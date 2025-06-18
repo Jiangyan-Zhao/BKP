@@ -1,12 +1,32 @@
 Package: BKP
-Title: What the Package Does (One Line, Title Case)
-Version: 0.0.0.9000
-Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"),
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
-License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
-    license
+Title: Beta Kernel Process
+Version: 0.1.0
+Authors@R: c(person(given = "Jiangyan", family = "Zhao", email = "zhaojy2017@126.com", role = c("aut", "cre")),
+    person(given = "Kunhai", family = "Qing", email = "kunhaiq@qq.com", role = c("aut")),
+    person(given = "Jin", family = "Xu", email = "jxu@stat.ecnu.edu.cn", role = "aut")
+  )
+Maintainer: Jiangyan Zhao <zhaojy2017@126.com>
+Description: Implements the Beta Kernel Profile (BKP) model for nonparametric probability 
+    function estimation. The package provides methods for model fitting, prediction, 
+    and visualization. Key features include support for multiple kernel functions 
+    (Gaussian, Matern 5/2, Matern 3/2) and efficient optimization routines. Suitable for 
+    applications in computational statistics and machine learning where flexible probability 
+    surface estimation is required.
+License: AGPL (>= 3)
+URL: https://github.com/Jiangyan-Zhao/BKP
+BugReports: https://github.com/Jiangyan-Zhao/BKP/issues
 Encoding: UTF-8
+LazyData: true
+NeedsCompilation: no
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.1
+RoxygenNote: 7.3.2
+Imports: optimx, tgp
+Depends: R (>= 3.5.0)
+Suggests: 
+    stats,
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+Author: Jiangyan Zhao [cre, aut],
+  Kunhai Qing [aut],
+  Jin Xu [aut].
+Date/Publication: 2025-06-17
