@@ -34,7 +34,7 @@ lossFun <- function(gamma, Xnorm, y, m, alpha0 = 1, beta0 = 1,
   loss <- match.arg(loss)
   kernel <- match.arg(kernel)
 
-  n <- length(y)
+  n <- nrow(y)
 
   # Expand scalar alpha0 and beta0 to vectors of length n
   if (length(alpha0) == 1) alpha0 <- rep(alpha0, n)

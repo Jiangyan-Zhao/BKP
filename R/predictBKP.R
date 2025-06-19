@@ -6,7 +6,7 @@
 #' Generate predictions from a fitted BKP model at new input locations.
 #'
 #' @param object A fitted BKP model object returned by \code{\link{fit.BKP}}.
-#' @param Xnew A matrix or data frame of new input locations (rows = points, cols = features).
+#' @param Xnew A matrix (or vector) of new input points at which to predict.
 #' @param CI.size Confidence interval level (default = 0.05 for 95% CI).
 #'
 #' @return A data frame with columns:
@@ -34,16 +34,27 @@ predict.BKP <- function(object, Xnew, CI.size = 0.05)
 
   BKPmodel <- object
 
-  Xnorm <- BKPmodel$Xnorm
-  y <- BKPmodel$y
-  m <- BKPmodel$m
-  theta <- BKPmodel$bestTheta
-  kernel <- BKPmodel$kernel
-  alpha0 <- BKPmodel$alpha0
-  beta0 <- BKPmodel$beta0
+  # Extract components
+  Xnorm   <- BKPmodel$Xnorm
+  y       <- BKPmodel$y
+  m       <- BKPmodel$m
+  theta   <- BKPmodel$bestTheta
+  kernel  <- BKPmodel$kernel
+  alpha0  <- BKPmodel$alpha0
+  beta0   <- BKPmodel$beta0
   Xbounds <- BKPmodel$Xbounds
+  d       <- ncol(Xnorm)
 
-  # Normalize new input locations
+  # Ensure Xnew is a matrix and matches input dimension
+  if (is.null(nrow(Xnew))) {
+    Xnew <- matrix(Xnew, nrow = 1)
+  }
+  Xnew <- as.matrix(Xnew)
+  if (ncol(Xnew) != d) {
+    stop("The number of columns in 'Xnew' must match the original input dimension.")
+  }
+
+  # Normalize Xnew to [0,1]^d
   XnewNorm <- sweep(Xnew, 2, Xbounds[, 1], "-")
   XnewNorm <- sweep(XnewNorm, 2, Xbounds[, 2] - Xbounds[, 1], "/")
 
@@ -51,8 +62,8 @@ predict.BKP <- function(object, Xnew, CI.size = 0.05)
   K <- kernel_matrix(Xnorm, XnewNorm, theta = theta, kernel = kernel)
 
   # Posterior parameters
-  alpha.n <- alpha0 + as.vector(K %*% y)
-  beta.n  <- beta0 + as.vector(K %*% (m - y))
+  alpha.n <- alpha0 + as.vector(t(K) %*% y)
+  beta.n  <- beta0 + as.vector(t(K) %*% (m - y))
 
   # Predictive mean and variance
   pi.mean <- alpha.n / (alpha.n + beta.n)

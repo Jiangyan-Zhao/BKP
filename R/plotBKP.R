@@ -43,11 +43,12 @@ plot.BKP <- function(x, ...){
   BKPmodel <- x
 
   # Extract necessary components from the BKP model object.
+  X <- BKPmodel$X # Covariate matrix.
   y <- BKPmodel$y # Number of successes.
   m <- BKPmodel$m # Number of trials.
-  X <- BKPmodel$X # Covariate matrix.
-  d <- ncol(X)    # Dimensionality.
   Xbounds <- BKPmodel$Xbounds
+
+  d <- ncol(X)    # Dimensionality.
 
   if (d == 1){
     #----- Plotting for 1-dimensional covariate data (d == 1) -----#
@@ -70,6 +71,7 @@ plot.BKP <- function(x, ...){
     polygon(c(prediction$X, rev(prediction$X)),
             c(prediction$lower, rev(prediction$upper)),
             col = "lightgrey", border = NA)
+    lines(prediction$X, prediction$mean, col = "blue", lwd = 2)
 
     # Overlay observed proportions (y/m) as points.
     points(X, y / m, pch = 16, cex = 0.8, col = "red")
@@ -105,6 +107,7 @@ plot.BKP <- function(x, ...){
           main = "Mean",
           col = hcl.colors(100, "viridis"))
     contour(x1, x2, pred_mean, add = TRUE, col = "black")
+    # Overlay observed proportions (y/m) as points.
 
     # Plot 2: Upper Bound Contour Map
     image(x1, x2, pred_upper,

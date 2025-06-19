@@ -38,7 +38,7 @@ print.BKP <- function(x, ...) {
   cat("--------------------------------------------------\n\n")
 
   cat("Number of Observations (n): ", nrow(BKPmodel$X), "\n")
-  cat("Input Dimensionality (d):   ", ncol(BKPmodel$originalX), "\n")
+  cat("Input Dimensionality (d):   ", ncol(BKPmodel$X), "\n")
   cat("Kernel Type:                ", BKPmodel$kernel, "\n")
   cat("Loss Type:                  ", BKPmodel$loss, "\n")
   cat("Optimized Parameters (θ):   ", paste(round(BKPmodel$bestTheta, 4), collapse = ", "), "\n")

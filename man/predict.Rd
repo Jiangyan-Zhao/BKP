@@ -10,7 +10,7 @@
 \arguments{
 \item{object}{A fitted BKP model object returned by \code{\link{fit.BKP}}.}
 
-\item{Xnew}{A matrix or data frame of new input locations (rows = points, cols = features).}
+\item{Xnew}{A matrix (or vector) of new input points at which to predict.}
 
 \item{CI.size}{Confidence interval level (default = 0.05 for 95\% CI).}
 }
