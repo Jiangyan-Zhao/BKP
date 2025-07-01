@@ -36,12 +36,12 @@ lossFun <- function(gamma, Xnorm, y, m, alpha0 = 1, beta0 = 1,
 
   n <- nrow(y)
 
-  # Expand scalar alpha0 and beta0 to vectors of length n
-  if (length(alpha0) == 1) alpha0 <- rep(alpha0, n)
-  if (length(beta0)  == 1) beta0  <- rep(beta0, n)
+  # # Expand scalar alpha0 and beta0 to vectors of length n
+  # if (length(alpha0) == 1) alpha0 <- rep(alpha0, n)
+  # if (length(beta0)  == 1) beta0  <- rep(beta0, n)
 
-  # Convert gamma to kernel hyperparameters (theta = 10^(-gamma))
-  theta <- 10^(-gamma)
+  # Convert gamma to kernel hyperparameters (theta = 10^gamma)
+  theta <- 10^gamma
 
   # Compute kernel matrix using specified kernel and theta
   K <- kernel_matrix(Xnorm, theta = theta, kernel = kernel)

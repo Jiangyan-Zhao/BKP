@@ -12,7 +12,7 @@ Description: Implements the Beta Kernel Profile (BKP) model for nonparametric pr
     (Gaussian, Matern 5/2, Matern 3/2) and efficient optimization routines. Suitable for 
     applications in computational statistics and machine learning where flexible probability 
     surface estimation is required.
-License: AGPL (>= 3)
+License: GPL-3
 URL: https://github.com/Jiangyan-Zhao/BKP
 BugReports: https://github.com/Jiangyan-Zhao/BKP/issues
 Encoding: UTF-8

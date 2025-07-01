@@ -97,12 +97,9 @@ kernel_matrix <- function(X, Xprime = NULL, theta = 1,
   # Compute pairwise distances
   if (identical(X, Xprime)) {
     # Efficient computation when X == Xprime using symmetry
-    dist_vec <- dist(X_scaled)^2  # lower triangle only, length n*(n-1)/2
-    n <- nrow(X_scaled)
-    dist_sq <- matrix(0, n, n)
-    dist_sq[lower.tri(dist_sq)] <- dist_vec
-    dist_sq <- dist_sq + t(dist_sq)  # fill upper triangle
-    dist <- sqrt(dist_sq)            # needed for Matern kernels
+    dist <- as.matrix(dist(X_scaled))
+    dist[dist < 0] <- 0  # numerical stability
+    dist_sq <- dist^2
 
   } else {
     # General case: X and Xprime are different

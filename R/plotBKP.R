@@ -30,10 +30,61 @@
 #'
 #' @keywords BKP
 #'
+#' @examples
+#' \dontrun{
+#' ### 1D
+#' set.seed(123)
+#' n <- 100
+#' Xbounds <- matrix(c(-2,2), nrow=1)
+#' x <- seq(-2, 2, length = n)
+#' true_pi <- (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
+#' m <- sample(100, n, replace = TRUE)
+#' y <- rbinom(n, size = m, prob = true_pi)
+#' df <- data.frame(x = x, y = y, m = m)
+#' xx = matrix(seq(-2, 2, length = 100), ncol=1) #new data points
+#' model <- fit.BKP(df, Xbounds=Xbounds)
+#' head(predict(model,xx))
+#' plot(model)
+#'
+#' ### 2D
+#' set.seed(123)
+#' n <- 100
+#' f <- function(X) {
+#'   if(is.null(nrow(X))) X <- matrix(X, nrow=1)
+#'   m <- 8.6928
+#'   s <- 2.4269
+#'   x1 <- 4*X[,1]- 2
+#'   x2 <- 4*X[,2]- 2
+#'   a <- 1 + (x1 + x2 + 1)^2 *
+#'     (19- 14*x1 + 3*x1^2- 14*x2 + 6*x1*x2 + 3*x2^2)
+#'   b <- 30 + (2*x1- 3*x2)^2 *
+#'     (18- 32*x1 + 12*x1^2 + 48*x2- 36*x1*x2 + 27*x2^2)
+#'   f <- log(a*b)
+#'   f <- (f- m)/s
+#'   return(f) }
+#' Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
+#' library(tgp)
+#' x <- lhs(n = n, rect = Xbounds)
+#' true_pi <- pnorm(f(x))
+#' m <- sample(100, n, replace = TRUE)
+#' y <- rbinom(n, size = m, prob = true_pi)
+#' df <- data.frame(x = x, y = y, m = m)
+#' xx1 <- seq(Xbounds[1,1], Xbounds[1,2], length.out = 100)
+#' xx2 <- seq(Xbounds[2,1], Xbounds[2,2], length.out = 100)
+#' xx <- expand.grid(xx1 = xx1, xx2 = xx2)
+#' #plot the true probability
+#' true_pi <- matrix(pnorm(f(xx)), nrow = length(xx1), ncol = length(xx2))
+#' image(xx1, xx2, true_pi, xlab ="X1", ylab ="X2",
+#'                 main = "True Probability",
+#'                 col = hcl.colors(100, "viridis"))
+#' contour(xx1, xx2, true_pi, add = TRUE, col = "black")
+#' model <- fit.BKP(df)
+#' head(predict(model,xx))
+#' plot(model)
+#' }
+#'
 #' @export
 #' @method plot BKP
-
-
 
 plot.BKP <- function(x, ...){
   if (!inherits(x, "BKP")) {
@@ -107,7 +158,7 @@ plot.BKP <- function(x, ...){
           main = "Mean",
           col = hcl.colors(100, "viridis"))
     contour(x1, x2, pred_mean, add = TRUE, col = "black")
-    # Overlay observed proportions (y/m) as points.
+    # points(X, pch=16)
 
     # Plot 2: Upper Bound Contour Map
     image(x1, x2, pred_upper,

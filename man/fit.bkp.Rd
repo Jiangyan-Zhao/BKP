@@ -85,7 +85,6 @@ model <- fit.BKP(df, Xbounds=Xbounds)
 head(predict(model,xx))
 plot(model)
 print(model)
-summary(model)
 
 ### 2D
 set.seed(123)
@@ -123,7 +122,6 @@ model <- fit.BKP(df)
 head(predict(model,xx))
 plot(model)
 print(model)
-summary(model)
 }
 
 }

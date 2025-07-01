@@ -63,7 +63,6 @@
 #' head(predict(model,xx))
 #' plot(model)
 #' print(model)
-#' summary(model)
 #'
 #' ### 2D
 #' set.seed(123)
@@ -101,7 +100,6 @@
 #' head(predict(model,xx))
 #' plot(model)
 #' print(model)
-#' summary(model)
 #' }
 #'
 #' @export
@@ -161,16 +159,26 @@ fit.BKP <- function(
     stop("Xbounds must be a matrix with dimension d x 2 (rows = number of features)")
   }
 
-  # Ensure alpha0 and beta0 are either scalars or vectors of length n; expand scalars if needed
-  if (length(alpha0) == 1) {
-    alpha0 <- rep(alpha0, n)
-  } else if (length(alpha0) != n) {
+  # # Ensure alpha0 and beta0 are either scalars or vectors of length n; expand scalars if needed
+  # if (length(alpha0) == 1) {
+  #   alpha0 <- rep(alpha0, n)
+  # } else if (length(alpha0) != n) {
+  #   stop("alpha0 must be either a scalar or a vector of length equal to the number of observations.")
+  # }
+  #
+  # if (length(beta0) == 1) {
+  #   beta0 <- rep(beta0, n)
+  # } else if (length(beta0) != n) {
+  #   stop("beta0 must be either a scalar or a vector of length equal to the number of observations.")
+  # }
+
+
+  # Ensure alpha0 and beta0 are either scalars or vectors of length n
+  if (length(alpha0) != 1 && length(alpha0) != n) {
     stop("alpha0 must be either a scalar or a vector of length equal to the number of observations.")
   }
 
-  if (length(beta0) == 1) {
-    beta0 <- rep(beta0, n)
-  } else if (length(beta0) != n) {
+  if (length(beta0) != 1 && length(beta0) != n) {
     stop("beta0 must be either a scalar or a vector of length equal to the number of observations.")
   }
 
@@ -185,10 +193,10 @@ fit.BKP <- function(
   Xnorm <- sweep(Xnorm, 2, Xbounds[,2] - Xbounds[,1], "/")
 
   # Generate initial gamma values using space-filling design followed by D-optimal selection.
-  # Gamma corresponds to kernel scale via theta = 10^(-gamma).
+  # Gamma corresponds to kernel scale via theta = 10^gamma.
   # Bounds are set based on input dimension d to ensure reasonable search range.
   gammaBounds <- matrix(
-    c(rep(-2 - log10(d), d), rep(log10(500) - log10(d), d)),
+    c(rep((log10(d)+2)/2, d), rep((log10(d)-log10(500))/2, d)),
     ncol = 2
   )
   # Latin Hypercube Sampling in gamma space
@@ -211,7 +219,7 @@ fit.BKP <- function(
   # Extract the results from the optimization.
   bestIndex <- which.min(res$value) # Find the index of the minimum loss.
   bestGamma <- as.numeric(res[bestIndex, 1:d]) # Get the gamma parameters corresponding to min loss.
-  bestTheta <- 10^(-bestGamma) # Transform gamma back to the kernel parameters (theta).
+  bestTheta <- 10^(bestGamma) # Transform gamma back to the kernel parameters (theta).
   minLoss <- res$value[bestIndex] # Get the minimum loss value.
 
   # Compute kernel matrix with the optimized parameters
