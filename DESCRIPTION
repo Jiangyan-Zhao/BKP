@@ -20,7 +20,7 @@ LazyData: true
 NeedsCompilation: no
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
-Imports: optimx, tgp
+Imports: optimx, tgp, lattice, gridExtra
 Depends: R (>= 3.5.0)
 Suggests: 
     stats,

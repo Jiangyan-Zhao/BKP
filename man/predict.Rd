@@ -5,14 +5,14 @@
 \alias{predict.BKP}
 \title{Predict method for Beta Kernel Process (BKP) models}
 \usage{
-\method{predict}{BKP}(object, Xnew, CI.size = 0.05)
+\method{predict}{BKP}(object, Xnew, CI_size = 0.05)
 }
 \arguments{
 \item{object}{A fitted BKP model object returned by \code{\link{fit.BKP}}.}
 
 \item{Xnew}{A matrix (or vector) of new input points at which to predict.}
 
-\item{CI.size}{Confidence interval level (default = 0.05 for 95\% CI).}
+\item{CI_size}{Confidence interval level (default = 0.05 for 95\% CI).}
 }
 \value{
 A data frame with columns:

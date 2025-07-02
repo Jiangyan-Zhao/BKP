@@ -48,20 +48,17 @@
 #' @author Jiangyan Zhao, Kunhai Qing, Jin Xu
 #'
 #' @examples
-#' \dontrun{
 #' ### 1D
 #' set.seed(123)
-#' n <- 100
+#' n <- 30
 #' Xbounds <- matrix(c(-2,2), nrow=1)
-#' x <- seq(-2, 2, length = n)
+#' x <- tgp::lhs(n = n, rect = Xbounds)
 #' true_pi <- (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
 #' m <- sample(100, n, replace = TRUE)
 #' y <- rbinom(n, size = m, prob = true_pi)
 #' df <- data.frame(x = x, y = y, m = m)
-#' xx = matrix(seq(-2, 2, length = 100), ncol=1) #new data points
+#' xx = matrix(seq(-2, 2, length = 100), ncol=1) # new data points
 #' model <- fit.BKP(df, Xbounds=Xbounds)
-#' head(predict(model,xx))
-#' plot(model)
 #' print(model)
 #'
 #' ### 2D
@@ -81,8 +78,7 @@
 #'   f <- (f- m)/s
 #'   return(f) }
 #' Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
-#' library(tgp)
-#' x <- lhs(n = n, rect = Xbounds)
+#' x <- tgp::lhs(n = n, rect = Xbounds)
 #' true_pi <- pnorm(f(x))
 #' m <- sample(100, n, replace = TRUE)
 #' y <- rbinom(n, size = m, prob = true_pi)
@@ -97,10 +93,7 @@
 #'                 col = hcl.colors(100, "viridis"))
 #' contour(xx1, xx2, true_pi, add = TRUE, col = "black")
 #' model <- fit.BKP(df)
-#' head(predict(model,xx))
-#' plot(model)
 #' print(model)
-#' }
 #'
 #' @export
 #' @importFrom tgp lhs dopt.gp
@@ -111,7 +104,7 @@ fit.BKP <- function(
     alpha0 = 1, beta0 = 1,
     Xbounds = NULL,
     kernel = c("gaussian", "matern52", "matern32"),
-    loss = c("brier", "NLML")
+    loss = c("brier", "log_Loss", "NLML")
 ){
 
   # Handle input data: prioritize 'data' data frame, otherwise use individual X, y, and m.

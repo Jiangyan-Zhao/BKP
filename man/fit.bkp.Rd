@@ -13,7 +13,7 @@ fit.BKP(
   beta0 = 1,
   Xbounds = NULL,
   kernel = c("gaussian", "matern52", "matern32"),
-  loss = c("brier", "NLML")
+  loss = c("brier", "log_Loss", "NLML")
 )
 }
 \arguments{
@@ -70,20 +70,17 @@ and failures \eqn{m - y} with the kernel matrix:
 where \eqn{K} is the kernel matrix evaluated at normalized inputs.
 }
 \examples{
-\dontrun{
 ### 1D
 set.seed(123)
-n <- 100
+n <- 30
 Xbounds <- matrix(c(-2,2), nrow=1)
-x <- seq(-2, 2, length = n)
+x <- tgp::lhs(n = n, rect = Xbounds)
 true_pi <- (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
 m <- sample(100, n, replace = TRUE)
 y <- rbinom(n, size = m, prob = true_pi)
 df <- data.frame(x = x, y = y, m = m)
-xx = matrix(seq(-2, 2, length = 100), ncol=1) #new data points
+xx = matrix(seq(-2, 2, length = 100), ncol=1) # new data points
 model <- fit.BKP(df, Xbounds=Xbounds)
-head(predict(model,xx))
-plot(model)
 print(model)
 
 ### 2D
@@ -103,8 +100,7 @@ f <- function(X) {
   f <- (f- m)/s
   return(f) }
 Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
-library(tgp)
-x <- lhs(n = n, rect = Xbounds)
+x <- tgp::lhs(n = n, rect = Xbounds)
 true_pi <- pnorm(f(x))
 m <- sample(100, n, replace = TRUE)
 y <- rbinom(n, size = m, prob = true_pi)
@@ -119,10 +115,7 @@ image(xx1, xx2, true_pi, xlab ="X1", ylab ="X2",
                 col = hcl.colors(100, "viridis"))
 contour(xx1, xx2, true_pi, add = TRUE, col = "black")
 model <- fit.BKP(df)
-head(predict(model,xx))
-plot(model)
 print(model)
-}
 
 }
 \author{

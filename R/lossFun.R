@@ -27,7 +27,7 @@
 #' @export
 
 lossFun <- function(gamma, Xnorm, y, m, alpha0 = 1, beta0 = 1,
-                    loss = c("brier", "NLML"),
+                    loss = c("brier", "log_Loss", "NLML"),
                     kernel = c("gaussian", "matern52", "matern32"))
 {
   # Match and validate the loss and kernel arguments
@@ -51,10 +51,11 @@ lossFun <- function(gamma, Xnorm, y, m, alpha0 = 1, beta0 = 1,
   beta.n <- beta0 + as.vector(K %*% (m - y))
 
   # Numerical stabilization: avoid log(0) or NaNs
-  alpha.n <- pmax(alpha.n, 1e-8)
-  beta.n  <- pmax(beta.n, 1e-8)
+  alpha.n <- pmax(alpha.n, 1e-10)
+  beta.n  <- pmax(beta.n, 1e-10)
 
   if (loss == "brier") {
+    # Brier score (Mean Squared Error)
     # Posterior mean prediction of success probability
     pi.tilde <- (alpha.n - y) / (alpha.n + beta.n - m)
     # Empirical success rate
@@ -62,7 +63,13 @@ lossFun <- function(gamma, Xnorm, y, m, alpha0 = 1, beta0 = 1,
     # Brier score: mean squared error between predicted and observed
     brier <- mean((pi.tilde - pi.hat)^2)
     return(brier)
-
+  } else if (loss == "log_Loss"){
+    # log-loss (cross-entropy)
+    pi.tilde <- (alpha.n - y) / (alpha.n + beta.n - m)
+    eps <- 1e-10
+    pi.tilde <- pmin(pmax(pi.tilde, eps), 1 - eps)
+    logLoss <- -mean(y * log(pi.tilde) + (m - y) * log(1 - pi.tilde))
+    return(logLoss)
   } else if (loss == "NLML") {
     # Negative log marginal likelihood (based on beta-binomial conjugacy)
     nlml <- sum(
@@ -70,6 +77,5 @@ lossFun <- function(gamma, Xnorm, y, m, alpha0 = 1, beta0 = 1,
         lbeta(alpha.n, beta.n) +
         lchoose(m, y)
     )
-    return(-nlml)  # Minimization target
   }
 }

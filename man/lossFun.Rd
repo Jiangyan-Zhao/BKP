@@ -11,7 +11,7 @@ lossFun(
   m,
   alpha0 = 1,
   beta0 = 1,
-  loss = c("brier", "NLML"),
+  loss = c("brier", "log_Loss", "NLML"),
   kernel = c("gaussian", "matern52", "matern32")
 )
 }

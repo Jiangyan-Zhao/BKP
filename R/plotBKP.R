@@ -85,6 +85,8 @@
 #'
 #' @export
 #' @method plot BKP
+#' @importFrom lattice levelplot
+#' @importFrom gridExtra grid.arrange
 
 plot.BKP <- function(x, ...){
   if (!inherits(x, "BKP")) {
@@ -107,7 +109,7 @@ plot.BKP <- function(x, ...){
     Xnew <- matrix(seq(Xbounds[1], Xbounds[2], length.out = 1000), ncol = 1)
 
     # Get the prediction for the new X values.
-    prediction <- predict(BKPmodel, Xnew, CI.size = 0.05)
+    prediction <- predict(BKPmodel, Xnew, CI_size = 0.05)
 
     # Initialize the plot with the estimated probability curve.
     plot(prediction$X, prediction$mean,
@@ -125,63 +127,58 @@ plot.BKP <- function(x, ...){
     lines(prediction$X, prediction$mean, col = "blue", lwd = 2)
 
     # Overlay observed proportions (y/m) as points.
-    points(X, y / m, pch = 16, cex = 0.8, col = "red")
+    points(X, y / m, pch = 20, col = "red")
 
     # Add a legend to explain plot elements.
     legend("topright",
            legend = c("Estimated Probability", "95% Confidence Interval", "Observed Proportions"),
-           col = c("blue", "lightgrey", "red"),
-           lwd = c(2, NA, NA), pch = c(NA, 15, 16), lty = c(1, NA, NA), bty = "n")
+           col = c("blue", "lightgrey", "red"), bty = "n",
+           lwd = c(2, 8, NA), pch = c(NA, NA, 20), lty = c(1, 1, NA))
   } else if (d == 2){
     #----- Plotting for 2-dimensional covariate data (d == 2) -----#
-    # Create a grid of new X values for prediction over the 2D space.
-    x1 <- seq(Xbounds[1,1], Xbounds[1,2], length.out = 100)
-    x2 <- seq(Xbounds[2,1], Xbounds[2,2], length.out = 100)
-    Xnew <- expand.grid(x1 = x1, x2 = x2)
-    Xnew <- as.matrix(Xnew)
+    # Generate 2D prediction grid
+    x1 <- seq(Xbounds[1, 1], Xbounds[1, 2], length.out = 100)
+    x2 <- seq(Xbounds[2, 1], Xbounds[2, 2], length.out = 100)
+    grid <- expand.grid(x1 = x1, x2 = x2)
+    pred <- predict.BKP(BKPmodel, as.matrix(grid), CI_size = 0.05)
 
-    # Predict probabilities and confidence intervals for the grid.
-    prediction <- predict(BKPmodel, Xnew, CI.size = 0.05)
+    # Convert to data frame for levelplot
+    df <- data.frame(x1 = grid$x1, x2 = grid$x2,
+                     Mean = pred$mean,
+                     Upper = pred$upper,
+                     Lower = pred$lower,
+                     Variance = pred$variance)
+                     # Width = pred$upper - pred$lower)
 
-    # Reshape the 1D prediction results into 2D matrices for image plotting.
-    pred_mean <- matrix(prediction$mean, nrow = length(x1), ncol = length(x2))
-    pred_upper <- matrix(prediction$upper, nrow = length(x1), ncol = length(x2))
-    pred_lower <- matrix(prediction$lower, nrow = length(x1), ncol = length(x2))
-    pred_variance <- matrix(prediction$variance, nrow = length(x1), ncol = length(x2))
+    # Helper to build each plot
+    plot_fun <- function(var, title, pal = "plasma") {
+      levelplot(
+        as.formula(paste(var, "~ x1 * x2")),
+        data = df,
+        col.regions = hcl.colors(100, palette = pal),
+        main = title,
+        xlab = "X1", ylab = "X2",
+        contour = TRUE,
+        colorkey = TRUE,
+        cuts = 15,
+        pretty = TRUE,
+        scales = list(draw = TRUE, tck = c(1, 0)),
+        panel = function(...) {
+          panel.levelplot(...)
+          panel.contourplot(..., col = "black", lwd = 0.5)
+        }
+      )
+    }
 
-    # Set up a 2x2 plot layout for multiple contour plots.
-    layout(matrix(c(1, 2, 3, 4), nrow = 2, byrow = TRUE))
+    # Create 4 plots
+    p1 <- plot_fun("Mean", "Predictive Mean")
+    p2 <- plot_fun("Upper", "95% CI Upper")
+    p3 <- plot_fun("Variance", "Predictive Variance")
+    # p3 <- plot_fun("Width", "CI Width")
+    p4 <- plot_fun("Lower", "95% CI Lower")
 
-    # Plot 1: Estimated Probability Contour Map
-    image(x1, x2, pred_mean,
-          xlab = "X1", ylab = "X2",
-          main = "Mean",
-          col = hcl.colors(100, "viridis"))
-    contour(x1, x2, pred_mean, add = TRUE, col = "black")
-    # points(X, pch=16)
-
-    # Plot 2: Upper Bound Contour Map
-    image(x1, x2, pred_upper,
-          xlab = "X1", ylab = "X2",
-          main = "Upper Bound",
-          col = hcl.colors(100, "viridis"))
-    contour(x1, x2, pred_upper, add = TRUE, col = "black")
-
-    # Plot 3: Lower Bound Contour Map
-    image(x1, x2, pred_lower,
-          xlab = "X1", ylab = "X2",
-          main = "Lower Bound",
-          col = hcl.colors(100, "viridis"))
-    contour(x1, x2, pred_lower, add = TRUE, col = "black")
-
-    # Plot 4: Variance Contour Map
-    image(x1, x2, pred_variance,
-          xlab = "X1", ylab = "X2",
-          main = "Variance",
-          col = hcl.colors(100, "plasma"))
-    contour(x1, x2, pred_variance, add = TRUE, col = "black")
-
-    par(mfrow = c(1, 1)) # Reset the plot layout to default (1 plot per page) after generating the grid.
+    # Arrange into 2×2 layout
+    grid.arrange(p1, p2, p3, p4, ncol = 2)
   } else {
     # --- Error handling for higher dimensions ---
     stop("plot.BKP() only supports data where the dimensionality of X is 1 or 2.")

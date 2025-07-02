@@ -7,7 +7,7 @@
 #'
 #' @param object A fitted BKP model object returned by \code{\link{fit.BKP}}.
 #' @param Xnew A matrix (or vector) of new input points at which to predict.
-#' @param CI.size Confidence interval level (default = 0.05 for 95% CI).
+#' @param CI_size Confidence interval level (default = 0.05 for 95% CI).
 #'
 #' @return A data frame with columns:
 #' \describe{
@@ -71,7 +71,7 @@
 #' @method predict BKP
 
 
-predict.BKP <- function(object, Xnew, CI.size = 0.05)
+predict.BKP <- function(object, Xnew, CI_size = 0.05)
 {
   if (!inherits(object, "BKP")) {
     stop("The input is not of class 'BKP'. Please provide a model fitted with 'fit.BKP()'.")
@@ -115,8 +115,8 @@ predict.BKP <- function(object, Xnew, CI.size = 0.05)
   pi.var  <- pi.mean * (1 - pi.mean) / (alpha.n + beta.n + 1)
 
   # Confidence intervals
-  pi.lower <- qbeta(CI.size / 2, alpha.n, beta.n)
-  pi.upper <- qbeta(1 - CI.size / 2, alpha.n, beta.n)
+  pi.lower <- qbeta(CI_size / 2, alpha.n, beta.n)
+  pi.upper <- qbeta(1 - CI_size / 2, alpha.n, beta.n)
 
   prediction <- data.frame(X = I(Xnew), mean = pi.mean, variance = pi.var,
                            lower = pi.lower, upper = pi.upper)
