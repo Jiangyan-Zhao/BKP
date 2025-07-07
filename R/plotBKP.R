@@ -31,7 +31,6 @@
 #' @keywords BKP
 #'
 #' @examples
-#' \dontrun{
 #' ### 1D
 #' set.seed(123)
 #' n <- 100
@@ -81,12 +80,14 @@
 #' model <- fit.BKP(df)
 #' head(predict(model,xx))
 #' plot(model)
-#' }
 #'
 #' @export
 #' @method plot BKP
-#' @importFrom lattice levelplot
+#' @importFrom lattice levelplot panel.levelplot panel.contourplot
 #' @importFrom gridExtra grid.arrange
+#' @importFrom grDevices hcl.colors
+#' @importFrom graphics legend lines points polygon
+#' @importFrom stats as.formula
 
 plot.BKP <- function(x, ...){
   if (!inherits(x, "BKP")) {
@@ -109,22 +110,22 @@ plot.BKP <- function(x, ...){
     Xnew <- matrix(seq(Xbounds[1], Xbounds[2], length.out = 1000), ncol = 1)
 
     # Get the prediction for the new X values.
-    prediction <- predict(BKPmodel, Xnew, CI_size = 0.05)
+    pred <- predict.BKP(BKPmodel, Xnew, CI_size = 0.05)
 
     # Initialize the plot with the estimated probability curve.
-    plot(prediction$X, prediction$mean,
+    plot(pred$x1, pred$mean,
          type = "l", col = "blue", lwd = 2,
          xlab = "x (Input Variable)", ylab = "Probability",
          main = "BKP Estimated Probability",
          xlim = Xbounds,
-         ylim = c(max(0, min(prediction$mean)-0.1),
-                  min(1, max(prediction$mean)+0.1)))
+         ylim = c(max(0, min(pred$mean)-0.1),
+                  min(1, max(pred$mean)+0.1)))
 
     # Add a shaded confidence interval band using polygon.
-    polygon(c(prediction$X, rev(prediction$X)),
-            c(prediction$lower, rev(prediction$upper)),
+    polygon(c(pred$x1, rev(pred$x1)),
+            c(pred$lower, rev(pred$upper)),
             col = "lightgrey", border = NA)
-    lines(prediction$X, prediction$mean, col = "blue", lwd = 2)
+    lines(pred$x1, pred$mean, col = "blue", lwd = 2)
 
     # Overlay observed proportions (y/m) as points.
     points(X, y / m, pch = 20, col = "red")
@@ -143,7 +144,7 @@ plot.BKP <- function(x, ...){
     pred <- predict.BKP(BKPmodel, as.matrix(grid), CI_size = 0.05)
 
     # Convert to data frame for levelplot
-    df <- data.frame(x1 = grid$x1, x2 = grid$x2,
+    df <- data.frame(x1 = pred$x1, x2 = pred$x2,
                      Mean = pred$mean,
                      Upper = pred$upper,
                      Lower = pred$lower,

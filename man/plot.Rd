@@ -30,7 +30,6 @@ lower bound, and the width of the confidence interval (uncertainty).
 If the dimension of \code{X} exceeds 2, the function will stop with an informative error.
 }
 \examples{
-\dontrun{
 ### 1D
 set.seed(123)
 n <- 100
@@ -80,7 +79,6 @@ contour(xx1, xx2, true_pi, add = TRUE, col = "black")
 model <- fit.BKP(df)
 head(predict(model,xx))
 plot(model)
-}
 
 }
 \seealso{

@@ -106,7 +106,7 @@
 #' print(model)
 #'
 #' @export
-#' @importFrom tgp lhs dopt.gp
+#' @importFrom tgp lhs
 #' @importFrom optimx multistart
 
 fit.BKP <- function(
