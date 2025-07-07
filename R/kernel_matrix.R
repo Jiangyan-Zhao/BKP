@@ -19,9 +19,10 @@
 #'                    as a vector of per-dimension scales. If \code{FALSE},
 #'                    \code{theta} is a global scalar lengthscale.
 #'
-#' @return A numeric kernel matrix of size \eqn{n \times m}, where element \eqn{(i,j)}
-#'         is the kernel value between \eqn{X_i} and \eqn{X'_j}, with \eqn{n = \mathrm{nrow}(X)}
-#'         and \eqn{m = \mathrm{nrow}(Xprime)}.
+#' @return A numeric matrix of kernel values of size \eqn{n \times m}, where
+#'         \eqn{n = \mathrm{nrow}(X)} and \eqn{m = \mathrm{nrow}(Xprime)}.
+#'         Each element \eqn{K_{ij}} corresponds to the kernel similarity between
+#'         input \eqn{X_i} and \eqn{Xprime_j}.
 #'
 #' @details
 #' The kernel functions are defined as follows:
@@ -62,8 +63,7 @@
 #'
 #' @export
 
-
-kernel_matrix <- function(X, Xprime = NULL, theta = 1,
+kernel_matrix <- function(X, Xprime = NULL, theta = 0.1,
                           kernel = c("gaussian", "matern52", "matern32"),
                           anisotropic = TRUE) {
   # Match the kernel argument explicitly
@@ -71,9 +71,15 @@ kernel_matrix <- function(X, Xprime = NULL, theta = 1,
 
   if (is.null(Xprime)) Xprime <- X
 
-  # Convert vector inputs to matrix form
-  if (is.vector(X)) X <- matrix(X, nrow = 1)
-  if (is.vector(Xprime)) Xprime <- matrix(Xprime, nrow = 1)
+  # Convert vectors to matrices
+  if (is.vector(X)) X <- matrix(X, ncol = 1)
+  if (is.null(Xprime)) {
+    Xprime <- X
+    symmetric <- TRUE
+  } else {
+    if (is.vector(Xprime)) Xprime <- matrix(Xprime, ncol = 1)
+    symmetric <- identical(X, Xprime)
+  }
 
   # Check that input dimensions match
   if (ncol(X) != ncol(Xprime)) {
@@ -95,7 +101,7 @@ kernel_matrix <- function(X, Xprime = NULL, theta = 1,
   }
 
   # Compute pairwise distances
-  if (identical(X, Xprime)) {
+  if (symmetric) {
     # Efficient computation when X == Xprime using symmetry
     dist <- as.matrix(dist(X_scaled))
     dist[dist < 0] <- 0  # numerical stability

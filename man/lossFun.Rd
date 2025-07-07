@@ -9,40 +9,45 @@ lossFun(
   Xnorm,
   y,
   m,
-  alpha0 = 1,
-  beta0 = 1,
-  loss = c("brier", "log_Loss", "NLML"),
+  prior = c("noninformative", "fixed", "adaptive"),
+  r0 = 2,
+  p0 = 0.5,
+  loss = c("brier", "log_loss"),
   kernel = c("gaussian", "matern52", "matern32")
 )
 }
 \arguments{
 \item{gamma}{A numeric vector of kernel hyperparameters (on the log scale).}
 
-\item{Xnorm}{A normalized input matrix (each column scaled to the range 0-1).}
+\item{Xnorm}{A normalized input matrix (each column scaled \code{[0,1]}).}
 
 \item{y}{A numeric vector of binary counts (successes).}
 
 \item{m}{A numeric vector of total trials (denominators).}
 
-\item{alpha0}{Prior alpha parameter(s) for the Beta prior. Can be a scalar or a vector of length \code{length(y)}.}
+\item{prior}{Type of prior: "noninformative", "fixed", or "adaptive".}
 
-\item{beta0}{Prior beta parameter(s) for the Beta prior. Can be a scalar or a vector of length \code{length(y)}.}
+\item{r0}{Global prior strength (used in "fixed"/"adaptive").}
 
-\item{loss}{Character string indicating the loss function: either \code{"brier"} or \code{"NLML"}.}
+\item{p0}{Prior mean for fixed prior (in (0,1)).}
 
-\item{kernel}{Type of kernel function used in the BKP model. One of \code{"gaussian"}, \code{"matern52"}, or \code{"matern32"}.}
+\item{loss}{Type of loss: "brier" or "log_loss".}
+
+\item{kernel}{Type of kernel: "gaussian", "matern52", or "matern32".}
 }
 \value{
 A scalar numeric value representing the loss.
 }
 \description{
 Computes the loss used for fitting the Beta Kernel Process (BKP) model.
-Supports Brier score or negative log marginal likelihood (NLML).
+Supports Brier score (mean squared error) or log-loss (cross-entropy),
+under different prior specifications.
 }
 \examples{
-lossFun(gamma = rep(0, 2), Xnorm = matrix(runif(20), ncol=2),
-        y = rbinom(10, 10, 0.5), m = rep(10, 10),
-        alpha0 = 1, beta0 = 1, loss = "brier", kernel = "gaussian")
+lossFun(gamma = rep(0, 2),
+        Xnorm = matrix(runif(20), ncol=2),
+        y = rbinom(10, 10, 0.5),
+        m = rep(10, 10))
 
 }
 \author{

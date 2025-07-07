@@ -23,10 +23,9 @@
 #' @keywords BKP
 #'
 #' @examples
-#' \dontrun{
 #' ### 1D
 #' set.seed(123)
-#' n <- 10
+#' n <- 30
 #' Xbounds <- matrix(c(-2,2), nrow=1)
 #' x <- seq(-2, 2, length = n)
 #' true_pi <- (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
@@ -54,8 +53,7 @@
 #'   f <- (f- m)/s
 #'   return(f) }
 #' Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
-#' library(tgp)
-#' x <- lhs(n = n, rect = Xbounds)
+#' x <- tgp::lhs(n = n, rect = Xbounds)
 #' true_pi <- pnorm(f(x))
 #' m <- sample(100, n, replace = TRUE)
 #' y <- rbinom(n, size = m, prob = true_pi)
@@ -65,7 +63,6 @@
 #' xx <- expand.grid(xx1 = xx1, xx2 = xx2)
 #' model <- fit.BKP(df)
 #' head(predict(model,xx))
-#' }
 #'
 #' @export
 #' @method predict BKP
@@ -85,8 +82,9 @@ predict.BKP <- function(object, Xnew, CI_size = 0.05)
   m       <- BKPmodel$m
   theta   <- BKPmodel$bestTheta
   kernel  <- BKPmodel$kernel
-  alpha0  <- BKPmodel$alpha0
-  beta0   <- BKPmodel$beta0
+  prior   <- BKPmodel$prior
+  r0      <- BKPmodel$r0
+  p0      <- BKPmodel$p0
   Xbounds <- BKPmodel$Xbounds
   d       <- ncol(Xnorm)
 
@@ -100,26 +98,32 @@ predict.BKP <- function(object, Xnew, CI_size = 0.05)
   }
 
   # Normalize Xnew to [0,1]^d
-  XnewNorm <- sweep(Xnew, 2, Xbounds[, 1], "-")
-  XnewNorm <- sweep(XnewNorm, 2, Xbounds[, 2] - Xbounds[, 1], "/")
+  Xnew_norm <- sweep(Xnew, 2, Xbounds[, 1], "-")
+  Xnew_norm <- sweep(Xnew_norm, 2, Xbounds[, 2] - Xbounds[, 1], "/")
 
   # Compute kernel matrix
-  K <- kernel_matrix(Xnorm, XnewNorm, theta = theta, kernel = kernel)
+  K <- kernel_matrix(Xnew_norm, Xnorm, theta = theta, kernel = kernel) # m*n matrix
+
+  # get the prior parameters: alpha0(x) and beta0(x)
+  prior_par <- get_prior(prior = prior, r0 = r0, p0 = p0, y = y, m = m, K = K)
+  alpha0 <- prior_par$alpha0
+  beta0 <- prior_par$beta0
 
   # Posterior parameters
-  alpha.n <- alpha0 + as.vector(t(K) %*% y)
-  beta.n  <- beta0 + as.vector(t(K) %*% (m - y))
+  alpha_n <- alpha0 + as.vector(K %*% y)
+  beta_n  <- beta0 + as.vector(K %*% (m - y))
 
   # Predictive mean and variance
-  pi.mean <- alpha.n / (alpha.n + beta.n)
-  pi.var  <- pi.mean * (1 - pi.mean) / (alpha.n + beta.n + 1)
+  pi_mean <- alpha_n / (alpha_n + beta_n)
+  pi_var  <- pi_mean * (1 - pi_mean) / (alpha_n + beta_n + 1)
 
   # Confidence intervals
-  pi.lower <- qbeta(CI_size / 2, alpha.n, beta.n)
-  pi.upper <- qbeta(1 - CI_size / 2, alpha.n, beta.n)
+  pi_lower <- qbeta(CI_size / 2, alpha_n, beta_n)
+  pi_upper <- qbeta(1 - CI_size / 2, alpha_n, beta_n)
 
-  prediction <- data.frame(X = I(Xnew), mean = pi.mean, variance = pi.var,
-                           lower = pi.lower, upper = pi.upper)
+  prediction <- data.frame(Xnew, mean = pi_mean, variance = pi_var,
+                           lower = pi_lower, upper = pi_upper)
+  names(prediction)[1:d] <- paste0("x", 1:d)
 
   return(prediction)
 }

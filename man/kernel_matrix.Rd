@@ -7,7 +7,7 @@
 kernel_matrix(
   X,
   Xprime = NULL,
-  theta = 1,
+  theta = 0.1,
   kernel = c("gaussian", "matern52", "matern32"),
   anisotropic = TRUE
 )
@@ -29,9 +29,10 @@ as a vector of per-dimension scales. If \code{FALSE},
 \code{theta} is a global scalar lengthscale.}
 }
 \value{
-A numeric kernel matrix of size \eqn{n \times m}, where element \eqn{(i,j)}
-is the kernel value between \eqn{X_i} and \eqn{X'_j}, with \eqn{n = \mathrm{nrow}(X)}
-and \eqn{m = \mathrm{nrow}(Xprime)}.
+A numeric matrix of kernel values of size \eqn{n \times m}, where
+\eqn{n = \mathrm{nrow}(X)} and \eqn{m = \mathrm{nrow}(Xprime)}.
+Each element \eqn{K_{ij}} corresponds to the kernel similarity between
+input \eqn{X_i} and \eqn{Xprime_j}.
 }
 \description{
 Computes the kernel matrix between \code{X} and \code{Xprime} using a specified

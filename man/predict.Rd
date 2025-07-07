@@ -28,10 +28,9 @@ A data frame with columns:
 Generate predictions from a fitted BKP model at new input locations.
 }
 \examples{
-\dontrun{
 ### 1D
 set.seed(123)
-n <- 10
+n <- 30
 Xbounds <- matrix(c(-2,2), nrow=1)
 x <- seq(-2, 2, length = n)
 true_pi <- (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
@@ -59,8 +58,7 @@ f <- function(X) {
   f <- (f- m)/s
   return(f) }
 Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
-library(tgp)
-x <- lhs(n = n, rect = Xbounds)
+x <- tgp::lhs(n = n, rect = Xbounds)
 true_pi <- pnorm(f(x))
 m <- sample(100, n, replace = TRUE)
 y <- rbinom(n, size = m, prob = true_pi)
@@ -70,7 +68,6 @@ xx2 <- seq(Xbounds[2,1], Xbounds[2,2], length.out = 100)
 xx <- expand.grid(xx1 = xx1, xx2 = xx2)
 model <- fit.BKP(df)
 head(predict(model,xx))
-}
 
 }
 \author{

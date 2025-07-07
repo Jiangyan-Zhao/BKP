@@ -9,11 +9,13 @@ fit.BKP(
   X = NULL,
   y = NULL,
   m = NULL,
-  alpha0 = 1,
-  beta0 = 1,
   Xbounds = NULL,
+  prior = c("noninformative", "fixed", "adaptive"),
+  r0 = 2,
+  p0 = 0.5,
   kernel = c("gaussian", "matern52", "matern32"),
-  loss = c("brier", "log_Loss", "NLML")
+  loss = c("brier", "log_loss"),
+  num_multi_start = NULL
 )
 }
 \arguments{
@@ -26,40 +28,52 @@ in the first \eqn{d}, \eqn{d+1}, and \eqn{d+2} columns, respectively.}
 
 \item{m}{Vector of binomial counts (trials). Must be numeric, positive, and same length as \code{y}.}
 
-\item{alpha0}{Prior shape parameter (scalar or vector of length \eqn{n}) for the beta distribution.}
-
-\item{beta0}{Prior shape parameter (scalar or vector of length \eqn{n}) for the beta distribution.}
-
 \item{Xbounds}{Optional \eqn{d \times 2} matrix defining lower and upper bounds for each input dimension
 (used for normalization). Defaults to \code{[0,1]^d}.}
+
+\item{prior}{Type of prior used: "noninformative", "fixed", or "adaptive".}
+
+\item{r0}{Global precision parameter used in prior specification.}
+
+\item{p0}{Global prior mean used when prior = "fixed".}
 
 \item{kernel}{Character string specifying the kernel function to use: one of \code{"gaussian"},
 \code{"matern52"}, or \code{"matern32"}.}
 
 \item{loss}{Loss function to be minimized during hyperparameter tuning. Choose between \code{"brier"}
 (default) and \code{"NLML"} (negative log marginal likelihood).}
+
+\item{num_multi_start}{Number of initial points for multi-start optimization (default = 10*d).}
 }
 \value{
-An object of class \code{"BKP"} containing:
-\item{bestTheta}{Optimal kernel parameters (length \eqn{d}).}
-\item{kernel}{Kernel type used.}
-\item{loss}{Loss function used.}
-\item{minLoss}{Minimum achieved loss.}
-\item{X}{Original (unnormalized) design matrix.}
-\item{Xnorm}{Normalized design matrix (scaled to \code{[0,1]^d}).}
-\item{Xbounds}{\eqn{d \times 2} matrix defining lower and upper bounds for each input dimension.}
-\item{y}{Observed successes.}
-\item{m}{Binomial counts.}
-\item{alpha0, beta0}{Prior parameters used.}
-\item{alpha.n, beta.n}{Posterior parameters (vector).}
+A list of class \code{"BKP"} containing the fitted model, with the following components:
+\describe{
+\item{\code{bestTheta}}{A numeric vector of optimal kernel hyperparameters (lengthscale), obtained by minimizing the specified loss function.}
+\item{\code{kernel}}{Character string indicating the kernel type used ("gaussian", "matern52", or "matern32").}
+\item{\code{loss}}{Character string specifying the loss function used ("brier" or "log_loss").}
+\item{\code{minLoss}}{The minimum loss value achieved during hyperparameter optimization.}
+\item{\code{X}}{The original input matrix (unnormalized), with dimensions \code{n x d}.}
+\item{\code{Xnorm}}{The normalized input matrix scaled to \code{[0,1]^d}.}
+\item{\code{Xbounds}}{A \code{d x 2} matrix specifying the lower and upper bounds used for normalizing each dimension of \code{X}.}
+\item{\code{y}}{A numeric vector of observed successes (length \code{n}).}
+\item{\code{m}}{A numeric vector of binomial counts/trials (length \code{n}).}
+\item{\code{prior}}{Character string indicating the prior type used ("noninformative", "fixed", or "adaptive").}
+\item{\code{r0}}{Global prior precision parameter (only used for fixed or adaptive priors).}
+\item{\code{p0}}{Global prior mean parameter (only used for fixed priors).}
+\item{\code{alpha0}}{The prior alpha parameters for each input location. A scalar or vector of length \code{n}.}
+\item{\code{beta0}}{The prior beta parameters for each input location. A scalar or vector of length \code{n}.}
+\item{\code{alpha.n}}{Posterior alpha parameters computed as \code{alpha0 + K \%*\% y}.}
+\item{\code{beta.n}}{Posterior beta parameters computed as \code{beta0 + K \%*\% (m - y)}.}
+}
 }
 \description{
 Fits a Beta Kernel Process model for binomial data, estimating latent functions
 representing Beta distribution parameters using kernel smoothing.
 }
 \details{
-The function fits the BKP model by optimizing kernel hyperparameters using multi-start
-local optimization. Inputs are first normalized to the \eqn{[0,1]^d} space defined by \code{Xbounds}.
+The function fits the BKP model and stores everything necessary for prediction.
+The kernel hyper-parameters optimization uses multi-start gradient-based method.
+Inputs are first normalized to the \eqn{[0,1]^d} space defined by \code{Xbounds}.
 The kernel matrix is computed with optimized parameters, and posterior Beta parameters
 \eqn{\alpha_n} and \eqn{\beta_n} are computed by smoothing the observed successes \eqn{y}
 and failures \eqn{m - y} with the kernel matrix:

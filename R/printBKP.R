@@ -76,16 +76,41 @@ print.BKP <- function(x, ...) {
     stop("The input is not of class 'BKP'. Please provide a model fitted with 'fit.BKP()'.")
   }
 
-  BKPmodel <- x
+  n <- nrow(x$X)
+  d <- ncol(x$X)
+  theta <- x$bestTheta
+  kernel <- x$kernel
+  loss <- x$loss
+  minLoss <- x$minLoss
+  prior <- x$prior
+  r0 <- x$r0
+  p0 <- x$p0
 
   cat("--------------------------------------------------\n")
-  cat("         Beta Kernel Process (BKP) Summary        \n")
-  cat("--------------------------------------------------\n\n")
+  cat("           Beta Kernel Process (BKP) Model        \n")
+  cat("--------------------------------------------------\n")
+  cat(sprintf("Number of observations (n):  %d\n", n))
+  cat(sprintf("Input dimensionality (d):    %d\n", d))
+  cat(sprintf("Kernel type:                 %s\n", kernel))
+  cat(sprintf("Loss function used:          %s\n", loss))
+  cat(sprintf("Optimized kernel parameters: %s\n",
+              paste(sprintf("%.4f", theta), collapse = ", ")))
+  cat(sprintf("Minimum achieved loss:       %.5f\n", minLoss))
+  cat("\n")
 
-  cat("Number of Observations (n): ", nrow(BKPmodel$X), "\n")
-  cat("Input Dimensionality (d):   ", ncol(BKPmodel$X), "\n")
-  cat("Kernel Type:                ", BKPmodel$kernel, "\n")
-  cat("Loss Type:                  ", BKPmodel$loss, "\n")
-  cat("Optimized Parameters (θ):   ", paste(round(BKPmodel$bestTheta, 4), collapse = ", "), "\n")
-  cat("Minimum Loss Value:         ", round(BKPmodel$minLoss, 4), "\n\n")
+  cat("Prior specification:\n")
+  cat(sprintf("  Type:    %s\n", prior))
+  if (prior == "adaptive") {
+    cat("  Note:    Data-adaptive informative prior used.\n")
+    cat(sprintf("  r0:      %.3f\n", r0))
+  } else if (prior == "fixed") {
+    cat("  Note:    Fixed informative prior shared across locations.\n")
+    cat(sprintf("  r0:      %.3f\n", r0))
+    cat(sprintf("  p0:      %.3f\n", p0))
+  } else if (prior == "noninformative") {
+    cat("  Note:    Noninformative prior: Beta(1,1).\n")
+  }
+
+  cat("--------------------------------------------------\n")
 }
+
