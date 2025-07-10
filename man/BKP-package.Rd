@@ -4,8 +4,12 @@
 \alias{BKP-package}
 \title{Beta Kernel Process Modeling}
 \description{
-\pkg{BKP} provides tools for modeling binary or binomial response data using the Beta Kernel Process (BKP), a flexible nonparametric method that estimates latent probability surfaces by local kernel smoothing with beta-binomial likelihood.
-The package supports efficient model fitting, prediction with uncertainty quantification, and visualization tools for both 1D and 2D covariates.
+\pkg{BKP} provides tools for modeling binary or binomial
+response data using the Beta Kernel Process (BKP), a flexible nonparametric
+method that estimates latent probability surfaces by local kernel smoothing
+with beta-binomial likelihood. The package supports efficient model
+fitting, prediction with uncertainty quantification, and visualization
+tools for both 1D and 2D covariates.
 }
 \section{Functions}{
 

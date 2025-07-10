@@ -2,13 +2,14 @@
 #'
 #' @title Predict method for Beta Kernel Process (BKP) models
 #'
-#' @description
-#' Generate predictions from a fitted BKP model at new input locations.
+#' @description Generate predictions from a fitted BKP model at new input
+#'   locations.
 #'
 #' @param object A fitted BKP model object returned by \code{\link{fit.BKP}}.
 #' @param Xnew A matrix (or vector) of new input points at which to predict.
 #' @param CI_size Confidence interval level (default = 0.05 for 95% CI).
-#' @param ... Additional arguments passed to generic predict functions (currently not used, included for S3 method consistency).
+#' @param ... Additional arguments passed to generic predict functions
+#'   (currently not used, included for S3 method consistency).
 #'
 #' @return A data frame with columns:
 #' \describe{
@@ -67,8 +68,6 @@
 #'
 #' @export
 #' @method predict BKP
-#' @importFrom stats qbeta
-
 
 predict.BKP <- function(object, Xnew, CI_size = 0.05, ...)
 {

@@ -13,32 +13,33 @@ kernel_matrix(
 )
 }
 \arguments{
-\item{X}{A numeric matrix (or vector) of input locations with shape \eqn{n \times d}.}
+\item{X}{A numeric matrix (or vector) of input locations with shape \eqn{n
+\times d}.}
 
 \item{Xprime}{An optional matrix of input locations (defaults to \code{X}).
 Should have the same number of columns as \code{X}.}
 
-\item{theta}{A positive numeric scalar or vector of length equal to the number of columns
-in \code{X}. Specifies the lengthscale(s).}
+\item{theta}{A positive numeric scalar or vector of length equal to the
+number of columns in \code{X}. Specifies the lengthscale(s).}
 
-\item{kernel}{A character string indicating the kernel type. One of \code{"gaussian"},
-\code{"matern32"}, or \code{"matern52"}.}
+\item{kernel}{A character string indicating the kernel type. One of
+\code{"gaussian"}, \code{"matern32"}, or \code{"matern52"}.}
 
 \item{anisotropic}{Logical. If \code{TRUE} (default), \code{theta} is treated
-as a vector of per-dimension scales. If \code{FALSE},
-\code{theta} is a global scalar lengthscale.}
+as a vector of per-dimension scales. If \code{FALSE}, \code{theta} is a
+global scalar lengthscale.}
 }
 \value{
 A numeric matrix of kernel values of size \eqn{n \times m}, where
-\eqn{n = \mathrm{nrow}(X)} and \eqn{m = \mathrm{nrow}(Xprime)}.
-Each element \eqn{K_{ij}} corresponds to the kernel similarity between
-input \eqn{X_i} and \eqn{Xprime_j}.
+\eqn{n = \mathrm{nrow}(X)} and \eqn{m = \mathrm{nrow}(Xprime)}. Each
+element \eqn{K_{ij}} corresponds to the kernel similarity between input
+\eqn{X_i} and \eqn{Xprime_j}.
 }
 \description{
-Computes the kernel matrix between \code{X} and \code{Xprime} using a specified
-kernel function and length-scale parameters \code{theta}.
-Supports both isotropic and anisotropic length scales.
-Supported kernels include Gaussian, Matern 5/2, and Matern 3/2 kernels.
+Computes the kernel matrix between \code{X} and \code{Xprime}
+using a specified kernel function and length-scale parameters \code{theta}.
+Supports both isotropic and anisotropic length scales. Supported kernels
+include Gaussian, Matern 5/2, and Matern 3/2 kernels.
 }
 \details{
 The kernel functions are defined as follows:
@@ -51,10 +52,11 @@ k_{\text{Matern 5/2}}(\mathbf{x}, \mathbf{x}') = \left(1 + \sqrt{5} r + \frac{5}
 \deqn{
 k_{\text{Matern 3/2}}(\mathbf{x}, \mathbf{x}') = \left(1 + \sqrt{3} r \right) \exp(-\sqrt{3} r)
 }
-where \eqn{r = \| \mathbf{d} \| = \left\| \frac{\mathbf{x} - \mathbf{x}'}{\boldsymbol{\theta}} \right\|} is the scaled Euclidean distance.
+where \eqn{r = \| \mathbf{d} \| = \left\| \frac{\mathbf{x} -
+\mathbf{x}'}{\boldsymbol{\theta}} \right\|} is the scaled Euclidean distance.
 
-The function automatically broadcasts \code{theta} if it is scalar and performs
-input dimension checks.
+The function automatically broadcasts \code{theta} if it is scalar and
+performs input dimension checks.
 }
 \examples{
 
@@ -74,7 +76,8 @@ K4 <- kernel_matrix(X, Xprime, theta = 0.2, kernel = "gaussian")
 
 }
 \references{
-Rasmussen, C. E., & Williams, C. K. I. (2006). Gaussian Processes for Machine Learning. MIT Press.
+Rasmussen, C. E., & Williams, C. K. I. (2006). Gaussian Processes
+for Machine Learning. MIT Press.
 }
 \author{
 Jiangyan Zhao, Kunhai Qing, Jin Xu

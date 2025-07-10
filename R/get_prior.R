@@ -1,17 +1,22 @@
 #' Construct Prior Parameters for Beta Kernel Process (BKP)
 #'
-#' @description
-#' Constructs prior Beta distribution parameters (alpha0 and beta0) at each location
-#' based on user-specified prior type: noninformative, fixed, or data-adaptive.
+#' @description Constructs prior Beta distribution parameters (alpha0 and beta0)
+#' at each location based on user-specified prior type: noninformative, fixed,
+#' or data-adaptive.
 #'
-#' @param prior   Type of prior: one of `"noninformative"`, `"fixed"`, or `"adaptive"`.
-#' @param r0      Global precision parameter (used in `"fixed"` and `"adaptive"`).
-#' @param p0      Global prior mean (used in `"fixed"` prior only; must be in (0,1)).
+#' @param prior   Type of prior: one of `"noninformative"`, `"fixed"`, or
+#'   `"adaptive"`.
+#' @param r0      Global precision parameter (used in `"fixed"` and
+#'   `"adaptive"`).
+#' @param p0      Global prior mean (used in `"fixed"` prior only; must be in
+#'   (0,1)).
 #' @param y       A numeric vector of observed successes.
 #' @param m       A numeric vector of total trials at each location.
-#' @param K       A precomputed kernel matrix (n x n), typically from `kernel_matrix()`.
+#' @param K       A precomputed kernel matrix (n x n), typically from
+#'   `kernel_matrix()`.
 #'
-#' @return A list with two numeric vectors: `alpha0` and `beta0` (each of length n).
+#' @return A list with two numeric vectors: `alpha0` and `beta0` (each of length
+#'   n).
 #'
 #' @examples
 #' # Simulated data

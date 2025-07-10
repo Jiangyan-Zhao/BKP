@@ -2,57 +2,72 @@
 #'
 #' @title Fit a Beta Kernel Process (BKP) Model for Binomial Observations
 #'
-#' @description
-#' Fits a Beta Kernel Process model for binomial data, estimating latent functions
-#' representing Beta distribution parameters using kernel smoothing.
+#' @description Fits a Beta Kernel Process model for binomial data, estimating
+#'   latent functions representing Beta distribution parameters using kernel
+#'   smoothing.
 #'
-#' @param data Optional data frame containing covariates \code{X}, observations \code{y}, and counts \code{m}
-#'   in the first \eqn{d}, \eqn{d+1}, and \eqn{d+2} columns, respectively.
-#' @param X Covariate matrix of size \eqn{n \times d}. Ignored if \code{data} is provided.
-#' @param y Vector of observed successes. Must be numeric with length equal to number of rows in \code{X}.
-#' @param m Vector of binomial counts (trials). Must be numeric, positive, and same length as \code{y}.
-#' @param Xbounds Optional \eqn{d \times 2} matrix defining lower and upper bounds for each input dimension
-#'   (used for normalization). Defaults to \code{[0,1]^d}.
+#' @param data Optional data frame containing covariates \code{X}, observations
+#'   \code{y}, and counts \code{m} in the first \eqn{d}, \eqn{d+1}, and
+#'   \eqn{d+2} columns, respectively.
+#' @param X Covariate matrix of size \eqn{n \times d}. Ignored if \code{data} is
+#'   provided.
+#' @param y Vector of observed successes. Must be numeric with length equal to
+#'   number of rows in \code{X}.
+#' @param m Vector of binomial counts (trials). Must be numeric, positive, and
+#'   same length as \code{y}.
+#' @param Xbounds Optional \eqn{d \times 2} matrix defining lower and upper
+#'   bounds for each input dimension (used for normalization). Defaults to
+#'   \code{[0,1]^d}.
 #' @param prior Type of prior used: "noninformative", "fixed", or "adaptive".
 #' @param r0 Global precision parameter used in prior specification.
 #' @param p0 Global prior mean used when prior = "fixed".
-#' @param kernel Character string specifying the kernel function to use: one of \code{"gaussian"},
-#'   \code{"matern52"}, or \code{"matern32"}.
-#' @param loss Loss function to be minimized during hyperparameter tuning. Choose between \code{"brier"}
-#'   (default) and \code{"NLML"} (negative log marginal likelihood).
-#' @param num_multi_start Number of initial points for multi-start optimization (default = 10*d).
+#' @param kernel Character string specifying the kernel function to use: one of
+#'   \code{"gaussian"}, \code{"matern52"}, or \code{"matern32"}.
+#' @param loss Loss function to be minimized during hyperparameter tuning.
+#'   Choose between \code{"brier"} (default) and \code{"NLML"} (negative log
+#'   marginal likelihood).
+#' @param num_multi_start Number of initial points for multi-start optimization
+#'   (default = 10*d).
 #'
-#' @details
-#' The function fits the BKP model and stores everything necessary for prediction.
-#' The kernel hyper-parameters optimization uses multi-start gradient-based method.
-#' Inputs are first normalized to the \eqn{[0,1]^d} space defined by \code{Xbounds}.
-#' The kernel matrix is computed with optimized parameters, and posterior Beta parameters
-#' \eqn{\alpha_n} and \eqn{\beta_n} are computed by smoothing the observed successes \eqn{y}
-#' and failures \eqn{m - y} with the kernel matrix:
+#' @details The function fits the BKP model and stores everything necessary for
+#'   prediction. The kernel hyper-parameters optimization uses multi-start
+#'   gradient-based method. Inputs are first normalized to the \eqn{[0,1]^d}
+#'   space defined by \code{Xbounds}. The kernel matrix is computed with
+#'   optimized parameters, and posterior Beta parameters \eqn{\alpha_n} and
+#'   \eqn{\beta_n}
+#' are computed by smoothing the observed successes \eqn{y} and failures \eqn{m
+#' - y} with the kernel matrix:
 #' \deqn{
 #' \alpha_n = \alpha_0 + K \cdot y, \quad
 #' \beta_n = \beta_0 + K \cdot (m - y)
 #' }
 #' where \eqn{K} is the kernel matrix evaluated at normalized inputs.
 #'
-#' @return A list of class \code{"BKP"} containing the fitted model, with the following components:
+#' @return A list of class \code{"BKP"} containing the fitted model, with the
+#'   following components:
 #' \describe{
-#'   \item{\code{bestTheta}}{A numeric vector of optimal kernel hyperparameters (lengthscale), obtained by minimizing the specified loss function.}
-#'   \item{\code{kernel}}{Character string indicating the kernel type used ("gaussian", "matern52", or "matern32").}
+#'   \item{\code{bestTheta}}{A numeric vector of optimal kernel hyperparameters (lengthscale),
+#'      obtained by minimizing the specified loss function.}
+#'   \item{\code{kernel}}{Character string indicating the kernel type used
+#'      ("gaussian", "matern52", or "matern32").}
 #'   \item{\code{loss}}{Character string specifying the loss function used ("brier" or "log_loss").}
 #'   \item{\code{minLoss}}{The minimum loss value achieved during hyperparameter optimization.}
 #'   \item{\code{X}}{The original input matrix (unnormalized), with dimensions \code{n x d}.}
 #'   \item{\code{Xnorm}}{The normalized input matrix scaled to \code{[0,1]^d}.}
-#'   \item{\code{Xbounds}}{A \code{d x 2} matrix specifying the lower and upper bounds used for normalizing each dimension of \code{X}.}
+#'   \item{\code{Xbounds}}{A \code{d x 2} matrix specifying the lower and upper bounds
+#'      used for normalizing each dimension of \code{X}.}
 #'   \item{\code{y}}{A numeric vector of observed successes (length \code{n}).}
 #'   \item{\code{m}}{A numeric vector of binomial counts/trials (length \code{n}).}
-#'   \item{\code{prior}}{Character string indicating the prior type used ("noninformative", "fixed", or "adaptive").}
+#'   \item{\code{prior}}{Character string indicating the prior type used
+#'      ("noninformative", "fixed", or "adaptive").}
 #'   \item{\code{r0}}{Global prior precision parameter (only used for fixed or adaptive priors).}
 #'   \item{\code{p0}}{Global prior mean parameter (only used for fixed priors).}
-#'   \item{\code{alpha0}}{The prior alpha parameters for each input location. A scalar or vector of length \code{n}.}
-#'   \item{\code{beta0}}{The prior beta parameters for each input location. A scalar or vector of length \code{n}.}
-#'   \item{\code{alpha.n}}{Posterior alpha parameters computed as \code{alpha0 + K \%*\% y}.}
-#'   \item{\code{beta.n}}{Posterior beta parameters computed as \code{beta0 + K \%*\% (m - y)}.}
+#'   \item{\code{alpha0}}{The prior alpha parameters for each input location.
+#'      A scalar or vector of length \code{n}.}
+#'   \item{\code{beta0}}{The prior beta parameters for each input location.
+#'      A scalar or vector of length \code{n}.}
+#'   \item{\code{alpha_n}}{Posterior alpha parameters computed as \code{alpha0 + K \%*\% y}.}
+#'   \item{\code{beta_n}}{Posterior beta parameters computed as \code{beta0 + K \%*\% (m - y)}.}
 #' }
 #'
 #' @author Jiangyan Zhao, Kunhai Qing, Jin Xu
@@ -106,8 +121,6 @@
 #' print(model)
 #'
 #' @export
-#' @importFrom tgp lhs
-#' @importFrom optimx multistart
 
 fit.BKP <- function(
     data, X = NULL, y = NULL, m = NULL, Xbounds = NULL,
@@ -116,7 +129,6 @@ fit.BKP <- function(
     loss = c("brier", "log_loss"),
     num_multi_start = NULL
 ){
-
   # Parse arguments
   prior <- match.arg(prior)
   kernel <- match.arg(kernel)
@@ -169,7 +181,7 @@ fit.BKP <- function(
   initialGamma <- lhs(num_multi_start, gammaBounds)
   res <- multistart(
     parmat = initialGamma,
-    fn     = lossFun,
+    fn     = loss_fun,
     method = "L-BFGS-B",
     # lower  = gammaBounds[,1], upper  = gammaBounds[,2],
     lower  = rep(-10, d), upper  = rep(10, d),
@@ -193,8 +205,8 @@ fit.BKP <- function(
   beta0 <- prior_par$beta0
 
   # Compute posterior Beta parameters using kernel smoothing
-  alpha.n <- alpha0 + as.vector(K %*% y)
-  beta.n <- beta0 + as.vector(K %*% (m - y))
+  alpha_n <- alpha0 + as.vector(K %*% y)
+  beta_n <- beta0 + as.vector(K %*% (m - y))
 
   # Construct the 'BKP' model object as a list.
   # This list contains all essential information about the fitted model.
@@ -203,7 +215,7 @@ fit.BKP <- function(
     loss = loss, minLoss = minLoss,
     X = X, Xnorm = Xnorm, Xbounds = Xbounds, y = y, m = m,
     prior = prior, r0 = r0, p0 = p0, alpha0 = alpha0, beta0 = beta0,
-    alpha.n = alpha.n, beta.n = beta.n
+    alpha_n = alpha_n, beta_n = beta_n
   )
 
   # Assign the "BKP" class to the object, enabling S3 generic methods.

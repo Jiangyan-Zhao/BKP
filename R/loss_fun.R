@@ -2,10 +2,9 @@
 #'
 #' @title Loss Function for BKP Model Fitting
 #'
-#' @description
-#' Computes the loss used for fitting the Beta Kernel Process (BKP) model.
-#' Supports Brier score (mean squared error) or log-loss (cross-entropy),
-#' under different prior specifications.
+#' @description Computes the loss used for fitting the Beta Kernel Process (BKP)
+#'   model. Supports Brier score (mean squared error) or log-loss
+#'   (cross-entropy), under different prior specifications.
 #'
 #' @param gamma A numeric vector of kernel hyperparameters (on the log scale).
 #' @param Xnorm A normalized input matrix (each column scaled \code{[0,1]}).
@@ -22,17 +21,18 @@
 #' @author Jiangyan Zhao, Kunhai Qing, Jin Xu
 #'
 #' @examples
-#' lossFun(gamma = rep(0, 2),
+#' loss_fun(gamma = rep(0, 2),
 #'         Xnorm = matrix(runif(20), ncol=2),
 #'         y = rbinom(10, 10, 0.5),
 #'         m = rep(10, 10))
 #'
 #' @export
 
-lossFun <- function(gamma, Xnorm, y, m,
-                    prior = c("noninformative", "fixed", "adaptive"), r0 = 2, p0 = 0.5,
-                    loss = c("brier", "log_loss"),
-                    kernel = c("gaussian", "matern52", "matern32"))
+loss_fun <- function(
+    gamma, Xnorm, y, m,
+    prior = c("noninformative", "fixed", "adaptive"), r0 = 2, p0 = 0.5,
+    loss = c("brier", "log_loss"),
+    kernel = c("gaussian", "matern52", "matern32"))
 {
   # Match and validate the loss and kernel arguments
   prior <- match.arg(prior)

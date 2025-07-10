@@ -2,16 +2,19 @@
 #'
 #' @title Plot a Beta Kernel Process (BKP) Model
 #'
-#' @description
-#' Visualizes the fitted Beta Kernel Process (BKP) model according to the dimensionality of the covariate matrix `X`.
-#' For 1-dimensional input, the function plots the estimated probability curve with confidence intervals and observed data points.
-#' For 2-dimensional input, it produces contour plots for the estimated mean, confidence bounds, and uncertainty.
+#' @description Visualizes the fitted Beta Kernel Process (BKP) model according
+#'   to the dimensionality of the covariate matrix `X`. For 1-dimensional input,
+#'   the function plots the estimated probability curve with confidence
+#'   intervals and observed data points. For 2-dimensional input, it produces
+#'   contour plots for the estimated mean, confidence bounds, and uncertainty.
 #'
-#' @param x An object of class \code{"BKP"}, typically returned by the \code{\link{fit.BKP}} function.
-#' @param ... Additional arguments passed to generic plot functions (currently not used, included for S3 method consistency).
+#' @param x An object of class \code{"BKP"}, typically returned by the
+#'   \code{\link{fit.BKP}} function.
+#' @param ... Additional arguments passed to generic plot functions (currently
+#'   not used, included for S3 method consistency).
 #'
-#' @details
-#' The plotting behavior depends on the dimensionality of the covariates \code{X} in the fitted BKP model:
+#' @details The plotting behavior depends on the dimensionality of the
+#'   covariates \code{X} in the fitted BKP model:
 #' \itemize{
 #'   \item \strong{1D covariates:} Produces a line plot of the predicted probability across the input domain.
 #'         A shaded region represents the confidence interval (default 95%), and the observed proportions \code{y/m}
@@ -20,13 +23,13 @@
 #'         lower bound, and the width of the confidence interval (uncertainty).
 #' }
 #'
-#' If the dimension of \code{X} exceeds 2, the function will stop with an informative error.
+#'   If the dimension of \code{X} exceeds 2, the function will stop with an
+#'   informative error.
 #'
 #' @author Jiangyan Zhao, Kunhai Qing, Jin Xu
 #'
-#' @seealso
-#' \code{\link{fit.BKP}} for fitting a BKP model.
-#' \code{\link{predict.BKP}} for generating predictions from a BKP model.
+#' @seealso \code{\link{fit.BKP}} for fitting a BKP model.
+#'   \code{\link{predict.BKP}} for generating predictions from a BKP model.
 #'
 #' @keywords BKP
 #'
@@ -83,11 +86,6 @@
 #'
 #' @export
 #' @method plot BKP
-#' @importFrom lattice levelplot panel.levelplot panel.contourplot
-#' @importFrom gridExtra grid.arrange
-#' @importFrom grDevices hcl.colors
-#' @importFrom graphics legend lines points polygon
-#' @importFrom stats as.formula
 
 plot.BKP <- function(x, ...){
   if (!inherits(x, "BKP")) {
@@ -116,7 +114,7 @@ plot.BKP <- function(x, ...){
     plot(pred$x1, pred$mean,
          type = "l", col = "blue", lwd = 2,
          xlab = "x (Input Variable)", ylab = "Probability",
-         main = "BKP Estimated Probability",
+         main = "Estimated Probability",
          xlim = Xbounds,
          ylim = c(max(0, min(pred$mean)-0.1),
                   min(1, max(pred$mean)+0.1)))
@@ -152,7 +150,7 @@ plot.BKP <- function(x, ...){
                      # Width = pred$upper - pred$lower)
 
     # Helper to build each plot
-    plot_fun <- function(var, title, pal = "plasma") {
+    plot_fun <- function(var, title, pal = "plasma", ...) {
       levelplot(
         as.formula(paste(var, "~ x1 * x2")),
         data = df,
