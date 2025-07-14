@@ -33,7 +33,7 @@
 #' @importFrom gridExtra grid.arrange
 #' @importFrom grDevices hcl.colors
 #' @importFrom graphics legend lines points polygon
-#' @importFrom stats as.formula qbeta
+#' @importFrom stats as.formula qbeta rbeta
 #' @importFrom tgp lhs
 #' @importFrom optimx multistart
 NULL

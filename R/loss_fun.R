@@ -1,4 +1,4 @@
-#' @name lossFun
+#' @name loss_fun
 #'
 #' @title Loss Function for BKP Model Fitting
 #'

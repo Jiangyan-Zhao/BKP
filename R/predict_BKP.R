@@ -8,6 +8,7 @@
 #' @param object A fitted BKP model object returned by \code{\link{fit.BKP}}.
 #' @param Xnew A matrix (or vector) of new input points at which to predict.
 #' @param CI_size Confidence interval level (default = 0.05 for 95% CI).
+#' @param threshold Classification threshold for posterior mean (default = 0.5).
 #' @param ... Additional arguments passed to generic predict functions
 #'   (currently not used, included for S3 method consistency).
 #'
@@ -18,6 +19,7 @@
 #'   \item{variance}{Posterior variance}
 #'   \item{lower}{Lower bound of CI for success probability}
 #'   \item{upper}{Upper bound of CI for success probability}
+#'   \item{class}{(Optional) Predicted binary label if all trials are \( m_i = 1 \)}
 #' }
 #'
 #' @author Jiangyan Zhao, Kunhai Qing, Jin Xu
@@ -69,7 +71,7 @@
 #' @export
 #' @method predict BKP
 
-predict.BKP <- function(object, Xnew, CI_size = 0.05, ...)
+predict.BKP <- function(object, Xnew, CI_size = 0.05, threshold = 0.5, ...)
 {
   if (!inherits(object, "BKP")) {
     stop("The input is not of class 'BKP'. Please provide a model fitted with 'fit.BKP()'.")
@@ -122,9 +124,22 @@ predict.BKP <- function(object, Xnew, CI_size = 0.05, ...)
   pi_lower <- qbeta(CI_size / 2, alpha_n, beta_n)
   pi_upper <- qbeta(1 - CI_size / 2, alpha_n, beta_n)
 
-  prediction <- data.frame(Xnew, mean = pi_mean, variance = pi_var,
-                           lower = pi_lower, upper = pi_upper)
+
+  # Output
+  prediction <- data.frame(Xnew,
+                           mean = pi_mean,
+                           variance = pi_var,
+                           lower = pi_lower,
+                           upper = pi_upper)
   names(prediction)[1:d] <- paste0("x", 1:d)
+
+  # Posterior classification label (only for classification data)
+  if (all(m == 1)) {
+    class_pred <- ifelse(pi_mean > threshold, 1, 0)
+    prediction$class <- class_pred
+  } else {
+    class_pred <- NA  # not defined for m_i > 1
+  }
 
   return(prediction)
 }
