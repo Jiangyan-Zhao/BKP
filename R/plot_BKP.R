@@ -10,6 +10,7 @@
 #'
 #' @param x An object of class \code{"BKP"}, typically returned by the
 #'   \code{\link{fit.BKP}} function.
+#' @param only_mean Only plot the predicted mean graphs (for 2D).
 #' @param ... Additional arguments passed to generic plot functions (currently
 #'   not used, included for S3 method consistency).
 #'
@@ -87,7 +88,7 @@
 #' @export
 #' @method plot BKP
 
-plot.BKP <- function(x, ...){
+plot.BKP <- function(x, only_mean = FALSE, ...){
   if (!inherits(x, "BKP")) {
     stop("The input is not of class 'BKP'. Please provide a model fitted with 'fit.BKP()'.")
   }
@@ -169,15 +170,21 @@ plot.BKP <- function(x, ...){
       )
     }
 
-    # Create 4 plots
-    p1 <- plot_fun("Mean", "Predictive Mean")
-    p2 <- plot_fun("Upper", "95% CI Upper")
-    p3 <- plot_fun("Variance", "Predictive Variance")
-    # p3 <- plot_fun("Width", "CI Width")
-    p4 <- plot_fun("Lower", "95% CI Lower")
+    if (only_mean) {
+      # Only plot the predicted mean graphs
+      p <- plot_fun("mean", "Predictive Mean")
+      print(p)
+    } else {
+      # Create 4 plots
+      p1 <- plot_fun("Mean", "Predictive Mean")
+      p2 <- plot_fun("Upper", "95% CI Upper")
+      p3 <- plot_fun("Variance", "Predictive Variance")
+      # p3 <- plot_fun("Width", "CI Width")
+      p4 <- plot_fun("Lower", "95% CI Lower")
 
-    # Arrange into 2×2 layout
-    grid.arrange(p1, p2, p3, p4, ncol = 2)
+      # Arrange into 2×2 layout
+      grid.arrange(p1, p2, p3, p4, ncol = 2)
+    }
   } else {
     # --- Error handling for higher dimensions ---
     stop("plot.BKP() only supports data where the dimensionality of X is 1 or 2.")

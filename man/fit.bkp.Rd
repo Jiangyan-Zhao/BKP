@@ -5,7 +5,7 @@
 \title{Fit a Beta Kernel Process (BKP) Model for Binomial Observations}
 \usage{
 fit.BKP(
-  data,
+  data = NULL,
   X = NULL,
   y = NULL,
   m = NULL,

@@ -123,7 +123,7 @@
 #' @export
 
 fit.BKP <- function(
-    data, X = NULL, y = NULL, m = NULL, Xbounds = NULL,
+    data = NULL, X = NULL, y = NULL, m = NULL, Xbounds = NULL,
     prior = c("noninformative", "fixed", "adaptive"), r0 = 2, p0 = 0.5,
     kernel = c("gaussian", "matern52", "matern32"),
     loss = c("brier", "log_loss"),

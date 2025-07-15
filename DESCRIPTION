@@ -2,16 +2,18 @@ Package: BKP
 Title: Beta Kernel Process
 Version: 0.1.0
 Authors@R: c(person(given = "Jiangyan", family = "Zhao", email = "zhaojy2017@126.com", role = c("aut", "cre")),
-    person(given = "Kunhai", family = "Qing", email = "kunhaiq@qq.com", role = c("aut")),
+    person(given = "Kunhai", family = "Qing", email = "kunhaiq@qq.com", role = "aut"),
     person(given = "Jin", family = "Xu", email = "jxu@stat.ecnu.edu.cn", role = "aut")
   )
+Author: Jiangyan Zhao [cre, aut], Kunhai Qing [aut], Jin Xu [aut]
 Maintainer: Jiangyan Zhao <zhaojy2017@126.com>
-Description: Implements the Beta Kernel Profile (BKP) model for nonparametric probability 
-    function estimation. The package provides methods for model fitting, prediction, 
-    and visualization. Key features include support for multiple kernel functions 
-    (Gaussian, Matern 5/2, Matern 3/2) and efficient optimization routines. Suitable for 
-    applications in computational statistics and machine learning where flexible probability 
-    surface estimation is required.
+Description: Implements the Beta Kernel Process (BKP) model for nonparametric estimation
+    of binomial and binary success probabilities. The package supports model fitting,
+    prediction with uncertainty quantification, simulation from the fitted model,
+    and visualization. It includes support for several kernel functions (Gaussian,
+    Matérn 5/2, and Matérn 3/2) and efficient hyperparameter optimization via multi-start
+    gradient-based algorithms. BKP is useful for probabilistic modeling in spatial
+    statistics, machine learning, and experimental design.
 License: GPL-3
 URL: https://github.com/Jiangyan-Zhao/BKP
 BugReports: https://github.com/Jiangyan-Zhao/BKP/issues
@@ -20,12 +22,14 @@ LazyData: true
 NeedsCompilation: no
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
-Imports: optimx, tgp, lattice, gridExtra
 Depends: R (>= 3.5.0)
-Suggests: 
+Imports:
+    optimx,
+    tgp,
+    lattice,
+    gridExtra
+Suggests:
     stats,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
-Author: Jiangyan Zhao [cre, aut],
-  Kunhai Qing [aut],
-  Jin Xu [aut].
+

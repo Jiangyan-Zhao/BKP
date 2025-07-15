@@ -5,11 +5,13 @@
 \alias{plot.BKP}
 \title{Plot a Beta Kernel Process (BKP) Model}
 \usage{
-\method{plot}{BKP}(x, ...)
+\method{plot}{BKP}(x, only_mean = FALSE, ...)
 }
 \arguments{
 \item{x}{An object of class \code{"BKP"}, typically returned by the
 \code{\link{fit.BKP}} function.}
+
+\item{only_mean}{Only plot the predicted mean graphs (for 2D).}
 
 \item{...}{Additional arguments passed to generic plot functions (currently
 not used, included for S3 method consistency).}

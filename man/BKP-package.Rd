@@ -6,27 +6,31 @@
 \description{
 \pkg{BKP} provides tools for modeling binary or binomial
 response data using the Beta Kernel Process (BKP), a flexible nonparametric
-method that estimates latent probability surfaces by local kernel smoothing
-with beta-binomial likelihood. The package supports efficient model
-fitting, prediction with uncertainty quantification, and visualization
-tools for both 1D and 2D covariates.
+method that estimates latent probability surfaces via local kernel smoothing
+under a beta-binomial framework. The package supports efficient model
+fitting, probabilistic prediction with uncertainty quantification, and
+visualization tools for 1D and 2D input spaces. It also provides simulation
+utilities for generating synthetic data from a fitted model.
 }
 \section{Functions}{
 
-
 Key functions included in the package:
 \describe{
-\item{\link{fit.BKP}}{
+\item{\link{fit.BKP}, \link{fit.DKP}}{
 Fit a BKP model to binomial or binary response data.
 }
-\item{\link{predict.BKP}}{
-Predict response probabilities and compute credible/confidence intervals at new input locations.
+\item{\link{predict.BKP}, \link{predict.DKP}}{
+Predict success probabilities and confidence/credible intervals at new input locations.
+Classification labels are automatically returned when \code{m = 1} for all training data.
 }
-\item{\link{plot.BKP}}{
+\item{\link{simulate.BKP}, \link{simulate.DKP}}{
+Generate simulated binary or binomial responses from a fitted BKP model.
+}
+\item{\link{plot.BKP}, \link{plot.DKP}}{
 Visualize fitted BKP models for 1D or 2D inputs.
 }
-\item{\link{print.BKP}, \link{summary.BKP}}{
-Print or summarize the BKP model fit results.
+\item{\link{print.BKP}, \link{print.DKP}, \link{summary.BKP}, \link{summary.DKP}}{
+Print or summarize model fit results.
 }
 }
 }

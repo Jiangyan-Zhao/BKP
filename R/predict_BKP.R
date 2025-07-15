@@ -137,8 +137,6 @@ predict.BKP <- function(object, Xnew, CI_size = 0.05, threshold = 0.5, ...)
   if (all(m == 1)) {
     class_pred <- ifelse(pi_mean > threshold, 1, 0)
     prediction$class <- class_pred
-  } else {
-    class_pred <- NA  # not defined for m_i > 1
   }
 
   return(prediction)
