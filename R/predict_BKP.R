@@ -31,14 +31,13 @@
 #' set.seed(123)
 #' n <- 30
 #' Xbounds <- matrix(c(-2,2), nrow=1)
-#' x <- seq(-2, 2, length = n)
-#' true_pi <- (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
+#' x <- tgp::lhs(n = n, rect = Xbounds)
 #' m <- sample(100, n, replace = TRUE)
+#' true_pi <- (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
 #' y <- rbinom(n, size = m, prob = true_pi)
-#' df <- data.frame(x = x, y = y, m = m)
+#' model1 <- fit.BKP(x, y, m, Xbounds=Xbounds)
 #' xx = matrix(seq(-2, 2, length = 100), ncol=1) #new data points
-#' model <- fit.BKP(df, Xbounds=Xbounds)
-#' head(predict(model,xx))
+#' head(predict(model1,xx))
 #'
 #' ### 2D
 #' set.seed(123)
@@ -58,15 +57,14 @@
 #'   return(f) }
 #' Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
 #' x <- tgp::lhs(n = n, rect = Xbounds)
-#' true_pi <- pnorm(f(x))
 #' m <- sample(100, n, replace = TRUE)
+#' true_pi <- pnorm(f(x))
 #' y <- rbinom(n, size = m, prob = true_pi)
-#' df <- data.frame(x = x, y = y, m = m)
+#' model2 <- fit.BKP(x, y, m)
 #' xx1 <- seq(Xbounds[1,1], Xbounds[1,2], length.out = 100)
 #' xx2 <- seq(Xbounds[2,1], Xbounds[2,2], length.out = 100)
 #' xx <- expand.grid(xx1 = xx1, xx2 = xx2)
-#' model <- fit.BKP(df)
-#' head(predict(model,xx))
+#' head(predict(model2,xx))
 #'
 #' @export
 #' @method predict BKP
@@ -83,7 +81,7 @@ predict.BKP <- function(object, Xnew, CI_size = 0.05, threshold = 0.5, ...)
   Xnorm   <- BKPmodel$Xnorm
   y       <- BKPmodel$y
   m       <- BKPmodel$m
-  theta   <- BKPmodel$bestTheta
+  theta   <- BKPmodel$theta_opt
   kernel  <- BKPmodel$kernel
   prior   <- BKPmodel$prior
   r0      <- BKPmodel$r0
@@ -135,8 +133,7 @@ predict.BKP <- function(object, Xnew, CI_size = 0.05, threshold = 0.5, ...)
 
   # Posterior classification label (only for classification data)
   if (all(m == 1)) {
-    class_pred <- ifelse(pi_mean > threshold, 1, 0)
-    prediction$class <- class_pred
+    prediction$class <- ifelse(pi_mean > threshold, 1, 0)
   }
 
   return(prediction)

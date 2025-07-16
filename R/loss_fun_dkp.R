@@ -29,10 +29,11 @@
 #' @export
 
 
-loss_fun_dkp <- function(gamma, Xnorm, Y,
-                    prior = c("noninformative", "fixed", "adaptive"), r0, p0,
-                    loss = c("brier", "log_loss"),
-                    kernel = c("gaussian", "matern52", "matern32"))
+loss_fun_dkp <- function(
+    gamma, Xnorm, Y,
+    prior = c("noninformative", "fixed", "adaptive"), r0 = 2, p0 = NULL,
+    loss = c("brier", "log_loss"),
+    kernel = c("gaussian", "matern52", "matern32"))
 {
   # Match and validate the loss and kernel arguments
   prior <- match.arg(prior)
@@ -49,14 +50,8 @@ loss_fun_dkp <- function(gamma, Xnorm, Y,
   diag(K) <- 0  # Leave-One-Out Cross-Validation (LOOCV)
 
   # get the prior parameters: alpha0(x) and beta0(x)
-  prior_par <- get_prior_dkp(
-    prior = prior, r0 = r0, p0 = p0,
-    Y = Y, K = K
-  )
-  alpha0 <- prior_par$alpha0
-  if (prior == "noninformative" || prior == "fixed"){
-    alpha0 <- matrix(rep(alpha0,n),nrow = n , byrow = T)
-  }
+  alpha0 <- get_prior_dkp(prior = prior, r0 = r0, p0 = p0, Y = Y, K = K)
+
   # Compute posterior alpha
   alpha_n <- as.matrix(alpha0) + as.matrix(K %*% Y)
 

@@ -24,19 +24,16 @@
 #' @keywords BKP
 #'
 #' @examples
-#' \dontrun{
 #' ### 1D
 #' set.seed(123)
-#' n <- 100
+#' n <- 30
 #' Xbounds <- matrix(c(-2,2), nrow=1)
-#' x <- seq(-2, 2, length = n)
-#' true_pi <- (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
+#' x <- tgp::lhs(n = n, rect = Xbounds)
 #' m <- sample(100, n, replace = TRUE)
+#' true_pi <- (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
 #' y <- rbinom(n, size = m, prob = true_pi)
-#' df <- data.frame(x = x, y = y, m = m)
-#' xx = matrix(seq(-2, 2, length = 100), ncol=1) #new data points
-#' model <- fit.BKP(df, Xbounds=Xbounds)
-#' print(model)
+#' model1 <- fit.BKP(x, y, m, Xbounds=Xbounds)
+#' print(model1)
 #'
 #' ### 2D
 #' set.seed(123)
@@ -55,18 +52,12 @@
 #'   f <- (f- m)/s
 #'   return(f) }
 #' Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
-#' library(tgp)
-#' x <- lhs(n = n, rect = Xbounds)
-#' true_pi <- pnorm(f(x))
+#' x <- tgp::lhs(n = n, rect = Xbounds)
 #' m <- sample(100, n, replace = TRUE)
+#' true_pi <- pnorm(f(x))
 #' y <- rbinom(n, size = m, prob = true_pi)
-#' df <- data.frame(x = x, y = y, m = m)
-#' xx1 <- seq(Xbounds[1,1], Xbounds[1,2], length.out = 100)
-#' xx2 <- seq(Xbounds[2,1], Xbounds[2,2], length.out = 100)
-#' xx <- expand.grid(xx1 = xx1, xx2 = xx2)
-#' model <- fit.BKP(df)
-#' print(model)
-#' }
+#' model2 <- fit.BKP(x, y, m)
+#' print(model2)
 #'
 #' @export
 #' @method print BKP
@@ -78,10 +69,10 @@ print.BKP <- function(x, ...) {
 
   n <- nrow(x$X)
   d <- ncol(x$X)
-  theta <- x$bestTheta
+  theta <- x$theta_opt
   kernel <- x$kernel
   loss <- x$loss
-  minLoss <- x$minLoss
+  loss_min <- x$loss_min
   prior <- x$prior
   r0 <- x$r0
   p0 <- x$p0
@@ -95,20 +86,19 @@ print.BKP <- function(x, ...) {
   cat(sprintf("Loss function used:          %s\n", loss))
   cat(sprintf("Optimized kernel parameters: %s\n",
               paste(sprintf("%.4f", theta), collapse = ", ")))
-  cat(sprintf("Minimum achieved loss:       %.5f\n", minLoss))
+  cat(sprintf("Minimum achieved loss:       %.5f\n", loss_min))
   cat("\n")
 
   cat("Prior specification:\n")
-  cat(sprintf("  Type:    %s\n", prior))
   if (prior == "adaptive") {
-    cat("  Note:    Data-adaptive informative prior used.\n")
+    cat("  Data-adaptive informative prior used.\n")
     cat(sprintf("  r0:      %.3f\n", r0))
   } else if (prior == "fixed") {
-    cat("  Note:    Fixed informative prior shared across locations.\n")
+    cat("  Fixed informative prior shared across locations.\n")
     cat(sprintf("  r0:      %.3f\n", r0))
     cat(sprintf("  p0:      %.3f\n", p0))
   } else if (prior == "noninformative") {
-    cat("  Note:    Noninformative prior: Beta(1,1).\n")
+    cat("  Noninformative prior: Beta(1,1).\n")
   }
 
   cat("--------------------------------------------------\n")

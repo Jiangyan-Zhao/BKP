@@ -6,9 +6,9 @@
 \usage{
 get_prior_dkp(
   prior = c("noninformative", "fixed", "adaptive"),
-  r0,
-  p0,
-  Y,
+  r0 = 2,
+  p0 = NULL,
+  Y = NULL,
   K = NULL
 )
 }
@@ -27,9 +27,33 @@ get_prior_dkp(
 A list with a numeric vectors: \code{alpha0} (of length n).
 }
 \description{
-Constructs prior Beta distribution parameters (alpha0 and beta0) at each location
+Constructs prior Dirichlet distribution parameters (alpha0) at each location
 based on user-specified prior type: noninformative, fixed, or data-adaptive.
 }
 \examples{
-get_prior_dkp(prior = "noninformative", Y = rep(1,3))
+# Simulated multi-class data
+set.seed(123)
+n <- 15           # number of training points
+p <- 3            # number of classes
+X <- matrix(runif(n * 2), ncol = 2)
+
+# Simulate class probabilities and draw multinomial counts
+true_pi <- t(apply(X, 1, function(x) {
+  raw <- c(
+    exp(-sum((x - 0.2)^2)),
+    exp(-sum((x - 0.5)^2)),
+    exp(-sum((x - 0.8)^2))
+  )
+  raw / sum(raw)
+}))
+m <- sample(10:20, n, replace = TRUE)
+Y <- t(apply(true_pi, 1, function(p) rmultinom(1, size = sample(10:20, 1), prob = p)))
+
+# Compute kernel matrix (e.g., Gaussian)
+K <- kernel_matrix(X, theta = rep(0.2, 2), kernel = "gaussian")
+
+# Construct prior (adaptive)
+prior_dkp <- get_prior_dkp(prior = "adaptive", r0 = 2, Y = Y, K = K)
+str(prior_dkp)
+
 }

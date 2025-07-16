@@ -37,17 +37,14 @@
 #' @examples
 #' ### 1D
 #' set.seed(123)
-#' n <- 100
+#' n <- 30
 #' Xbounds <- matrix(c(-2,2), nrow=1)
-#' x <- seq(-2, 2, length = n)
-#' true_pi <- (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
+#' x <- tgp::lhs(n = n, rect = Xbounds)
 #' m <- sample(100, n, replace = TRUE)
+#' true_pi <- (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
 #' y <- rbinom(n, size = m, prob = true_pi)
-#' df <- data.frame(x = x, y = y, m = m)
-#' xx = matrix(seq(-2, 2, length = 100), ncol=1) #new data points
-#' model <- fit.BKP(df, Xbounds=Xbounds)
-#' head(predict(model,xx))
-#' plot(model)
+#' model1 <- fit.BKP(x, y, m, Xbounds=Xbounds)
+#' plot(model1)
 #'
 #' ### 2D
 #' set.seed(123)
@@ -66,24 +63,12 @@
 #'   f <- (f- m)/s
 #'   return(f) }
 #' Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
-#' library(tgp)
-#' x <- lhs(n = n, rect = Xbounds)
-#' true_pi <- pnorm(f(x))
+#' x <- tgp::lhs(n = n, rect = Xbounds)
 #' m <- sample(100, n, replace = TRUE)
+#' true_pi <- pnorm(f(x))
 #' y <- rbinom(n, size = m, prob = true_pi)
-#' df <- data.frame(x = x, y = y, m = m)
-#' xx1 <- seq(Xbounds[1,1], Xbounds[1,2], length.out = 100)
-#' xx2 <- seq(Xbounds[2,1], Xbounds[2,2], length.out = 100)
-#' xx <- expand.grid(xx1 = xx1, xx2 = xx2)
-#' #plot the true probability
-#' true_pi <- matrix(pnorm(f(xx)), nrow = length(xx1), ncol = length(xx2))
-#' image(xx1, xx2, true_pi, xlab ="X1", ylab ="X2",
-#'                 main = "True Probability",
-#'                 col = hcl.colors(100, "viridis"))
-#' contour(xx1, xx2, true_pi, add = TRUE, col = "black")
-#' model <- fit.BKP(df)
-#' head(predict(model,xx))
-#' plot(model)
+#' model2 <- fit.BKP(x, y, m)
+#' plot(model2)
 #'
 #' @export
 #' @method plot BKP

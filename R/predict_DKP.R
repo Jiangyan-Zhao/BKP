@@ -72,7 +72,7 @@
 #' @importFrom stats qbeta
 
 
-predict.DKP <- function(object, Xnew, CI_size = 0.05, threshold = NULL, ...)
+predict.DKP <- function(object, Xnew, CI_size = 0.05, ...)
 {
   if (!inherits(object, "DKP")) {
     stop("The input is not of class 'DKP'. Please provide a model fitted with 'fit.DKP()'.")
@@ -83,7 +83,7 @@ predict.DKP <- function(object, Xnew, CI_size = 0.05, threshold = NULL, ...)
   # Extract components
   Xnorm   <- DKPmodel$Xnorm
   Y       <- DKPmodel$Y
-  theta   <- DKPmodel$bestTheta
+  theta   <- DKPmodel$theta_opt
   kernel  <- DKPmodel$kernel
   prior   <- DKPmodel$prior
   r0      <- DKPmodel$r0
@@ -108,35 +108,30 @@ predict.DKP <- function(object, Xnew, CI_size = 0.05, threshold = NULL, ...)
   K <- kernel_matrix(Xnew_norm, Xnorm, theta = theta, kernel = kernel) # m*n matrix
 
   # get the prior parameters: alpha0(x) and beta0(x)
-  prior_par <- get_prior_dkp(prior = prior, r0 = r0, p0 = p0, Y = Y, K = K)
-
-  alpha0 <- prior_par$alpha0
-
-  if (prior == "noninformative" || prior == "fixed"){
-    alpha0 <- matrix(rep(alpha0,nrow(Xnew)),nrow = nrow(Xnew) , byrow = T)
-  }
+  alpha0 <- get_prior_dkp(prior = prior, r0 = r0, p0 = p0, Y = Y, K = K)
 
   # Posterior parameters
   alpha_n <- alpha0 + as.matrix(K %*% Y)
 
   # Predictive mean and variance
   pi_mean <- alpha_n / rowSums(alpha_n)
-  pi_var  <- alpha_n * (rowSums(alpha_n) - alpha_n) / rowSums(alpha_n)^2/(rowSums(alpha_n) + 1)
+  pi_var  <- alpha_n * (rowSums(alpha_n) - alpha_n) / (rowSums(alpha_n)^2 * (rowSums(alpha_n) + 1))
 
   # Confidence intervals
-  pi_lower <- stats::qbeta(CI_size / 2, alpha_n, rowSums(alpha_n) - alpha_n)
-  pi_upper <- stats::qbeta(1 - CI_size / 2, alpha_n, rowSums(alpha_n) - alpha_n)
+  pi_lower <- qbeta(CI_size / 2, alpha_n, rowSums(alpha_n) - alpha_n)
+  pi_upper <- qbeta(1 - CI_size / 2, alpha_n, rowSums(alpha_n) - alpha_n)
 
-  prediction <- data.frame(Xnew, mean = pi_mean, variance = pi_var,
-                           lower = pi_lower, upper = pi_upper)
+  # Output
+  prediction <- data.frame(Xnew,
+                           mean = pi_mean,
+                           variance = pi_var,
+                           lower = pi_lower,
+                           upper = pi_upper)
   names(prediction)[1:d] <- paste0("x", 1:d)
 
   # Posterior classification label (only for classification data)
   if (all(rowSums(Y) == 1)) {
-    q <- ncol(Y)
-    threshold <- 1/q
-    class_pred <- ifelse(pi_mean > threshold, 1, 0)
-    prediction$class <- class_pred
+    prediction$class <-max.col(pi_mean)
   }
 
   return(prediction)

@@ -23,13 +23,7 @@ NeedsCompilation: no
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Depends: R (>= 3.5.0)
-Imports:
-    optimx,
-    tgp,
-    lattice,
-    gridExtra
-Suggests:
-    stats,
-    testthat (>= 3.0.0)
+Imports: gridExtra, lattice, optimx, tgp
+Suggests: stats, testthat (>= 3.0.0)
 Config/testthat/edition: 3
 

@@ -26,19 +26,16 @@
 #' @keywords BKP
 #'
 #' @examples
-#' \dontrun{
 #' ### 1D
 #' set.seed(123)
-#' n <- 100
+#' n <- 30
 #' Xbounds <- matrix(c(-2,2), nrow=1)
-#' x <- seq(-2, 2, length = n)
-#' true_pi <- (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
+#' x <- tgp::lhs(n = n, rect = Xbounds)
 #' m <- sample(100, n, replace = TRUE)
+#' true_pi <- (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
 #' y <- rbinom(n, size = m, prob = true_pi)
-#' df <- data.frame(x = x, y = y, m = m)
-#' xx = matrix(seq(-2, 2, length = 100), ncol=1) #new data points
-#' model <- fit.BKP(df, Xbounds=Xbounds)
-#' summary(model)
+#' model1 <- fit.BKP(x, y, m, Xbounds=Xbounds)
+#' summary(model1)
 #'
 #' ### 2D
 #' set.seed(123)
@@ -57,15 +54,12 @@
 #'   f <- (f- m)/s
 #'   return(f) }
 #' Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
-#' library(tgp)
-#' x <- lhs(n = n, rect = Xbounds)
-#' true_pi <- pnorm(f(x))
+#' x <- tgp::lhs(n = n, rect = Xbounds)
 #' m <- sample(100, n, replace = TRUE)
+#' true_pi <- pnorm(f(x))
 #' y <- rbinom(n, size = m, prob = true_pi)
-#' df <- data.frame(x = x, y = y, m = m)
-#' model <- fit.BKP(df)
-#' summary(model)
-#' }
+#' model2 <- fit.BKP(x, y, m)
+#' summary(model2)
 #'
 #' @export
 #' @method summary BKP

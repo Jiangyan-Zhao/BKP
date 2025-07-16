@@ -27,12 +27,12 @@ get_prior(
 
 \item{m}{A numeric vector of total trials at each location.}
 
-\item{K}{A precomputed kernel matrix (n x n), typically from
+\item{K}{A precomputed kernel matrix (m x n), typically from
 \code{kernel_matrix()}.}
 }
 \value{
 A list with two numeric vectors: \code{alpha0} and \code{beta0} (each of length
-n).
+m).
 }
 \description{
 Constructs prior Beta distribution parameters (alpha0 and beta0)
@@ -53,4 +53,5 @@ K <- kernel_matrix(X)
 # Construct prior (adaptive)
 prior <- get_prior(prior = "adaptive", r0 = 2, y = y, m = m, K = K)
 str(prior)
+
 }

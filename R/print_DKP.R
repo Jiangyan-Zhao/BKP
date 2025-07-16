@@ -80,10 +80,10 @@ print.DKP <- function(x, ...) {
   n <- nrow(x$X)
   d <- ncol(x$X)
   q <- ncol(x$Y)
-  theta <- x$bestTheta
+  theta <- x$theta_opt
   kernel <- x$kernel
   loss <- x$loss
-  minLoss <- x$minLoss
+  loss_min <- x$loss_min
   prior <- x$prior
   r0 <- x$r0
   p0 <- x$p0
@@ -93,25 +93,24 @@ print.DKP <- function(x, ...) {
   cat("--------------------------------------------------\n")
   cat(sprintf("Number of observations (n):  %d\n", n))
   cat(sprintf("Input dimensionality (d):    %d\n", d))
-  cat(sprintf("Output dimensionality (q):    %d\n", q))
+  cat(sprintf("Output dimensionality (q):   %d\n", q))
   cat(sprintf("Kernel type:                 %s\n", kernel))
   cat(sprintf("Loss function used:          %s\n", loss))
   cat(sprintf("Optimized kernel parameters: %s\n",
               paste(sprintf("%.4f", theta), collapse = ", ")))
-  cat(sprintf("Minimum achieved loss:       %.5f\n", minLoss))
+  cat(sprintf("Minimum achieved loss:       %.5f\n", loss_min))
   cat("\n")
 
   cat("Prior specification:\n")
-  cat(sprintf("  Type:    %s\n", prior))
   if (prior == "adaptive") {
-    cat("  Note:    Data-adaptive informative prior used.\n")
+    cat("  Data-adaptive informative prior used.\n")
     cat(sprintf("  r0:      %.3f\n", r0))
   } else if (prior == "fixed") {
-    cat("  Note:    Fixed informative prior shared across locations.\n")
+    cat("  Fixed informative prior shared across locations.\n")
     cat(sprintf("  r0:      %.3f\n", r0))
     cat(sprintf("  p0:      %.3f\n", p0))
   } else if (prior == "noninformative") {
-    cat("  Note:    Noninformative prior: Dirichlet(1,...,1).\n")
+    cat("  Noninformative prior: Dirichlet(1,...,1).\n")
   }
 
   cat("--------------------------------------------------\n")

@@ -2,103 +2,88 @@
 % Please edit documentation in R/fit_BKP.R
 \name{fit.BKP}
 \alias{fit.BKP}
-\title{Fit a Beta Kernel Process (BKP) Model for Binomial Observations}
+\title{Fit a Beta Kernel Process (BKP) Model}
 \usage{
 fit.BKP(
-  data = NULL,
-  X = NULL,
-  y = NULL,
-  m = NULL,
+  X,
+  y,
+  m,
   Xbounds = NULL,
   prior = c("noninformative", "fixed", "adaptive"),
   r0 = 2,
   p0 = 0.5,
   kernel = c("gaussian", "matern52", "matern32"),
   loss = c("brier", "log_loss"),
-  num_multi_start = NULL
+  n_multi_start = NULL
 )
 }
 \arguments{
-\item{data}{Optional data frame containing covariates \code{X}, observations
-\code{y}, and counts \code{m} in the first \eqn{d}, \eqn{d+1}, and
-\eqn{d+2} columns, respectively.}
+\item{X}{Covariate matrix of size \eqn{n \times d}.}
 
-\item{X}{Covariate matrix of size \eqn{n \times d}. Ignored if \code{data} is
-provided.}
+\item{y}{Vector of observed successes.}
 
-\item{y}{Vector of observed successes. Must be numeric with length equal to
-number of rows in \code{X}.}
+\item{m}{Vector of binomial counts (number of trials), same length as \code{y}.}
 
-\item{m}{Vector of binomial counts (trials). Must be numeric, positive, and
-same length as \code{y}.}
+\item{Xbounds}{Optional \eqn{d \times 2} matrix of lower and upper bounds for each input
+dimension (used for normalization). Defaults to \eqn{[0,1]^d}.}
 
-\item{Xbounds}{Optional \eqn{d \times 2} matrix defining lower and upper
-bounds for each input dimension (used for normalization). Defaults to
-\code{[0,1]^d}.}
+\item{prior}{Prior type: one of \code{"noninformative"}, \code{"fixed"}, or \code{"adaptive"}.}
 
-\item{prior}{Type of prior used: "noninformative", "fixed", or "adaptive".}
+\item{r0}{Global prior precision (only used in fixed or adaptive priors).}
 
-\item{r0}{Global precision parameter used in prior specification.}
+\item{p0}{Global prior mean (only used for fixed priors).}
 
-\item{p0}{Global prior mean used when prior = "fixed".}
+\item{kernel}{Kernel function: one of \code{"gaussian"}, \code{"matern52"}, or \code{"matern32"}.}
 
-\item{kernel}{Character string specifying the kernel function to use: one of
-\code{"gaussian"}, \code{"matern52"}, or \code{"matern32"}.}
+\item{loss}{Loss function used for hyperparameter tuning: \code{"brier"} (default) or \code{"log_loss"}.}
 
-\item{loss}{Loss function to be minimized during hyperparameter tuning.
-Choose between \code{"brier"} (default) and \code{"NLML"} (negative log
-marginal likelihood).}
-
-\item{num_multi_start}{Number of initial points for multi-start optimization
-(default = 10*d).}
+\item{n_multi_start}{Number of random initializations for multi-start optimization (default: \code{10 * d}).}
 }
 \value{
-A list of class \code{"BKP"} containing the fitted model, with the
-following components:
+A list of class \code{"BKP"} representing the fitted Beta Kernel Process model.
+It contains the following components:
 \describe{
-\item{\code{bestTheta}}{A numeric vector of optimal kernel hyperparameters (lengthscale),
+\item{\code{theta_opt}}{Numeric vector of optimized kernel hyperparameters (lengthscales),
 obtained by minimizing the specified loss function.}
-\item{\code{kernel}}{Character string indicating the kernel type used
-("gaussian", "matern52", or "matern32").}
-\item{\code{loss}}{Character string specifying the loss function used ("brier" or "log_loss").}
-\item{\code{minLoss}}{The minimum loss value achieved during hyperparameter optimization.}
-\item{\code{X}}{The original input matrix (unnormalized), with dimensions \code{n x d}.}
-\item{\code{Xnorm}}{The normalized input matrix scaled to \code{[0,1]^d}.}
-\item{\code{Xbounds}}{A \code{d x 2} matrix specifying the lower and upper bounds
-used for normalizing each dimension of \code{X}.}
-\item{\code{y}}{A numeric vector of observed successes (length \code{n}).}
-\item{\code{m}}{A numeric vector of binomial counts/trials (length \code{n}).}
-\item{\code{prior}}{Character string indicating the prior type used
-("noninformative", "fixed", or "adaptive").}
-\item{\code{r0}}{Global prior precision parameter (only used for fixed or adaptive priors).}
-\item{\code{p0}}{Global prior mean parameter (only used for fixed priors).}
-\item{\code{alpha0}}{The prior alpha parameters for each input location.
-A scalar or vector of length \code{n}.}
-\item{\code{beta0}}{The prior beta parameters for each input location.
-A scalar or vector of length \code{n}.}
-\item{\code{alpha_n}}{Posterior alpha parameters computed as \code{alpha0 + K \%*\% y}.}
-\item{\code{beta_n}}{Posterior beta parameters computed as \code{beta0 + K \%*\% (m - y)}.}
+\item{\code{kernel}}{Character string specifying the kernel function used, one of
+\code{"gaussian"}, \code{"matern52"}, or \code{"matern32"}.}
+\item{\code{loss}}{Character string indicating the loss function used during optimization,
+either \code{"brier"} or \code{"log_loss"}.}
+\item{\code{loss_min}}{Numeric value representing the minimum loss achieved over all
+optimization runs.}
+\item{\code{X}}{Original (unnormalized) input matrix of dimension \code{n × d}.}
+\item{\code{Xnorm}}{Normalized input matrix scaled to the unit hypercube \code{[0,1]^d}.}
+\item{\code{Xbounds}}{A \code{d × 2} matrix specifying the lower and upper bounds used
+for normalizing each input dimension.}
+\item{\code{y}}{Numeric vector of observed binomial successes, of length \code{n}.}
+\item{\code{m}}{Numeric vector of binomial trial counts, of length \code{n}.}
+\item{\code{prior}}{Character string indicating the prior type used:
+\code{"noninformative"}, \code{"fixed"}, or \code{"adaptive"}.}
+\item{\code{r0}}{Positive scalar specifying the global precision parameter used
+for informative priors.}
+\item{\code{p0}}{Prior mean used when \code{prior = "fixed"}.}
+\item{\code{alpha0}}{Prior shape parameters \eqn{\alpha_0(\mathbf{x})} for the Beta distribution;
+a scalar or length-\code{n} vector.}
+\item{\code{beta0}}{Prior shape parameters \eqn{\beta_0(\mathbf{x})} for the Beta distribution;
+a scalar or length-\code{n} vector.}
+\item{\code{alpha_n}}{Posterior alpha parameters \eqn{\alpha_n(\mathbf{x})}.}
+\item{\code{beta_n}}{Posterior beta parameters \eqn{\beta_n(\mathbf{x})}.}
 }
 }
 \description{
-Fits a Beta Kernel Process model for binomial data, estimating
-latent functions representing Beta distribution parameters using kernel
-smoothing.
+Fits a Beta Kernel Process model to binomial data
+using local kernel smoothing of success and failure counts.
 }
 \details{
-The function fits the BKP model and stores everything necessary for
-prediction. The kernel hyper-parameters optimization uses multi-start
-gradient-based method. Inputs are first normalized to the \eqn{[0,1]^d}
-space defined by \code{Xbounds}. The kernel matrix is computed with
-optimized parameters, and posterior Beta parameters \eqn{\alpha_n} and
-\eqn{\beta_n}
-are computed by smoothing the observed successes \eqn{y} and failures \eqn{m
-- y} with the kernel matrix:
+The BKP model fits a smoothed latent success probability function via
+kernel-weighted updates to the Beta prior. Inputs are normalized to \eqn{[0,1]^d},
+and kernel hyperparameters are optimized by minimizing a cross-validated loss.
+
+Posterior Beta parameters are computed as:
 \deqn{
-\alpha_n = \alpha_0 + K \cdot y, \quad
-\beta_n = \beta_0 + K \cdot (m - y)
+  \alpha_n(\mathbf{x}) = \alpha_0(\mathbf{x}) + \sum k(\mathbf{x}, \mathbf{x}_i) y_i,\quad
+  \beta_n(\mathbf{x}) = \beta_0(\mathbf{x}) + \sum k(\mathbf{x}, \mathbf{x}_i)(m_i - y_i)
 }
-where \eqn{K} is the kernel matrix evaluated at normalized inputs.
 }
 \examples{
 ### 1D
@@ -106,12 +91,10 @@ set.seed(123)
 n <- 30
 Xbounds <- matrix(c(-2,2), nrow=1)
 x <- tgp::lhs(n = n, rect = Xbounds)
-true_pi <- (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
 m <- sample(100, n, replace = TRUE)
+true_pi <- (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
 y <- rbinom(n, size = m, prob = true_pi)
-df <- data.frame(x = x, y = y, m = m)
-xx = matrix(seq(-2, 2, length = 100), ncol=1) # new data points
-model <- fit.BKP(df, Xbounds=Xbounds)
+model <- fit.BKP(x, y, m, Xbounds=Xbounds)
 print(model)
 
 ### 2D
@@ -132,23 +115,10 @@ f <- function(X) {
   return(f) }
 Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
 x <- tgp::lhs(n = n, rect = Xbounds)
-true_pi <- pnorm(f(x))
 m <- sample(100, n, replace = TRUE)
+true_pi <- pnorm(f(x))
 y <- rbinom(n, size = m, prob = true_pi)
-df <- data.frame(x = x, y = y, m = m)
-xx1 <- seq(Xbounds[1,1], Xbounds[1,2], length.out = 100)
-xx2 <- seq(Xbounds[2,1], Xbounds[2,2], length.out = 100)
-xx <- expand.grid(xx1 = xx1, xx2 = xx2)
-#plot the true probability
-true_pi <- matrix(pnorm(f(xx)), nrow = length(xx1), ncol = length(xx2))
-image(xx1, xx2, true_pi, xlab ="X1", ylab ="X2",
-                main = "True Probability",
-                col = hcl.colors(100, "viridis"))
-contour(xx1, xx2, true_pi, add = TRUE, col = "black")
-model <- fit.BKP(df)
+model <- fit.BKP(x, y, m)
 print(model)
 
-}
-\author{
-Jiangyan Zhao, Kunhai Qing, Jin Xu
 }

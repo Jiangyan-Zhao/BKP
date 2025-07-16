@@ -19,7 +19,7 @@
 #'   \code{"matern52"}, or \code{"matern32"}.
 #' @param loss Loss function to be minimized during hyperparameter tuning. Choose between \code{"brier"}
 #'   (default) and \code{"NLML"} (negative log marginal likelihood).
-#' @param num_multi_start Number of initial points for multi-start optimization (default = 10*d).
+#' @param n_multi_start Number of initial points for multi-start optimization (default = 10*d).
 #'
 #' @details
 #' The function fits the DKP model and stores everything necessary for prediction.
@@ -57,7 +57,7 @@
 #' Xbounds <- matrix(c(-2,2), nrow=1)
 #' x <- tgp::lhs(n = n, rect = Xbounds)
 #' true_pi <- (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
-#' true_pi <- matrix(c(true_pi/2,true_pi/2,1-true_pi),nrow = n, byrow = F)
+#' true_pi <- matrix(c(true_pi/2,true_pi/2,1-true_pi),nrow = n, byrow = FALSE)
 #' m <- sample(100, n, replace = TRUE)
 #' Y <- matrix(0, nrow = n, ncol = 3)
 #' for (i in 1:n) {
@@ -85,7 +85,7 @@
 #' Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
 #' x <- tgp::lhs(n = n, rect = Xbounds)
 #' true_pi <- pnorm(f(x))
-#' true_pi <- matrix(c(true_pi/2,true_pi/2,1-true_pi),nrow = n, byrow = F)
+#' true_pi <- matrix(c(true_pi/2,true_pi/2,1-true_pi),nrow = n, byrow = FALSE)
 #' m <- sample(100, n, replace = TRUE)
 #' Y <- matrix(0, nrow = n, ncol = 3)
 #' for (i in 1:n) {
@@ -95,118 +95,80 @@
 #' print(DKPmodel)
 #'
 #' @export
-#' @importFrom tgp lhs
 #' @importFrom optimx multistart
 
 fit.DKP <- function(
-    data = NULL, d = NULL, q = NULL, X = NULL, Y = NULL, Xbounds = NULL,
-    prior = c("noninformative", "fixed", "adaptive"), r0 = NULL, p0 = NULL,
+    X, Y, Xbounds = NULL,
+    prior = c("noninformative", "fixed", "adaptive"), r0 = 2, p0 = NULL,
     kernel = c("gaussian", "matern52", "matern32"),
     loss = c("brier", "log_loss"),
-    num_multi_start = NULL
+    n_multi_start = NULL
 ){
-  # Handle input data: prioritize 'data' data frame, otherwise use individual X and Y.
-  if (!missing(data)) {
-    if (ncol(data) < 3) {
-      stop("The 'data' frame must contain at least three columns (covariates X and Y in order).")
-    }
-    if (is.null(q) & is.null(d)){
-      stop("Either 'q' or 'd' must be provided.")
-    }
-    if (is.null(d)){
-      d <- ncol(data) - q
-    } else {
-      if (is.null(q)) {
-        q <- ncol(data) - d
-      }
-    }
-    X <- as.matrix(data[, 1:d])
-    Y <- as.matrix(data[, (d + 1):(d + q)])
-  } else {
-    if (is.null(X) || is.null(Y) ) {
-      stop("Either 'data' must be provided, or both of 'X' and 'Y'.")
-    }
-    d <- ncol(X)
-    q <- ncol(Y)
-    X <- as.matrix(X)
-    Y <- as.matrix(Y)
-  }
-
-  # Parse arguments
+  # ---- Parse and validate arguments ----
   prior <- match.arg(prior)
   kernel <- match.arg(kernel)
   loss <- match.arg(loss)
 
-  # Fixed mean informative prior
-  if (is.null(r0) || is.null(p0)){
-    r0 <- q
-    p0 <- as.vector(rep(1/q,q))
-  }
-
-  # Validity checks
+  # Convert input to proper form
+  X <- as.matrix(X)
+  Y <- as.matrix(Y)
+  d <- ncol(X)
+  q <- ncol(Y)
   n <- nrow(X)
-  if (nrow(Y) != n) {
-    stop("The length of 'Y' must match the number of rows in X.")
-  }
-  # Normalize X to [0,1]^d
-  if (is.null(Xbounds)) {
-    Xbounds <- cbind(rep(0, d), rep(1, d))
-  }
-  if (!all(dim(Xbounds) == c(d, 2))) {
-    stop("Xbounds must be a d x 2 matrix.")
-  }
+
+  # ---- Validity checks on inputs ----
+  if (nrow(Y) != n) stop("Number of rows in 'Y' must match number of rows in 'X'.")
+  if (any(Y < 0)) stop("'Y' must be in non-negtive.")
+
+  # ---- Normalize input X to [0,1]^d ----
+  if (is.null(Xbounds)) Xbounds <- cbind(rep(0, d), rep(1, d))
+  if (!all(dim(Xbounds) == c(d, 2))) stop("'Xbounds' must be a d x 2 matrix.")
   Xnorm <- sweep(X, 2, Xbounds[,1], "-")
   Xnorm <- sweep(Xnorm, 2, Xbounds[,2] - Xbounds[,1], "/")
 
-  # Generate initial gamma values using space-filling design followed by D-optimal selection.
-  # Gamma corresponds to kernel scale via theta = 10^gamma.
-  # Bounds are set based on input dimension d to ensure reasonable search range.
-  gammaBounds <- matrix(c(rep((log10(d)+2)/2, d), rep((log10(d)-log10(500))/2, d)), ncol = 2)
+  # ---- Determine initial search space for log10(theta) ----
+  # We work in log10(theta) space for numerical stability
+  gamma_bounds <- matrix(c((log10(d)-log10(500))/2,       # lower bound
+                           (log10(d)+2)/2),               # upper bound
+                         ncol = 2, nrow = d, byrow = TRUE)
+  if (is.null(n_multi_start)) n_multi_start <- 10 * d
+  init_gamma <- lhs(n_multi_start, gamma_bounds)
 
-  # Perform multi-start optimization to find the best kernel parameters.
-  if(is.null(num_multi_start)){num_multi_start <- 10 * d}
-  initialGamma <- tgp::lhs(num_multi_start, gammaBounds)
-  res <- optimx::multistart(
-    parmat = initialGamma,
+  # ---- Run multi-start L-BFGS-B optimization to find best kernel parameters ----
+  opt_res <- multistart(
+    parmat = init_gamma,
     fn     = loss_fun_dkp,
     method = "L-BFGS-B",
-    # lower  = gammaBounds[,1], upper  = gammaBounds[,2],
-    lower  = rep(-10, d), upper  = rep(10, d),
+    lower  = rep(-10, d), # relaxed lower bound
+    upper  = rep(10, d),  # relaxed upper bound
     prior = prior, r0 = r0, p0 = p0,
     Xnorm = Xnorm, Y = Y,
     loss = loss, kernel = kernel,
     control= list(trace=0))
 
-  # Extract the results from the optimization.
-  bestIndex <- which.min(res$value) # Find the index of the minimum loss.
-  bestGamma <- as.numeric(res[bestIndex, 1:d]) # Get the gamma parameters corresponding to min loss.
-  bestTheta <- 10^(bestGamma) # Transform gamma back to the kernel parameters (theta).
-  minLoss <- res$value[bestIndex] # Get the minimum loss value.
+  # ---- Extract optimal kernel parameters and loss ----
+  best_index <- which.min(opt_res$value)
+  gamma_opt  <- as.numeric(opt_res[best_index, 1:d])
+  theta_opt  <- 10^gamma_opt
+  loss_min   <- opt_res$value[best_index]
 
-  # Compute kernel matrix with the optimized parameters
-  K <- kernel_matrix(Xnorm, theta = bestTheta, kernel = kernel)
+  # ---- Compute kernel matrix at optimized hyperparameters ----
+  K <- kernel_matrix(Xnorm, theta = theta_opt, kernel = kernel)
 
-  # get the prior parameters: alpha0(x)
-  prior_par <- get_prior_dkp(prior = prior, r0 = r0, p0 = p0, Y = Y, K = K)
-  alpha0 <- prior_par$alpha0
+  # ---- Compute prior parameters (alpha0 and beta0) ----
+  alpha0 <- get_prior_dkp(prior = prior, r0 = r0, p0 = p0, Y = Y, K = K)
 
-  # Compute posterior Dirichlet parameters using kernel smoothing
-  if (prior == "noninformative" || prior == "fixed"){
-    alpha0 <- matrix(rep(alpha0,n),nrow = n , byrow = T)
-  }
+  # ---- Compute posterior parameters ----
   alpha_n <- alpha0 + as.matrix(K %*% Y)
 
-  # Construct the 'DKP' model object as a list.
-  # This list contains all essential information about the fitted model.
+  # ---- Construct and return the fitted model object ----
   model <- list(
-    bestTheta = bestTheta, kernel = kernel,
-    loss = loss, minLoss = minLoss,
+    theta_opt = theta_opt, kernel = kernel,
+    loss = loss, loss_min = loss_min,
     X = X, Xnorm = Xnorm, Xbounds = Xbounds, Y = Y,
-    prior = prior, r0 = r0, p0 = p0, alpha0 = alpha0,
-    alpha_n = alpha_n
+    prior = prior, r0 = r0, p0 = p0,
+    alpha0 = alpha0, alpha_n = alpha_n
   )
-
-  # Assign the "DKP" class to the object, enabling S3 generic methods.
   class(model) <- "DKP"
-  return(model) # Return the fitted DKP model object.
+  return(model)
 }
