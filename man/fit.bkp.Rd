@@ -94,8 +94,8 @@ x <- tgp::lhs(n = n, rect = Xbounds)
 m <- sample(100, n, replace = TRUE)
 true_pi <- (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
 y <- rbinom(n, size = m, prob = true_pi)
-model <- fit.BKP(x, y, m, Xbounds=Xbounds)
-print(model)
+model1 <- fit.BKP(x, y, m, Xbounds=Xbounds)
+print(model1)
 
 ### 2D
 set.seed(123)
@@ -118,7 +118,7 @@ x <- tgp::lhs(n = n, rect = Xbounds)
 m <- sample(100, n, replace = TRUE)
 true_pi <- pnorm(f(x))
 y <- rbinom(n, size = m, prob = true_pi)
-model <- fit.BKP(x, y, m)
-print(model)
+model2 <- fit.BKP(x, y, m)
+print(model2)
 
 }

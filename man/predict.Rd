@@ -8,7 +8,7 @@
 \usage{
 \method{predict}{BKP}(object, Xnew, CI_size = 0.05, threshold = 0.5, ...)
 
-\method{predict}{DKP}(object, Xnew, CI_size = 0.05, threshold = NULL, ...)
+\method{predict}{DKP}(object, Xnew, CI_size = 0.05, ...)
 }
 \arguments{
 \item{object}{A fitted DKP model object returned by \code{\link{fit.DKP}}.}
@@ -52,14 +52,13 @@ Generate predictions from a fitted DKP model at new input locations.
 set.seed(123)
 n <- 30
 Xbounds <- matrix(c(-2,2), nrow=1)
-x <- seq(-2, 2, length = n)
-true_pi <- (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
+x <- tgp::lhs(n = n, rect = Xbounds)
 m <- sample(100, n, replace = TRUE)
+true_pi <- (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
 y <- rbinom(n, size = m, prob = true_pi)
-df <- data.frame(x = x, y = y, m = m)
+model1 <- fit.BKP(x, y, m, Xbounds=Xbounds)
 xx = matrix(seq(-2, 2, length = 100), ncol=1) #new data points
-model <- fit.BKP(df, Xbounds=Xbounds)
-head(predict(model,xx))
+head(predict(model1,xx))
 
 ### 2D
 set.seed(123)
@@ -79,15 +78,14 @@ f <- function(X) {
   return(f) }
 Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
 x <- tgp::lhs(n = n, rect = Xbounds)
-true_pi <- pnorm(f(x))
 m <- sample(100, n, replace = TRUE)
+true_pi <- pnorm(f(x))
 y <- rbinom(n, size = m, prob = true_pi)
-df <- data.frame(x = x, y = y, m = m)
+model2 <- fit.BKP(x, y, m)
 xx1 <- seq(Xbounds[1,1], Xbounds[1,2], length.out = 100)
 xx2 <- seq(Xbounds[2,1], Xbounds[2,2], length.out = 100)
 xx <- expand.grid(xx1 = xx1, xx2 = xx2)
-model <- fit.BKP(df)
-head(predict(model,xx))
+head(predict(model2,xx))
 
 ### 1D
 set.seed(123)
@@ -95,13 +93,13 @@ n <- 30
 Xbounds <- matrix(c(-2,2), nrow=1)
 x <- tgp::lhs(n = n, rect = Xbounds)
 true_pi <- (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
-true_pi <- matrix(c(true_pi/2,true_pi/2,1-true_pi),nrow = n, byrow = F)
+true_pi <- matrix(c(true_pi/2,true_pi/2,1-true_pi),nrow = n, byrow = FALSE)
 m <- sample(100, n, replace = TRUE)
 Y <- matrix(0, nrow = n, ncol = 3)
 for (i in 1:n) {
   Y[i, ] <- rmultinom(n=1, size=m[i], prob=true_pi[i, ])
 }
-DKPmodel <- fit.DKP(p=3,X=x,Y=Y,Xbounds = Xbounds,prior = "noninformative",kernel = "gaussian",loss = "brier")
+DKPmodel <- fit.DKP(x, Y,Xbounds = Xbounds)
 predict(DKPmodel,Xnew = 0.5)
 
 ### 2D
@@ -123,13 +121,13 @@ f <- function(X) {
 Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
 x <- tgp::lhs(n = n, rect = Xbounds)
 true_pi <- pnorm(f(x))
-true_pi <- matrix(c(true_pi/2,true_pi/2,1-true_pi),nrow = n, byrow = F)
+true_pi <- matrix(c(true_pi/2,true_pi/2,1-true_pi),nrow = n, byrow = FALSE)
 m <- sample(100, n, replace = TRUE)
 Y <- matrix(0, nrow = n, ncol = 3)
 for (i in 1:n) {
   Y[i, ] <- rmultinom(n=1, size=m[i], prob=true_pi[i, ])
 }
-DKPmodel <- fit.DKP(p=3,X=x,Y=Y,Xbounds = Xbounds,prior = "noninformative",kernel = "gaussian",loss = "brier")
+DKPmodel <- fit.DKP(x, Y, Xbounds = Xbounds)
 predict(DKPmodel, Xnew = c(0.5,0.5))
 
 }

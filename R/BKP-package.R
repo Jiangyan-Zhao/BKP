@@ -35,6 +35,7 @@
 #' }
 #'
 #' @importFrom lattice levelplot panel.levelplot panel.contourplot
+#' @importFrom grid gpar textGrob
 #' @importFrom gridExtra grid.arrange
 #' @importFrom grDevices hcl.colors
 #' @importFrom graphics legend lines points polygon

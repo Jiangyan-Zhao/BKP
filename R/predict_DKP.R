@@ -30,13 +30,13 @@
 #' Xbounds <- matrix(c(-2,2), nrow=1)
 #' x <- tgp::lhs(n = n, rect = Xbounds)
 #' true_pi <- (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
-#' true_pi <- matrix(c(true_pi/2,true_pi/2,1-true_pi),nrow = n, byrow = F)
+#' true_pi <- matrix(c(true_pi/2,true_pi/2,1-true_pi),nrow = n, byrow = FALSE)
 #' m <- sample(100, n, replace = TRUE)
 #' Y <- matrix(0, nrow = n, ncol = 3)
 #' for (i in 1:n) {
 #'   Y[i, ] <- rmultinom(n=1, size=m[i], prob=true_pi[i, ])
 #' }
-#' DKPmodel <- fit.DKP(p=3,X=x,Y=Y,Xbounds = Xbounds,prior = "noninformative",kernel = "gaussian",loss = "brier")
+#' DKPmodel <- fit.DKP(x, Y,Xbounds = Xbounds)
 #' predict(DKPmodel,Xnew = 0.5)
 #'
 #' ### 2D
@@ -58,13 +58,13 @@
 #' Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
 #' x <- tgp::lhs(n = n, rect = Xbounds)
 #' true_pi <- pnorm(f(x))
-#' true_pi <- matrix(c(true_pi/2,true_pi/2,1-true_pi),nrow = n, byrow = F)
+#' true_pi <- matrix(c(true_pi/2,true_pi/2,1-true_pi),nrow = n, byrow = FALSE)
 #' m <- sample(100, n, replace = TRUE)
 #' Y <- matrix(0, nrow = n, ncol = 3)
 #' for (i in 1:n) {
 #'   Y[i, ] <- rmultinom(n=1, size=m[i], prob=true_pi[i, ])
 #' }
-#' DKPmodel <- fit.DKP(p=3,X=x,Y=Y,Xbounds = Xbounds,prior = "noninformative",kernel = "gaussian",loss = "brier")
+#' DKPmodel <- fit.DKP(x, Y, Xbounds = Xbounds)
 #' predict(DKPmodel, Xnew = c(0.5,0.5))
 #'
 #' @export
@@ -113,26 +113,25 @@ predict.DKP <- function(object, Xnew, CI_size = 0.05, ...)
   # Posterior parameters
   alpha_n <- alpha0 + as.matrix(K %*% Y)
 
-  # Predictive mean and variance
-  pi_mean <- alpha_n / rowSums(alpha_n)
-  pi_var  <- alpha_n * (rowSums(alpha_n) - alpha_n) / (rowSums(alpha_n)^2 * (rowSums(alpha_n) + 1))
+  # Predictive quantities
+  row_sum <- rowSums(alpha_n)
+  pi_mean <- alpha_n / row_sum
+  pi_var  <- alpha_n * (row_sum - alpha_n) / (row_sum^2 * (row_sum + 1))
+  pi_lower <- qbeta(CI_size / 2, alpha_n, row_sum - alpha_n)
+  pi_upper <- qbeta(1 - CI_size / 2, alpha_n, row_sum - alpha_n)
 
-  # Confidence intervals
-  pi_lower <- qbeta(CI_size / 2, alpha_n, rowSums(alpha_n) - alpha_n)
-  pi_upper <- qbeta(1 - CI_size / 2, alpha_n, rowSums(alpha_n) - alpha_n)
+  # Classification
+  class_pred <- if (all(rowSums(Y) == 1)) max.col(pi_mean) else NULL
 
-  # Output
-  prediction <- data.frame(Xnew,
-                           mean = pi_mean,
-                           variance = pi_var,
-                           lower = pi_lower,
-                           upper = pi_upper)
-  names(prediction)[1:d] <- paste0("x", 1:d)
-
-  # Posterior classification label (only for classification data)
-  if (all(rowSums(Y) == 1)) {
-    prediction$class <-max.col(pi_mean)
-  }
+  # Return structured output
+  prediction <- list(
+    Xnew     = Xnew,         # [n × d]
+    mean     = pi_mean,      # [n × q]
+    variance = pi_var,       # [n × q]
+    lower    = pi_lower,     # [n × q]
+    upper    = pi_upper,     # [n × q]
+    class    = class_pred    # [n]
+  )
 
   return(prediction)
 }

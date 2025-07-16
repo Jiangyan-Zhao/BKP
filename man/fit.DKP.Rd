@@ -5,22 +5,18 @@
 \title{Fit a Dirichlet Kernel Process (DKP) Model for Multinomial Observations}
 \usage{
 fit.DKP(
-  data = NULL,
-  X = NULL,
-  Y = NULL,
+  X,
+  Y,
   Xbounds = NULL,
   prior = c("noninformative", "fixed", "adaptive"),
   r0 = 2,
   p0 = NULL,
   kernel = c("gaussian", "matern52", "matern32"),
   loss = c("brier", "log_loss"),
-  num_multi_start = NULL
+  n_multi_start = NULL
 )
 }
 \arguments{
-\item{data}{Optional data frame containing covariates \code{X} and observations \code{Y}
-in the first \eqn{d} and \eqn{d+q} columns, respectively.}
-
 \item{X}{Covariate matrix of size \eqn{n \times d}. Ignored if \code{data} is provided.}
 
 \item{Y}{Matrix of observed successes of size \eqn{n \times q}.}
@@ -40,7 +36,7 @@ in the first \eqn{d} and \eqn{d+q} columns, respectively.}
 \item{loss}{Loss function to be minimized during hyperparameter tuning. Choose between \code{"brier"}
 (default) and \code{"NLML"} (negative log marginal likelihood).}
 
-\item{num_multi_start}{Number of initial points for multi-start optimization (default = 10*d).}
+\item{n_multi_start}{Number of initial points for multi-start optimization (default = 10*d).}
 }
 \value{
 A list of class \code{"DKP"} containing the fitted model, with the following components:
@@ -88,7 +84,7 @@ Y <- matrix(0, nrow = n, ncol = 3)
 for (i in 1:n) {
   Y[i, ] <- rmultinom(n=1, size=m[i], prob=true_pi[i, ])
 }
-DKPmodel <- fit.DKP(p=3,X=x,Y=Y,Xbounds = Xbounds,prior = "noninformative",kernel = "gaussian",loss = "brier")
+DKPmodel <- fit.DKP(x,Y,Xbounds = Xbounds)
 print(DKPmodel)
 
 ### 2D
@@ -116,7 +112,7 @@ Y <- matrix(0, nrow = n, ncol = 3)
 for (i in 1:n) {
   Y[i, ] <- rmultinom(n=1, size=m[i], prob=true_pi[i, ])
 }
-DKPmodel <- fit.DKP(p=3,X=x,Y=Y,Xbounds = Xbounds,prior = "noninformative",kernel = "gaussian",loss = "brier")
+DKPmodel <- fit.DKP(x,Y,Xbounds = Xbounds)
 print(DKPmodel)
 
 }

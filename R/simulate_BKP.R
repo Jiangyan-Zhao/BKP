@@ -32,9 +32,8 @@
 #' true_pi <- (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
 #' m <- sample(50:100, n, replace = TRUE)
 #' y <- rbinom(n, size = m, prob = true_pi)
-#' df <- data.frame(x = x, y = y, m = m)
 #' Xbounds <- matrix(c(-2, 2), nrow = 1)
-#' model <- fit.BKP(df, Xbounds = Xbounds)
+#' model <- fit.BKP(x, y, m, Xbounds = Xbounds)
 #'
 #' # Simulate 5 posterior draws of success probabilities at new points
 #' Xnew <- matrix(seq(-2, 2, length.out = 10), ncol = 1)
@@ -50,16 +49,13 @@ simulate.BKP <- function(object, Xnew, n_sim = 1, threshold = NULL, seed = NULL,
   if (!inherits(object, "BKP")) {
     stop("The input must be of class 'BKP'. Please provide a model fitted with 'fit.BKP()'.")
   }
-
-  if (!is.null(seed)) set.seed(seed)
-
   BKPmodel <- object
 
   # Extract components
   Xnorm   <- BKPmodel$Xnorm
   y       <- BKPmodel$y
   m       <- BKPmodel$m
-  theta   <- BKPmodel$bestTheta
+  theta   <- BKPmodel$theta_opt
   kernel  <- BKPmodel$kernel
   prior   <- BKPmodel$prior
   r0      <- BKPmodel$r0
@@ -87,25 +83,36 @@ simulate.BKP <- function(object, Xnew, n_sim = 1, threshold = NULL, seed = NULL,
   beta0 <- prior_par$beta0
 
   # Posterior parameters
-  alpha_n <- alpha0 + as.vector(K %*% y)
-  beta_n  <- beta0 + as.vector(K %*% (m - y))
+  alpha_n <- pmax(alpha0 + as.vector(K %*% y), 1e-10)
+  beta_n  <- pmax(beta0 + as.vector(K %*% (m - y)), 1e-10)
 
   # Simulate from Beta
+  if (!is.null(seed)) set.seed(seed)
   sims <- matrix(rbeta(length(alpha_n) * n_sim,
                        shape1 = rep(alpha_n, n_sim),
                        shape2 = rep(beta_n, n_sim)),
                  nrow = length(alpha_n), ncol = n_sim)
+  colnames(sims) <- paste0("Xnew_", 1:n_sim)
+  rownames(sims) <- paste0("sim", 1:length(alpha_n))
 
-  # Optional: convert to binary class labels
+  # Binary hard predictions if threshold is given
+  class_pred <- NULL
   if (!is.null(threshold)) {
     if (!is.numeric(threshold) || length(threshold) != 1 || threshold <= 0 || threshold >= 1) {
       stop("Threshold must be a number between 0 and 1.")
     }
-    sims <- ifelse(sims > threshold, 1L, 0L)
+    class_pred <- ifelse(sims > threshold, 1L, 0L)
   }
 
-  colnames(sims) <- paste0("sim", 1:n_sim)
-  return(sims)
+  # Posterior mean (expectation of Beta)
+  pi_mean <- alpha_n / (alpha_n + beta_n)
+
+  # Return structured list
+  return(list(
+    sims = sims,          # matrix [n_sim × n_new]
+    mean = pi_mean,       # vector of posterior mean
+    class = class_pred    # binary predictions if threshold is provided
+  ))
 }
 
 

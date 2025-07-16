@@ -10,8 +10,8 @@ loss_fun_dkp(
   Xnorm,
   Y,
   prior = c("noninformative", "fixed", "adaptive"),
-  r0,
-  p0,
+  r0 = 2,
+  p0 = NULL,
   loss = c("brier", "log_loss"),
   kernel = c("gaussian", "matern52", "matern32")
 )

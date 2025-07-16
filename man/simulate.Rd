@@ -8,7 +8,7 @@
 \usage{
 \method{simulate}{BKP}(object, Xnew, n_sim = 1, threshold = NULL, seed = NULL, ...)
 
-\method{simulate}{DKP}(object, Xnew, n_sim = 1, threshold = NULL, seed = NULL, ...)
+\method{simulate}{DKP}(object, Xnew, n_sim = 1, seed = NULL, ...)
 }
 \arguments{
 \item{object}{A fitted DKP model object from \code{\link{fit.DKP}}.}
@@ -53,9 +53,8 @@ x <- seq(-2, 2, length = n)
 true_pi <- (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
 m <- sample(50:100, n, replace = TRUE)
 y <- rbinom(n, size = m, prob = true_pi)
-df <- data.frame(x = x, y = y, m = m)
 Xbounds <- matrix(c(-2, 2), nrow = 1)
-model <- fit.BKP(df, Xbounds = Xbounds)
+model <- fit.BKP(x, y, m, Xbounds = Xbounds)
 
 # Simulate 5 posterior draws of success probabilities at new points
 Xnew <- matrix(seq(-2, 2, length.out = 10), ncol = 1)
@@ -70,13 +69,13 @@ n <- 30
 Xbounds <- matrix(c(-2,2), nrow=1)
 x <- tgp::lhs(n = n, rect = Xbounds)
 true_pi <- (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
-true_pi <- matrix(c(true_pi/2,true_pi/2,1-true_pi),nrow = n, byrow = F)
+true_pi <- matrix(c(true_pi/2,true_pi/2,1-true_pi),nrow = n, byrow = FALSE)
 m <- sample(100, n, replace = TRUE)
 Y <- matrix(0, nrow = n, ncol = 3)
 for (i in 1:n) {
   Y[i, ] <- rmultinom(n=1, size=m[i], prob=true_pi[i, ])
 }
-DKPmodel <- fit.DKP(p=3,X=x,Y=Y,Xbounds = Xbounds,prior = "noninformative",kernel = "gaussian",loss = "brier")
+DKPmodel <- fit.DKP(x, Y, Xbounds = Xbounds)
 simulate(DKPmodel,Xnew = 0.5, n_sim = 5)
 
 }

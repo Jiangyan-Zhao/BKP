@@ -34,19 +34,16 @@ When a \code{DKP} object is printed (e.g., by calling \code{print(model)} or typ
 in the console), this method presents a readable summary of the fitted model's essential properties.
 }
 \examples{
-\dontrun{
 ### 1D
 set.seed(123)
-n <- 100
+n <- 30
 Xbounds <- matrix(c(-2,2), nrow=1)
-x <- seq(-2, 2, length = n)
-true_pi <- (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
+x <- tgp::lhs(n = n, rect = Xbounds)
 m <- sample(100, n, replace = TRUE)
+true_pi <- (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
 y <- rbinom(n, size = m, prob = true_pi)
-df <- data.frame(x = x, y = y, m = m)
-xx = matrix(seq(-2, 2, length = 100), ncol=1) #new data points
-model <- fit.BKP(df, Xbounds=Xbounds)
-print(model)
+model1 <- fit.BKP(x, y, m, Xbounds=Xbounds)
+print(model1)
 
 ### 2D
 set.seed(123)
@@ -65,33 +62,26 @@ f <- function(X) {
   f <- (f- m)/s
   return(f) }
 Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
-library(tgp)
-x <- lhs(n = n, rect = Xbounds)
-true_pi <- pnorm(f(x))
+x <- tgp::lhs(n = n, rect = Xbounds)
 m <- sample(100, n, replace = TRUE)
+true_pi <- pnorm(f(x))
 y <- rbinom(n, size = m, prob = true_pi)
-df <- data.frame(x = x, y = y, m = m)
-xx1 <- seq(Xbounds[1,1], Xbounds[1,2], length.out = 100)
-xx2 <- seq(Xbounds[2,1], Xbounds[2,2], length.out = 100)
-xx <- expand.grid(xx1 = xx1, xx2 = xx2)
-model <- fit.BKP(df)
-print(model)
-}
+model2 <- fit.BKP(x, y, m)
+print(model2)
 
-\dontrun{
 ### 1D
 set.seed(123)
 n <- 30
 Xbounds <- matrix(c(-2,2), nrow=1)
 x <- tgp::lhs(n = n, rect = Xbounds)
 true_pi <- (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
-true_pi <- matrix(c(true_pi/2,true_pi/2,1-true_pi),nrow = n, byrow = F)
+true_pi <- matrix(c(true_pi/2,true_pi/2,1-true_pi),nrow = n, byrow = FALSE)
 m <- sample(100, n, replace = TRUE)
 Y <- matrix(0, nrow = n, ncol = 3)
 for (i in 1:n) {
   Y[i, ] <- rmultinom(n=1, size=m[i], prob=true_pi[i, ])
 }
-DKPmodel <- fit.DKP(p=3,X=x,Y=Y,Xbounds = Xbounds,prior = "noninformative",kernel = "gaussian",loss = "brier")
+DKPmodel <- fit.DKP(x, Y, Xbounds = Xbounds)
 print(DKPmodel)
 
 ### 2D
@@ -113,15 +103,14 @@ f <- function(X) {
 Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
 x <- tgp::lhs(n = n, rect = Xbounds)
 true_pi <- pnorm(f(x))
-true_pi <- matrix(c(true_pi/2,true_pi/2,1-true_pi),nrow = n, byrow = F)
+true_pi <- matrix(c(true_pi/2,true_pi/2,1-true_pi),nrow = n, byrow = FALSE)
 m <- sample(100, n, replace = TRUE)
 Y <- matrix(0, nrow = n, ncol = 3)
 for (i in 1:n) {
   Y[i, ] <- rmultinom(n=1, size=m[i], prob=true_pi[i, ])
 }
-DKPmodel <- fit.DKP(p=3,X=x,Y=Y,Xbounds = Xbounds,prior = "noninformative",kernel = "gaussian",loss = "brier")
+DKPmodel <- fit.DKP(x, Y, Xbounds = Xbounds)
 print(DKPmodel)
-}
 
 }
 \seealso{

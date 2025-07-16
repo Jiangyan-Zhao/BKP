@@ -6,8 +6,6 @@
 #' Fits a Dirichlet Kernel Process model for multinomiall data, estimating latent functions
 #' representing Dirichlet distribution parameters using kernel smoothing.
 #'
-#' @param data Optional data frame containing covariates \code{X} and observations \code{Y}
-#'   in the first \eqn{d} and \eqn{d+q} columns, respectively.
 #' @param X Covariate matrix of size \eqn{n \times d}. Ignored if \code{data} is provided.
 #' @param Y Matrix of observed successes of size \eqn{n \times q}.
 #' @param Xbounds Optional \eqn{d \times 2} matrix defining lower and upper bounds for each input dimension
@@ -63,7 +61,7 @@
 #' for (i in 1:n) {
 #'   Y[i, ] <- rmultinom(n=1, size=m[i], prob=true_pi[i, ])
 #' }
-#' DKPmodel <- fit.DKP(p=3,X=x,Y=Y,Xbounds = Xbounds,prior = "noninformative",kernel = "gaussian",loss = "brier")
+#' DKPmodel <- fit.DKP(x,Y,Xbounds = Xbounds)
 #' print(DKPmodel)
 #'
 #' ### 2D
@@ -91,7 +89,7 @@
 #' for (i in 1:n) {
 #'   Y[i, ] <- rmultinom(n=1, size=m[i], prob=true_pi[i, ])
 #' }
-#' DKPmodel <- fit.DKP(p=3,X=x,Y=Y,Xbounds = Xbounds,prior = "noninformative",kernel = "gaussian",loss = "brier")
+#' DKPmodel <- fit.DKP(x,Y,Xbounds = Xbounds)
 #' print(DKPmodel)
 #'
 #' @export

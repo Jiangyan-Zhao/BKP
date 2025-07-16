@@ -30,31 +30,28 @@
 #' Xbounds <- matrix(c(-2,2), nrow=1)
 #' x <- tgp::lhs(n = n, rect = Xbounds)
 #' true_pi <- (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
-#' true_pi <- matrix(c(true_pi/2,true_pi/2,1-true_pi),nrow = n, byrow = F)
+#' true_pi <- matrix(c(true_pi/2,true_pi/2,1-true_pi),nrow = n, byrow = FALSE)
 #' m <- sample(100, n, replace = TRUE)
 #' Y <- matrix(0, nrow = n, ncol = 3)
 #' for (i in 1:n) {
 #'   Y[i, ] <- rmultinom(n=1, size=m[i], prob=true_pi[i, ])
 #' }
-#' DKPmodel <- fit.DKP(p=3,X=x,Y=Y,Xbounds = Xbounds,prior = "noninformative",kernel = "gaussian",loss = "brier")
+#' DKPmodel <- fit.DKP(x, Y, Xbounds = Xbounds)
 #' simulate(DKPmodel,Xnew = 0.5, n_sim = 5)
 #'
 #' @export
 #' @method simulate DKP
 
-simulate.DKP <- function(object, Xnew, n_sim = 1, threshold = NULL, seed = NULL, ...) {
+simulate.DKP <- function(object, Xnew, n_sim = 1, seed = NULL, ...) {
   if (!inherits(object, "DKP")) {
     stop("The input must be of class 'DKP'. Please provide a model fitted with 'fit.DKP()'.")
   }
-
-  if (!is.null(seed)) set.seed(seed)
-
   DKPmodel <- object
 
   # Extract components
   Xnorm   <- DKPmodel$Xnorm
   Y       <- DKPmodel$Y
-  theta   <- DKPmodel$bestTheta
+  theta   <- DKPmodel$theta_opt
   kernel  <- DKPmodel$kernel
   prior   <- DKPmodel$prior
   r0      <- DKPmodel$r0
@@ -69,50 +66,52 @@ simulate.DKP <- function(object, Xnew, n_sim = 1, threshold = NULL, seed = NULL,
   if (ncol(Xnew) != d) {
     stop("Xnew must have the same number of columns as the training input.")
   }
+  n_new <- nrow(Xnew)
 
   # Normalize Xnew to [0,1]^d
   Xnew_norm <- sweep(Xnew, 2, Xbounds[, 1], "-")
   Xnew_norm <- sweep(Xnew_norm, 2, Xbounds[, 2] - Xbounds[, 1], "/")
 
-  n_new       <- nrow(Xnew)
+
   # Kernel matrix
   K <- kernel_matrix(Xnew_norm, Xnorm, theta = theta, kernel = kernel)
 
   # Prior parameters
-  prior_par <- get_prior_dkp(prior = prior, r0 = r0, p0 = p0, Y = Y, K = K)
-  alpha0 <- prior_par$alpha0
-  if (prior == "noninformative" || prior == "fixed"){
-    alpha0 <- matrix(rep(alpha0,n_new),nrow = n_new, byrow = T)
-  }
+  alpha0 <- get_prior_dkp(prior = prior, r0 = r0, p0 = p0, Y = Y, K = K)
+
   # Compute posterior alpha
   alpha_n <- as.matrix(alpha0) + as.matrix(K %*% Y)
+  alpha_n <- pmax(alpha_n, 1e-10) # Avoid numerical issues
 
-  # Numerical stabilization: avoid log(0) or NaNs
-  alpha_n <- pmax(alpha_n, 1e-10)
+  # Simulate posterior samples: array [n_sim × q × n_new]
+  if (!is.null(seed)) set.seed(seed)
+  sims <- array(0, dim = c(n_sim, q, n_new))
+  for (i in 1:n_new) {
+    shape_mat <- matrix(rgamma(n_sim * q, shape = rep(alpha_n[i, ], each = n_sim), rate = 1),
+                        nrow = n_sim, byrow = FALSE)
+    sims[,,i] <- shape_mat / rowSums(shape_mat)
+  }
+  # Name dimensions
+  dimnames(sims) <- list(
+    paste0("sim", 1:n_sim),
+    paste0("Class", 1:q),
+    paste0("Xnew_", 1:n_new)
+  )
 
-  # rdirichlet
-  rdirichlet <- function(n, alpha) {
-    k <- length(alpha)
-    x <- matrix(rgamma(n * k, shape = alpha, rate = 1), nrow = n, byrow = TRUE)
-    samples <- x / rowSums(x)
-    return(samples)
-  }
-  # Simulate from Beta
-  sims <- array(0,dim = c(n_sim,q,n_new))
-  for (i in 1:n_new ) {
-    sims[,,i] <- rdirichlet(n_sim, alpha_n[i,])
+  # Compute posterior mean
+  pi_mean <- alpha_n / rowSums(alpha_n)
+
+  # Optional: hard class prediction
+  class_pred <- NULL
+  if (all(rowSums(Y) == 1)) {
+    class_pred <- max.col(pi_mean)
   }
 
-  # Optional: convert to multinomial class labels
-  if (!is.null(threshold)) {
-    if (!is.numeric(threshold) || length(threshold) != 1 || threshold <= 0 || threshold >= 1) {
-      stop("Threshold must be a number between 0 and 1.")
-    }
-    sims <- ifelse(sims > threshold, 1L, 0L)
-  }
-  dimnames(sims) <- list(paste0("sim", 1:n_sim),
-                         paste0("Ylabel", 1:q),
-                         paste0("Xnew", 1:n_new))
-  return(sims)
+  # Return results
+  return(list(
+    sims = sims,             # [n_sim × q × n_new]
+    mean = pi_mean,          # [n_new × q]
+    class = class_pred       # [n_new] — no comma here!
+  ))
 }
 
