@@ -1,6 +1,10 @@
 
 # BKP <img src="man/figures/logo.png" align="right" height="140"/>
 
+<!-- badges: start -->
+[![R-CMD-check](https://github.com/Jiangyan-Zhao/BKP/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/Jiangyan-Zhao/BKP/actions/workflows/R-CMD-check.yaml)
+<!-- badges: end -->
+
 The **BKP** package provides scalable Bayesian modeling tools for
 binomial and multinomial response data via the **Beta Kernel Process
 (BKP)** and its generalization, the **Dirichlet Kernel Process (DKP)**.
