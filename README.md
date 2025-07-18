@@ -1,53 +1,114 @@
 
-<!-- README.md is generated from README.Rmd. Please edit that file -->
+# BKP <img src="man/figures/logo.png" align="right" height="140"/>
 
-# BKP
+The **BKP** package provides scalable Bayesian modeling tools for
+binomial and multinomial response data via the **Beta Kernel Process
+(BKP)** and its generalization, the **Dirichlet Kernel Process (DKP)**.
 
-<!-- badges: start -->
+- **BKP** is designed for binary (or binomial) outcomes.
+- **DKP** extends BKP to handle multi-class responses via
+  Dirichlet-multinomial modeling.
 
-<!-- badges: end -->
-
-The goal of BKP is to …
+Both models leverage kernel-based weighting and conjugate priors to
+enable efficient posterior inference, probabilistic prediction, and
+uncertainty quantification.
 
 ## Installation
 
-You can install the development version of BKP from
-[GitHub](https://github.com/) with:
+Install the development version of the BKP package from GitHub:
 
 ``` r
 # install.packages("pak")
 pak::pak("Jiangyan-Zhao/BKP")
 ```
 
-## Example
+## BKP: Binary/Count Response Modeling
 
-This is a basic example which shows you how to solve a common problem:
+### Example
 
 ``` r
 library(BKP)
-## basic example code
+
+# Simulate data
+set.seed(123)
+n <- 30
+Xbounds <- matrix(c(-2, 2), nrow = 1)
+x <- matrix(seq(-2, 2, length.out = n), ncol = 1)
+true_pi <- (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
+m <- sample(50:100, n, replace = TRUE)
+y <- rbinom(n, size = m, prob = true_pi)
+
+# Fit BKP model
+model <- fit.BKP(x, y, m, Xbounds = Xbounds)
+
+# Predict on new data
+Xnew <- matrix(seq(-2, 2, length.out = 100), ncol = 1)
+pred <- predict(model, Xnew)
+
+# Plot results
+plot(model)
 ```
 
-What is special about using `README.Rmd` instead of just `README.md`?
-You can include R chunks like so:
+<img src="man/figures/README-BKP-example-1.png" width="100%" />
+
+## DKP: Multi-class Extension
+
+DKP generalizes BKP to multi-class settings using a
+Dirichlet-multinomial model.
+
+### Example
 
 ``` r
-summary(cars)
-#>      speed           dist       
-#>  Min.   : 4.0   Min.   :  2.00  
-#>  1st Qu.:12.0   1st Qu.: 26.00  
-#>  Median :15.0   Median : 36.00  
-#>  Mean   :15.4   Mean   : 42.98  
-#>  3rd Qu.:19.0   3rd Qu.: 56.00  
-#>  Max.   :25.0   Max.   :120.00
+# Simulate 3-class data
+set.seed(123)
+n <- 30
+Xbounds <- matrix(c(-2, 2), nrow = 1)
+x <- matrix(seq(-2, 2, length.out = n), ncol = 1)
+pi1 <- (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
+pi_true <- cbind(pi1/2, pi1/2, 1 - pi1)
+
+m <- sample(50:100, n, replace = TRUE)
+Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = pi_true[i, ])))
+
+# Fit DKP model
+model_dkp <- fit.DKP(x, Y, Xbounds = Xbounds)
+
+# Predict on new input
+Xnew <- matrix(seq(-2, 2, length.out = 10), ncol = 1)
+pred_dkp <- predict(model_dkp, Xnew)
+
+# Plot results
+plot(model_dkp)
 ```
 
-You’ll still need to render `README.Rmd` regularly, to keep `README.md`
-up-to-date. `devtools::build_readme()` is handy for this.
+<img src="man/figures/README-DKP-example-1.png" width="100%" /><img src="man/figures/README-DKP-example-2.png" width="100%" /><img src="man/figures/README-DKP-example-3.png" width="100%" />
 
-You can also embed plots, for example:
+## Features
 
-<img src="man/figures/README-pressure-1.png" width="100%" />
+- ✅ Bayesian modeling for binomial and multinomial count data
+- ✅ Kernel-based local information sharing
+- ✅ Posterior prediction and uncertainty quantification
+- ✅ Class label prediction using threshold or MAP rule
+- ✅ Simulation from posterior (Beta or Dirichlet) distributions
 
-In that case, don’t forget to commit and push the resulting figure
-files, so they display on GitHub and CRAN.
+## Simulate Posterior Samples
+
+You can simulate posterior samples using:
+
+``` r
+# BKP posterior draws
+simulate(model, Xnew, n_sim = 5)
+
+# DKP posterior draws
+simulate(model_dkp, Xnew, n_sim = 5)
+```
+
+## Citing
+
+If you use this package in your work, please cite the accompanying
+methodology papers or package documentation.
+
+## Development
+
+The BKP package is under active development. Contributions and
+suggestions are welcome via GitHub issues or pull requests.

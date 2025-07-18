@@ -2,8 +2,6 @@
 output: github_document
 ---
 
-<!-- README.md is generated from README.Rmd. Please edit that file -->
-
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
@@ -13,43 +11,106 @@ knitr::opts_chunk$set(
 )
 ```
 
-# BKP
+# BKP <img src="man/figures/logo.png" align="right" height="140"/>
 
-<!-- badges: start -->
-<!-- badges: end -->
 
-The goal of BKP is to ...
+The **BKP** package provides scalable Bayesian modeling tools for binomial and multinomial response data via the **Beta Kernel Process (BKP)** and its generalization, the **Dirichlet Kernel Process (DKP)**.
+
+- **BKP** is designed for binary (or binomial) outcomes.
+- **DKP** extends BKP to handle multi-class responses via Dirichlet-multinomial modeling.
+
+Both models leverage kernel-based weighting and conjugate priors to enable efficient posterior inference, probabilistic prediction, and uncertainty quantification.
 
 ## Installation
 
-You can install the development version of BKP from [GitHub](https://github.com/) with:
+Install the development version of the BKP package from GitHub:
 
-``` r
+```r
 # install.packages("pak")
 pak::pak("Jiangyan-Zhao/BKP")
 ```
 
-## Example
+## BKP: Binary/Count Response Modeling
 
-This is a basic example which shows you how to solve a common problem:
+### Example
 
-```{r example}
+```{r BKP-example, message = FALSE, warning = FALSE}
 library(BKP)
-## basic example code
+
+# Simulate data
+set.seed(123)
+n <- 30
+Xbounds <- matrix(c(-2, 2), nrow = 1)
+x <- matrix(seq(-2, 2, length.out = n), ncol = 1)
+true_pi <- (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
+m <- sample(50:100, n, replace = TRUE)
+y <- rbinom(n, size = m, prob = true_pi)
+
+# Fit BKP model
+model <- fit.BKP(x, y, m, Xbounds = Xbounds)
+
+# Predict on new data
+Xnew <- matrix(seq(-2, 2, length.out = 100), ncol = 1)
+pred <- predict(model, Xnew)
+
+# Plot results
+plot(model)
 ```
 
-What is special about using `README.Rmd` instead of just `README.md`? You can include R chunks like so:
+## DKP: Multi-class Extension
 
-```{r cars}
-summary(cars)
+DKP generalizes BKP to multi-class settings using a Dirichlet-multinomial model.
+
+### Example
+
+```{r DKP-example, message = FALSE, warning = FALSE}
+# Simulate 3-class data
+set.seed(123)
+n <- 30
+Xbounds <- matrix(c(-2, 2), nrow = 1)
+x <- matrix(seq(-2, 2, length.out = n), ncol = 1)
+pi1 <- (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
+pi_true <- cbind(pi1/2, pi1/2, 1 - pi1)
+
+m <- sample(50:100, n, replace = TRUE)
+Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = pi_true[i, ])))
+
+# Fit DKP model
+model_dkp <- fit.DKP(x, Y, Xbounds = Xbounds)
+
+# Predict on new input
+Xnew <- matrix(seq(-2, 2, length.out = 10), ncol = 1)
+pred_dkp <- predict(model_dkp, Xnew)
+
+# Plot results
+plot(model_dkp)
 ```
 
-You'll still need to render `README.Rmd` regularly, to keep `README.md` up-to-date. `devtools::build_readme()` is handy for this.
+## Features
 
-You can also embed plots, for example:
+- ✅ Bayesian modeling for binomial and multinomial count data
+- ✅ Kernel-based local information sharing
+- ✅ Posterior prediction and uncertainty quantification
+- ✅ Class label prediction using threshold or MAP rule
+- ✅ Simulation from posterior (Beta or Dirichlet) distributions
 
-```{r pressure, echo = FALSE}
-plot(pressure)
+## Simulate Posterior Samples
+
+You can simulate posterior samples using:
+
+```r
+# BKP posterior draws
+simulate(model, Xnew, n_sim = 5)
+
+# DKP posterior draws
+simulate(model_dkp, Xnew, n_sim = 5)
 ```
 
-In that case, don't forget to commit and push the resulting figure files, so they display on GitHub and CRAN.
+## Citing
+
+If you use this package in your work, please cite the accompanying methodology papers or package documentation.
+
+## Development
+
+The BKP package is under active development. Contributions and suggestions are welcome via GitHub issues or pull requests.
+
