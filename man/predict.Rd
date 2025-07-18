@@ -4,66 +4,80 @@
 \alias{predict}
 \alias{predict.BKP}
 \alias{predict.DKP}
-\title{Predict method for Beta Kernel Process (BKP) models}
+\title{Predict Method for BKP or DKP Models}
 \usage{
-\method{predict}{BKP}(object, Xnew, CI_size = 0.05, threshold = 0.5, ...)
+\method{predict}{BKP}(object, Xnew, CI_level = 0.05, threshold = 0.5, ...)
 
-\method{predict}{DKP}(object, Xnew, CI_size = 0.05, ...)
+\method{predict}{DKP}(object, Xnew, CI_level = 0.05, ...)
 }
 \arguments{
-\item{object}{A fitted DKP model object returned by \code{\link{fit.DKP}}.}
+\item{object}{An object of class \code{"BKP"} or \code{"DKP"}, typically
+returned by \code{\link{fit.BKP}} or \code{\link{fit.DKP}}.}
 
-\item{Xnew}{A matrix (or vector) of new input points at which to predict.}
+\item{Xnew}{A numeric matrix (or vector) of new input locations where
+predictions are desired.}
 
-\item{CI_size}{Confidence interval level (default = 0.05 for 95\% CI).}
+\item{CI_level}{Confidence level for prediction intervals (default is
+\code{0.05}, corresponding to 95\% CI).}
 
-\item{threshold}{Classification threshold for posterior mean (default = 0.5).}
+\item{threshold}{Classification threshold for binary prediction based on
+posterior mean (used only for BKP; default is \code{0.5}).}
 
-\item{...}{Additional arguments passed to generic predict functions (currently not used, included for S3 method consistency).}
+\item{...}{Additional arguments passed to generic \code{predict} methods
+(currently not used; included for S3 method consistency).}
 }
 \value{
-A data frame with columns:
+A list with the following components:
 \describe{
-\item{X}{Original new input locations}
-\item{mean}{Posterior mean of success probability}
-\item{variance}{Posterior variance}
-\item{lower}{Lower bound of CI for success probability}
-\item{upper}{Upper bound of CI for success probability}
-\item{class}{(Optional) Predicted binary label if all trials are \( m_i = 1 \)}
-}
-
-A data frame with columns:
-\describe{
-\item{X}{Original new input locations}
-\item{mean}{Posterior mean of success probability}
-\item{variance}{Posterior variance}
-\item{lower}{Lower bound of CI for success probability}
-\item{upper}{Upper bound of CI for success probability}
+\item{\code{Xnew}}{The new input locations.}
+\item{\code{mean}}{BKP: Posterior mean of the success probability at each location.
+DKP: A matrix of posterior mean class probabilities (rows = inputs, columns = classes).}
+\item{\code{variance}}{BKP: Posterior variance of the success probability.
+DKP: A matrix of posterior variances for each class.}
+\item{\code{lower}}{BKP: Lower bound of the prediction interval (e.g., 2.5th percentile for 95\% CI).
+DKP: A matrix of lower bounds for each class (e.g., 2.5th percentile).}
+\item{\code{upper}}{BKP: Upper bound of the prediction interval (e.g., 97.5th percentile for 95\% CI).
+DKP: A matrix of upper bounds for each class (e.g., 97.5th percentile).}
+\item{\code{class}}{BKP: Predicted binary label (0 or 1), based on posterior mean and threshold, if \code{m = 1}.
+DKP: Predicted class label (i.e., the class with the highest posterior mean probability).}
 }
 }
 \description{
-Generate predictions from a fitted BKP model at new input
-locations.
-
-Generate predictions from a fitted DKP model at new input locations.
+Generates posterior predictive summaries from a fitted BKP or
+DKP model at new input locations.
 }
 \examples{
-### 1D
+# ============================================================== #
+# ========================= BKP Examples ======================= #
+# ============================================================== #
+
+#-------------------------- 1D Example ---------------------------
 set.seed(123)
+
+# Define true success probability function
+true_pi_fun <- function(x) {
+  (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
+}
+
 n <- 30
 Xbounds <- matrix(c(-2,2), nrow=1)
-x <- tgp::lhs(n = n, rect = Xbounds)
+X <- tgp::lhs(n = n, rect = Xbounds)
+true_pi <- true_pi_fun(X)
 m <- sample(100, n, replace = TRUE)
-true_pi <- (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
 y <- rbinom(n, size = m, prob = true_pi)
-model1 <- fit.BKP(x, y, m, Xbounds=Xbounds)
-xx = matrix(seq(-2, 2, length = 100), ncol=1) #new data points
-head(predict(model1,xx))
 
-### 2D
+# Fit BKP model
+model1 <- fit.BKP(X, y, m, Xbounds=Xbounds)
+
+Xnew = matrix(seq(-2, 2, length = 100), ncol=1) #new data points
+head(predict(model1, Xnew))
+
+
+#-------------------------- 2D Example ---------------------------
 set.seed(123)
-n <- 100
-f <- function(X) {
+
+# Define 2D latent function and probability transformation
+true_pi_fun <- function(X) {
   if(is.null(nrow(X))) X <- matrix(X, nrow=1)
   m <- 8.6928
   s <- 2.4269
@@ -75,64 +89,88 @@ f <- function(X) {
     (18- 32*x1 + 12*x1^2 + 48*x2- 36*x1*x2 + 27*x2^2)
   f <- log(a*b)
   f <- (f- m)/s
-  return(f) }
-Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
-x <- tgp::lhs(n = n, rect = Xbounds)
-m <- sample(100, n, replace = TRUE)
-true_pi <- pnorm(f(x))
-y <- rbinom(n, size = m, prob = true_pi)
-model2 <- fit.BKP(x, y, m)
-xx1 <- seq(Xbounds[1,1], Xbounds[1,2], length.out = 100)
-xx2 <- seq(Xbounds[2,1], Xbounds[2,2], length.out = 100)
-xx <- expand.grid(xx1 = xx1, xx2 = xx2)
-head(predict(model2,xx))
-
-### 1D
-set.seed(123)
-n <- 30
-Xbounds <- matrix(c(-2,2), nrow=1)
-x <- tgp::lhs(n = n, rect = Xbounds)
-true_pi <- (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
-true_pi <- matrix(c(true_pi/2,true_pi/2,1-true_pi),nrow = n, byrow = FALSE)
-m <- sample(100, n, replace = TRUE)
-Y <- matrix(0, nrow = n, ncol = 3)
-for (i in 1:n) {
-  Y[i, ] <- rmultinom(n=1, size=m[i], prob=true_pi[i, ])
+  return(pnorm(f))  # Transform to probability
 }
-DKPmodel <- fit.DKP(x, Y,Xbounds = Xbounds)
-predict(DKPmodel,Xnew = 0.5)
 
-### 2D
-set.seed(123)
 n <- 100
-f <- function(X) {
-  if(is.null(nrow(X))) X <- matrix(X, nrow=1)
-  m <- 8.6928
-  s <- 2.4269
-  x1 <- 4*X[,1]- 2
-  x2 <- 4*X[,2]- 2
-  a <- 1 + (x1 + x2 + 1)^2 *
-    (19- 14*x1 + 3*x1^2- 14*x2 + 6*x1*x2 + 3*x2^2)
-  b <- 30 + (2*x1- 3*x2)^2 *
-    (18- 32*x1 + 12*x1^2 + 48*x2- 36*x1*x2 + 27*x2^2)
-  f <- log(a*b)
-  f <- (f- m)/s
-  return(f) }
 Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
-x <- tgp::lhs(n = n, rect = Xbounds)
-true_pi <- pnorm(f(x))
-true_pi <- matrix(c(true_pi/2,true_pi/2,1-true_pi),nrow = n, byrow = FALSE)
+X <- tgp::lhs(n = n, rect = Xbounds)
+true_pi <- true_pi_fun(X)
 m <- sample(100, n, replace = TRUE)
-Y <- matrix(0, nrow = n, ncol = 3)
-for (i in 1:n) {
-  Y[i, ] <- rmultinom(n=1, size=m[i], prob=true_pi[i, ])
+y <- rbinom(n, size = m, prob = true_pi)
+
+# Fit BKP model
+model2 <- fit.BKP(X, y, m, Xbounds=Xbounds)
+
+x1 <- seq(Xbounds[1,1], Xbounds[1,2], length.out = 100)
+x2 <- seq(Xbounds[2,1], Xbounds[2,2], length.out = 100)
+Xnew <- expand.grid(x1 = x1, x2 = x2)
+head(predict(model2, Xnew))
+
+# ============================================================== #
+# ========================= BKP Examples ======================= #
+# ============================================================== #
+
+#-------------------------- 1D Example ---------------------------
+set.seed(123)
+
+# Define true class probability function (3-class)
+true_pi_fun <- function(X) {
+  p <- (1 + exp(-X^2) * cos(10 * (1 - exp(-X)) / (1 + exp(-X)))) / 2
+  return(matrix(c(p/2, p/2, 1 - p), nrow = length(p)))
 }
-DKPmodel <- fit.DKP(x, Y, Xbounds = Xbounds)
-predict(DKPmodel, Xnew = c(0.5,0.5))
+
+n <- 30
+Xbounds <- matrix(c(-2, 2), nrow = 1)
+X <- tgp::lhs(n = n, rect = Xbounds)
+true_pi <- true_pi_fun(X)
+m <- sample(100, n, replace = TRUE)
+
+# Generate multinomial responses
+Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
+
+# Fit DKP model
+model1 <- fit.DKP(X, Y, Xbounds = Xbounds)
+print(model1)
+
+
+#-------------------------- 2D Example ---------------------------
+set.seed(123)
+
+# Define latent function and transform to 3-class probabilities
+true_pi_fun <- function(X) {
+  if (is.null(nrow(X))) X <- matrix(X, nrow = 1)
+  m <- 8.6928; s <- 2.4269
+  x1 <- 4 * X[,1] - 2
+  x2 <- 4 * X[,2] - 2
+  a <- 1 + (x1 + x2 + 1)^2 *
+    (19 - 14*x1 + 3*x1^2 - 14*x2 + 6*x1*x2 + 3*x2^2)
+  b <- 30 + (2*x1 - 3*x2)^2 *
+    (18 - 32*x1 + 12*x1^2 + 48*x2 - 36*x1*x2 + 27*x2^2)
+  f <- (log(a * b) - m) / s
+  p <- pnorm(f)
+  return(matrix(c(p/2, p/2, 1 - p), nrow = length(p)))
+}
+
+n <- 100
+Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
+X <- tgp::lhs(n = n, rect = Xbounds)
+true_pi <- true_pi_fun(X)
+m <- sample(100, n, replace = TRUE)
+
+# Generate multinomial responses
+Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
+
+# Fit DKP model
+model2 <- fit.DKP(X, Y, Xbounds = Xbounds)
+print(model2)
 
 }
-\author{
-Jiangyan Zhao, Kunhai Qing, Jin Xu
+\seealso{
+\code{\link{fit.BKP}} for fitting Beta Kernel Process models.
+\code{\link{fit.DKP}} for fitting Dirichlet Kernel Process models.
+\code{\link{plot.BKP}} for visualizing fitted BKP models.
+\code{\link{plot.DKP}} for visualizing fitted DKP models.
 }
 \keyword{BKP}
 \keyword{DKP}

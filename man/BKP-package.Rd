@@ -2,35 +2,40 @@
 % Please edit documentation in R/BKP-package.R
 \name{BKP-package}
 \alias{BKP-package}
-\title{Beta Kernel Process Modeling}
+\title{Beta and Dirichlet Kernel Process Modeling}
 \description{
-\pkg{BKP} provides tools for modeling binary or binomial
-response data using the Beta Kernel Process (BKP), a flexible nonparametric
-method that estimates latent probability surfaces via local kernel smoothing
-under a beta-binomial framework. The package supports efficient model
-fitting, probabilistic prediction with uncertainty quantification, and
-visualization tools for 1D and 2D input spaces. It also provides simulation
-utilities for generating synthetic data from a fitted model.
-}
-\section{Functions}{
+The \pkg{BKP} package provides tools for nonparametric modeling
+of binary, binomial, or multinomial response data using the Beta Kernel
+Process (BKP) and its extension, the Dirichlet Kernel Process (DKP). These
+methods estimate latent probability surfaces through localized kernel
+smoothing under a Bayesian framework.
 
-Key functions included in the package:
+The package includes functionality for model fitting, probabilistic
+prediction with uncertainty quantification, posterior simulation, and
+visualization in both one- and two-dimensional input spaces. It also
+supports hyperparameter tuning and flexible prior specification.
+}
+\section{Main Functions}{
+ Core functionality is organized into the following
+groups:
 \describe{
-\item{\link{fit.BKP}, \link{fit.DKP}}{
-Fit a BKP model to binomial or binary response data.
+\item{\code{\link{fit.BKP}}, \code{\link{fit.DKP}}}{
+Fit a BKP or DKP model to (multi)binomial response data.
 }
-\item{\link{predict.BKP}, \link{predict.DKP}}{
-Predict success probabilities and confidence/credible intervals at new input locations.
-Classification labels are automatically returned when \code{m = 1} for all training data.
+\item{\code{\link{predict.BKP}}, \code{\link{predict.DKP}}}{
+Perform posterior predictive inference at new input locations, including
+predictive means, variances, and credible intervals.
+Classification labels are returned automatically
+when observations represent single trials (i.e., binary outcomes).
 }
-\item{\link{simulate.BKP}, \link{simulate.DKP}}{
-Generate simulated binary or binomial responses from a fitted BKP model.
+\item{\code{\link{simulate.BKP}}, \code{\link{simulate.DKP}}}{
+Draw simulated responses from the posterior predictive distribution of a fitted model.
 }
-\item{\link{plot.BKP}, \link{plot.DKP}}{
-Visualize fitted BKP models for 1D or 2D inputs.
+\item{\code{\link{plot.BKP}}, \code{\link{plot.DKP}}}{
+Visualize model predictions and uncertainty bands in 1D and 2D input spaces.
 }
-\item{\link{print.BKP}, \link{print.DKP}, \link{summary.BKP}, \link{summary.DKP}}{
-Print or summarize model fit results.
+\item{\code{\link{summary.BKP}}, \code{\link{summary.DKP}}, \code{\link{print.BKP}}, \code{\link{print.DKP}}}{
+Summarize or print details of a fitted BKP or DKP model.
 }
 }
 }

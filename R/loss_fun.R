@@ -1,30 +1,26 @@
-#' @name loss_fun
+#' @title Loss Function for Fitting the BKP Model
 #'
-#' @title Loss Function for BKP Model Fitting
+#' @description Computes the loss used to fit the BKP model. Supports the Brier
+#'   score (mean squared error) and negative log-loss (cross-entropy), under
+#'   different prior specifications.
 #'
-#' @description Computes the loss used for fitting the Beta Kernel Process (BKP)
-#'   model. Supports Brier score (mean squared error) or log-loss
-#'   (cross-entropy), under different prior specifications.
+#' @inheritParams fit.BKP
+#' @param gamma A numeric vector of log-transformed kernel hyperparameters.
+#' @param Xnorm A numeric matrix of normalized inputs (each column scaled to
+#'   \code{[0,1]}).
 #'
-#' @param gamma A numeric vector of kernel hyperparameters (on the log scale).
-#' @param Xnorm A normalized input matrix (each column scaled \code{[0,1]}).
-#' @param y A numeric vector of binary counts (successes).
-#' @param m A numeric vector of total trials (denominators).
-#' @param prior Type of prior: "noninformative", "fixed", or "adaptive".
-#' @param r0 Global prior strength (used in "fixed"/"adaptive").
-#' @param p0 Prior mean for fixed prior (in (0,1)).
-#' @param loss Type of loss: "brier" or "log_loss".
-#' @param kernel Type of kernel: "gaussian", "matern52", or "matern32".
+#' @return A single numeric value representing the total loss (to be minimized).
 #'
-#' @return A scalar numeric value representing the loss.
-#'
-#' @author Jiangyan Zhao, Kunhai Qing, Jin Xu
+#' @seealso \code{\link{loss_fun_dkp}}, \code{\link{fit.BKP}}, \code{\link{get_prior}},
+#'   \code{\link{kernel_matrix}}
 #'
 #' @examples
-#' loss_fun(gamma = rep(0, 2),
-#'         Xnorm = matrix(runif(20), ncol=2),
-#'         y = rbinom(10, 10, 0.5),
-#'         m = rep(10, 10))
+#' set.seed(123)
+#' n = 10
+#' Xnorm = matrix(runif(2 * n), ncol = 2)
+#' m = rep(10, n)
+#' y = rbinom(n, size = m, prob = runif(n))
+#' loss_fun(gamma = rep(0, 2), Xnorm = Xnorm, y = y, m = m)
 #'
 #' @export
 

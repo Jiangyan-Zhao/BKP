@@ -2,7 +2,7 @@
 % Please edit documentation in R/fit_DKP.R
 \name{fit.DKP}
 \alias{fit.DKP}
-\title{Fit a Dirichlet Kernel Process (DKP) Model for Multinomial Observations}
+\title{Fit a Dirichlet Kernel Process (DKP) Model}
 \usage{
 fit.DKP(
   X,
@@ -17,105 +17,117 @@ fit.DKP(
 )
 }
 \arguments{
-\item{X}{Covariate matrix of size \eqn{n \times d}. Ignored if \code{data} is provided.}
+\item{X}{A numeric input matrix of size \eqn{n \times d}, where each row
+represents a covariate vector.}
 
-\item{Y}{Matrix of observed successes of size \eqn{n \times q}.}
+\item{Y}{Matrix of observed multinomial counts, with dimension \eqn{n \times
+q}.}
 
-\item{Xbounds}{Optional \eqn{d \times 2} matrix defining lower and upper bounds for each input dimension
-(used for normalization). Defaults to \code{[0,1]^d}.}
+\item{Xbounds}{Optional \eqn{d \times 2} matrix specifying the lower and
+upper bounds of each input dimension. Used to normalize inputs to
+\eqn{[0,1]^d}. If \code{NULL}, bounds are inferred from \code{X}.}
 
-\item{prior}{Type of prior used: "noninformative", "fixed", or "adaptive".}
+\item{prior}{Type of prior to use. One of \code{"noninformative"},
+\code{"fixed"}, or \code{"adaptive"}.}
 
-\item{r0}{Global precision parameter used in prior specification.}
+\item{r0}{Global prior precision (only used when \code{prior = "fixed"} or
+\code{"adaptive"}).}
 
-\item{p0}{Global prior mean used when prior = "fixed". Must be a vector of length \eqn{q}.}
+\item{p0}{Global prior mean vector (only used when \code{prior = "fixed"}).
+Must be of length \eqn{q}.}
 
-\item{kernel}{Character string specifying the kernel function to use: one of \code{"gaussian"},
-\code{"matern52"}, or \code{"matern32"}.}
+\item{kernel}{Kernel function for local weighting. Choose from
+\code{"gaussian"}, \code{"matern52"}, or \code{"matern32"}.}
 
-\item{loss}{Loss function to be minimized during hyperparameter tuning. Choose between \code{"brier"}
-(default) and \code{"NLML"} (negative log marginal likelihood).}
+\item{loss}{Loss function for kernel hyperparameter tuning. One of
+\code{"brier"} (default) or \code{"log_loss"}.}
 
-\item{n_multi_start}{Number of initial points for multi-start optimization (default = 10*d).}
+\item{n_multi_start}{Number of random initializations for multi-start
+optimization. Default is \code{10 × d}.}
 }
 \value{
-A list of class \code{"DKP"} containing the fitted model, with the following components:
+A list of class \code{"DKP"} representing the fitted DKP model, with
+the following components:
 \describe{
-\item{\code{bestTheta}}{A numeric vector of optimal kernel hyperparameters (lengthscale), obtained by minimizing the specified loss function.}
-\item{\code{kernel}}{Character string indicating the kernel type used ("gaussian", "matern52", or "matern32").}
-\item{\code{loss}}{Character string specifying the loss function used ("brier" or "log_loss").}
-\item{\code{minLoss}}{The minimum loss value achieved during hyperparameter optimization.}
-\item{\code{X}}{The original input matrix (unnormalized), with dimensions \code{n x d}.}
-\item{\code{Xnorm}}{The normalized input matrix scaled to \code{[0,1]^d}.}
-\item{\code{Xbounds}}{A \code{d x 2} matrix specifying the lower and upper bounds used for normalizing each dimension of \code{X}.}
-\item{\code{Y}}{A numeric matrix of observed successes (length \code{n x q}).}
-\item{\code{prior}}{Character string indicating the prior type used ("noninformative", "fixed", or "adaptive").}
-\item{\code{r0}}{Global prior precision parameter (only used for fixed or adaptive priors).}
-\item{\code{p0}}{Global prior mean parameter (only used for fixed priors).}
-\item{\code{alpha0}}{The prior alpha parameters for each input location. A vector or matrix with \code{n} rows.}
-\item{\code{alpha_n}}{Posterior alpha parameters computed as \code{alpha0 + K \%*\% Y}.}
+\item{\code{theta_opt}}{Optimized kernel hyperparameters (lengthscales).}
+\item{\code{kernel}}{Kernel function used, as a string.}
+\item{\code{loss}}{Loss function used for hyperparameter tuning.}
+\item{\code{loss_min}}{Minimum loss value achieved during optimization.}
+\item{\code{X}}{Original (unnormalized) input matrix of size \code{n × d}.}
+\item{\code{Xnorm}}{Normalized input matrix scaled to \eqn{[0,1]^d}.}
+\item{\code{Xbounds}}{Matrix specifying normalization bounds for each input dimension.}
+\item{\code{Y}}{Observed multinomial counts of size \code{n × q}.}
+\item{\code{prior}}{Type of prior used.}
+\item{\code{r0}}{Prior precision parameter.}
+\item{\code{p0}}{Prior mean (for fixed priors).}
+\item{\code{alpha0}}{Prior Dirichlet parameters at each input location (scalar or matrix).}
+\item{\code{alpha_n}}{Posterior Dirichlet parameters after kernel smoothing.}
 }
 }
 \description{
-Fits a Dirichlet Kernel Process model for multinomiall data, estimating latent functions
-representing Dirichlet distribution parameters using kernel smoothing.
-}
-\details{
-The function fits the DKP model and stores everything necessary for prediction.
-The kernel hyper-parameters optimization uses multi-start gradient-based method.
-Inputs are first normalized to the \eqn{[0,1]^d} space defined by \code{Xbounds}.
-The kernel matrix is computed with optimized parameters, and posterior Dirichlet parameters
-\eqn{\alpha_n} is computed by smoothing the observed successes \eqn{y} with the kernel matrix:
-\deqn{
-\alpha_n = \alpha_0 + K \cdot Y,
-}
-where \eqn{K} is the kernel matrix evaluated at normalized inputs.
+Fits a DKP model for multinomial response data by locally
+smoothing observed counts to estimate latent Dirichlet parameters.
 }
 \examples{
-### 1D
+#-------------------------- 1D Example ---------------------------
 set.seed(123)
+
+# Define true class probability function (3-class)
+true_pi_fun <- function(X) {
+  p <- (1 + exp(-X^2) * cos(10 * (1 - exp(-X)) / (1 + exp(-X)))) / 2
+  return(matrix(c(p/2, p/2, 1 - p), nrow = length(p)))
+}
+
 n <- 30
-Xbounds <- matrix(c(-2,2), nrow=1)
-x <- tgp::lhs(n = n, rect = Xbounds)
-true_pi <- (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
-true_pi <- matrix(c(true_pi/2,true_pi/2,1-true_pi),nrow = n, byrow = FALSE)
+Xbounds <- matrix(c(-2, 2), nrow = 1)
+X <- tgp::lhs(n = n, rect = Xbounds)
+true_pi <- true_pi_fun(X)
 m <- sample(100, n, replace = TRUE)
-Y <- matrix(0, nrow = n, ncol = 3)
-for (i in 1:n) {
-  Y[i, ] <- rmultinom(n=1, size=m[i], prob=true_pi[i, ])
-}
-DKPmodel <- fit.DKP(x,Y,Xbounds = Xbounds)
-print(DKPmodel)
 
-### 2D
+# Generate multinomial responses
+Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
+
+# Fit DKP model
+model1 <- fit.DKP(X, Y, Xbounds = Xbounds)
+print(model1)
+
+
+#-------------------------- 2D Example ---------------------------
 set.seed(123)
-n <- 100
-f <- function(X) {
-  if(is.null(nrow(X))) X <- matrix(X, nrow=1)
-  m <- 8.6928
-  s <- 2.4269
-  x1 <- 4*X[,1]- 2
-  x2 <- 4*X[,2]- 2
+
+# Define latent function and transform to 3-class probabilities
+true_pi_fun <- function(X) {
+  if (is.null(nrow(X))) X <- matrix(X, nrow = 1)
+  m <- 8.6928; s <- 2.4269
+  x1 <- 4 * X[,1] - 2
+  x2 <- 4 * X[,2] - 2
   a <- 1 + (x1 + x2 + 1)^2 *
-    (19- 14*x1 + 3*x1^2- 14*x2 + 6*x1*x2 + 3*x2^2)
-  b <- 30 + (2*x1- 3*x2)^2 *
-    (18- 32*x1 + 12*x1^2 + 48*x2- 36*x1*x2 + 27*x2^2)
-  f <- log(a*b)
-  f <- (f- m)/s
-  return(f) }
-Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
-x <- tgp::lhs(n = n, rect = Xbounds)
-true_pi <- pnorm(f(x))
-true_pi <- matrix(c(true_pi/2,true_pi/2,1-true_pi),nrow = n, byrow = FALSE)
-m <- sample(100, n, replace = TRUE)
-Y <- matrix(0, nrow = n, ncol = 3)
-for (i in 1:n) {
-  Y[i, ] <- rmultinom(n=1, size=m[i], prob=true_pi[i, ])
+    (19 - 14*x1 + 3*x1^2 - 14*x2 + 6*x1*x2 + 3*x2^2)
+  b <- 30 + (2*x1 - 3*x2)^2 *
+    (18 - 32*x1 + 12*x1^2 + 48*x2 - 36*x1*x2 + 27*x2^2)
+  f <- (log(a * b) - m) / s
+  p <- pnorm(f)
+  return(matrix(c(p/2, p/2, 1 - p), nrow = length(p)))
 }
-DKPmodel <- fit.DKP(x,Y,Xbounds = Xbounds)
-print(DKPmodel)
+
+n <- 100
+Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
+X <- tgp::lhs(n = n, rect = Xbounds)
+true_pi <- true_pi_fun(X)
+m <- sample(100, n, replace = TRUE)
+
+# Generate multinomial responses
+Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
+
+# Fit DKP model
+model2 <- fit.DKP(X, Y, Xbounds = Xbounds)
+print(model2)
 
 }
-\author{
-Jiangyan Zhao, Kunhai Qing, Jin Xu
+\seealso{
+\code{\link{fit.BKP}} for modeling binomial responses using the Beta
+Kernel Process. \code{\link{predict.DKP}}, \code{\link{plot.DKP}},
+\code{\link{simulate.DKP}} for making predictions, visualizing results, and
+generating simulations from a fitted DKP model. \code{\link{summary.DKP}},
+\code{\link{print.DKP}} for inspecting fitted model summaries.
 }

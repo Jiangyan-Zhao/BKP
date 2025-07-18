@@ -1,31 +1,25 @@
-#' @name lossFun
+#' @title Loss Function for Fitting the DKP Model
 #'
-#' @title Loss Function for DKP Model Fitting
+#' @description Computes the loss used to fit the DKP model. Supports the Brier
+#'   score (mean squared error) and negative log-loss (cross-entropy), under
+#'   different prior specifications.
 #'
-#' @description
-#' Computes the loss used for fitting the Beta Kernel Process (DKP) model.
-#' Supports Brier score (mean squared error) or log-loss (cross-entropy),
-#' under different prior specifications.
+#' @inheritParams fit.DKP
+#' @inheritParams loss_fun
 #'
-#' @param gamma A numeric vector of kernel hyperparameters (on the log scale).
-#' @param Xnorm A normalized input matrix (each column scaled \code{[0,1]}).
-#' @param Y A matrix of observed successes of size \eqn{n \times q}.
-#' @param prior Type of prior: "noninformative", "fixed", or "adaptive".
-#' @param r0 Global prior strength (used in "fixed"/"adaptive").
-#' @param p0 Prior mean for fixed prior.
-#' @param loss Type of loss: "brier" or "log_loss".
-#' @param kernel Type of kernel: "gaussian", "matern52", or "matern32".
+#' @return A single numeric value representing the total loss (to be minimized).
 #'
-#' @return A scalar numeric value representing the loss.
+#' @seealso \code{\link{loss_fun}}, \code{\link{fit.DKP}}, \code{\link{get_prior_dkp}},
+#'   \code{\link{kernel_matrix}}
 #'
-#' @author Jiangyan Zhao, Kunhai Qing, Jin Xu
 #' @examples
-#' loss_fun_dkp(gamma = rep(1, 2),
-#'         Xnorm = matrix(runif(20), ncol=2),
-#'         Y = matrix(runif(20), ncol=2),
-#'         prior = "noninformative",
-#'         loss = "brier",
-#'         kernel = "gaussian")
+#' set.seed(123)
+#' n = 10
+#' Xnorm = matrix(runif(2 * n), ncol = 2)
+#' m = rep(10, n)
+#' y = rbinom(n, size = m, prob = runif(n))
+#' Y = cbind(y, m-y)
+#' loss_fun_dkp(gamma = rep(0, 2), Xnorm = Xnorm, Y = Y)
 #' @export
 
 

@@ -2,7 +2,7 @@
 % Please edit documentation in R/get_prior_dkp.R
 \name{get_prior_dkp}
 \alias{get_prior_dkp}
-\title{Construct Prior Parameters for Dirichlet Kernel Process (DKP)}
+\title{Construct Prior Parameters for the DKP Model}
 \usage{
 get_prior_dkp(
   prior = c("noninformative", "fixed", "adaptive"),
@@ -13,28 +13,48 @@ get_prior_dkp(
 )
 }
 \arguments{
-\item{prior}{Type of prior: one of \code{"noninformative"}, \code{"fixed"}, or \code{"adaptive"}.}
+\item{prior}{Character string specifying the type of prior to use. One of
+\code{"noninformative"}, \code{"fixed"}, or \code{"adaptive"}.}
 
-\item{r0}{Global precision parameter (used in \code{"fixed"} and \code{"adaptive"}).}
+\item{r0}{Positive scalar indicating the global precision parameter. Used
+when \code{prior} is \code{"fixed"} or \code{"adaptive"}.}
 
-\item{p0}{Global prior mean used when prior = "fixed".}
+\item{p0}{Numeric vector specifying the global prior mean for each class
+(must sum to 1). Only used when \code{prior = "fixed"}. Should be of length
+equal to the number of classes.}
 
-\item{Y}{A numeric vector of observed successes.}
+\item{Y}{Numeric matrix of observed class counts of size \code{n × q}, where
+\code{n} is the number of observations and \code{q} the number of classes.}
 
-\item{K}{A precomputed kernel matrix (n x n), typically from \code{kernel_matrix()}.}
+\item{K}{A precomputed kernel matrix of size \code{n × n}, typically obtained
+from \code{\link{kernel_matrix}}.}
 }
 \value{
-A list with a numeric vectors: \code{alpha0} (of length n).
+A list containing:
+\describe{
+\item{\code{alpha0}}{A numeric matrix of prior Dirichlet parameters at each input location;
+dimension \code{n × q}.}
+}
 }
 \description{
-Constructs prior Dirichlet distribution parameters (alpha0) at each location
-based on user-specified prior type: noninformative, fixed, or data-adaptive.
+Computes prior Dirichlet distribution parameters \code{alpha0}
+at each input location for the Dirichlet Kernel Process model, based on the
+specified prior type: noninformative, fixed, or adaptive.
+}
+\details{
+\itemize{
+\item When \code{prior = "noninformative"}, all entries in \code{alpha0} are set to 1 (flat Dirichlet).
+\item When \code{prior = "fixed"}, all rows of \code{alpha0} are set to \code{r0 * p0}.
+\item When \code{prior = "adaptive"}, each row of \code{alpha0} is computed by kernel-weighted
+smoothing of the observed relative frequencies in \code{Y}, scaled by
+\code{r0}.
+}
 }
 \examples{
 # Simulated multi-class data
 set.seed(123)
 n <- 15           # number of training points
-p <- 3            # number of classes
+q <- 3            # number of classes
 X <- matrix(runif(n * 2), ncol = 2)
 
 # Simulate class probabilities and draw multinomial counts
@@ -47,13 +67,16 @@ true_pi <- t(apply(X, 1, function(x) {
   raw / sum(raw)
 }))
 m <- sample(10:20, n, replace = TRUE)
-Y <- t(apply(true_pi, 1, function(p) rmultinom(1, size = sample(10:20, 1), prob = p)))
+Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 
-# Compute kernel matrix (e.g., Gaussian)
+# Compute kernel matrix (Gaussian)
 K <- kernel_matrix(X, theta = rep(0.2, 2), kernel = "gaussian")
 
-# Construct prior (adaptive)
+# Construct adaptive prior
 prior_dkp <- get_prior_dkp(prior = "adaptive", r0 = 2, Y = Y, K = K)
-str(prior_dkp)
 
+}
+\seealso{
+\code{\link{get_prior}}, \code{\link{fit.DKP}},
+\code{\link{predict.DKP}}, \code{\link{kernel_matrix}}
 }

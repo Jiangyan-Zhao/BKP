@@ -4,51 +4,55 @@
 \alias{print}
 \alias{print.BKP}
 \alias{print.DKP}
-\title{Print Summary of a BKP Model}
+\title{Print Summary of a Fitted BKP or DKP Model}
 \usage{
 \method{print}{BKP}(x, ...)
 
 \method{print}{DKP}(x, ...)
 }
 \arguments{
-\item{x}{An object of class \code{"DKP"}, typically returned by \code{\link{fit.DKP}}.}
+\item{x}{An object of class \code{"BKP"} (from \code{\link{fit.BKP}}) or
+\code{"DKP"} (from \code{\link{fit.DKP}}).}
 
-\item{...}{Additional arguments passed to the generic \code{print} method (not used here).}
+\item{...}{Additional arguments passed to the generic \code{print} method
+(currently not used).}
 }
 \description{
-Provides a concise summary of a fitted Beta Kernel Process (BKP) model object.
-The printed output includes key model characteristics such as the number of observations,
-the dimensionality of the input, the kernel and loss type used, the optimized kernel
-parameters (\code{bestTheta}), and the minimum loss (e.g., Brier score) achieved.
-
-Provides a concise summary of a fitted Beta Kernel Process (DKP) model object.
-The printed output includes key model characteristics such as the number of observations,
-the dimensionality of the input, the kernel and loss type used, the optimized kernel
-parameters (\code{bestTheta}), and the minimum loss (e.g., Brier score) achieved.
-}
-\details{
-When a \code{BKP} object is printed (e.g., by calling \code{print(model)} or typing the object name
-in the console), this method presents a readable summary of the fitted model's essential properties.
-
-When a \code{DKP} object is printed (e.g., by calling \code{print(model)} or typing the object name
-in the console), this method presents a readable summary of the fitted model's essential properties.
+Displays a concise summary of a fitted BKP or DKP model. The
+output includes key characteristics such as sample size, input
+dimensionality, kernel type, loss function, optimized kernel
+hyperparameters, and minimum loss.
 }
 \examples{
-### 1D
+# ============================================================== #
+# ========================= BKP Examples ======================= #
+# ============================================================== #
+
+#-------------------------- 1D Example ---------------------------
 set.seed(123)
+
+# Define true success probability function
+true_pi_fun <- function(x) {
+  (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
+}
+
 n <- 30
 Xbounds <- matrix(c(-2,2), nrow=1)
-x <- tgp::lhs(n = n, rect = Xbounds)
+X <- tgp::lhs(n = n, rect = Xbounds)
+true_pi <- true_pi_fun(X)
 m <- sample(100, n, replace = TRUE)
-true_pi <- (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
 y <- rbinom(n, size = m, prob = true_pi)
-model1 <- fit.BKP(x, y, m, Xbounds=Xbounds)
+
+# Fit BKP model
+model1 <- fit.BKP(X, y, m, Xbounds=Xbounds)
 print(model1)
 
-### 2D
+
+#-------------------------- 2D Example ---------------------------
 set.seed(123)
-n <- 100
-f <- function(X) {
+
+# Define 2D latent function and probability transformation
+true_pi_fun <- function(X) {
   if(is.null(nrow(X))) X <- matrix(X, nrow=1)
   m <- 8.6928
   s <- 2.4269
@@ -60,68 +64,82 @@ f <- function(X) {
     (18- 32*x1 + 12*x1^2 + 48*x2- 36*x1*x2 + 27*x2^2)
   f <- log(a*b)
   f <- (f- m)/s
-  return(f) }
+  return(pnorm(f))  # Transform to probability
+}
+
+n <- 100
 Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
-x <- tgp::lhs(n = n, rect = Xbounds)
+X <- tgp::lhs(n = n, rect = Xbounds)
+true_pi <- true_pi_fun(X)
 m <- sample(100, n, replace = TRUE)
-true_pi <- pnorm(f(x))
 y <- rbinom(n, size = m, prob = true_pi)
-model2 <- fit.BKP(x, y, m)
+
+# Fit BKP model
+model2 <- fit.BKP(X, y, m, Xbounds=Xbounds)
 print(model2)
 
-### 1D
-set.seed(123)
-n <- 30
-Xbounds <- matrix(c(-2,2), nrow=1)
-x <- tgp::lhs(n = n, rect = Xbounds)
-true_pi <- (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
-true_pi <- matrix(c(true_pi/2,true_pi/2,1-true_pi),nrow = n, byrow = FALSE)
-m <- sample(100, n, replace = TRUE)
-Y <- matrix(0, nrow = n, ncol = 3)
-for (i in 1:n) {
-  Y[i, ] <- rmultinom(n=1, size=m[i], prob=true_pi[i, ])
-}
-DKPmodel <- fit.DKP(x, Y, Xbounds = Xbounds)
-print(DKPmodel)
+# ============================================================== #
+# ========================= DKP Examples ======================= #
+# ============================================================== #
 
-### 2D
+#-------------------------- 1D Example ---------------------------
 set.seed(123)
-n <- 100
-f <- function(X) {
-  if(is.null(nrow(X))) X <- matrix(X, nrow=1)
-  m <- 8.6928
-  s <- 2.4269
-  x1 <- 4*X[,1]- 2
-  x2 <- 4*X[,2]- 2
-  a <- 1 + (x1 + x2 + 1)^2 *
-    (19- 14*x1 + 3*x1^2- 14*x2 + 6*x1*x2 + 3*x2^2)
-  b <- 30 + (2*x1- 3*x2)^2 *
-    (18- 32*x1 + 12*x1^2 + 48*x2- 36*x1*x2 + 27*x2^2)
-  f <- log(a*b)
-  f <- (f- m)/s
-  return(f) }
-Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
-x <- tgp::lhs(n = n, rect = Xbounds)
-true_pi <- pnorm(f(x))
-true_pi <- matrix(c(true_pi/2,true_pi/2,1-true_pi),nrow = n, byrow = FALSE)
-m <- sample(100, n, replace = TRUE)
-Y <- matrix(0, nrow = n, ncol = 3)
-for (i in 1:n) {
-  Y[i, ] <- rmultinom(n=1, size=m[i], prob=true_pi[i, ])
+
+# Define true class probability function (3-class)
+true_pi_fun <- function(X) {
+  p <- (1 + exp(-X^2) * cos(10 * (1 - exp(-X)) / (1 + exp(-X)))) / 2
+  return(matrix(c(p/2, p/2, 1 - p), nrow = length(p)))
 }
-DKPmodel <- fit.DKP(x, Y, Xbounds = Xbounds)
-print(DKPmodel)
+
+n <- 30
+Xbounds <- matrix(c(-2, 2), nrow = 1)
+X <- tgp::lhs(n = n, rect = Xbounds)
+true_pi <- true_pi_fun(X)
+m <- sample(100, n, replace = TRUE)
+
+# Generate multinomial responses
+Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
+
+# Fit DKP model
+model1 <- fit.DKP(X, Y, Xbounds = Xbounds)
+print(model1)
+
+
+#-------------------------- 2D Example ---------------------------
+set.seed(123)
+
+# Define latent function and transform to 3-class probabilities
+true_pi_fun <- function(X) {
+  if (is.null(nrow(X))) X <- matrix(X, nrow = 1)
+  m <- 8.6928; s <- 2.4269
+  x1 <- 4 * X[,1] - 2
+  x2 <- 4 * X[,2] - 2
+  a <- 1 + (x1 + x2 + 1)^2 *
+    (19 - 14*x1 + 3*x1^2 - 14*x2 + 6*x1*x2 + 3*x2^2)
+  b <- 30 + (2*x1 - 3*x2)^2 *
+    (18 - 32*x1 + 12*x1^2 + 48*x2 - 36*x1*x2 + 27*x2^2)
+  f <- (log(a * b) - m) / s
+  p <- pnorm(f)
+  return(matrix(c(p/2, p/2, 1 - p), nrow = length(p)))
+}
+
+n <- 100
+Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
+X <- tgp::lhs(n = n, rect = Xbounds)
+true_pi <- true_pi_fun(X)
+m <- sample(100, n, replace = TRUE)
+
+# Generate multinomial responses
+Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
+
+# Fit DKP model
+model2 <- fit.DKP(X, Y, Xbounds = Xbounds)
+print(model2)
 
 }
 \seealso{
-\code{\link{fit.BKP}} for model fitting.
-\code{\link{summary.BKP}} for a more detailed report, if implemented.
-
-\code{\link{fit.DKP}} for model fitting.
-\code{\link{summary.DKP}} for a more detailed report, if implemented.
-}
-\author{
-Jiangyan Zhao, Kunhai Qing, Jin Xu
+\code{\link{fit.BKP}}, \code{\link{fit.DKP}},
+\code{\link{summary.BKP}}, \code{\link{summary.DKP}}.
 }
 \keyword{BKP}
 \keyword{DKP}

@@ -1,60 +1,66 @@
-#' @name kernel_matrix
-#'
 #' @title Compute Kernel Matrix Between Input Locations
 #'
-#' @description Computes the kernel matrix between \code{X} and \code{Xprime}
-#'   using a specified kernel function and length-scale parameters \code{theta}.
-#'   Supports both isotropic and anisotropic length scales. Supported kernels
-#'   include Gaussian, Matern 5/2, and Matern 3/2 kernels.
+#' @description Computes the kernel matrix between two sets of input locations
+#'   using a specified kernel function. Supports both isotropic and anisotropic
+#'   lengthscales. Available kernels include the Gaussian, Matérn 5/2, and
+#'   Matérn 3/2.
 #'
 #' @param X A numeric matrix (or vector) of input locations with shape \eqn{n
 #'   \times d}.
-#' @param Xprime An optional matrix of input locations (defaults to \code{X}).
-#'   Should have the same number of columns as \code{X}.
-#' @param theta A positive numeric scalar or vector of length equal to the
-#'   number of columns in \code{X}. Specifies the lengthscale(s).
-#' @param kernel A character string indicating the kernel type. One of
-#'   \code{"gaussian"}, \code{"matern32"}, or \code{"matern52"}.
-#' @param anisotropic Logical. If \code{TRUE} (default), \code{theta} is treated
-#'   as a vector of per-dimension scales. If \code{FALSE}, \code{theta} is a
-#'   global scalar lengthscale.
+#' @param Xprime An optional numeric matrix of input locations with shape \eqn{m
+#'   \times d}. If \code{NULL} (default), it is set to \code{X}, resulting in a
+#'   symmetric matrix.
+#' @param theta A positive numeric value or vector specifying the kernel
+#'   lengthscale(s). If a scalar, the same lengthscale is applied to all input
+#'   dimensions. If a vector, it must be of length \code{d}, corresponding to
+#'   anisotropic scaling.
+#' @param kernel A character string specifying the kernel function. Must be one
+#'   of \code{"gaussian"}, \code{"matern32"}, or \code{"matern52"}.
+#' @param anisotropic Logical. If \code{TRUE} (default), \code{theta} is
+#'   interpreted as a vector of per-dimension lengthscales. If \code{FALSE},
+#'   \code{theta} is treated as a scalar.
 #'
-#' @return A numeric matrix of kernel values of size \eqn{n \times m}, where
-#'   \eqn{n = \mathrm{nrow}(X)} and \eqn{m = \mathrm{nrow}(Xprime)}. Each
-#'   element \eqn{K_{ij}} corresponds to the kernel similarity between input
-#'   \eqn{X_i} and \eqn{Xprime_j}.
+#' @return A numeric matrix of size \eqn{n \times m}, where each element
+#'   \eqn{K_{ij}} gives the kernel similarity between input \eqn{X_i} and
+#'   \eqn{X'_j}.
 #'
-#' @details The kernel functions are defined as follows:
-#' \deqn{
-#' k_{\text{Gaussian}}(\mathbf{x}, \mathbf{x}') = \exp\left(- \|\mathbf{d}\|^2\right)
-#' }
-#' \deqn{
-#' k_{\text{Matern 5/2}}(\mathbf{x}, \mathbf{x}') = \left(1 + \sqrt{5} r + \frac{5}{3} r^2\right) \exp(-\sqrt{5} r)
-#' }
-#' \deqn{
-#' k_{\text{Matern 3/2}}(\mathbf{x}, \mathbf{x}') = \left(1 + \sqrt{3} r \right) \exp(-\sqrt{3} r)
-#' }
-#' where \eqn{r = \| \mathbf{d} \| = \left\| \frac{\mathbf{x} -
-#' \mathbf{x}'}{\boldsymbol{\theta}} \right\|} is the scaled Euclidean distance.
+#' @details Let \eqn{\mathbf{x}} and \eqn{\mathbf{x}'} denote two input points.
+#'   The scaled distance is defined as
+#'   \deqn{
+#'      r = \left\| \frac{\mathbf{x} - \mathbf{x}'}{\boldsymbol{\theta}} \right\|_2.
+#'   }
 #'
-#'   The function automatically broadcasts \code{theta} if it is scalar and
-#'   performs input dimension checks.
+#'   The available kernels are defined as:
+#'   \itemize{
+#'      \item \strong{Gaussian:}
+#'      \deqn{
+#'        k(\mathbf{x}, \mathbf{x}') = \exp(-r^2)
+#'      }
+#'      \item \strong{Matérn 5/2:}
+#'      \deqn{
+#'        k(\mathbf{x}, \mathbf{x}') = \left(1 + \sqrt{5} r + \frac{5}{3} r^2 \right) \exp(-\sqrt{5} r)
+#'      }
+#'      \item \strong{Matérn 3/2:}
+#'      \deqn{
+#'        k(\mathbf{x}, \mathbf{x}') = \left(1 + \sqrt{3} r \right) \exp(-\sqrt{3} r)
+#'      }
+#'   }
 #'
-#' @references Rasmussen, C. E., & Williams, C. K. I. (2006). Gaussian Processes
-#'   for Machine Learning. MIT Press.
+#'   The function performs consistency checks on input dimensions and
+#'   automatically broadcasts \code{theta} when it is a scalar.
 #'
-#' @author Jiangyan Zhao, Kunhai Qing, Jin Xu
+#' @references Rasmussen, C. E., & Williams, C. K. I. (2006). \emph{Gaussian
+#'   Processes for Machine Learning}. MIT Press.
 #'
 #' @examples
-#'
 #' # Basic usage with default Xprime = X
 #' X <- matrix(runif(20), ncol = 2)
 #' K1 <- kernel_matrix(X, theta = 0.2, kernel = "gaussian")
 #'
-#' # Anisotropic lengthscales with Matern 5/2
+#' # Anisotropic lengthscales with Matérn 5/2
 #' K2 <- kernel_matrix(X, theta = c(0.1, 0.3), kernel = "matern52")
 #'
-#' # Isotropic Matern 3/2
+#' # Isotropic Matérn 3/2
 #' K3 <- kernel_matrix(X, theta = 1, kernel = "matern32", anisotropic = FALSE)
 #'
 #' # Use Xprime different from X

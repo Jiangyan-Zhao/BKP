@@ -4,83 +4,108 @@
 \alias{simulate}
 \alias{simulate.BKP}
 \alias{simulate.DKP}
-\title{Simulate method for Beta Kernel Process (BKP) models}
+\title{Simulate from a Fitted BKP or DKP Model}
 \usage{
 \method{simulate}{BKP}(object, Xnew, n_sim = 1, threshold = NULL, seed = NULL, ...)
 
 \method{simulate}{DKP}(object, Xnew, n_sim = 1, seed = NULL, ...)
 }
 \arguments{
-\item{object}{A fitted DKP model object from \code{\link{fit.DKP}}.}
+\item{object}{An object of class \code{"BKP"} or \code{"DKP"}, typically
+returned by \code{\link{fit.BKP}} or \code{\link{fit.DKP}}.}
 
-\item{Xnew}{A matrix (or vector) of new input points at which to simulate.}
+\item{Xnew}{A numeric matrix or vector of new input locations for simulation.}
 
-\item{n_sim}{Number of simulation replicates (default = 1).}
+\item{n_sim}{Number of posterior samples to generate (default = \code{1}).}
 
-\item{threshold}{Classification threshold for labeling (default = NULL)}
+\item{threshold}{Classification threshold for binary output (only used for
+BKP). If specified, the output will include binary class labels with values
+above the threshold classified as 1 (default is \code{NULL}).}
 
-\item{seed}{Optional random seed for reproducibility.}
+\item{seed}{Optional integer seed for reproducibility.}
 
 \item{...}{Additional arguments (currently unused).}
 }
 \value{
-A matrix of dimension \code{nrow(Xnew) x n_sim}:
-\itemize{
-\item If \code{threshold = NULL}, each column contains simulated success probabilities.
-\item If \code{threshold} is provided, the matrix contains binary class labels (0/1).
+A list containing the following components:
+\describe{
+\item{\code{sims}}{
+BKP: A numeric matrix of dimension \code{nrow(Xnew) × n_sim} with simulated success probabilities.\cr
+DKP: A numeric array of dimension \code{n_sim × q × nrow(Xnew)} representing simulated class probabilities
+from Dirichlet distributions, where \code{q} is the number of classes.
 }
-
-A array of dimension \code{n_sim x q x nrow(Xnew)}:
-\itemize{
-\item If \code{threshold = NULL}, for every fold, each row contains simulated success probabilities.
-\item If \code{threshold} is provided, every fold contains multinomial class labels .
+\item{\code{mean}}{
+BKP: A numeric vector of posterior means of success probabilities.\cr
+DKP: A numeric matrix of posterior mean class probabilities (\code{nrow(Xnew) × q}).
+}
+\item{\code{class}}{
+BKP: A binary classification matrix (\code{nrow(Xnew) × n_sim}) if \code{threshold} is provided.\cr
+DKP: A vector of MAP class labels if training data is one-hot encoded (i.e., each row of \code{Y} sums to 1).
+}
 }
 }
 \description{
-Generate random samples from the posterior Beta distributions
-of a fitted BKP model at new input locations. Optionally return
-classification labels based on a threshold.
-
-Generate random samples from the posterior Dirichlet distributions
-of a fitted DKP model at new input locations. Optionally return
-classification labels based on a threshold.
+Generates random samples from the posterior distributions of a
+fitted BKP or DKP model at new input locations. For BKP models, optional
+binary classification labels can be returned based on a user-specified
+threshold. For DKP models, optional multiclass labels can be assigned using
+the maximum a posteriori (MAP) rule.
 }
 \examples{
-## 1D example: simulate probabilities and classifications
+## -------------------- BKP Simulation Example --------------------
 set.seed(123)
-n <- 30
-x <- seq(-2, 2, length = n)
-true_pi <- (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
-m <- sample(50:100, n, replace = TRUE)
-y <- rbinom(n, size = m, prob = true_pi)
-Xbounds <- matrix(c(-2, 2), nrow = 1)
-model <- fit.BKP(x, y, m, Xbounds = Xbounds)
 
-# Simulate 5 posterior draws of success probabilities at new points
+# Define true success probability function
+true_pi_fun <- function(x) {
+  (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
+}
+
+n <- 30
+Xbounds <- matrix(c(-2,2), nrow=1)
+X <- tgp::lhs(n = n, rect = Xbounds)
+true_pi <- true_pi_fun(X)
+m <- sample(100, n, replace = TRUE)
+y <- rbinom(n, size = m, prob = true_pi)
+
+# Fit BKP model
+model <- fit.BKP(X, y, m, Xbounds=Xbounds)
+
+# Simulate 5 posterior draws of success probabilities
 Xnew <- matrix(seq(-2, 2, length.out = 10), ncol = 1)
 simulate(model, Xnew, n_sim = 5)
 
-# Simulate 5 posterior binary classifications using threshold 0.5
+# Simulate binary classifications (threshold = 0.5)
 simulate(model, Xnew, n_sim = 5, threshold = 0.5)
 
-### 1D
+## -------------------- DKP Simulation Example --------------------
 set.seed(123)
-n <- 30
-Xbounds <- matrix(c(-2,2), nrow=1)
-x <- tgp::lhs(n = n, rect = Xbounds)
-true_pi <- (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
-true_pi <- matrix(c(true_pi/2,true_pi/2,1-true_pi),nrow = n, byrow = FALSE)
-m <- sample(100, n, replace = TRUE)
-Y <- matrix(0, nrow = n, ncol = 3)
-for (i in 1:n) {
-  Y[i, ] <- rmultinom(n=1, size=m[i], prob=true_pi[i, ])
+
+# Define true class probability function (3-class)
+true_pi_fun <- function(X) {
+  p <- (1 + exp(-X^2) * cos(10 * (1 - exp(-X)) / (1 + exp(-X)))) / 2
+  return(matrix(c(p/2, p/2, 1 - p), nrow = length(p)))
 }
-DKPmodel <- fit.DKP(x, Y, Xbounds = Xbounds)
-simulate(DKPmodel,Xnew = 0.5, n_sim = 5)
+
+n <- 30
+Xbounds <- matrix(c(-2, 2), nrow = 1)
+X <- tgp::lhs(n = n, rect = Xbounds)
+true_pi <- true_pi_fun(X)
+m <- sample(100, n, replace = TRUE)
+
+# Generate multinomial responses
+Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
+
+# Fit DKP model
+model <- fit.DKP(X, Y, Xbounds = Xbounds)
+
+# Simulate 5 draws from posterior Dirichlet distributions at new point
+Xnew <- matrix(seq(-2, 2, length.out = 10), ncol = 1)
+simulate(model, Xnew = Xnew, n_sim = 5)
 
 }
-\author{
-Jiangyan Zhao, Kunhai Qing, Jin Xu
+\seealso{
+\code{\link{fit.BKP}}, \code{\link{fit.DKP}},
+\code{\link{predict.BKP}}, \code{\link{predict.DKP}}
 }
 \keyword{BKP}
 \keyword{DKP}

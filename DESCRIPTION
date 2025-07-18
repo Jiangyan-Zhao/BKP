@@ -1,5 +1,5 @@
 Package: BKP
-Title: Beta Kernel Process
+Title: Beta and Dirichlet Kernel Processes for Binomial and Multinomial Modeling
 Version: 0.1.0
 Authors@R: c(person(given = "Jiangyan", family = "Zhao", email = "zhaojy2017@126.com", role = c("aut", "cre")),
     person(given = "Kunhai", family = "Qing", email = "kunhaiq@qq.com", role = "aut"),
@@ -7,13 +7,13 @@ Authors@R: c(person(given = "Jiangyan", family = "Zhao", email = "zhaojy2017@126
   )
 Author: Jiangyan Zhao [cre, aut], Kunhai Qing [aut], Jin Xu [aut]
 Maintainer: Jiangyan Zhao <zhaojy2017@126.com>
-Description: Implements the Beta Kernel Process (BKP) model for nonparametric estimation
-    of binomial and binary success probabilities. The package supports model fitting,
-    prediction with uncertainty quantification, simulation from the fitted model,
-    and visualization. It includes support for several kernel functions (Gaussian,
-    Matérn 5/2, and Matérn 3/2) and efficient hyperparameter optimization via multi-start
-    gradient-based algorithms. BKP is useful for probabilistic modeling in spatial
-    statistics, machine learning, and experimental design.
+Description: Provides methods for nonparametric modeling of binomial and multinomial success probabilities 
+  via the Beta Kernel Process (BKP) and its extension, the Dirichlet Kernel Process (DKP). 
+  Supports model fitting, predictive inference with uncertainty quantification, posterior simulation, 
+  and visualization in one- and two-dimensional input spaces. 
+  The package implements multiple kernel functions (Gaussian, Matérn 5/2, and Matérn 3/2), 
+  and performs hyperparameter optimization using multi-start gradient-based search. 
+  Applications include spatial statistics, probabilistic classification, and Bayesian experimental design.
 License: GPL-3
 URL: https://github.com/Jiangyan-Zhao/BKP
 BugReports: https://github.com/Jiangyan-Zhao/BKP/issues

@@ -2,7 +2,7 @@
 % Please edit documentation in R/get_prior.R
 \name{get_prior}
 \alias{get_prior}
-\title{Construct Prior Parameters for Beta Kernel Process (BKP)}
+\title{Construct Prior Parameters for the BKP Model}
 \usage{
 get_prior(
   prior = c("noninformative", "fixed", "adaptive"),
@@ -14,30 +14,44 @@ get_prior(
 )
 }
 \arguments{
-\item{prior}{Type of prior: one of \code{"noninformative"}, \code{"fixed"}, or
-\code{"adaptive"}.}
+\item{prior}{Character string specifying the type of prior to use. One of
+\code{"noninformative"}, \code{"fixed"}, or \code{"adaptive"}.}
 
-\item{r0}{Global precision parameter (used in \code{"fixed"} and
-\code{"adaptive"}).}
+\item{r0}{Positive scalar indicating the global precision parameter. Used
+when \code{prior} is \code{"fixed"} or \code{"adaptive"}.}
 
-\item{p0}{Global prior mean (used in \code{"fixed"} prior only; must be in
-(0,1)).}
+\item{p0}{Prior mean for the success probability (in (0,1)). Used only when
+\code{prior = "fixed"}.}
 
-\item{y}{A numeric vector of observed successes.}
+\item{y}{Numeric vector of observed successes, of length \code{n}.}
 
-\item{m}{A numeric vector of total trials at each location.}
+\item{m}{Numeric vector of total binomial trials, of length \code{n}.}
 
-\item{K}{A precomputed kernel matrix (m x n), typically from
-\code{kernel_matrix()}.}
+\item{K}{A precomputed kernel matrix of size \code{n × n}, typically obtained
+from \code{\link{kernel_matrix}}.}
 }
 \value{
-A list with two numeric vectors: \code{alpha0} and \code{beta0} (each of length
-m).
+A list with two numeric vectors:
+\describe{
+\item{\code{alpha0}}{Prior alpha parameters of the Beta distribution, length \code{n}.}
+\item{\code{beta0}}{Prior beta parameters of the Beta distribution, length \code{n}.}
+}
 }
 \description{
-Constructs prior Beta distribution parameters (alpha0 and beta0)
-at each location based on user-specified prior type: noninformative, fixed,
-or data-adaptive.
+Computes the prior Beta distribution parameters \code{alpha0}
+and \code{beta0} at each input location, based on the chosen prior
+specification. Supports noninformative, fixed, and data-adaptive prior
+strategies.
+}
+\details{
+\itemize{
+\item For \code{prior = "noninformative"}, all prior parameters are set to 1 (noninformative prior).
+\item For \code{prior = "fixed"}, all locations share the same Beta prior:
+\code{Beta(r0 * p0, r0 * (1 - p0))}.
+\item For \code{prior = "adaptive"}, the prior mean at each location is computed by
+kernel smoothing the observed proportions \code{y/m}, and precision \code{r0}
+is distributed accordingly.
+}
 }
 \examples{
 # Simulated data
@@ -50,8 +64,11 @@ m <- rep(5, n)
 # Example kernel matrix (Gaussian)
 K <- kernel_matrix(X)
 
-# Construct prior (adaptive)
+# Construct adaptive prior
 prior <- get_prior(prior = "adaptive", r0 = 2, y = y, m = m, K = K)
-str(prior)
 
+}
+\seealso{
+\code{\link{get_prior_dkp}}, \code{\link{fit.BKP}},
+\code{\link{predict.BKP}}, \code{\link{kernel_matrix}}
 }

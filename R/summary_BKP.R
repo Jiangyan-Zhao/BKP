@@ -1,46 +1,52 @@
 #' @name summary
 #'
-#' @title Summary of a BKP Model
+#' @title Summary of a Fitted BKP or DKP Model
 #'
-#' @description Provides a summary of a fitted Beta Kernel Process (BKP) model.
-#'   Currently, this function serves as a wrapper for \code{\link{print.BKP}},
-#'   offering a concise overview of the model's key components and fitting
-#'   results.
+#' @description Provides a summary of a fitted Beta Kernel Process (BKP) or
+#'   Dirichlet Kernel Process (DKP) model. Currently, this function acts as a
+#'   wrapper for \code{\link{print.BKP}} or \code{\link{print.DKP}}, delivering
+#'   a concise overview of key model characteristics and fitting results.
 #'
-#' @param object An object of class \code{"BKP"}, typically returned by
-#'   \code{\link{fit.BKP}}.
+#' @param object An object of class \code{"BKP"} (from \code{\link{fit.BKP}}) or
+#'   \code{"DKP"} (from \code{\link{fit.DKP}}).
 #' @param ... Additional arguments passed to the generic \code{summary} method
-#'   (not used here).
+#'   (currently not used).
 #'
-#' @details The \code{summary.BKP} method displays essential model details such
-#'   as the number of observations, input dimensionality, kernel type, optimized
-#'   kernel parameters, and the corresponding loss value (e.g., Brier score).
-#'   Future versions may expand this method to include more diagnostics,
-#'   confidence metrics, or model evaluation summaries.
-#'
-#' @seealso \code{\link{print.BKP}} for basic print output.
-#'   \code{\link{fit.BKP}} to fit a BKP model.
-#'
-#' @author Jiangyan Zhao, Kunhai Qing, Jin Xu
+#' @seealso \code{\link{fit.BKP}}, \code{\link{fit.DKP}},
+#'   \code{\link{print.BKP}}, \code{\link{print.DKP}}.
 #'
 #' @keywords BKP
 #'
 #' @examples
-#' ### 1D
+#' # ============================================================== #
+#' # ========================= BKP Examples ======================= #
+#' # ============================================================== #
+#'
+#' #-------------------------- 1D Example ---------------------------
 #' set.seed(123)
+#'
+#' # Define true success probability function
+#' true_pi_fun <- function(x) {
+#'   (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
+#' }
+#'
 #' n <- 30
 #' Xbounds <- matrix(c(-2,2), nrow=1)
-#' x <- tgp::lhs(n = n, rect = Xbounds)
+#' X <- tgp::lhs(n = n, rect = Xbounds)
+#' true_pi <- true_pi_fun(X)
 #' m <- sample(100, n, replace = TRUE)
-#' true_pi <- (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
 #' y <- rbinom(n, size = m, prob = true_pi)
-#' model1 <- fit.BKP(x, y, m, Xbounds=Xbounds)
+#'
+#' # Fit BKP model
+#' model1 <- fit.BKP(X, y, m, Xbounds=Xbounds)
 #' summary(model1)
 #'
-#' ### 2D
+#'
+#' #-------------------------- 2D Example ---------------------------
 #' set.seed(123)
-#' n <- 100
-#' f <- function(X) {
+#'
+#' # Define 2D latent function and probability transformation
+#' true_pi_fun <- function(X) {
 #'   if(is.null(nrow(X))) X <- matrix(X, nrow=1)
 #'   m <- 8.6928
 #'   s <- 2.4269
@@ -52,13 +58,18 @@
 #'     (18- 32*x1 + 12*x1^2 + 48*x2- 36*x1*x2 + 27*x2^2)
 #'   f <- log(a*b)
 #'   f <- (f- m)/s
-#'   return(f) }
+#'   return(pnorm(f))  # Transform to probability
+#' }
+#'
+#' n <- 100
 #' Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
-#' x <- tgp::lhs(n = n, rect = Xbounds)
+#' X <- tgp::lhs(n = n, rect = Xbounds)
+#' true_pi <- true_pi_fun(X)
 #' m <- sample(100, n, replace = TRUE)
-#' true_pi <- pnorm(f(x))
 #' y <- rbinom(n, size = m, prob = true_pi)
-#' model2 <- fit.BKP(x, y, m)
+#'
+#' # Fit BKP model
+#' model2 <- fit.BKP(X, y, m, Xbounds=Xbounds)
 #' summary(model2)
 #'
 #' @export
