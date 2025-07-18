@@ -2,7 +2,10 @@
 # BKP <img src="man/figures/logo.png" align="right" height="140"/>
 
 <!-- badges: start -->
+
 [![R-CMD-check](https://github.com/Jiangyan-Zhao/BKP/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/Jiangyan-Zhao/BKP/actions/workflows/R-CMD-check.yaml)
+[![Codecov test
+coverage](https://codecov.io/gh/Jiangyan-Zhao/BKP/graph/badge.svg)](https://app.codecov.io/gh/Jiangyan-Zhao/BKP)
 <!-- badges: end -->
 
 The **BKP** package provides scalable Bayesian modeling tools for
