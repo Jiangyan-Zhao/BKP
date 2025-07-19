@@ -74,7 +74,7 @@ simulate.DKP <- function(object, Xnew, n_sim = 1, seed = NULL, ...) {
   sims <- array(0, dim = c(n_sim, q, n_new))
   for (i in 1:n_new) {
     shape_mat <- matrix(rgamma(n_sim * q, shape = rep(alpha_n[i, ], each = n_sim), rate = 1),
-                        nrow = n_sim, byrow = FALSE)
+                        nrow = n_sim)
     sims[,,i] <- shape_mat / rowSums(shape_mat)
   }
 
@@ -90,13 +90,16 @@ simulate.DKP <- function(object, Xnew, n_sim = 1, seed = NULL, ...) {
   # --- Optional: MAP prediction (only if data are single-label multinomial) ---
   class_pred <- NULL
   if (all(rowSums(Y) == 1)) {
-    class_pred <- max.col(pi_mean)  # [n_new]
+    class_pred <- matrix(NA, nrow = n_new, ncol = n_sim)
+    for (i in 1:n_sim) {
+      class_pred[, i] <- max.col(t(sims[i,,]))  # [n_new]
+    }
   }
 
   return(list(
     sims = sims,        # [n_sim × q × n_new]: posterior samples
     mean = pi_mean,     # [n_new × q]: posterior mean
-    class = class_pred  # [n_new]: MAP class (if available)
+    class = class_pred  # [n_new × n_sim]: MAP class (if available)
   ))
 }
 

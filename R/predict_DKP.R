@@ -124,7 +124,7 @@ predict.DKP <- function(object, Xnew, CI_level = 0.05, ...)
 
   # Posterior classification label (only for classification data)
   if (all(rowSums(Y) == 1)) {
-    prediction$class <- max.col(pi_mean)
+    prediction$class <- max.col(pi_mean) # [n]
   }
 
   return(prediction)

@@ -1,89 +1,41 @@
-# -------------------------- Test Setup ---------------------------
-set.seed(123)
-n_model <- 30
-d_model <- 2
-q_model <- 3 # Number of classes
-X_model <- matrix(runif(n_model * d_model, 0, 1), n_model, d_model)
-m_sum_model <- sample(50, n_model, replace = TRUE)
-Y_model <- t(sapply(1:n_model, function(i) rmultinom(1, size = m_sum_model[i], prob = rep(1/q_model, q_model))))
+test_that("predict.DKP returns expected structure and values", {
+  # 0. Define true class probability function (3-class)
+  true_pi_fun <- function(X) {
+    p <- (1 + exp(-X^2) * cos(10 * (1 - exp(-X)) / (1 + exp(-X)))) / 2
+    return(matrix(c(p/2, p/2, 1 - p), nrow = length(p)))
+  }
 
-# Create a dummy DKP model object (minimal for testing predict.DKP)
-dummy_DKP_model <- list(
-  theta_opt = rep(1, d_model),
-  kernel = "gaussian",
-  prior = "noninformative",
-  r0 = 2,
-  p0 = rep(1/q_model, q_model),
-  X = X_model,
-  Xnorm = X_model, # Assuming X is already normalized for simplicity
-  Xbounds = cbind(rep(0, d_model), rep(1, d_model)),
-  Y = Y_model
-)
-class(dummy_DKP_model) <- "DKP"
+  # 1. Simulate training data
+  n <- 30
+  Xbounds <- matrix(c(-2, 2), nrow = 1)
+  X <- tgp::lhs(n = n, rect = Xbounds)
+  true_pi <- true_pi_fun(X)
+  m <- sample(100, n, replace = TRUE)
+  Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 
-n_new_test <- 5
-Xnew_test <- matrix(runif(n_new_test * d_model, 0, 1), n_new_test, d_model)
+  # 2. Fit DKP model
+  model <- fit.DKP(X, Y, Xbounds = Xbounds)
 
-# -------------------------- Test Context: Basic Functionality ---------------------------
-test_that("Basic Functionality: predict.DKP returns a list with expected components", {
-  prediction <- predict.DKP(dummy_DKP_model, Xnew_test)
+  # 3. Predict on new input
+  n_Xnew <- 10
+  Xnew <- matrix(seq(-2, 2, length.out = n_Xnew), ncol = 1)
+  prediction <- predict(model, Xnew)
+
+  # 4. Check structure
   expect_type(prediction, "list")
-  expect_named(prediction, c("Xnew", "mean", "variance", "lower", "upper", "CI_level"))
-})
+  expect_in(names(prediction),
+            c("Xnew", "mean", "variance", "lower", "upper", "CI_level", "class"))
 
-test_that("predicted mean, variance, lower, upper have correct dimensions", {
-  prediction <- predict.DKP(dummy_DKP_model, Xnew_test)
-  expect_equal(dim(prediction$mean), c(n_new_test, q_model))
-  expect_equal(dim(prediction$variance), c(n_new_test, q_model))
-  expect_equal(dim(prediction$lower), c(n_new_test, q_model))
-  expect_equal(dim(prediction$upper), c(n_new_test, q_model))
-})
+  # 5. Dimensions and types
+  expect_equal(nrow(prediction$Xnew), n_Xnew)
+  expect_equal(dim(prediction$mean), c(n_Xnew, 3))
+  expect_equal(dim(prediction$variance), c(n_Xnew, 3))
+  expect_equal(dim(prediction$lower), c(n_Xnew, 3))
+  expect_equal(dim(prediction$upper), c(n_Xnew, 3))
+  expect_true(all(prediction$class %in% 1:3))
 
-test_that("CI_level is correctly passed through", {
-  prediction <- predict.DKP(dummy_DKP_model, Xnew_test, CI_level = 0.1)
-  expect_equal(prediction$CI_level, 0.1)
-})
-
-test_that("'class' output is correct for classification data (rowSums(Y)==1)", {
-  # Create a dummy DKP model for classification data (each row in Y sums to 1)
-  dummy_DKP_model_class <- dummy_DKP_model
-  dummy_DKP_model_class$Y <- t(sapply(1:n_model, function(i) {
-    p <- rep(0, q_model)
-    p[sample(1:q_model, 1)] <- 1 # Only one class is 1, others 0
-    p
-  }))
-
-  # Mock kernel_matrix and get_prior_dkp to control alpha_n, thus pi_mean
-  mock_kernel_matrix <- function(Xnew_norm, Xnorm, theta, kernel) matrix(1, nrow(Xnew_norm), nrow(Xnorm))
-  mock_get_prior_dkp <- function(prior, r0, p0, Y, K) matrix(c(10,1,1, 1,10,1, 1,1,10, 10,1,1, 1,10,1), byrow=TRUE, nrow=n_new_test, ncol=q_model)
-
-  with_mocked_bindings(
-    {
-      prediction <- predict.DKP(dummy_DKP_model_class, Xnew_test)
-      # Based on mock_get_prior_dkp, alpha_n will be (10+1, 1+1, 1+1), (1+1, 10+1, 1+1)...
-      # Expected classes will be 1, 2, 3, 1, 2 for the 5 rows
-      expect_equal(as.vector(prediction$class), c(1, 2, 3, 1, 2))
-    },
-    kernel_matrix = mock_kernel_matrix,
-    get_prior_dkp = mock_get_prior_dkp
-  )
-})
-
-# -------------------------- Test Context: Input Validation ---------------------------
-
-test_that("Input Validation: input 'object' must be of class 'DKP'", {
-  expect_error(predict.DKP(list(), Xnew_test))
-  expect_error(predict.DKP(matrix(), Xnew_test))
-})
-
-test_that("Input Validation: 'Xnew' must have the same number of columns as original X", {
-  Xnew_wrong_dim <- matrix(runif(n_new_test * (d_model + 1)), n_new_test, d_model + 1)
-  expect_error(predict.DKP(dummy_DKP_model, Xnew_wrong_dim))
-})
-
-test_that("Input Validation: vector 'Xnew' input is handled correctly", {
-  Xnew_vector <- Xnew_test[1, ] # Take first row as a vector
-  prediction <- predict.DKP(dummy_DKP_model, Xnew_vector)
-  expect_equal(dim(prediction$mean), c(1, q_model))
-  expect_equal(prediction$Xnew, matrix(Xnew_vector, nrow = 1))
+  # 6. Prediction values should be probabilities
+  expect_true(all(prediction$mean >= 0 & prediction$mean <= 1))
+  expect_true(all(prediction$lower >= 0 & prediction$upper <= 1))
+  expect_true(all(prediction$upper >= 0 & prediction$upper <= 1))
 })

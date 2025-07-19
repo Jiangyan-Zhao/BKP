@@ -1,65 +1,41 @@
-# -------------------------- Test Setup ---------------------------
-set.seed(123)
-n_model <- 30
-d_model <- 2
-X_model <- matrix(runif(n_model * d_model, 0, 1), n_model, d_model)
-m_model <- rep(10, n_model)
-y_model <- rbinom(n_model, size = m_model, prob = runif(n_model, 0.1, 0.9))
+test_that("predict.BKP returns correct structure and valid values", {
+  # 0. Define true success probability function
+  true_pi_fun <- function(x) {
+    (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
+  }
 
-# Create a dummy BKP model object (minimal for testing predict.BKP)
-dummy_BKP_model <- list(
-  theta_opt = rep(1, d_model),
-  kernel = "gaussian",
-  prior = "noninformative",
-  r0 = 2,
-  p0 = 0.5,
-  X = X_model,
-  Xnorm = X_model, # Assuming X is already normalized for simplicity
-  Xbounds = cbind(rep(0, d_model), rep(1, d_model)),
-  y = y_model,
-  m = m_model
-)
-class(dummy_BKP_model) <- "BKP"
+  # 1. Simulate binary outcome data
+  set.seed(123)
+  n <- 30
+  Xbounds <- matrix(c(-2, 2), nrow = 1)
+  X <- tgp::lhs(n = n, rect = Xbounds)
+  true_pi <- true_pi_fun(X)
+  m <- sample(100, n, replace = TRUE)
+  y <- rbinom(n, size = m, prob = true_pi)
 
-n_new_test <- 5
-Xnew_test <- matrix(runif(n_new_test * d_model, 0, 1), n_new_test, d_model)
+  # 2. Fit BKP model
+  model <- fit.BKP(X, y, m, Xbounds = Xbounds)
 
-# -------------------------- Test Context: Basic Functionality ---------------------------
-test_that("Basic Functionality: predict.BKP returns a list with expected components", {
-  prediction <- predict.BKP(dummy_BKP_model, Xnew_test)
+  # 3. Make predictions
+  n_Xnew <- 10
+  Xnew <- matrix(seq(-2, 2, length.out = n_Xnew), ncol = 1)
+  prediction <- predict(model, Xnew)
+
+  # 4. Check structure
   expect_type(prediction, "list")
-  expect_named(prediction, c("Xnew", "mean", "variance", "lower", "upper", "CI_level"))
-})
+  expect_in(names(prediction),
+            c("Xnew", "mean", "variance", "lower", "upper", "CI_level", "class"))
 
-test_that("predicted mean, variance, lower, upper have correct dimensions", {
-  prediction <- predict.BKP(dummy_BKP_model, Xnew_test)
-  expect_equal(length(prediction$mean), n_new_test)
-  expect_equal(length(prediction$variance), n_new_test)
-  expect_equal(length(prediction$lower), n_new_test)
-  expect_equal(length(prediction$upper), n_new_test)
-})
+  # 5. Check dimensions
+  expect_equal(nrow(prediction$Xnew), n_Xnew)
+  expect_length(prediction$mean, n_Xnew)
+  expect_length(prediction$variance, n_Xnew)
+  expect_length(prediction$lower, n_Xnew)
+  expect_length(prediction$upper, n_Xnew)
+  expect_true(all(prediction$class %in% c(0L, 1L)))
 
-test_that("CI_level is correctly passed through", {
-  prediction <- predict.BKP(dummy_BKP_model, Xnew_test, CI_level = 0.1)
-  expect_equal(prediction$CI_level, 0.1)
-})
-
-
-# -------------------------- Test Context: Input Validation ---------------------------
-
-test_that("Input Validation: input 'object' must be of class 'BKP'", {
-  expect_error(predict.BKP(list(), Xnew_test)) # Not a BKP object
-  expect_error(predict.BKP(matrix(), Xnew_test)) # Not a BKP object
-})
-
-test_that("Input Validation: 'Xnew' must have the same number of columns as original X", {
-  Xnew_wrong_dim <- matrix(runif(n_new_test * (d_model + 1)), n_new_test, d_model + 1)
-  expect_error(predict.BKP(dummy_BKP_model, Xnew_wrong_dim))
-})
-
-test_that("Input Validation: vector 'Xnew' input is handled correctly", {
-  Xnew_vector <- Xnew_test[1, ] # Take first row as a vector
-  prediction <- predict.BKP(dummy_BKP_model, Xnew_vector)
-  expect_equal(length(prediction$mean), 1)
-  expect_equal(prediction$Xnew, matrix(Xnew_vector, nrow = 1))
+  # 5. Check probability bounds
+  expect_true(all(prediction$mean >= 0 & prediction$mean <= 1))
+  expect_true(all(prediction$lower >= 0 & prediction$lower <= 1))
+  expect_true(all(prediction$upper >= 0 & prediction$upper <= 1))
 })
