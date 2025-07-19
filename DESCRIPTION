@@ -1,7 +1,7 @@
 Package: BKP
 Title: Beta and Dirichlet Kernel Processes for Binomial and Multinomial Modeling
 Version: 0.1.0
-Authors@R: c(person(given = "Jiangyan", family = "Zhao", email = "zhaojy2017@126.com", role = c("aut", "cre")),
+Authors@R: c(person(given = "Jiangyan", family = "Zhao", email = "zhaojy2017@126.com", role = c("cre", "aut")),
     person(given = "Kunhai", family = "Qing", email = "kunhaiq@qq.com", role = "aut"),
     person(given = "Jin", family = "Xu", email = "jxu@stat.ecnu.edu.cn", role = "aut")
   )
