@@ -1,7 +1,3 @@
-# tests/testthat/test-fit.DKP.R
-
-library(testthat)
-
 # -------------------------- Test Setup ---------------------------
 set.seed(123)
 n_test <- 50

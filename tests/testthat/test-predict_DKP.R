@@ -1,7 +1,3 @@
-# tests/testthat/test-predict_DKP.R
-
-library(testthat)
-
 # -------------------------- Test Setup ---------------------------
 set.seed(123)
 n_model <- 30

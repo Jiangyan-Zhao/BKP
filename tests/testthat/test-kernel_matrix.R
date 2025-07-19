@@ -1,6 +1,3 @@
-# tests/testthat/test-kernel_matrix.R
-
-library(testthat)
 
 # -------------------------- Test Setup ---------------------------
 # Define some common test data

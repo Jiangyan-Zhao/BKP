@@ -1,7 +1,3 @@
-# tests/testthat/test-loss_fun.R
-
-library(testthat)
-
 # -------------------------- Test Setup ---------------------------
 set.seed(42)
 n_test <- 10
