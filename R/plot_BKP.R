@@ -121,7 +121,7 @@ plot.BKP <- function(x, only_mean = FALSE, ...){
   if (d == 1){
     #----- Plotting for 1-dimensional covariate data (d == 1) -----#
     # Generate new X values for a smooth prediction curve.
-    Xnew <- matrix(seq(Xbounds[1], Xbounds[2], length.out = 1000), ncol = 1)
+    Xnew <- matrix(seq(Xbounds[1], Xbounds[2], length.out = 100), ncol = 1)
 
     # Get the prediction for the new X values.
     prediction <- predict.BKP(BKPmodel, Xnew, ...)
@@ -154,8 +154,8 @@ plot.BKP <- function(x, only_mean = FALSE, ...){
   } else if (d == 2){
     #----- Plotting for 2-dimensional covariate data (d == 2) -----#
     # Generate 2D prediction grid
-    x1 <- seq(Xbounds[1, 1], Xbounds[1, 2], length.out = 100)
-    x2 <- seq(Xbounds[2, 1], Xbounds[2, 2], length.out = 100)
+    x1 <- seq(Xbounds[1, 1], Xbounds[1, 2], length.out = 80)
+    x2 <- seq(Xbounds[2, 1], Xbounds[2, 2], length.out = 80)
     grid <- expand.grid(x1 = x1, x2 = x2)
     prediction <- predict.BKP(BKPmodel, as.matrix(grid), ...)
 

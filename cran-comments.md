@@ -10,3 +10,13 @@ We checked 0 reverse dependencies, comparing R CMD check results across CRAN and
 
  * We saw 0 new problems
  * We failed to check 0 packages
+
+## Resubmission
+
+This is a resubmission. I have made the following changes to address the previous NOTE(s):
+
+* Replaced “Matérn” with “Matern” in the DESCRIPTION to avoid spelling issues.
+* Removed abbreviations “BKP” and “DKP” from the DESCRIPTION field to avoid false spelling notes.
+* Reduced the grid size in example plots to ensure runtime remains below 10 seconds.
+
+These changes resolve all previous NOTE messages.

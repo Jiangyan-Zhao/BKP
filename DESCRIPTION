@@ -8,10 +8,10 @@ Authors@R: c(person(given = "Jiangyan", family = "Zhao", email = "zhaojy2017@126
 Author: Jiangyan Zhao [cre, aut], Kunhai Qing [aut], Jin Xu [aut]
 Maintainer: Jiangyan Zhao <zhaojy2017@126.com>
 Description: Provides methods for nonparametric modeling of binomial and multinomial success probabilities 
-  via the Beta Kernel Process (BKP) and its extension, the Dirichlet Kernel Process (DKP). 
+  via the Beta Kernel Process and its extension, the Dirichlet Kernel Process. 
   Supports model fitting, predictive inference with uncertainty quantification, posterior simulation, 
   and visualization in one- and two-dimensional input spaces. 
-  The package implements multiple kernel functions (Gaussian, Matérn 5/2, and Matérn 3/2), 
+  The package implements multiple kernel functions (Gaussian, Matern 5/2, and Matern 3/2), 
   and performs hyperparameter optimization using multi-start gradient-based search. 
   Applications include spatial statistics, probabilistic classification, and Bayesian experimental design.
 License: GPL-3
