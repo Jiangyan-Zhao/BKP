@@ -25,7 +25,7 @@
 #' model <- fit.DKP(X, Y, Xbounds = Xbounds)
 #'
 #' # Simulate 5 draws from posterior Dirichlet distributions at new point
-#' Xnew <- matrix(seq(-2, 2, length.out = 10), ncol = 1)
+#' Xnew <- matrix(seq(-2, 2, length.out = 100), ncol = 1)
 #' simulate(model, Xnew = Xnew, n_sim = 5)
 #'
 #' @export

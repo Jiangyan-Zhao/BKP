@@ -2,11 +2,18 @@
 #'
 #' @title Simulate from a Fitted BKP or DKP Model
 #'
-#' @description Generates random samples from the posterior distributions of a
-#'   fitted BKP or DKP model at new input locations. For BKP models, optional
-#'   binary classification labels can be returned based on a user-specified
-#'   threshold. For DKP models, optional multiclass labels can be assigned using
-#'   the maximum a posteriori (MAP) rule.
+#' @description Generates random samples from the posterior predictive
+#'   distribution of a fitted BKP or DKP model at new input locations.
+#'
+#'   For BKP models, posterior samples are drawn from Beta distributions
+#'   representing success probabilities, with optional binary class labels
+#'   determined by a threshold.
+#'
+#'   For DKP models, posterior samples are drawn from Dirichlet distributions
+#'   representing class probabilities, with optional class labels determined by
+#'   the maximum a posteriori (MAP) rule if training responses are one-hot
+#'   encoded.
+
 #'
 #' @param object An object of class \code{"BKP"} or \code{"DKP"}, typically
 #'   returned by \code{\link{fit.BKP}} or \code{\link{fit.DKP}}.
@@ -18,20 +25,24 @@
 #' @param seed Optional integer seed for reproducibility.
 #' @param ... Additional arguments (currently unused).
 #'
-#' @return A list containing the following components:
+#' @return A list with the following components:
 #' \describe{
 #'   \item{\code{sims}}{
-#'     BKP: A numeric matrix of dimension \code{nrow(Xnew) × n_sim} with simulated success probabilities.\cr
-#'     DKP: A numeric array of dimension \code{n_sim × q × nrow(Xnew)} representing simulated class probabilities
-#'     from Dirichlet distributions, where \code{q} is the number of classes.
+#'     For \strong{BKP}: A numeric matrix of dimension \code{nrow(Xnew) × n_sim}, containing simulated success probabilities.\cr
+#'     For \strong{DKP}: A numeric array of dimension \code{n_sim × q × nrow(Xnew)}, containing simulated class probabilities
+#'     from Dirichlet posteriors, where \code{q} is the number of classes.
 #'   }
+#'
 #'   \item{\code{mean}}{
-#'     BKP: A numeric vector of posterior means of success probabilities.\cr
-#'     DKP: A numeric matrix of posterior mean class probabilities (\code{nrow(Xnew) × q}).
+#'     For \strong{BKP}: A numeric vector of posterior mean success probabilities at each \code{Xnew}.\cr
+#'     For \strong{DKP}: A numeric matrix of dimension \code{nrow(Xnew) × q}, containing posterior mean class probabilities.
 #'   }
+#'
 #'   \item{\code{class}}{
-#'     BKP: A binary classification matrix (\code{nrow(Xnew) × n_sim}) if \code{threshold} is provided.\cr
-#'     DKP: A vector of MAP class labels if training data is one-hot encoded (i.e., each row of \code{Y} sums to 1).
+#'     For \strong{BKP}: A binary matrix of dimension \code{nrow(Xnew) × n_sim} indicating simulated class labels (0/1),
+#'     returned if \code{threshold} is specified.\cr
+#'     For \strong{DKP}: A numeric matrix of dimension \code{nrow(Xnew) × n_sim} containing MAP-predicted class labels,
+#'     returned only when training data is single-label (i.e., each row of \code{Y} sums to 1).
 #'   }
 #' }
 #'
@@ -60,7 +71,7 @@
 #' model <- fit.BKP(X, y, m, Xbounds=Xbounds)
 #'
 #' # Simulate 5 posterior draws of success probabilities
-#' Xnew <- matrix(seq(-2, 2, length.out = 10), ncol = 1)
+#' Xnew <- matrix(seq(-2, 2, length.out = 100), ncol = 1)
 #' simulate(model, Xnew, n_sim = 5)
 #'
 #' # Simulate binary classifications (threshold = 0.5)
