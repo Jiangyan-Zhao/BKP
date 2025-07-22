@@ -17,6 +17,11 @@
 \item{...}{Additional arguments passed to the generic \code{summary} method
 (currently not used).}
 }
+\value{
+Invisibly returns the input object (of class \code{"BKP"} or
+\code{"DKP"}). Called for side effects: prints a concise summary of the
+fitted model.
+}
 \description{
 Provides a summary of a fitted Beta Kernel Process (BKP) or
 Dirichlet Kernel Process (DKP) model. Currently, this function acts as a

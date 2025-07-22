@@ -21,33 +21,42 @@ plotted for 2D inputs (only applies to \code{BKP} models). Default is
 \item{...}{Additional arguments passed to internal plotting routines
 (currently unused).}
 }
+\value{
+This function does not return a value. It is called for its side
+effects, producing plots that visualize the model predictions and
+uncertainty.
+}
 \description{
 Visualizes fitted \code{BKP} or \code{DKP} models depending on
 the input dimensionality. For 1-dimensional inputs, it displays predicted
-class probabilities with confidence intervals and observed data. For
+class probabilities with credible intervals and observed data. For
 2-dimensional inputs, it generates contour plots of posterior summaries.
 }
 \details{
 The plotting behavior depends on the dimensionality of the input
 covariates:
+
 \itemize{
 \item \strong{1D inputs:}
 \itemize{
-\item For \code{BKP}, plots the posterior mean curve with 95\% confidence band and observed proportions (\eqn{y/m}).
-\item For \code{DKP}, plots one curve per class, with shaded confidence intervals and observed multinomial frequencies.
+\item For \code{BKP}, the function plots the posterior mean curve with a 95\% credible band, along with the observed proportions (\eqn{y/m}).
+\item For \code{DKP}, the function plots one curve per class, each with a shaded credible interval and observed multinomial class frequencies.
 }
+
 \item \strong{2D inputs:}
 \itemize{
-\item For both models, generates a 2 × 2 panel of contour plots, showing:
+\item For both models, the function produces a 2-by-2 panel of contour plots for each class (or the success class in BKP), showing:
 \enumerate{
-\item Posterior mean surface (for a selected class)
-\item Lower bound (95\% CI)
-\item Upper bound (95\% CI)
-\item Width of the CI (uncertainty)
+\item Predictive mean surface
+\item Predictive 97.5th percentile surface (upper bound of 95\% credible interval)
+\item Predictive variance surface
+\item Predictive 2.5th percentile surface (lower bound of 95\% credible interval)
 }
 }
 }
-For input dimensions greater than 2, the function will stop with an error.
+
+For input dimensions greater than 2, the function will terminate with an
+error.
 }
 \examples{
 # ============================================================== #

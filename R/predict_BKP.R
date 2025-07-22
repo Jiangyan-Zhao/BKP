@@ -9,7 +9,7 @@
 #'   returned by \code{\link{fit.BKP}} or \code{\link{fit.DKP}}.
 #' @param Xnew A numeric matrix (or vector) of new input locations where
 #'   predictions are desired.
-#' @param CI_level Confidence level for prediction intervals (default is
+#' @param CI_level Credible level for prediction intervals (default is
 #'   \code{0.05}, corresponding to 95% CI).
 #' @param threshold Classification threshold for binary prediction based on
 #'   posterior mean (used only for BKP; default is \code{0.5}).
@@ -151,7 +151,7 @@ predict.BKP <- function(object, Xnew, CI_level = 0.05, threshold = 0.5, ...)
   pi_mean <- alpha_n / (alpha_n + beta_n)
   pi_var  <- pi_mean * (1 - pi_mean) / (alpha_n + beta_n + 1)
 
-  # Confidence intervals
+  # Credible intervals
   pi_lower <- qbeta(CI_level / 2, alpha_n, beta_n)
   pi_upper <- qbeta(1 - CI_level / 2, alpha_n, beta_n)
 

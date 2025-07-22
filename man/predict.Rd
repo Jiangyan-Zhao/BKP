@@ -17,7 +17,7 @@ returned by \code{\link{fit.BKP}} or \code{\link{fit.DKP}}.}
 \item{Xnew}{A numeric matrix (or vector) of new input locations where
 predictions are desired.}
 
-\item{CI_level}{Confidence level for prediction intervals (default is
+\item{CI_level}{Credible level for prediction intervals (default is
 \code{0.05}, corresponding to 95\% CI).}
 
 \item{threshold}{Classification threshold for binary prediction based on

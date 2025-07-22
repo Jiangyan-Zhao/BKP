@@ -25,7 +25,8 @@ q}.}
 
 \item{Xbounds}{Optional \eqn{d \times 2} matrix specifying the lower and
 upper bounds of each input dimension. Used to normalize inputs to
-\eqn{[0,1]^d}. If \code{NULL}, bounds are inferred from \code{X}.}
+\eqn{[0,1]^d}. If \code{Xbounds} is \code{NULL}, the input is assumed to
+have already been normalized, and the default bounds are set to \eqn{[0,1]^d}.}
 
 \item{prior}{Type of prior to use. One of \code{"noninformative"},
 \code{"fixed"}, or \code{"adaptive"}.}

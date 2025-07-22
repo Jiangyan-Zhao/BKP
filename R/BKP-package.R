@@ -38,6 +38,21 @@
 #'   }
 #' }
 #'
+#' @references Goetschalckx R, Poupart P, Hoey J (2011). \emph{Continuous
+#'   Correlated Beta Processes}. In Proceedings of the Twenty-Second
+#'   International Joint Conference on Artificial Intelligence - Volume Volume
+#'   Two, IJCAI’11, p. 1269-1274. AAAI Press.
+#'
+#'   MacKenzie CA, Trafalis TB, Barker K (2014). \emph{A Bayesian Beta Kernel Model
+#'   for Binary Classification and Online Learning Problems}. Statistical
+#'   Analysis and Data Mining: The ASA Data Science Journal, 7(6), 434-449.
+#'
+#'   Rolland P, Kavis A, Singla A, Cevher V (2019). \emph{Efficient learning of
+#'   smooth probability functions from Bernoulli tests with guarantees}. In
+#'   Proceedings of the 36th International Conference on Machine Learning, ICML
+#'   2019, 9-15 June 2019, Long Beach, California, USA, volume 97 of Proceedings
+#'   of Machine Learning Research, pp. 5459-5467. PMLR.
+#'
 #' @importFrom graphics legend lines points polygon
 #' @importFrom grDevices hcl.colors
 #' @importFrom grid gpar textGrob

@@ -13,7 +13,6 @@
 #'   representing class probabilities, with optional class labels determined by
 #'   the maximum a posteriori (MAP) rule if training responses are one-hot
 #'   encoded.
-
 #'
 #' @param object An object of class \code{"BKP"} or \code{"DKP"}, typically
 #'   returned by \code{\link{fit.BKP}} or \code{\link{fit.DKP}}.

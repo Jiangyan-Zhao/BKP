@@ -12,6 +12,10 @@
 #' @param ... Additional arguments passed to the generic \code{print} method
 #'   (currently not used).
 #'
+#' @return Invisibly returns the input object (of class \code{"BKP"} or
+#'   \code{"DKP"}). The function is called for its side effect of printing a
+#'   summary to the console.
+#'
 #' @seealso \code{\link{fit.BKP}}, \code{\link{fit.DKP}},
 #'   \code{\link{summary.BKP}}, \code{\link{summary.DKP}}.
 #'

@@ -17,6 +17,11 @@
 \item{...}{Additional arguments passed to the generic \code{print} method
 (currently not used).}
 }
+\value{
+Invisibly returns the input object (of class \code{"BKP"} or
+\code{"DKP"}). The function is called for its side effect of printing a
+summary to the console.
+}
 \description{
 Displays a concise summary of a fitted BKP or DKP model. The
 output includes key characteristics such as sample size, input

@@ -99,12 +99,12 @@ plot.DKP <- function(x, only_mean = FALSE, ...){
       plot(Xnew, mean_j,
            type = "l", col = "blue", lwd = 2,
            xlab = "x (Input Variable)", ylab = "Probability",
-           main = paste0("Estimated Probability for Y Label ",j),
+           main = paste0("Estimated Probability (class ", j, ")"),
            xlim = Xbounds,
            ylim = c(max(0, min(mean_j)-0.1),
-                    min(1, max(mean_j)+0.1)))
+                    min(1, max(mean_j)+0.2)))
 
-      # Add a shaded confidence interval band using polygon.
+      # Add a shaded Credible interval band using polygon.
       polygon(c(Xnew, rev(Xnew)),
               c(lower_j, rev(upper_j)),
               col = "lightgrey", border = NA)
@@ -116,7 +116,7 @@ plot.DKP <- function(x, only_mean = FALSE, ...){
       # Add a legend to explain plot elements.
       legend("topright",
              legend = c("Estimated Probability",
-                        paste0((1 - prediction$CI_level)*100, "% Confidence Interval"),
+                        paste0((1 - prediction$CI_level)*100, "% Credible Interval"),
                         "Observed Proportions"),
              col = c("blue", "lightgrey", "red"), bty = "n",
              lwd = c(2, 8, NA), pch = c(NA, NA, 20), lty = c(1, 1, NA))
@@ -151,7 +151,7 @@ plot.DKP <- function(x, only_mean = FALSE, ...){
 
         # Arrange into 2×2 layout
         grid.arrange(p1, p2, p3, p4, ncol = 2,
-                     top = textGrob(paste0("Estimated Probability for Y Label ",j),
+                     top = textGrob(paste0("Estimated Probability (class ", j, ")"),
                                     gp = gpar(fontface = "bold", fontsize = 16)))
       }
     }

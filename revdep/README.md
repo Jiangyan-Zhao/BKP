@@ -1,18 +1,18 @@
 # Platform
 
-|field    |value                                                      |
-|:--------|:----------------------------------------------------------|
-|version  |R version 4.5.1 (2025-06-13 ucrt)                          |
-|os       |Windows 10 x64 (build 19045)                               |
-|system   |x86_64, mingw32                                            |
-|ui       |RStudio                                                    |
-|language |(EN)                                                       |
-|collate  |Chinese (Simplified)_China.utf8                            |
-|ctype    |Chinese (Simplified)_China.utf8                            |
-|tz       |Asia/Shanghai                                              |
-|date     |2025-07-19                                                 |
-|rstudio  |2025.05.0+496 Mariposa Orchid (desktop)                    |
-|pandoc   |2.17.0.1 @ C:\Users\JYZHAO\AppData\Local\Pandoc\pandoc.exe |
+|field    |value                                                                                |
+|:--------|:------------------------------------------------------------------------------------|
+|version  |R version 4.5.1 (2025-06-13 ucrt)                                                    |
+|os       |Windows 10 x64 (build 19045)                                                         |
+|system   |x86_64, mingw32                                                                      |
+|ui       |RStudio                                                                              |
+|language |(EN)                                                                                 |
+|collate  |Chinese (Simplified)_China.utf8                                                      |
+|ctype    |Chinese (Simplified)_China.utf8                                                      |
+|tz       |Asia/Shanghai                                                                        |
+|date     |2025-07-22                                                                           |
+|rstudio  |2025.05.0+496 Mariposa Orchid (desktop)                                              |
+|pandoc   |3.4 @ C:/Program Files/R/RStudio/resources/app/bin/quarto/bin/tools/ (via rmarkdown) |
 
 # Dependencies
 
