@@ -3,6 +3,8 @@
 
 <!-- badges: start -->
 
+[![CRAN
+status](https://www.r-pkg.org/badges/version/BKP)](https://cran.r-project.org/package=BKP)
 [![R-CMD-check](https://github.com/Jiangyan-Zhao/BKP/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/Jiangyan-Zhao/BKP/actions/workflows/R-CMD-check.yaml)
 [![Codecov test
 coverage](https://codecov.io/gh/Jiangyan-Zhao/BKP/graph/badge.svg)](https://app.codecov.io/gh/Jiangyan-Zhao/BKP)
@@ -22,7 +24,15 @@ uncertainty quantification.
 
 ## Installation
 
-Install the development version of the BKP package from GitHub:
+You can install the stable version of **BKP** from
+[CRAN](https://CRAN.R-project.org/package=BKP) with:
+
+``` r
+install.packages("BKP")
+```
+
+Or install the development version from
+[GitHub](https://github.com/Jiangyan-Zhao/BKP) with:
 
 ``` r
 # install.packages("pak")

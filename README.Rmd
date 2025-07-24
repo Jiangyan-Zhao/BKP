@@ -14,6 +14,7 @@ knitr::opts_chunk$set(
 # BKP <img src="man/figures/logo.png" align="right" height="140"/>
 
 <!-- badges: start -->
+[![CRAN status](https://www.r-pkg.org/badges/version/BKP)](https://cran.r-project.org/package=BKP)
 [![R-CMD-check](https://github.com/Jiangyan-Zhao/BKP/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/Jiangyan-Zhao/BKP/actions/workflows/R-CMD-check.yaml)
 [![Codecov test coverage](https://codecov.io/gh/Jiangyan-Zhao/BKP/graph/badge.svg)](https://app.codecov.io/gh/Jiangyan-Zhao/BKP)
 <!-- badges: end -->
@@ -27,7 +28,13 @@ Both models leverage kernel-based weighting and conjugate priors to enable effic
 
 ## Installation
 
-Install the development version of the BKP package from GitHub:
+You can install the stable version of **BKP** from [CRAN](https://CRAN.R-project.org/package=BKP) with:
+
+```r
+install.packages("BKP")
+```
+
+Or install the development version from [GitHub](https://github.com/Jiangyan-Zhao/BKP) with:
 
 ```r
 # install.packages("pak")
