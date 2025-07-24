@@ -100,11 +100,12 @@ get_prior_dkp <- function(prior = c("noninformative", "fixed", "adaptive"),
     Pi_hat <- W %*% (Y / rowSums(Y))  # m * q
 
     # Estimate local precision
-    r_hat <- r0 * rowSums(K) + 1e-10  # m * 1
+    r_hat <- r0 * rowSums(K)          # m * 1
 
     # Compute prior parameters
     alpha0 <- Pi_hat * r_hat
   }
+  alpha0 <- pmax(alpha0, 1e-3)
   return(alpha0 = alpha0)
 }
 

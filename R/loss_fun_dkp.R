@@ -49,12 +49,9 @@ loss_fun_dkp <- function(
   # Compute posterior alpha
   alpha_n <- as.matrix(alpha0) + as.matrix(K %*% Y)
 
-  # Numerical stabilization: avoid log(0) or NaNs
-  alpha_n <- pmax(alpha_n, 1e-10)
-
   # Posterior mean prediction of success probability
   pi_hat <- alpha_n / rowSums(alpha_n)
-  pi_hat <- pmin(pmax(pi_hat, 1e-10), 1 - 1e-10)   # avoid log(0)
+  pi_hat <- pmin(pmax(pi_hat, 1e-6), 1 - 1e-6)   # avoid log(0)
 
   if (loss == "brier") {
     # Brier score (Mean Squared Error)

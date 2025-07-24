@@ -111,6 +111,10 @@ fit.DKP <- function(
   q <- ncol(Y)
   n <- nrow(X)
 
+  if (q == 2) {
+    warning("For binary data, consider using the BKP model instead of DKP.")
+  }
+
   # ---- Validity checks on inputs ----
   if (nrow(Y) != n) stop("Number of rows in 'Y' must match number of rows in 'X'.")
   if (any(Y < 0)) stop("'Y' must be in non-negtive.")

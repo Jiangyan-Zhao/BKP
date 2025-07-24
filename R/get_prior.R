@@ -82,11 +82,13 @@ get_prior <- function(prior = c("noninformative", "fixed", "adaptive"),
     W <- K / rowSums(K)   # m * n
 
     # Estimated mean and precision
-    p_hat <- as.vector(W %*% (y / m))          # Estimated prior mean
-    r_hat <- r0 * rowSums(K) + 1e-10           # Estimated prior precision
+    p_hat <- as.vector(W %*% (y / m))   # Estimated prior mean
+    r_hat <- r0 * rowSums(K)            # Estimated prior precision
 
     alpha0 <- r_hat * p_hat
     beta0  <- r_hat * (1 - p_hat)
+    alpha0 <- pmax(alpha0, 1e-3)
+    beta0 <- pmax(beta0, 1e-3)
   }
   return(list(alpha0 = alpha0, beta0 = beta0))
 }

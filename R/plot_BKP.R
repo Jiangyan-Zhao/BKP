@@ -137,11 +137,11 @@ plot.BKP <- function(x, only_mean = FALSE, ...){
     # Initialize the plot with the estimated probability curve.
     plot(Xnew, prediction$mean,
          type = "l", col = "blue", lwd = 2,
-         xlab = "x (Input Variable)", ylab = "Probability",
+         xlab = "x", ylab = "Probability",
          main = "Estimated Probability",
          xlim = Xbounds,
-         ylim = c(max(0, min(prediction$lower)-0.1),
-                  min(1, max(prediction$upper)+0.1)))
+         ylim = c(min(prediction$lower) * 0.9,
+                  min(1, max(prediction$upper) * 1.1)))
 
     # Add a shaded credible interval band using polygon.
     polygon(c(Xnew, rev(Xnew)),
@@ -152,13 +152,24 @@ plot.BKP <- function(x, only_mean = FALSE, ...){
     # Overlay observed proportions (y/m) as points.
     points(X, y / m, pch = 20, col = "red")
 
-    # Add a legend to explain plot elements.
-    legend("topright",
-           legend = c("Estimated Probability",
-                      paste0((1 - prediction$CI_level)*100, "% Credible Interval"),
-                      "Observed Proportions"),
-           col = c("blue", "lightgrey", "red"), bty = "n",
-           lwd = c(2, 8, NA), pch = c(NA, NA, 20), lty = c(1, 1, NA))
+    if(is.null(prediction$class)){
+      # Add a legend to explain plot elements.
+      legend("topleft",
+             legend = c("Estimated Probability",
+                        paste0((1 - prediction$CI_level)*100, "% Credible Interval"),
+                        "Observed Proportions"),
+             col = c("blue", "lightgrey", "red"), bty = "n",
+             lwd = c(2, 8, NA), pch = c(NA, NA, 20), lty = c(1, 1, NA))
+    }else{
+      abline(h = prediction$threshold, lty = 2, lwd = 1.2)
+      text(x = Xbounds[2],
+           y = prediction$threshold,
+           labels = "threshold",
+           pos = 3,
+           cex = 0.9,
+           col = "black")
+    }
+
   } else if (d == 2){
     #----- Plotting for 2-dimensional covariate data (d == 2) -----#
     # Generate 2D prediction grid

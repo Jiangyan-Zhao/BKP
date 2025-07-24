@@ -107,10 +107,11 @@ predict.DKP <- function(object, Xnew, CI_level = 0.05, ...)
 
   # Predictive quantities
   row_sum <- rowSums(alpha_n)
+  beta_n  <- row_sum - alpha_n
   pi_mean <- alpha_n / row_sum
-  pi_var  <- alpha_n * (row_sum - alpha_n) / (row_sum^2 * (row_sum + 1))
-  pi_lower <- qbeta(CI_level / 2, alpha_n, row_sum - alpha_n)
-  pi_upper <- qbeta(1 - CI_level / 2, alpha_n, row_sum - alpha_n)
+  pi_var  <- alpha_n * beta_n / (row_sum^2 * (row_sum + 1))
+  pi_lower <- qbeta(CI_level / 2, alpha_n, beta_n)
+  pi_upper <- qbeta(1 - CI_level / 2, alpha_n, beta_n)
 
   # Return structured output
   prediction <- list(

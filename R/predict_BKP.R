@@ -144,8 +144,8 @@ predict.BKP <- function(object, Xnew, CI_level = 0.05, threshold = 0.5, ...)
   beta0 <- prior_par$beta0
 
   # Posterior parameters
-  alpha_n <- alpha0 + as.vector(K %*% y)
-  beta_n  <- beta0 + as.vector(K %*% (m - y))
+  alpha_n <- pmax(alpha0 + as.vector(K %*% y), 1e-6)
+  beta_n  <- pmax(beta0 + as.vector(K %*% (m - y)), 1e-6)
 
   # Predictive mean and variance
   pi_mean <- alpha_n / (alpha_n + beta_n)
@@ -168,6 +168,7 @@ predict.BKP <- function(object, Xnew, CI_level = 0.05, threshold = 0.5, ...)
   # Posterior classification label (only for classification data)
   if (all(m == 1)) {
     prediction$class <- ifelse(pi_mean > threshold, 1, 0)
+    prediction$threshold <- threshold
   }
 
   return(prediction)

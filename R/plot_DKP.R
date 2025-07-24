@@ -85,45 +85,74 @@ plot.DKP <- function(x, only_mean = FALSE, ...){
 
   if (d == 1){
     #----- Plotting for 1-dimensional covariate data (d == 1) -----#
-    # Generate new X values for a smooth prediction curve.
-    Xnew <- matrix(seq(Xbounds[1], Xbounds[2], length.out = 100), ncol = 1)
 
-    # Get the prediction for the new X values.
+    # Generate new X values for smooth prediction
+    Xnew <- matrix(seq(Xbounds[1], Xbounds[2], length.out = 100), ncol = 1)
     prediction <- predict.DKP(DKPmodel, Xnew, ...)
 
+    cols <- rainbow(q)
+    old_par <- par(mfrow = c(2, 2))
+    on.exit(par(old_par))  # Restore par on exit
+
+    # --- First panel: all mean curves together ---
+    plot(NA, xlim = Xbounds, ylim = c(-0.1, 1.1),
+         xlab = "x", ylab = "Probability",
+         main = "Mean Probability Curves (All Classes)")
     for (j in 1:q) {
-      mean_j <- prediction$mean[, j]
+      lines(Xnew, prediction$mean[, j], col = cols[j], lwd = 2)
+    }
+    if(!is.null(prediction$class)){
+      for (i in 1:nrow(X)) {
+        class_idx <- which.max(Y[i, ])
+        points(X[i], -0.05, col = cols[class_idx], pch = 20)
+      }
+    }
+    legend("top", legend = paste("Class", 1:q), col = cols, lty = 1, lwd = 2,
+           horiz = TRUE, bty = "n")
+
+    # --- Remaining panels: each class with CI + obs ---
+    for (j in 1:q) {
+      mean_j  <- prediction$mean[, j]
       lower_j <- prediction$lower[, j]
       upper_j <- prediction$upper[, j]
-      # Initialize the plot with the estimated probability curve.
-      plot(Xnew, mean_j,
-           type = "l", col = "blue", lwd = 2,
-           xlab = "x (Input Variable)", ylab = "Probability",
-           main = paste0("Estimated Probability (class ", j, ")"),
-           xlim = Xbounds,
-           ylim = c(max(0, min(lower_j)-0.1),
-                    min(1, max(upper_j)+0.2)))
 
-      # Add a shaded Credible interval band using polygon.
+      # Start plot for class j
+      if (!is.null(prediction$class)) {
+        ylim = c(0, 1)
+      }else{
+        ylim = c(min(lower_j) * 0.9, min(1, max(upper_j) * 1.1))
+      }
+      plot(Xnew, mean_j,
+           type = "l", col = cols[j], lwd = 2,
+           xlab = "x", ylab = "Probability",
+           main = paste0("Estimated Probability (Class ", j, ")"),
+           xlim = Xbounds,
+           ylim = ylim)
+
+      # Shaded CI
       polygon(c(Xnew, rev(Xnew)),
               c(lower_j, rev(upper_j)),
-              col = "lightgrey", border = NA)
-      lines(Xnew, mean_j, col = "blue", lwd = 2)
+              col = adjustcolor(cols[j], alpha.f = 0.2), border = NA)
+      lines(Xnew, mean_j, col = cols[j], lwd = 2)
 
-      # Overlay observed proportions (y/m) as points.
-      points(X, Y[,j] / rowSums(Y), pch = 20, col = "red")
+      # If class label is known, show binary observed indicator (1 if this class, 0 otherwise)
+      if (!is.null(prediction$class)) {
+        obs_j <- as.integer(apply(Y, 1, which.max) == j)
+        points(X, obs_j, pch = 20, col = cols[j])
+      } else {
+        # Proportions from multinomial
+        points(X, Y[, j] / rowSums(Y), pch = 20, col = cols[j])
 
-      # Add a legend to explain plot elements.
-      legend("topright",
-             legend = c("Estimated Probability",
-                        paste0((1 - prediction$CI_level)*100, "% Credible Interval"),
-                        "Observed Proportions"),
-             col = c("blue", "lightgrey", "red"), bty = "n",
-             lwd = c(2, 8, NA), pch = c(NA, NA, 20), lty = c(1, 1, NA))
+        # Legend
+        legend("topleft",
+               legend = c("Estimated Probability",
+                          paste0((1 - prediction$CI_level)*100, "% CI"),
+                          "Observed"),
+               col = c(cols[j], adjustcolor(cols[j], alpha.f = 0.2), cols[j]),
+               lwd = c(2, 8, NA), pch = c(NA, NA, 20), lty = c(1, 1, NA),
+               bty = "n")
+      }
     }
-
-
-
   } else if (d == 2){
     #----- Plotting for 2-dimensional covariate data (d == 2) -----#
     # Generate 2D prediction grid
