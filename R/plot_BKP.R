@@ -140,8 +140,8 @@ plot.BKP <- function(x, only_mean = FALSE, ...){
          xlab = "x (Input Variable)", ylab = "Probability",
          main = "Estimated Probability",
          xlim = Xbounds,
-         ylim = c(max(0, min(prediction$mean)-0.1),
-                  min(1, max(prediction$mean)+0.2)))
+         ylim = c(max(0, min(prediction$lower)-0.1),
+                  min(1, max(prediction$upper)+0.1)))
 
     # Add a shaded credible interval band using polygon.
     polygon(c(Xnew, rev(Xnew)),

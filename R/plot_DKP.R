@@ -101,8 +101,8 @@ plot.DKP <- function(x, only_mean = FALSE, ...){
            xlab = "x (Input Variable)", ylab = "Probability",
            main = paste0("Estimated Probability (class ", j, ")"),
            xlim = Xbounds,
-           ylim = c(max(0, min(mean_j)-0.1),
-                    min(1, max(mean_j)+0.2)))
+           ylim = c(max(0, min(lower_j)-0.1),
+                    min(1, max(upper_j)+0.2)))
 
       # Add a shaded Credible interval band using polygon.
       polygon(c(Xnew, rev(Xnew)),
