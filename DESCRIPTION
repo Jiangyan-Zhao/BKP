@@ -13,7 +13,7 @@ Description: Provides methods for nonparametric modeling of binomial and multino
  Applications include spatial statistics, probabilistic classification, and Bayesian experimental design.
  For more details, see MacKenzie, Trafalis, and Barker (2014) <doi:10.1002/sam.11241>.
 License: GPL-3
-URL: https://github.com/Jiangyan-Zhao/BKP
+URL: https://github.com/Jiangyan-Zhao/BKP, https://jiangyan-zhao.github.io/BKP/
 BugReports: https://github.com/Jiangyan-Zhao/BKP/issues
 Encoding: UTF-8
 LazyData: true
@@ -24,4 +24,3 @@ Depends: R (>= 3.5.0)
 Imports: gridExtra, lattice, optimx, tgp
 Suggests: stats, testthat (>= 3.0.0)
 Config/testthat/edition: 3
-
