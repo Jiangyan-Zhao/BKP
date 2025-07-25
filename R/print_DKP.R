@@ -100,7 +100,8 @@ print.DKP <- function(x, ...) {
   } else if (prior == "fixed") {
     cat("  Fixed informative prior shared across locations.\n")
     cat(sprintf("  r0:      %.3f\n", r0))
-    cat(sprintf("  p0:      %.3f\n", p0))
+    cat("  p0:     ", paste(sprintf("%.3f", p0), collapse = ", "), "\n")
+
   } else if (prior == "noninformative") {
     cat("  Noninformative prior: Dirichlet(1,...,1).\n")
   }

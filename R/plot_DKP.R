@@ -83,6 +83,8 @@ plot.DKP <- function(x, only_mean = FALSE, ...){
   d <- ncol(X)    # Dimensionality.
   q <- ncol(Y)    # Dimensionality.
 
+  # old_par <- par(ask = TRUE)
+
   if (d == 1){
     #----- Plotting for 1-dimensional covariate data (d == 1) -----#
 
@@ -90,25 +92,25 @@ plot.DKP <- function(x, only_mean = FALSE, ...){
     Xnew <- matrix(seq(Xbounds[1], Xbounds[2], length.out = 100), ncol = 1)
     prediction <- predict.DKP(DKPmodel, Xnew, ...)
 
-    cols <- rainbow(q)
     old_par <- par(mfrow = c(2, 2))
-    on.exit(par(old_par))  # Restore par on exit
+    # on.exit(par(old_par))  # Restore par on exit
 
     # --- First panel: all mean curves together ---
-    plot(NA, xlim = Xbounds, ylim = c(-0.1, 1.1),
-         xlab = "x", ylab = "Probability",
-         main = "Mean Probability Curves (All Classes)")
-    for (j in 1:q) {
-      lines(Xnew, prediction$mean[, j], col = cols[j], lwd = 2)
-    }
     if(!is.null(prediction$class)){
+      cols <- rainbow(q)
+      plot(NA, xlim = Xbounds, ylim = c(-0.1, 1.1),
+           xlab = "x", ylab = "Probability",
+           main = "Estimated Mean Curves (All Classes)")
+      for (j in 1:q) {
+        lines(Xnew, prediction$mean[, j], col = cols[j], lwd = 2)
+      }
       for (i in 1:nrow(X)) {
         class_idx <- which.max(Y[i, ])
         points(X[i], -0.05, col = cols[class_idx], pch = 20)
       }
+      legend("top", legend = paste("Class", 1:q), col = cols, lty = 1, lwd = 2,
+             horiz = TRUE, bty = "n")
     }
-    legend("top", legend = paste("Class", 1:q), col = cols, lty = 1, lwd = 2,
-           horiz = TRUE, bty = "n")
 
     # --- Remaining panels: each class with CI + obs ---
     for (j in 1:q) {
@@ -123,7 +125,7 @@ plot.DKP <- function(x, only_mean = FALSE, ...){
         ylim = c(min(lower_j) * 0.9, min(1, max(upper_j) * 1.1))
       }
       plot(Xnew, mean_j,
-           type = "l", col = cols[j], lwd = 2,
+           type = "l", col = "blue", lwd = 2,
            xlab = "x", ylab = "Probability",
            main = paste0("Estimated Probability (Class ", j, ")"),
            xlim = Xbounds,
@@ -132,23 +134,23 @@ plot.DKP <- function(x, only_mean = FALSE, ...){
       # Shaded CI
       polygon(c(Xnew, rev(Xnew)),
               c(lower_j, rev(upper_j)),
-              col = adjustcolor(cols[j], alpha.f = 0.2), border = NA)
-      lines(Xnew, mean_j, col = cols[j], lwd = 2)
+              col = "lightgrey", border = NA)
+      lines(Xnew, mean_j, col = "blue", lwd = 2)
 
       # If class label is known, show binary observed indicator (1 if this class, 0 otherwise)
       if (!is.null(prediction$class)) {
         obs_j <- as.integer(apply(Y, 1, which.max) == j)
-        points(X, obs_j, pch = 20, col = cols[j])
+        points(X, obs_j, pch = 20, col = "red")
       } else {
         # Proportions from multinomial
-        points(X, Y[, j] / rowSums(Y), pch = 20, col = cols[j])
+        points(X, Y[, j] / rowSums(Y), pch = 20, col = "red")
 
         # Legend
         legend("topleft",
                legend = c("Estimated Probability",
                           paste0((1 - prediction$CI_level)*100, "% CI"),
                           "Observed"),
-               col = c(cols[j], adjustcolor(cols[j], alpha.f = 0.2), cols[j]),
+               col = c("blue", "lightgrey", "red"),
                lwd = c(2, 8, NA), pch = c(NA, NA, 20), lty = c(1, 1, NA),
                bty = "n")
       }
@@ -188,4 +190,6 @@ plot.DKP <- function(x, only_mean = FALSE, ...){
     # --- Error handling for higher dimensions ---
     stop("plot.DKP() only supports data where the dimensionality of X is 1 or 2.")
   }
+
+  # par(old_par)
 }
