@@ -15,6 +15,7 @@ knitr::opts_chunk$set(
 
 <!-- badges: start -->
 [![CRAN status](https://www.r-pkg.org/badges/version/BKP)](https://cran.r-project.org/package=BKP)
+![Total downloads](https://cranlogs.r-pkg.org/badges/grand-total/BKP)
 [![R-CMD-check](https://github.com/Jiangyan-Zhao/BKP/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/Jiangyan-Zhao/BKP/actions/workflows/R-CMD-check.yaml)
 [![Codecov test coverage](https://codecov.io/gh/Jiangyan-Zhao/BKP/graph/badge.svg)](https://app.codecov.io/gh/Jiangyan-Zhao/BKP)
 <!-- badges: end -->
@@ -45,7 +46,7 @@ pak::pak("Jiangyan-Zhao/BKP")
 
 ### Example
 
-```{r BKP-example, message = FALSE, warning = FALSE}
+```{r BKP-example, message = FALSE, warning = FALSE, fig.width = 6, fig.height = 6}
 library(BKP)
 
 # Simulate data
@@ -74,7 +75,7 @@ DKP generalizes BKP to multi-class settings using a Dirichlet-multinomial model.
 
 ### Example
 
-```{r DKP-example, message = FALSE, warning = FALSE}
+```{r DKP-example, message = FALSE, warning = FALSE, fig.width = 10, fig.height = 10}
 # Simulate 3-class data
 set.seed(123)
 n <- 30

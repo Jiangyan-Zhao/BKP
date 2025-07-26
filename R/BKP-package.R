@@ -53,8 +53,8 @@
 #'   2019, 9-15 June 2019, Long Beach, California, USA, volume 97 of Proceedings
 #'   of Machine Learning Research, pp. 5459-5467. PMLR.
 #'
-#' @importFrom graphics legend lines points polygon
-#' @importFrom grDevices hcl.colors
+#' @importFrom graphics abline legend lines par points polygon text
+#' @importFrom grDevices hcl.colors rainbow
 #' @importFrom grid gpar textGrob
 #' @importFrom gridExtra grid.arrange
 #' @importFrom lattice levelplot panel.levelplot panel.contourplot

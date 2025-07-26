@@ -5,6 +5,7 @@
 
 [![CRAN
 status](https://www.r-pkg.org/badges/version/BKP)](https://cran.r-project.org/package=BKP)
+![Total downloads](https://cranlogs.r-pkg.org/badges/grand-total/BKP)
 [![R-CMD-check](https://github.com/Jiangyan-Zhao/BKP/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/Jiangyan-Zhao/BKP/actions/workflows/R-CMD-check.yaml)
 [![Codecov test
 coverage](https://codecov.io/gh/Jiangyan-Zhao/BKP/graph/badge.svg)](https://app.codecov.io/gh/Jiangyan-Zhao/BKP)
@@ -98,7 +99,7 @@ pred_dkp <- predict(model_dkp, Xnew)
 plot(model_dkp)
 ```
 
-<img src="man/figures/README-DKP-example-1.png" width="100%" /><img src="man/figures/README-DKP-example-2.png" width="100%" /><img src="man/figures/README-DKP-example-3.png" width="100%" />
+<img src="man/figures/README-DKP-example-1.png" width="100%" />
 
 ## Features
 
