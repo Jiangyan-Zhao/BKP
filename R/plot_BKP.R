@@ -188,17 +188,30 @@ plot.BKP <- function(x, only_mean = FALSE, ...){
 
     if (only_mean) {
       # Only plot the predicted mean graphs
-      my_2D_plot_fun("Mean", "Predictive Mean", df)
+      if(!is.null(prediction$class)){
+        p1 <- my_2D_plot_fun("Mean", "Predicted Class Probability (Predictive Mean)", df, X = X, y = y)
+      }else{
+        p1 <- my_2D_plot_fun("Mean", "Predictive Mean", df)
+      }
+      print(p1)
     } else {
       # Create 4 plots
-      p1 <- my_2D_plot_fun("Mean", "Predictive Mean", df)
-      p2 <- my_2D_plot_fun("Upper", paste0((1 - prediction$CI_level)*100, "% CI Upper"), df)
+      if(!is.null(prediction$class)){
+        p1 <- my_2D_plot_fun("Mean", "Predictive Mean", df, X = X, y = y)
+      }else{
+        p1 <- my_2D_plot_fun("Mean", "Predictive Mean", df)
+      }
       p3 <- my_2D_plot_fun("Variance", "Predictive Variance", df)
-      # p3 <- plot_fun("Width", "CI Width")
-      p4 <- my_2D_plot_fun("Lower", paste0((1 - prediction$CI_level)*100, "% CI Lower"), df)
+      if(!is.null(prediction$class)){
+        # Arrange into 1×2 layout
+        grid.arrange(p1, p3, ncol = 2)
+      }else{
+        p2 <- my_2D_plot_fun("Upper", paste0((1 - prediction$CI_level)*100, "% CI Upper"), df)
+        p4 <- my_2D_plot_fun("Lower", paste0((1 - prediction$CI_level)*100, "% CI Lower"), df)
 
-      # Arrange into 2×2 layout
-      grid.arrange(p1, p2, p3, p4, ncol = 2)
+        # Arrange into 2×2 layout
+        grid.arrange(p1, p2, p3, p4, ncol = 2)
+      }
     }
   } else {
     # --- Error handling for higher dimensions ---

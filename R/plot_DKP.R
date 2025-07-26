@@ -146,13 +146,15 @@ plot.DKP <- function(x, only_mean = FALSE, ...){
         points(X, Y[, j] / rowSums(Y), pch = 20, col = "red")
 
         # Legend
-        legend("topleft",
-               legend = c("Estimated Probability",
-                          paste0((1 - prediction$CI_level)*100, "% CI"),
-                          "Observed"),
-               col = c("blue", "lightgrey", "red"),
-               lwd = c(2, 8, NA), pch = c(NA, NA, 20), lty = c(1, 1, NA),
-               bty = "n")
+        if(j == 1) {
+          legend("topleft",
+                 legend = c("Estimated Probability",
+                            paste0((1 - prediction$CI_level)*100, "% CI"),
+                            "Observed"),
+                 col = c("blue", "lightgrey", "red"),
+                 lwd = c(2, 8, NA), pch = c(NA, NA, 20), lty = c(1, 1, NA),
+                 bty = "n")
+        }
       }
     }
   } else if (d == 2){
@@ -172,18 +174,57 @@ plot.DKP <- function(x, only_mean = FALSE, ...){
 
       if (only_mean) {
         # Only plot the predicted mean graphs
-        my_2D_plot_fun("Mean", "Predictive Mean", df)
+        if(!is.null(prediction$class)){
+          p1 <- my_2D_plot_fun("Mean", "Predicted Class Probability (Predictive Mean)", df, X = X, y = y)
+        }else{
+          p1 <- my_2D_plot_fun("Mean", "Predictive Mean", df)
+        }
+        print(p1)
       } else {
         # Create 4 plots
+        if(!is.null(prediction$class)){
+          p1 <- my_2D_plot_fun("Mean", "Predictive Mean", df, X = X, y = y)
+        }else{
+          p1 <- my_2D_plot_fun("Mean", "Predictive Mean", df)
+        }
+        p3 <- my_2D_plot_fun("Variance", "Predictive Variance", df)
+        if(!is.null(prediction$class)){
+          # Arrange into 1×2 layout
+          grid.arrange(p1, p3, ncol = 2,
+                       top = textGrob(paste0("Estimated Probability (class ", j, ")"),
+                                      gp = gpar(fontface = "bold", fontsize = 16)))
+        }else{
+          p2 <- my_2D_plot_fun("Upper", paste0((1 - prediction$CI_level)*100, "% CI Upper"), df)
+          p4 <- my_2D_plot_fun("Lower", paste0((1 - prediction$CI_level)*100, "% CI Lower"), df)
+          # Arrange into 2×2 layout
+          grid.arrange(p1, p2, p3, p4, ncol = 2,
+                       top = textGrob(paste0("Estimated Probability (class ", j, ")"),
+                                      gp = gpar(fontface = "bold", fontsize = 16)))
+        }
+      }
+
+      if (only_mean) {
+        # Only plot the predicted mean graphs
+        if(!is.null(prediction$class)){
+          p1 <- my_2D_plot_fun("Mean", "Predicted Class Probability Surface", df, X = X, y = y)
+        }else{
+          p1 <- my_2D_plot_fun("Mean", "Predictive Mean", df)
+        }
+        print(p1)
+      } else {
+        # Create 4 plots
+        if(!is.null(prediction$class)){
+          p1 <- my_2D_plot_fun("Mean", "Predicted Class Probability Surface", df, X = X, y = y)
+        }else{
+          p1 <- my_2D_plot_fun("Mean", "Predictive Mean", df)
+        }
         p1 <- my_2D_plot_fun("Mean", "Predictive Mean", df)
         p2 <- my_2D_plot_fun("Upper", paste0((1 - prediction$CI_level)*100, "% CI Upper"), df)
         p3 <- my_2D_plot_fun("Variance", "Predictive Variance", df)
         p4 <- my_2D_plot_fun("Lower", paste0((1 - prediction$CI_level)*100, "% CI Lower"), df)
 
         # Arrange into 2×2 layout
-        grid.arrange(p1, p2, p3, p4, ncol = 2,
-                     top = textGrob(paste0("Estimated Probability (class ", j, ")"),
-                                    gp = gpar(fontface = "bold", fontsize = 16)))
+
       }
     }
   } else {
