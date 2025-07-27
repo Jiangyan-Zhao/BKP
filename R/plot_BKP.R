@@ -195,7 +195,7 @@ plot.BKP <- function(x, only_mean = FALSE, ...){
       }
       print(p1)
     } else {
-      # Create 4 plots
+      # Create 2 or 4 plots
       if(!is.null(prediction$class)){
         p1 <- my_2D_plot_fun("Mean", "Predictive Mean", df, X = X, y = y)
       }else{
@@ -208,7 +208,6 @@ plot.BKP <- function(x, only_mean = FALSE, ...){
       }else{
         p2 <- my_2D_plot_fun("Upper", paste0((1 - prediction$CI_level)*100, "% CI Upper"), df)
         p4 <- my_2D_plot_fun("Lower", paste0((1 - prediction$CI_level)*100, "% CI Lower"), df)
-
         # Arrange into 2×2 layout
         grid.arrange(p1, p2, p3, p4, ncol = 2)
       }

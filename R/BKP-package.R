@@ -57,7 +57,7 @@
 #' @importFrom grDevices hcl.colors rainbow
 #' @importFrom grid gpar textGrob
 #' @importFrom gridExtra grid.arrange
-#' @importFrom lattice levelplot panel.levelplot panel.contourplot
+#' @importFrom lattice levelplot panel.contourplot panel.levelplot panel.points
 #' @importFrom optimx multistart
 #' @importFrom stats as.formula qbeta rbeta rgamma
 #' @importFrom tgp lhs
