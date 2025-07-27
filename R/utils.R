@@ -3,6 +3,7 @@
 #' @noRd
 
 my_2D_plot_fun <- function(var, title, data, pal = "plasma", X = NULL, y = NULL, ...) {
+  stopifnot(ncol(X) == 2)
   levelplot(
     as.formula(paste(var, "~ x1 * x2")),
     data = data,

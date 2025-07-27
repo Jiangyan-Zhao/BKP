@@ -165,36 +165,23 @@ plot.DKP <- function(x, only_mean = FALSE, ...){
     grid <- expand.grid(x1 = x1, x2 = x2)
     prediction <- predict.DKP(DKPmodel, as.matrix(grid))
 
-    for (j in 1:q) {
-      df <- data.frame(x1 = grid$x1, x2 = grid$x2,
-                       Mean = prediction$mean[, j],
-                       Upper = prediction$upper[, j],
-                       Lower = prediction$lower[, j],
-                       Variance = prediction$variance[, j])
+    if(is.null(prediction$class)){
+      for (j in 1:q) {
+        df <- data.frame(x1 = grid$x1, x2 = grid$x2,
+                         Mean = prediction$mean[, j],
+                         Upper = prediction$upper[, j],
+                         Lower = prediction$lower[, j],
+                         Variance = prediction$variance[, j])
 
-      if (only_mean) {
-        # Only plot the predicted mean graphs
-        if(!is.null(prediction$class)){
-          p1 <- my_2D_plot_fun("Mean", "Predicted Class Probability (Predictive Mean)", df, X = X, y = y)
-        }else{
+        if (only_mean) {
+          # Only plot the predicted mean graphs
           p1 <- my_2D_plot_fun("Mean", "Predictive Mean", df)
-        }
-        print(p1)
-      } else {
-        # Create 2 or 4 plots
-        if(!is.null(prediction$class)){
-          p1 <- my_2D_plot_fun("Mean", "Predictive Mean", df, X = X, y = y)
-        }else{
+          print(p1)
+        } else {
+          # Create 4 plots
           p1 <- my_2D_plot_fun("Mean", "Predictive Mean", df)
-        }
-        p3 <- my_2D_plot_fun("Variance", "Predictive Variance", df)
-        if(!is.null(prediction$class)){
-          # Arrange into 1×2 layout
-          grid.arrange(p1, p3, ncol = 2,
-                       top = textGrob(paste0("Estimated Probability (class ", j, ")"),
-                                      gp = gpar(fontface = "bold", fontsize = 16)))
-        }else{
           p2 <- my_2D_plot_fun("Upper", paste0((1 - prediction$CI_level)*100, "% CI Upper"), df)
+          p3 <- my_2D_plot_fun("Variance", "Predictive Variance", df)
           p4 <- my_2D_plot_fun("Lower", paste0((1 - prediction$CI_level)*100, "% CI Lower"), df)
           # Arrange into 2×2 layout
           grid.arrange(p1, p2, p3, p4, ncol = 2,
@@ -202,6 +189,28 @@ plot.DKP <- function(x, only_mean = FALSE, ...){
                                       gp = gpar(fontface = "bold", fontsize = 16)))
         }
       }
+    }else{
+      df <- data.frame(x1 = grid$x1, x2 = grid$x2,
+                       class = factor(prediction$class))
+      class_Y <- max.col(Y)
+      cols <- hcl.colors(q, palette = "Set2")
+
+      levelplot(
+        class ~ x1 * x2,
+        data = df,
+        col.regions = cols,
+        main = "DKP Classification",
+        xlab = "X1", ylab = "X2",
+        colorkey = FALSE,
+        cuts = q,
+        pretty = TRUE,
+        scales = list(draw = TRUE, tck = c(1, 0)),
+        panel = function(...) {
+          panel.levelplot(...)
+          panel.points(X[, 1], X[, 2], pch = class_Y, col = "black",
+                       fill = cols[class_Y], lwd = 1.5, cex = 1.2)
+        }
+      )
     }
   } else {
     # --- Error handling for higher dimensions ---
