@@ -198,10 +198,11 @@ plot.BKP <- function(x, only_mean = FALSE, ...){
       # Create 2 or 4 plots
       if(!is.null(prediction$class)){
         p1 <- my_2D_plot_fun("Mean", "Predictive Mean", df, X = X, y = y)
+        p3 <- my_2D_plot_fun("Variance", "Predictive Variance", df, X = X, y = y)
       }else{
         p1 <- my_2D_plot_fun("Mean", "Predictive Mean", df)
+        p3 <- my_2D_plot_fun("Variance", "Predictive Variance", df)
       }
-      p3 <- my_2D_plot_fun("Variance", "Predictive Variance", df)
       if(!is.null(prediction$class)){
         # Arrange into 1×2 layout
         grid.arrange(p1, p3, ncol = 2)

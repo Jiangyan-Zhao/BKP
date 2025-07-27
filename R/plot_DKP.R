@@ -191,26 +191,12 @@ plot.DKP <- function(x, only_mean = FALSE, ...){
       }
     }else{
       df <- data.frame(x1 = grid$x1, x2 = grid$x2,
-                       class = factor(prediction$class))
-      class_Y <- max.col(Y)
-      cols <- hcl.colors(q, palette = "Set2")
+                       class = factor(prediction$class),
+                       max_prob = apply(prediction$mean, 1, max))
 
-      levelplot(
-        class ~ x1 * x2,
-        data = df,
-        col.regions = cols,
-        main = "DKP Classification",
-        xlab = "X1", ylab = "X2",
-        colorkey = FALSE,
-        cuts = q,
-        pretty = TRUE,
-        scales = list(draw = TRUE, tck = c(1, 0)),
-        panel = function(...) {
-          panel.levelplot(...)
-          panel.points(X[, 1], X[, 2], pch = class_Y, col = "black",
-                       fill = cols[class_Y], lwd = 1.5, cex = 1.2)
-        }
-      )
+      p1 <- my_2D_plot_fun_class("class", "Predicted Classes", df, X, Y)
+      p2 <- my_2D_plot_fun_class("max_prob", "Maximum Predicted Probability", df, X, Y, classification = FALSE)
+      grid.arrange(p1, p2, ncol = 2)
     }
   } else {
     # --- Error handling for higher dimensions ---
