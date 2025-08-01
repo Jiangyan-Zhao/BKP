@@ -156,7 +156,7 @@ plot.BKP <- function(x, only_mean = FALSE, ...){
       # Add a legend to explain plot elements.
       legend("topleft",
              legend = c("Estimated Probability",
-                        paste0((1 - prediction$CI_level)*100, "% Credible Interval"),
+                        paste0(prediction$CI_level * 100, "% Credible Interval"),
                         "Observed Proportions"),
              col = c("blue", "lightgrey", "red"), bty = "n",
              lwd = c(2, 8, NA), pch = c(NA, NA, 20), lty = c(1, 1, NA))
@@ -207,8 +207,8 @@ plot.BKP <- function(x, only_mean = FALSE, ...){
         # Arrange into 1×2 layout
         grid.arrange(p1, p3, ncol = 2)
       }else{
-        p2 <- my_2D_plot_fun("Upper", paste0((1 - prediction$CI_level)*100, "% CI Upper"), df)
-        p4 <- my_2D_plot_fun("Lower", paste0((1 - prediction$CI_level)*100, "% CI Lower"), df)
+        p2 <- my_2D_plot_fun("Upper", paste0(prediction$CI_level * 100, "% CI Upper"), df)
+        p4 <- my_2D_plot_fun("Lower", paste0(prediction$CI_level * 100, "% CI Lower"), df)
         # Arrange into 2×2 layout
         grid.arrange(p1, p2, p3, p4, ncol = 2)
       }

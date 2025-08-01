@@ -65,11 +65,11 @@ loss_fun <- function(
     # Empirical success rate
     pi_tilde <- y / m
     # Brier score: mean squared error between predicted and observed
-    brier <- mean((pi_hat - pi_tilde)^2)
+    brier <- sum((pi_hat - pi_tilde)^2) / sum(m)
     return(brier)
   } else if (loss == "log_loss"){
     # log-loss (cross-entropy)
-    log_loss <- -mean(y * log(pi_hat) + (m - y) * log(1 - pi_hat))
+    log_loss <- -sum(y * log(pi_hat) + (m - y) * log(1 - pi_hat)) / sum(m)
     return(log_loss)
   } else {
     stop("Unsupported loss type. Use 'brier' or 'log_loss'.")

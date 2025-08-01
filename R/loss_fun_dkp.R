@@ -58,11 +58,11 @@ loss_fun_dkp <- function(
     # Empirical success rate
     pi_tilde <- Y / rowSums(Y)
     # Brier score: mean squared error between predicted and observed
-    brier <- mean((pi_hat - pi_tilde)^2)
+    brier <- sum((pi_hat - pi_tilde)^2) / sum(Y)
     return(brier)
   } else if (loss == "log_loss"){
     # log-loss (cross-entropy)
-    log_loss <- -mean( Y * log(pi_hat) )
+    log_loss <- -sum(Y * log(pi_hat)) / sum(Y)
     return(log_loss)
   } else {
     stop("Unsupported loss type. Use 'brier' or 'log_loss'.")

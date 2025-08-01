@@ -4,7 +4,7 @@
 #'
 #' @examples
 #' # ============================================================== #
-#' # ========================= BKP Examples ======================= #
+#' # ========================= DKP Examples ======================= #
 #' # ============================================================== #
 #'
 #' #-------------------------- 1D Example ---------------------------
@@ -27,7 +27,10 @@
 #'
 #' # Fit DKP model
 #' model1 <- fit.DKP(X, Y, Xbounds = Xbounds)
-#' print(model1)
+#'
+#' # Prediction
+#' Xnew = matrix(seq(-2, 2, length = 10), ncol=1) #new data points
+#' predict(model1, Xnew)
 #'
 #'
 #' #-------------------------- 2D Example ---------------------------
@@ -61,10 +64,16 @@
 #' model2 <- fit.DKP(X, Y, Xbounds = Xbounds)
 #' print(model2)
 #'
+#' # Prediction
+#' x1 <- seq(Xbounds[1,1], Xbounds[1,2], length.out = 10)
+#' x2 <- seq(Xbounds[2,1], Xbounds[2,2], length.out = 10)
+#' Xnew <- expand.grid(x1 = x1, x2 = x2)
+#' predict(model2, Xnew)
+#'
 #' @export
 #' @method predict DKP
 
-predict.DKP <- function(object, Xnew, CI_level = 0.05, ...)
+predict.DKP <- function(object, Xnew, CI_level = 0.95, ...)
 {
   if (!inherits(object, "DKP")) {
     stop("The input is not of class 'DKP'. Please provide a model fitted with 'fit.DKP()'.")
@@ -110,8 +119,8 @@ predict.DKP <- function(object, Xnew, CI_level = 0.05, ...)
   beta_n  <- row_sum - alpha_n
   pi_mean <- alpha_n / row_sum
   pi_var  <- alpha_n * beta_n / (row_sum^2 * (row_sum + 1))
-  pi_lower <- qbeta(CI_level / 2, alpha_n, beta_n)
-  pi_upper <- qbeta(1 - CI_level / 2, alpha_n, beta_n)
+  pi_lower <- qbeta((1 - CI_level) / 2, alpha_n, beta_n)
+  pi_upper <- qbeta(1 - (1 - CI_level) / 2, alpha_n, beta_n)
 
   # Return structured output
   prediction <- list(

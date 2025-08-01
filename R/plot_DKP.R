@@ -149,7 +149,7 @@ plot.DKP <- function(x, only_mean = FALSE, ...){
         if(j == 1) {
           legend("topleft",
                  legend = c("Estimated Probability",
-                            paste0((1 - prediction$CI_level)*100, "% CI"),
+                            paste0(prediction$CI_level * 100, "% CI"),
                             "Observed"),
                  col = c("blue", "lightgrey", "red"),
                  lwd = c(2, 8, NA), pch = c(NA, NA, 20), lty = c(1, 1, NA),
@@ -180,12 +180,12 @@ plot.DKP <- function(x, only_mean = FALSE, ...){
         } else {
           # Create 4 plots
           p1 <- my_2D_plot_fun("Mean", "Predictive Mean", df)
-          p2 <- my_2D_plot_fun("Upper", paste0((1 - prediction$CI_level)*100, "% CI Upper"), df)
+          p2 <- my_2D_plot_fun("Upper", paste0(prediction$CI_level * 100, "% CI Upper"), df)
           p3 <- my_2D_plot_fun("Variance", "Predictive Variance", df)
-          p4 <- my_2D_plot_fun("Lower", paste0((1 - prediction$CI_level)*100, "% CI Lower"), df)
+          p4 <- my_2D_plot_fun("Lower", paste0(prediction$CI_level * 100, "% CI Lower"), df)
           # Arrange into 2×2 layout
           grid.arrange(p1, p2, p3, p4, ncol = 2,
-                       top = textGrob(paste0("Estimated Probability (class ", j, ")"),
+                       top = textGrob(paste0("Estimated Probability (Class ", j, ")"),
                                       gp = gpar(fontface = "bold", fontsize = 16)))
         }
       }
