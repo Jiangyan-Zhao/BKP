@@ -54,7 +54,8 @@ surface by updating Beta priors using kernel-weighted observations.</p>
 <span>  p0 <span class="op">=</span> <span class="fl">0.5</span>,</span>
 <span>  kernel <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"gaussian"</span>, <span class="st">"matern52"</span>, <span class="st">"matern32"</span><span class="op">)</span>,</span>
 <span>  loss <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"brier"</span>, <span class="st">"log_loss"</span><span class="op">)</span>,</span>
-<span>  n_multi_start <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  n_multi_start <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  theta <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -80,7 +81,8 @@ corresponding to each <code>y</code>.</p></dd>
 <dd><p>Optional \(d \times 2\) matrix specifying the lower and
 upper bounds of each input dimension. Used to normalize inputs to
 \([0,1]^d\). If <code>Xbounds</code> is <code>NULL</code>, the input is assumed to
-have already been normalized, and the default bounds are set to \([0,1]^d\).</p></dd>
+have already been normalized, and the default bounds are set to
+\([0,1]^d\).</p></dd>
 
 
 <dt id="arg-prior">prior<a class="anchor" aria-label="anchor" href="#arg-prior"></a></dt>
@@ -111,6 +113,14 @@ have already been normalized, and the default bounds are set to \([0,1]^d\).</p>
 <dd><p>Number of random initializations for multi-start
 optimization. Default is <code>10 × d</code>.</p></dd>
 
+
+<dt id="arg-theta">theta<a class="anchor" aria-label="anchor" href="#arg-theta"></a></dt>
+<dd><p>Optional. A positive scalar or a numeric vector of length equal
+to the input dimension <code>d</code>. If specified, these values will be used
+directly as the kernel lengthscale parameters, bypassing the internal
+optimization procedure. If <code>NULL</code> (default), the kernel parameters are
+optimized via (multi-start) L-BFGS-B to minimize the chosen loss function.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -126,6 +136,10 @@ the following elements:</p><dl><dt><code>theta_opt</code></dt>
 
 <dt><code>loss_min</code></dt>
 <dd><p>Minimum loss value achieved during optimization.</p></dd>
+
+<dt><code>loss_min</code></dt>
+<dd><p>Minimum loss value achieved during kernel hyperparameter optimization.
+If <code>theta</code> was manually specified by the user, this value is set to <code>NA</code>.</p></dd>
 
 <dt><code>X</code></dt>
 <dd><p>Original (unnormalized) input matrix of size <code>n × d</code>.</p></dd>
@@ -203,7 +217,8 @@ details.</p></div>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Kernel type:                 gaussian</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Loss function used:          brier</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Optimized kernel parameters: 0.0386</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Minimum achieved loss:       0.00012</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Minimum achieved loss:       0.00617</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Kernel parameters were obtained by optimization.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Prior specification:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Noninformative prior: Beta(1,1).</span>
@@ -247,7 +262,8 @@ details.</p></div>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Kernel type:                 gaussian</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Loss function used:          brier</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Optimized kernel parameters: 0.1112, 0.0680</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Minimum achieved loss:       0.00020</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Minimum achieved loss:       0.01041</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Kernel parameters were obtained by optimization.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Prior specification:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Noninformative prior: Beta(1,1).</span>
