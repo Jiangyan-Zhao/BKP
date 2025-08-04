@@ -17,7 +17,8 @@
 #'   \item{\code{theta_opt}}{Optimized kernel hyperparameters (lengthscales).}
 #'   \item{\code{kernel}}{Kernel function used, as a string.}
 #'   \item{\code{loss}}{Loss function used for hyperparameter tuning.}
-#'   \item{\code{loss_min}}{Minimum loss value achieved during optimization.}
+#'   \item{\code{loss_min}}{Minimum loss value achieved during kernel hyperparameter optimization.
+#'   If \code{theta} was manually specified by the user, this value is set to \code{NA}.}
 #'   \item{\code{X}}{Original (unnormalized) input matrix of size \code{n × d}.}
 #'   \item{\code{Xnorm}}{Normalized input matrix scaled to \eqn{[0,1]^d}.}
 #'   \item{\code{Xbounds}}{Matrix specifying normalization bounds for each input dimension.}
@@ -97,7 +98,7 @@ fit.DKP <- function(
     prior = c("noninformative", "fixed", "adaptive"), r0 = 2, p0 = NULL,
     kernel = c("gaussian", "matern52", "matern32"),
     loss = c("brier", "log_loss"),
-    n_multi_start = NULL
+    n_multi_start = NULL, theta = NULL
 ){
   # ---- Parse and validate arguments ----
   prior <- match.arg(prior)
@@ -125,31 +126,45 @@ fit.DKP <- function(
   Xnorm <- sweep(X, 2, Xbounds[,1], "-")
   Xnorm <- sweep(Xnorm, 2, Xbounds[,2] - Xbounds[,1], "/")
 
-  # ---- Determine initial search space for log10(theta) ----
-  # We work in log10(theta) space for numerical stability
-  gamma_bounds <- matrix(c((log10(d)-log10(500))/2,       # lower bound
-                           (log10(d)+2)/2),               # upper bound
-                         ncol = 2, nrow = d, byrow = TRUE)
-  if (is.null(n_multi_start)) n_multi_start <- 10 * d
-  init_gamma <- lhs(n_multi_start, gamma_bounds)
+  if (is.null(theta)) {
+    # ---- Determine initial search space for log10(theta) ----
+    # We work in log10(theta) space for numerical stability
+    gamma_bounds <- matrix(c((log10(d)-log10(500))/2,       # lower bound
+                             (log10(d)+2)/2),               # upper bound
+                           ncol = 2, nrow = d, byrow = TRUE)
+    if (is.null(n_multi_start)) n_multi_start <- 10 * d
+    init_gamma <- lhs(n_multi_start, gamma_bounds)
 
-  # ---- Run multi-start L-BFGS-B optimization to find best kernel parameters ----
-  opt_res <- multistart(
-    parmat = init_gamma,
-    fn     = loss_fun_dkp,
-    method = "L-BFGS-B",
-    lower  = rep(-10, d), # relaxed lower bound
-    upper  = rep(10, d),  # relaxed upper bound
-    prior = prior, r0 = r0, p0 = p0,
-    Xnorm = Xnorm, Y = Y,
-    loss = loss, kernel = kernel,
-    control= list(trace=0))
+    # ---- Run multi-start L-BFGS-B optimization to find best kernel parameters ----
+    opt_res <- multistart(
+      parmat = init_gamma,
+      fn     = loss_fun_dkp,
+      method = "L-BFGS-B",
+      lower  = rep(-10, d), # relaxed lower bound
+      upper  = rep(10, d),  # relaxed upper bound
+      prior = prior, r0 = r0, p0 = p0,
+      Xnorm = Xnorm, Y = Y,
+      loss = loss, kernel = kernel,
+      control= list(trace=0))
 
-  # ---- Extract optimal kernel parameters and loss ----
-  best_index <- which.min(opt_res$value)
-  gamma_opt  <- as.numeric(opt_res[best_index, 1:d])
-  theta_opt  <- 10^gamma_opt
-  loss_min   <- opt_res$value[best_index]
+    # ---- Extract optimal kernel parameters and loss ----
+    best_index <- which.min(opt_res$value)
+    gamma_opt  <- as.numeric(opt_res[best_index, 1:d])
+    theta_opt  <- 10^gamma_opt
+    loss_min   <- opt_res$value[best_index]
+  }else{
+    # ---- Use user-provided theta ----
+    if (length(theta) == 1) {
+      theta <- rep(theta, d)
+    } else if (length(theta) != d) {
+      stop("'theta' must be a positive scalar or a vector of length equal to ncol(X).")
+    }
+    if (any(theta <= 0)) {
+      stop("'theta' must be strictly positive.")
+    }
+    theta_opt <- theta
+    loss_min <- NA  # No optimization, so loss value not meaningful
+  }
 
   # ---- Compute kernel matrix at optimized hyperparameters ----
   K <- kernel_matrix(Xnorm, theta = theta_opt, kernel = kernel)

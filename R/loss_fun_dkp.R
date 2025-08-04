@@ -34,8 +34,6 @@ loss_fun_dkp <- function(
   loss <- match.arg(loss)
   kernel <- match.arg(kernel)
 
-  n <- nrow(Y)
-
   # Convert gamma to kernel hyperparameters (theta = 10^gamma)
   theta <- 10^gamma
 
@@ -58,11 +56,11 @@ loss_fun_dkp <- function(
     # Empirical success rate
     pi_tilde <- Y / rowSums(Y)
     # Brier score: mean squared error between predicted and observed
-    brier <- sum((pi_hat - pi_tilde)^2) / sum(Y)
+    brier <- mean((pi_hat - pi_tilde)^2)
     return(brier)
   } else if (loss == "log_loss"){
     # log-loss (cross-entropy)
-    log_loss <- -sum(Y * log(pi_hat)) / sum(Y)
+    log_loss <- -mean(Y * log(pi_hat))
     return(log_loss)
   } else {
     stop("Unsupported loss type. Use 'brier' or 'log_loss'.")

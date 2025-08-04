@@ -120,7 +120,7 @@ predict.DKP <- function(object, Xnew, CI_level = 0.95, ...)
   pi_mean <- alpha_n / row_sum
   pi_var  <- alpha_n * beta_n / (row_sum^2 * (row_sum + 1))
   pi_lower <- qbeta((1 - CI_level) / 2, alpha_n, beta_n)
-  pi_upper <- qbeta(1 - (1 - CI_level) / 2, alpha_n, beta_n)
+  pi_upper <- qbeta((1 + CI_level) / 2, alpha_n, beta_n)
 
   # Return structured output
   prediction <- list(

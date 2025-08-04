@@ -13,7 +13,8 @@ fit.DKP(
   p0 = NULL,
   kernel = c("gaussian", "matern52", "matern32"),
   loss = c("brier", "log_loss"),
-  n_multi_start = NULL
+  n_multi_start = NULL,
+  theta = NULL
 )
 }
 \arguments{
@@ -26,7 +27,8 @@ q}.}
 \item{Xbounds}{Optional \eqn{d \times 2} matrix specifying the lower and
 upper bounds of each input dimension. Used to normalize inputs to
 \eqn{[0,1]^d}. If \code{Xbounds} is \code{NULL}, the input is assumed to
-have already been normalized, and the default bounds are set to \eqn{[0,1]^d}.}
+have already been normalized, and the default bounds are set to
+\eqn{[0,1]^d}.}
 
 \item{prior}{Type of prior to use. One of \code{"noninformative"},
 \code{"fixed"}, or \code{"adaptive"}.}
@@ -45,6 +47,12 @@ Must be of length \eqn{q}.}
 
 \item{n_multi_start}{Number of random initializations for multi-start
 optimization. Default is \code{10 × d}.}
+
+\item{theta}{Optional. A positive scalar or a numeric vector of length equal
+to the input dimension \code{d}. If specified, these values will be used
+directly as the kernel lengthscale parameters, bypassing the internal
+optimization procedure. If \code{NULL} (default), the kernel parameters are
+optimized via (multi-start) L-BFGS-B to minimize the chosen loss function.}
 }
 \value{
 A list of class \code{"DKP"} representing the fitted DKP model, with
@@ -53,7 +61,8 @@ the following components:
 \item{\code{theta_opt}}{Optimized kernel hyperparameters (lengthscales).}
 \item{\code{kernel}}{Kernel function used, as a string.}
 \item{\code{loss}}{Loss function used for hyperparameter tuning.}
-\item{\code{loss_min}}{Minimum loss value achieved during optimization.}
+\item{\code{loss_min}}{Minimum loss value achieved during kernel hyperparameter optimization.
+If \code{theta} was manually specified by the user, this value is set to \code{NA}.}
 \item{\code{X}}{Original (unnormalized) input matrix of size \code{n × d}.}
 \item{\code{Xnorm}}{Normalized input matrix scaled to \eqn{[0,1]^d}.}
 \item{\code{Xbounds}}{Matrix specifying normalization bounds for each input dimension.}

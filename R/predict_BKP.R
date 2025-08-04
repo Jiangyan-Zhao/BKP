@@ -155,7 +155,7 @@ predict.BKP <- function(object, Xnew, CI_level = 0.95, threshold = 0.5, ...)
 
   # Credible intervals
   pi_lower <- qbeta((1 - CI_level) / 2, alpha_n, beta_n)
-  pi_upper <- qbeta(1 - (1 - CI_level) / 2, alpha_n, beta_n)
+  pi_upper <- qbeta((1 + CI_level) / 2, alpha_n, beta_n)
 
 
   # Output

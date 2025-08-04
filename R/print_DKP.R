@@ -90,7 +90,12 @@ print.DKP <- function(x, ...) {
   cat(sprintf("Loss function used:          %s\n", loss))
   cat(sprintf("Optimized kernel parameters: %s\n",
               paste(sprintf("%.4f", theta), collapse = ", ")))
-  cat(sprintf("Minimum achieved loss:       %.5f\n", loss_min))
+  if (!is.na(loss_min)) {
+    cat(sprintf("Minimum achieved loss:       %.5f\n", loss_min))
+    cat("Kernel parameters were obtained by optimization.\n")
+  } else {
+    cat("Note: Kernel parameters were user-specified (no optimization).\n")
+  }
   cat("\n")
 
   cat("Prior specification:\n")
