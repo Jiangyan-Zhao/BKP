@@ -1,0 +1,14 @@
+---
+title: "A Guide to the BKP R package "
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(BKP)
+```
