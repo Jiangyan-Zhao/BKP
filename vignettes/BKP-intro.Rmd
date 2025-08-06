@@ -1,0 +1,177 @@
+---
+title: "Introduction to Beta Kernel Model"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Introduction to Beta Kernel Model}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE} 
+NOT_CRAN <- identical(tolower(Sys.getenv("NOT_CRAN")), "true")
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  purl = NOT_CRAN,
+  eval = NOT_CRAN
+)
+```
+
+
+## Beta Kernel Process
+
+The **Beta Kernel Process (BKP)** provides a flexible and computationally efficient nonparametric framework for modeling spatially varying binomial probabilities.  
+Let $\vec{x} = (x_1, x_2, \ldots, x_d) \in \mathcal{X} \subset \mathbb{R}^d$ denote a $d$-dimensional input, and suppose the success probability surface $\pi(\vec{x}) \in [0,1]$ is unknown. At each location $\vec{x}$, the observed data is modeled as
+
+$$
+y(\vec{x}) \sim \mathrm{Binomial}(m(\vec{x}), \pi(\vec{x})),
+$$
+
+where $y(\vec{x})$ is the number of successes out of $m(\vec{x})$ independent trials.  
+The full dataset comprises $n$ observations $\mathcal{D}_n = \{(\vec{x}_i, y_i, m_i)\}_{i=1}^n$, where we write $y_i= y(\vec{x}_i)$ and $m_i= m(\vec{x}_i)$ for brevity.
+
+---
+
+### Prior
+
+In line with the Bayesian paradigm, we assign a **Beta prior** to the unknown probability function:
+
+$$
+\pi(\vec{x}) \sim \mathrm{Beta}(\alpha_0(\vec{x}), \beta_0(\vec{x})),
+$$
+
+where $\alpha_0(\vec{x}) > 0$ and $\beta_0(\vec{x}) > 0$ are spatially varying shape parameters.
+
+---
+
+### Posterior
+
+Let $k: \mathcal{X} \times \mathcal{X} \to [0,1]$ denote a user-defined kernel function measuring the similarity between input locations.  
+By the kernel-based Bayesian updating strategy, the BKP model defines a closed-form posterior distribution for $\pi(\vec{x})$ as
+
+$$
+\pi(\vec{x}) \mid \mathcal{D}_n \sim \mathrm{Beta}\left(\alpha_n(\vec{x}), \beta_n(\vec{x})\right),
+$$
+
+where
+
+$$
+\alpha_n(\vec{x}) = \alpha_0(\vec{x}) + \sum_{i=1}^{n} k(\vec{x}, \vec{x}_i) y_i
+= \alpha_0(\vec{x}) + \vec{k}(\vec{x})^\top \vec{y},
+$$
+
+$$
+\beta_n(\vec{x})  = \beta_0(\vec{x}) + \sum_{i=1}^{n} k(\vec{x}, \vec{x}_i) (m_i - y_i)
+= \beta_0(\vec{x}) + \vec{k}(\vec{x})^\top (\vec{m} - \vec{y}),
+$$
+
+and $\vec{k}(\vec{x}) = [k(\vec{x}, \vec{x}_1), \ldots, k(\vec{x}, \vec{x}_n)]^\top$ is the vector of kernel weights.  
+
+---
+
+### Posterior summaries
+
+Based on the posterior distribution above, the **posterior mean** is
+
+$$
+\widehat{\pi}_n(\vec{x}) =
+\frac{\alpha_n(\vec{x})}{\alpha_n(\vec{x}) + \beta_n(\vec{x})},
+$$
+
+which serves as a smooth estimator of the latent success probability.  
+
+The corresponding **posterior variance** is
+
+$$
+s^2_n(\vec{x}) =
+\frac{\widehat{\pi}_n(\vec{x})\{1 - \widehat{\pi}_n(\vec{x})\}}
+{\alpha_n(\vec{x}) + \beta_n(\vec{x}) + 1},
+$$
+
+which provides a local measure of epistemic uncertainty.  
+These posterior summaries can be used to visualize prediction quality across the input space, particularly highlighting regions with sparse data coverage (see Section \@ref(sec:example) for illustrations).
+
+---
+
+### Binary classification
+
+For binary classification, the posterior mean can be thresholded to produce hard predictions:
+
+$$
+\widehat{y}(\vec{x}) =
+\begin{cases}
+1 & \text{if } \widehat{\pi}_n(\vec{x}) > \pi_0, \\
+0 & \text{otherwise},
+\end{cases}
+$$
+
+where $\pi_0 \in (0,1)$ is a user-specified threshold, typically set to $0.5$.
+
+---
+
+## Dirichlet Kernel Process
+
+The **Dirichlet Kernel Process (DKP)** naturally extends the BKP framework to multi-class responses by replacing the binomial likelihood with a multinomial model and the Beta prior with a Dirichlet prior \citep{MacKenzie2014}.
+
+Let the response at input $\vec{x} \in \mathcal{X} \subset \mathbb{R}^d$ be
+$$
+\vec{y}(\vec{x}) = \left(y_1(\vec{x}), \ldots, y_q(\vec{x})\right),
+$$
+where $y_s(\vec{x})$ denotes the count of class $s$ out of $m(\vec{x}) = \sum_{s=1}^q y_s(\vec{x})$ total trials. Assume
+$$
+\vec{y}(\vec{x}) \sim \mathrm{Multinomial}(m(\vec{x}), \vec{\pi}(\vec{x})),
+$$
+with class probabilities
+$$
+\vec{\pi}(\vec{x}) = (\pi_1(\vec{x}), \ldots, \pi_q(\vec{x})), \quad \sum_{s=1}^q \pi_s(\vec{x}) = 1.
+$$
+
+---
+
+### Prior
+
+A Dirichlet prior is placed on $\vec{\pi}(\vec{x})$:
+$$
+\vec{\pi}(\vec{x}) \sim \mathrm{Dirichlet}(\vec{\alpha}_0(\vec{x})),
+$$
+where
+$$
+\vec{\alpha}_0(\vec{x}) = (\alpha_{0,1}(\vec{x}), \ldots, \alpha_{0,q}(\vec{x}))
+$$
+are prior concentration parameters.
+
+---
+
+### Posterior
+
+Given training data $\mathcal{D}_n = \{(\vec{x}_i, \vec{y}_i)\}_{i=1}^n$, define the response matrix as
+$$
+\vec{Y} = [\vec{y}_1, \ldots, \vec{y}_n]^\top \in \mathbb{R}^{n \times q}.
+$$
+
+The kernel-smoothed conjugate posterior distribution becomes
+\begin{equation}\label{eq:DKP_model}
+\vec{\pi}(\vec{x}) \mid \mathcal{D}_n \sim \mathrm{Dirichlet}\left(\vec{\alpha}_n(\vec{x})\right), \quad \text{with} \quad \vec{\alpha}_n(\vec{x}) = \vec{\alpha}_0(\vec{x}) + \vec{k}(\vec{x})^\top \vec{Y}.
+\end{equation}
+
+---
+
+### Posterior mean
+
+The posterior mean
+$$
+\widehat{\pi}_{n,s}(\vec{x}) = \frac{\alpha_{n,s}(\vec{x})}{\sum_{s'=1}^q \alpha_{n,s'}(\vec{x})}, \quad s = 1, \ldots, q,
+$$
+provides a smooth estimate of the class probabilities.
+
+---
+
+### Categorical classification
+
+For classification tasks, labels are assigned by the maximum a posteriori (MAP) decision rule:
+$$
+\widehat{y}(\vec{x}) = \underset{s \in \{1,\ldots,q\}}{\rm argmax}\; \widehat{\pi}_{n,s}(\vec{x}).
+$$
+
+---
+
