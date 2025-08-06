@@ -22,6 +22,10 @@ class probabilities with credible intervals and observed data. For
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/BKP_intr.html">What is the Beta Kernel Model?</a></li>
+  </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
@@ -84,17 +88,17 @@ uncertainty.</p>
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The plotting behavior depends on the dimensionality of the input
 covariates:</p>
-<ul><li><p><strong>1D inputs:</strong></p><ul><li><p>For <code>BKP</code>, the function plots the posterior mean curve with a 95% credible band, along with the observed proportions (\(y/m\)).</p></li>
-<li><p>For <code>DKP</code>, the function plots one curve per class, each with a shaded credible interval and observed multinomial class frequencies.</p></li>
+<ul><li><p><strong>1D inputs:</strong></p><ul><li><p>For <code>BKP</code> (binary/binomial data), plots the posterior mean curve with a 95% credible band, overlaid with the observed proportions (\(y/m\)).</p></li>
+<li><p>For <code>DKP</code> (categorical/multinomial data), plots one curve per class, each with a shaded credible interval and the observed class frequencies.</p></li>
+<li><p>For classification tasks, an optional curve of the maximum posterior class probability can be displayed to visualize decision confidence.</p></li>
 </ul></li>
-<li><p><strong>2D inputs:</strong></p><ul><li><p>For both models, the function produces a 2-by-2 panel of contour plots for each class (or the success class in BKP), showing:</p><ol><li><p>Predictive mean surface</p></li>
-<li><p>Predictive 97.5th percentile surface (upper bound of 95% credible interval)</p></li>
-<li><p>Predictive variance surface</p></li>
-<li><p>Predictive 2.5th percentile surface (lower bound of 95% credible interval)</p></li>
+<li><p><strong>2D inputs:</strong></p><ul><li><p>For both models, produces either:</p><ol><li><p>A predictive mean surface (optionally maximum posterior probability for classification), or</p></li>
+<li><p>A 2-by-2 panel of contour plots showing: predictive mean, predictive 97.5th percentile (upper bound of 95% credible interval), predictive variance, and predictive 2.5th percentile (lower bound).</p></li>
 </ol></li>
+<li><p>For DKP, these surfaces are generated separately for each class.</p></li>
 </ul></li>
-</ul><p>For input dimensions greater than 2, the function will terminate with an
-error.</p>
+</ul><p>For input dimensions greater than two, the function terminates with an
+error message.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
