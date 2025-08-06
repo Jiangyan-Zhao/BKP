@@ -2,8 +2,8 @@ pandoc: 3.1.11
 pkgdown: 2.1.3
 pkgdown_sha: ~
 articles:
-  BKP_intr: BKP_intr.html
-last_built: 2025-08-06T11:35Z
+  BKP-intro: BKP-intro.html
+last_built: 2025-08-06T12:57Z
 urls:
   reference: https://jiangyan-zhao.github.io/BKP/reference
   article: https://jiangyan-zhao.github.io/BKP/articles
