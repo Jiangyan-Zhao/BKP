@@ -39,24 +39,24 @@ covariates:
 \itemize{
 \item \strong{1D inputs:}
 \itemize{
-\item For \code{BKP}, the function plots the posterior mean curve with a 95\% credible band, along with the observed proportions (\eqn{y/m}).
-\item For \code{DKP}, the function plots one curve per class, each with a shaded credible interval and observed multinomial class frequencies.
+\item For \code{BKP} (binary/binomial data), plots the posterior mean curve with a 95\% credible band, overlaid with the observed proportions (\eqn{y/m}).
+\item For \code{DKP} (categorical/multinomial data), plots one curve per class, each with a shaded credible interval and the observed class frequencies.
+\item For classification tasks, an optional curve of the maximum posterior class probability can be displayed to visualize decision confidence.
 }
 
 \item \strong{2D inputs:}
 \itemize{
-\item For both models, the function produces a 2-by-2 panel of contour plots for each class (or the success class in BKP), showing:
+\item For both models, produces either:
 \enumerate{
-\item Predictive mean surface
-\item Predictive 97.5th percentile surface (upper bound of 95\% credible interval)
-\item Predictive variance surface
-\item Predictive 2.5th percentile surface (lower bound of 95\% credible interval)
+\item A predictive mean surface (optionally maximum posterior probability for classification), or
+\item A 2-by-2 panel of contour plots showing: predictive mean, predictive 97.5th percentile (upper bound of 95\% credible interval), predictive variance, and predictive 2.5th percentile (lower bound).
 }
+\item For DKP, these surfaces are generated separately for each class.
 }
 }
 
-For input dimensions greater than 2, the function will terminate with an
-error.
+For input dimensions greater than two, the function terminates with an
+error message.
 }
 \examples{
 # ============================================================== #

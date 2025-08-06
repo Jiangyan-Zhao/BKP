@@ -91,12 +91,13 @@ plot.DKP <- function(x, only_mean = FALSE, ...){
     # Generate new X values for smooth prediction
     Xnew <- matrix(seq(Xbounds[1], Xbounds[2], length.out = 100), ncol = 1)
     prediction <- predict.DKP(DKPmodel, Xnew, ...)
+    is_classification <- !is.null(prediction$class)
 
     old_par <- par(mfrow = c(2, 2))
     # on.exit(par(old_par))  # Restore par on exit
 
     # --- First panel: all mean curves together ---
-    if(!is.null(prediction$class)){
+    if(is_classification){
       cols <- rainbow(q)
       plot(NA, xlim = Xbounds, ylim = c(-0.1, 1.1),
            xlab = "x", ylab = "Probability",
@@ -119,7 +120,7 @@ plot.DKP <- function(x, only_mean = FALSE, ...){
       upper_j <- prediction$upper[, j]
 
       # Start plot for class j
-      if (!is.null(prediction$class)) {
+      if (is_classification) {
         ylim = c(0, 1)
       }else{
         ylim = c(min(lower_j) * 0.9, min(1, max(upper_j) * 1.1))
@@ -138,7 +139,7 @@ plot.DKP <- function(x, only_mean = FALSE, ...){
       lines(Xnew, mean_j, col = "blue", lwd = 2)
 
       # If class label is known, show binary observed indicator (1 if this class, 0 otherwise)
-      if (!is.null(prediction$class)) {
+      if (is_classification) {
         obs_j <- as.integer(apply(Y, 1, which.max) == j)
         points(X, obs_j, pch = 20, col = "red")
       } else {
@@ -164,8 +165,17 @@ plot.DKP <- function(x, only_mean = FALSE, ...){
     x2 <- seq(Xbounds[2, 1], Xbounds[2, 2], length.out = 80)
     grid <- expand.grid(x1 = x1, x2 = x2)
     prediction <- predict.DKP(DKPmodel, as.matrix(grid))
+    is_classification <- !is.null(prediction$class)
 
-    if(is.null(prediction$class)){
+    if(is_classification){
+      df <- data.frame(x1 = grid$x1, x2 = grid$x2,
+                       class = factor(prediction$class),
+                       max_prob = apply(prediction$mean, 1, max))
+
+      p1 <- my_2D_plot_fun_class("class", "Predicted Classes", df, X, Y)
+      p2 <- my_2D_plot_fun_class("max_prob", "Maximum Predicted Probability", df, X, Y, classification = FALSE)
+      grid.arrange(p1, p2, ncol = 2)
+    }else{
       for (j in 1:q) {
         df <- data.frame(x1 = grid$x1, x2 = grid$x2,
                          Mean = prediction$mean[, j],
@@ -189,14 +199,6 @@ plot.DKP <- function(x, only_mean = FALSE, ...){
                                       gp = gpar(fontface = "bold", fontsize = 16)))
         }
       }
-    }else{
-      df <- data.frame(x1 = grid$x1, x2 = grid$x2,
-                       class = factor(prediction$class),
-                       max_prob = apply(prediction$mean, 1, max))
-
-      p1 <- my_2D_plot_fun_class("class", "Predicted Classes", df, X, Y)
-      p2 <- my_2D_plot_fun_class("max_prob", "Maximum Predicted Probability", df, X, Y, classification = FALSE)
-      grid.arrange(p1, p2, ncol = 2)
     }
   } else {
     # --- Error handling for higher dimensions ---

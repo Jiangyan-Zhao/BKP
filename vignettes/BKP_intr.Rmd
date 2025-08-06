@@ -1,0 +1,22 @@
+---
+title: "What is the Beta Kernel Model?"
+link-citations: yes
+linkcolor: blue
+output: rmarkdown::html_vignette
+bibliography: refs.bib
+vignette: >
+  %\VignetteIndexEntry{What is the Beta Kernel Model?}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(BKP)
+```
