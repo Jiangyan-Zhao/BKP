@@ -5,12 +5,12 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>A Guide to the BKP R package  • BKP</title>
+<title>A Guide to the BKP R package • BKP</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="A Guide to the BKP R package ">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="A Guide to the BKP R package">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -33,7 +33,7 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/BKP-guide.html">A Guide to the BKP R package </a></li>
+<li><a class="dropdown-item" href="../articles/BKP-guide.html">A Guide to the BKP R package</a></li>
     <li><a class="dropdown-item" href="../articles/BKP-intro.html">Introduction to Beta Kernel Process</a></li>
   </ul>
 </li>
@@ -56,7 +56,7 @@
 
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
-      <img src="../logo.png" class="logo" alt=""><h1>A Guide to the BKP R package </h1>
+      <img src="../logo.png" class="logo" alt=""><h1>A Guide to the BKP R package</h1>
             
       
       <small class="dont-index">Source: <a href="https://github.com/Jiangyan-Zhao/BKP/blob/master/vignettes/articles/BKP-guide.Rmd" class="external-link"><code>vignettes/articles/BKP-guide.Rmd</code></a></small>
@@ -185,7 +185,8 @@ increase the number of locations to 30.</p>
 <p>Let
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>x</mi><mo accent="true">→</mo></mover><mo>∈</mo><msup><mrow><mo stretchy="true" form="prefix">[</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="true" form="postfix">]</mo></mrow><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">\vec{x} \in [0,1]^2</annotation></semantics></math>,
 and define the latent surface using a re-scaled version of the
-Goldstein–Price function: <span class="math display">$$\begin{align}\label{eq:Goldstein-Price}
+Goldstein–Price function: <span class="math display">$$
+\begin{aligned}
     f(\vec{x})=&amp;
 \frac{\log[\{1+a(\vec{x})\}\{30+b(\vec{x})\}-8.6928]}{2.4269}, \quad
 \text{with}\\
@@ -198,7 +199,8 @@ Goldstein–Price function: <span class="math display">$$\begin{align}\label{eq:
     &amp; \{-14 - 128 x_1 + 12\left(4 x_1 - 2 \right)^2 + 192 x_2 -
 36\left(4 x_1 - 2 \right)\left(4 x_2 - 2 \right) + 27\left(4 x_2 - 2
 \right)^2 \}.\notag
-\end{align}$$</span></p>
+\end{aligned}
+$$</span></p>
 <p>The true Bernoulli probability surface is then defined by
 <math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>π</mi><mn>3</mn></msub><mrow><mo stretchy="true" form="prefix">(</mo><mover><mi>x</mi><mo accent="true">→</mo></mover><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mi>Φ</mi><mo stretchy="false" form="prefix">{</mo><mi>f</mi><mrow><mo stretchy="true" form="prefix">(</mo><mover><mi>x</mi><mo accent="true">→</mo></mover><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="false" form="postfix">}</mo><mo>,</mo></mrow><annotation encoding="application/x-tex">
     \pi_3(\vec{x}) = \Phi\{f(\vec{x})\}, 
