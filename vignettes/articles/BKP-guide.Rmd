@@ -5,10 +5,208 @@ title: "A Guide to the BKP R package "
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  warning = FALSE,
+  message = FALSE,
+  fig.align = "center"
 )
 ```
 
+
+## Installation
+
+You can install the stable version of **BKP** from [CRAN](https://CRAN.R-project.org/package=BKP) with:
+
+```{r, eval=FALSE}
+install.packages("BKP")
+```
+
+Or install the development version from [GitHub](https://github.com/Jiangyan-Zhao/BKP) with:
+
+```{r, eval=FALSE}
+# install.packages("pak")
+pak::pak("Jiangyan-Zhao/BKP")
+```
+
+## BKP model
+
 ```{r setup}
 library(BKP)
+library(tgp)
+```
+
+
+### Example 1
+
+Let $x\in[-2,2]$, and suppose the true Bernoulli probability function is given by
+$$
+\pi_{1}(x) = \frac{1}{1+e^{-3x}}.
+$$
+
+```{r, fig.width = 6, fig.height = 6}
+# Define true success probability function
+true_pi_fun <- function(x) {
+  1/(1+exp(-3*x))
+}
+X <- seq(-2, 2, length = 1000)
+true_pi <- true_pi_fun(X)
+plot(X, true_pi, type = "l", lwd = 2, xlab = "x", ylab = "Probability")
+```
+
+We aim to fit the BKP model based on seven input locations that are uniformly distributed over $[-2,2]$, with each location associated with a binomial observation having a maximum trial count of 100.
+
+```{r, fig.width = 6, fig.height = 6}
+set.seed(123)
+# Data generation
+n <- 7
+Xbounds <- matrix(c(-2,2), nrow = 1)
+X <- lhs(n = n, rect = Xbounds)
+true_pi <- true_pi_fun(X)
+m <- sample(100, n, replace = TRUE)
+y <- rbinom(n, size = m, prob = true_pi)
+
+# Fit BKP model
+BKP_model_1D_1 <- fit.BKP(X, y, m, Xbounds = Xbounds)
+
+# Plot results
+plot(BKP_model_1D_1)
+
+# Add true probability function
+Xnew = matrix(seq(-2, 2, length = 100), ncol=1)
+true_pi <- true_pi_fun(Xnew)
+lines(Xnew,true_pi, col = "black", lwd = 2)
+legend(x = -2.24,y = 0.89, lwd = 2, bty = "n", col = "black",
+       legend = "Ture Probability", inset = 0.02)
+```
+
+
+### Example 2
+
+The first example is essentially a generalized linear model with a smooth logit link, and thus poses limited modeling complexity. To demonstrate the capability of the BKP model in handling more challenging classification structures, we consider a second example with a highly nonlinear underlying probability surface. Define the true Bernoulli probability as
+$$
+\pi_{2}(x) = \frac{1}{2}\left[ 1+e^{-x^{2}}\cos \left( 10\frac{1-e^{-x}}{1+e^{-x}} \right) \right],
+$$
+where $x \in [-2,2]$. This example involves rapid local oscillations and strong nonlinearity, making it substantially more difficult to fit than Example 1. Here, we increase the number of locations to 30.
+
+```{r, fig.width = 6, fig.height = 6}
+# Define true success probability function
+true_pi_fun <- function(x) {
+  (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
+}
+X <- seq(-2, 2, length = 1000)
+true_pi <- true_pi_fun(X)
+plot(X, true_pi, type = "l", lwd = 2,
+     xlab = "x", ylab = "Probability")
+```
+
+
+```{r, fig.width = 6, fig.height = 6}
+set.seed(123)
+# Data generation
+n <- 30
+Xbounds <- matrix(c(-2,2), nrow = 1)
+X <- lhs(n = n, rect = Xbounds)
+true_pi <- true_pi_fun(X)
+m <- sample(100, n, replace = TRUE)
+y <- rbinom(n, size = m, prob = true_pi)
+
+# Fit BKP model
+BKP_model_1D_2 <- fit.BKP(X, y, m, Xbounds = Xbounds)
+
+# Plot results
+plot(BKP_model_1D_2)
+
+# Add true probability function
+Xnew = matrix(seq(-2, 2, length = 100), ncol=1)
+true_pi <- true_pi_fun(Xnew)
+lines(Xnew,true_pi, col = "black", lwd = 2)
+legend(x = -2.24,y = 0.89, lwd = 2, bty = "n", col = "black",
+       legend = "Ture Probability", inset = 0.02)
+```
+
+### Example 3
+
+Let $\vec{x} \in [0,1]^2$, and define the latent surface using a re-scaled version of the Goldstein–Price function:
+\begin{align}\label{eq:Goldstein-Price}
+	f(\vec{x})=& \frac{\log[\{1+a(\vec{x})\}\{30+b(\vec{x})\}-8.6928]}{2.4269}, \quad \text{with}\\
+	a(\vec{x}) =& \left(4 x_1 + 4 x_2 - 3 \right)^2  \times  \notag  \\
+	& \{75 - 56 \left(x_1 + x_2 \right) + 3\left(4 x_1 - 2 \right)^2 + 6\left(4 x_1 - 2 \right)\left(4 x_2 - 2 \right) + 3\left(4 x_2 - 2 \right)^2\}, \notag \\
+	b(\vec{x}) =& \left(8 x_1 - 12 x_2 +2 \right)^2 \times \notag \\
+	& \{-14 - 128 x_1 + 12\left(4 x_1 - 2 \right)^2 + 192 x_2 - 36\left(4 x_1 - 2 \right)\left(4 x_2 - 2 \right) + 27\left(4 x_2 - 2 \right)^2 \}.\notag 
+\end{align} 
+
+The true Bernoulli probability surface is then defined by 
+\[
+	\pi_3(\vec{x}) = \Phi\{f(\vec{x})\}, 
+\]
+where $\Phi(\cdot)$ is the cumulative distribution function of the standard normal distribution. 
+
+```{r, fig.width = 6.5, fig.height = 6}
+# Define 2D latent function and probability transformation
+true_pi_fun <- function(X) {
+  if(is.null(nrow(X))) X <- matrix(X, nrow=1)
+  m <- 8.6928
+  s <- 2.4269
+  x1 <- 4*X[,1]- 2
+  x2 <- 4*X[,2]- 2
+  a <- 1 + (x1 + x2 + 1)^2 *
+    (19- 14*x1 + 3*x1^2- 14*x2 + 6*x1*x2 + 3*x2^2)
+  b <- 30 + (2*x1- 3*x2)^2 *
+    (18- 32*x1 + 12*x1^2 + 48*x2- 36*x1*x2 + 27*x2^2)
+  f <- log(a*b)
+  f <- (f- m)/s
+  return(pnorm(f))  # Transform to probability
+}
+x1 <- seq(0, 1, length.out = 100)
+x2 <- seq(0, 1, length.out = 100)
+X <- expand.grid(x1 = x1, x2 = x2)
+true_pi <- true_pi_fun(X)
+df <- data.frame(x1 = X$x1, x2 = X$x2, True = true_pi)
+print(BKP:::my_2D_plot_fun("True", title = "True Probability", data = df))
+```
+
+To construct the training data, we generate a LHD of size $100$ over $[0,1]^2$. Each location is associated with a binomial observation whose number of trials is randomly drawn from $\{1, \dots, 100\}$.
+
+```{r, fig.width = 9, fig.height = 8}
+set.seed(123)
+# Data generation
+n <- 100
+Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
+X <- lhs(n = n, rect = Xbounds)
+true_pi <- true_pi_fun(X)
+m <- sample(100, n, replace = TRUE)
+y <- rbinom(n, size = m, prob = true_pi)
+
+# Fit BKP model
+BKP_model_2D <- fit.BKP(X, y, m, Xbounds=Xbounds)
+
+# Plot results
+plot(BKP_model_2D)
+```
+
+### Example 4
+
+We next consider a binary classification task using the *Two Spirals* dataset, a well-known benchmark consisting of two intertwined spirals in a bounded two-dimensional input space. 
+
+We generate $n = 200$ observations using the `mlbench.spirals` function from the R package [mlbench](https://CRAN.R-project.org/package=mlbench), with two complete rotations and additive Gaussian noise of standard deviation `sd = 0.05`. The inputs $\vec{x}$ are constrained to the domain $[-1.7, 1.7]^2$, and the binary class labels are encoded as 0 and 1. We fit the BKP model using a fixed prior specification with `r_0 = 0.1` and `p_0 = 0.5`.
+
+```{r, fig.width = 13, fig.height = 6}
+library(mlbench) 
+set.seed(123)
+
+# Data
+n <- 200
+data <- mlbench.spirals(n, cycles = 2, sd = 0.05)
+X <- data$x
+y <- as.numeric(data$classes) - 1  # Convert to 0/1 for BKP
+m <- rep(1, n)
+Xbounds <- rbind(c(-1.7, 1.7), c(-1.7, 1.7))
+
+# Fit model
+BKP_model_Class <- fit.BKP(
+  X, y, m, Xbounds = Xbounds,
+  prior = "fixed", r0 = 0.1, loss = "log_loss")
+
+# Plot results
+plot(BKP_model_Class)
 ```
