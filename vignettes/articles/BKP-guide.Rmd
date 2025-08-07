@@ -1,5 +1,8 @@
 ---
-title: "A Guide to the BKP R package "
+title: "A Guide to the BKP R package"
+output:
+  html_document:
+    mathjax: default
 ---
 
 ```{r, include = FALSE}
@@ -127,18 +130,20 @@ legend(x = -2.24,y = 0.89, lwd = 2, bty = "n", col = "black",
 ### Example 3
 
 Let $\vec{x} \in [0,1]^2$, and define the latent surface using a re-scaled version of the Goldstein–Price function:
-\begin{align}\label{eq:Goldstein-Price}
+$$
+\begin{aligned}
 	f(\vec{x})=& \frac{\log[\{1+a(\vec{x})\}\{30+b(\vec{x})\}-8.6928]}{2.4269}, \quad \text{with}\\
 	a(\vec{x}) =& \left(4 x_1 + 4 x_2 - 3 \right)^2  \times  \notag  \\
 	& \{75 - 56 \left(x_1 + x_2 \right) + 3\left(4 x_1 - 2 \right)^2 + 6\left(4 x_1 - 2 \right)\left(4 x_2 - 2 \right) + 3\left(4 x_2 - 2 \right)^2\}, \notag \\
 	b(\vec{x}) =& \left(8 x_1 - 12 x_2 +2 \right)^2 \times \notag \\
 	& \{-14 - 128 x_1 + 12\left(4 x_1 - 2 \right)^2 + 192 x_2 - 36\left(4 x_1 - 2 \right)\left(4 x_2 - 2 \right) + 27\left(4 x_2 - 2 \right)^2 \}.\notag 
-\end{align} 
+\end{aligned}
+$$
 
 The true Bernoulli probability surface is then defined by 
-\[
+$$
 	\pi_3(\vec{x}) = \Phi\{f(\vec{x})\}, 
-\]
+$$
 where $\Phi(\cdot)$ is the cumulative distribution function of the standard normal distribution. 
 
 ```{r, fig.width = 6.5, fig.height = 6}

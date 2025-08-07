@@ -1,5 +1,8 @@
 ---
 title: "Introduction to Beta Kernel Process"
+output:
+  html_document:
+    mathjax: default
 ---
 
 ## Beta Kernel Process
