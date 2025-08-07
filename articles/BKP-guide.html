@@ -34,7 +34,7 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/BKP-guide.html">A Guide to the BKP R package </a></li>
-    <li><a class="dropdown-item" href="../articles/BKP-intro.html">Introduction to Beta Kernel Model</a></li>
+    <li><a class="dropdown-item" href="../articles/BKP-intro.html">Introduction to Beta Kernel Process</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -65,14 +65,236 @@
 
     
     
+<div class="section level2">
+<h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
+</h2>
+<p>You can install the stable version of <strong>BKP</strong> from <a href="https://CRAN.R-project.org/package=BKP" class="external-link">CRAN</a> with:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"BKP"</span><span class="op">)</span></span></code></pre></div>
+<p>Or install the development version from <a href="https://github.com/Jiangyan-Zhao/BKP" class="external-link">GitHub</a> with:</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># install.packages("pak")</span></span>
+<span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"Jiangyan-Zhao/BKP"</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="bkp-model">BKP model<a class="anchor" aria-label="anchor" href="#bkp-model"></a>
+</h2>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/Jiangyan-Zhao/BKP" class="external-link">BKP</a></span><span class="op">)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Attaching package: 'BKP'</span></span>
-<span><span class="co">#&gt; The following object is masked from 'package:stats':</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;     simulate</span></span></code></pre></div>
-  </main>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bobby.gramacy.com/r_packages/tgp/" class="external-link">tgp</a></span><span class="op">)</span></span></code></pre></div>
+<div class="section level3">
+<h3 id="example-1">Example 1<a class="anchor" aria-label="anchor" href="#example-1"></a>
+</h3>
+<p>Let
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>∈</mo><mrow><mo stretchy="true" form="prefix">[</mo><mo>−</mo><mn>2</mn><mo>,</mo><mn>2</mn><mo stretchy="true" form="postfix">]</mo></mrow></mrow><annotation encoding="application/x-tex">x\in[-2,2]</annotation></semantics></math>,
+and suppose the true Bernoulli probability function is given by
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>π</mi><mn>1</mn></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mfrac><mn>1</mn><mrow><mn>1</mn><mo>+</mo><msup><mi>e</mi><mrow><mo>−</mo><mn>3</mn><mi>x</mi></mrow></msup></mrow></mfrac><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\pi_{1}(x) = \frac{1}{1+e^{-3x}}.
+</annotation></semantics></math></p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Define true success probability function</span></span>
+<span><span class="va">true_pi_fun</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fl">1</span><span class="op">/</span><span class="op">(</span><span class="fl">1</span><span class="op">+</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="op">-</span><span class="fl">3</span><span class="op">*</span><span class="va">x</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span><span class="va">X</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="op">-</span><span class="fl">2</span>, <span class="fl">2</span>, length <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
+<span><span class="va">true_pi</span> <span class="op">&lt;-</span> <span class="fu">true_pi_fun</span><span class="op">(</span><span class="va">X</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/plot.html">plot</a></span><span class="op">(</span><span class="va">X</span>, <span class="va">true_pi</span>, type <span class="op">=</span> <span class="st">"l"</span>, lwd <span class="op">=</span> <span class="fl">2</span>, xlab <span class="op">=</span> <span class="st">"x"</span>, ylab <span class="op">=</span> <span class="st">"Probability"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="BKP-guide_files/figure-html/unnamed-chunk-4-1.png" width="576" style="display: block; margin: auto;"></p>
+<p>We aim to fit the BKP model based on seven input locations that are
+uniformly distributed over
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="true" form="prefix">[</mo><mo>−</mo><mn>2</mn><mo>,</mo><mn>2</mn><mo stretchy="true" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">[-2,2]</annotation></semantics></math>,
+with each location associated with a binomial observation having a
+maximum trial count of 100.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">123</span><span class="op">)</span></span>
+<span><span class="co"># Data generation</span></span>
+<span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">7</span></span>
+<span><span class="va">Xbounds</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">2</span>,<span class="fl">2</span><span class="op">)</span>, nrow <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="va">X</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/tgp/man/lhs.html" class="external-link">lhs</a></span><span class="op">(</span>n <span class="op">=</span> <span class="va">n</span>, rect <span class="op">=</span> <span class="va">Xbounds</span><span class="op">)</span></span>
+<span><span class="va">true_pi</span> <span class="op">&lt;-</span> <span class="fu">true_pi_fun</span><span class="op">(</span><span class="va">X</span><span class="op">)</span></span>
+<span><span class="va">m</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">100</span>, <span class="va">n</span>, replace <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html" class="external-link">rbinom</a></span><span class="op">(</span><span class="va">n</span>, size <span class="op">=</span> <span class="va">m</span>, prob <span class="op">=</span> <span class="va">true_pi</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Fit BKP model</span></span>
+<span><span class="va">BKP_model_1D_1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.bkp.html">fit.BKP</a></span><span class="op">(</span><span class="va">X</span>, <span class="va">y</span>, <span class="va">m</span>, Xbounds <span class="op">=</span> <span class="va">Xbounds</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Plot results</span></span>
+<span><span class="fu"><a href="../reference/plot.html">plot</a></span><span class="op">(</span><span class="va">BKP_model_1D_1</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Add true probability function</span></span>
+<span><span class="va">Xnew</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="op">-</span><span class="fl">2</span>, <span class="fl">2</span>, length <span class="op">=</span> <span class="fl">100</span><span class="op">)</span>, ncol<span class="op">=</span><span class="fl">1</span><span class="op">)</span></span>
+<span><span class="va">true_pi</span> <span class="op">&lt;-</span> <span class="fu">true_pi_fun</span><span class="op">(</span><span class="va">Xnew</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">Xnew</span>,<span class="va">true_pi</span>, col <span class="op">=</span> <span class="st">"black"</span>, lwd <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/legend.html" class="external-link">legend</a></span><span class="op">(</span>x <span class="op">=</span> <span class="op">-</span><span class="fl">2.24</span>,y <span class="op">=</span> <span class="fl">0.89</span>, lwd <span class="op">=</span> <span class="fl">2</span>, bty <span class="op">=</span> <span class="st">"n"</span>, col <span class="op">=</span> <span class="st">"black"</span>,</span>
+<span>       legend <span class="op">=</span> <span class="st">"Ture Probability"</span>, inset <span class="op">=</span> <span class="fl">0.02</span><span class="op">)</span></span></code></pre></div>
+<p><img src="BKP-guide_files/figure-html/unnamed-chunk-5-1.png" width="576" style="display: block; margin: auto;"></p>
+</div>
+<div class="section level3">
+<h3 id="example-2">Example 2<a class="anchor" aria-label="anchor" href="#example-2"></a>
+</h3>
+<p>The first example is essentially a generalized linear model with a
+smooth logit link, and thus poses limited modeling complexity. To
+demonstrate the capability of the BKP model in handling more challenging
+classification structures, we consider a second example with a highly
+nonlinear underlying probability surface. Define the true Bernoulli
+probability as
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>π</mi><mn>2</mn></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mrow><mo stretchy="true" form="prefix">[</mo><mn>1</mn><mo>+</mo><msup><mi>e</mi><mrow><mo>−</mo><msup><mi>x</mi><mn>2</mn></msup></mrow></msup><mo>cos</mo><mrow><mo stretchy="true" form="prefix">(</mo><mn>10</mn><mfrac><mrow><mn>1</mn><mo>−</mo><msup><mi>e</mi><mrow><mo>−</mo><mi>x</mi></mrow></msup></mrow><mrow><mn>1</mn><mo>+</mo><msup><mi>e</mi><mrow><mo>−</mo><mi>x</mi></mrow></msup></mrow></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">]</mo></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">
+\pi_{2}(x) = \frac{1}{2}\left[ 1+e^{-x^{2}}\cos \left( 10\frac{1-e^{-x}}{1+e^{-x}} \right) \right],
+</annotation></semantics></math> where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>∈</mo><mrow><mo stretchy="true" form="prefix">[</mo><mo>−</mo><mn>2</mn><mo>,</mo><mn>2</mn><mo stretchy="true" form="postfix">]</mo></mrow></mrow><annotation encoding="application/x-tex">x \in [-2,2]</annotation></semantics></math>.
+This example involves rapid local oscillations and strong nonlinearity,
+making it substantially more difficult to fit than Example 1. Here, we
+increase the number of locations to 30.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Define true success probability function</span></span>
+<span><span class="va">true_pi_fun</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="op">(</span><span class="fl">1</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="op">-</span><span class="va">x</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">cos</a></span><span class="op">(</span><span class="fl">10</span> <span class="op">*</span> <span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="op">-</span><span class="va">x</span><span class="op">)</span><span class="op">)</span> <span class="op">/</span> <span class="op">(</span><span class="fl">1</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="op">-</span><span class="va">x</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">/</span> <span class="fl">2</span></span>
+<span><span class="op">}</span></span>
+<span><span class="va">X</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="op">-</span><span class="fl">2</span>, <span class="fl">2</span>, length <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
+<span><span class="va">true_pi</span> <span class="op">&lt;-</span> <span class="fu">true_pi_fun</span><span class="op">(</span><span class="va">X</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/plot.html">plot</a></span><span class="op">(</span><span class="va">X</span>, <span class="va">true_pi</span>, type <span class="op">=</span> <span class="st">"l"</span>, lwd <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>     xlab <span class="op">=</span> <span class="st">"x"</span>, ylab <span class="op">=</span> <span class="st">"Probability"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="BKP-guide_files/figure-html/unnamed-chunk-6-1.png" width="576" style="display: block; margin: auto;"></p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">123</span><span class="op">)</span></span>
+<span><span class="co"># Data generation</span></span>
+<span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">30</span></span>
+<span><span class="va">Xbounds</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">2</span>,<span class="fl">2</span><span class="op">)</span>, nrow <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="va">X</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/tgp/man/lhs.html" class="external-link">lhs</a></span><span class="op">(</span>n <span class="op">=</span> <span class="va">n</span>, rect <span class="op">=</span> <span class="va">Xbounds</span><span class="op">)</span></span>
+<span><span class="va">true_pi</span> <span class="op">&lt;-</span> <span class="fu">true_pi_fun</span><span class="op">(</span><span class="va">X</span><span class="op">)</span></span>
+<span><span class="va">m</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">100</span>, <span class="va">n</span>, replace <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html" class="external-link">rbinom</a></span><span class="op">(</span><span class="va">n</span>, size <span class="op">=</span> <span class="va">m</span>, prob <span class="op">=</span> <span class="va">true_pi</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Fit BKP model</span></span>
+<span><span class="va">BKP_model_1D_2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.bkp.html">fit.BKP</a></span><span class="op">(</span><span class="va">X</span>, <span class="va">y</span>, <span class="va">m</span>, Xbounds <span class="op">=</span> <span class="va">Xbounds</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Plot results</span></span>
+<span><span class="fu"><a href="../reference/plot.html">plot</a></span><span class="op">(</span><span class="va">BKP_model_1D_2</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Add true probability function</span></span>
+<span><span class="va">Xnew</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="op">-</span><span class="fl">2</span>, <span class="fl">2</span>, length <span class="op">=</span> <span class="fl">100</span><span class="op">)</span>, ncol<span class="op">=</span><span class="fl">1</span><span class="op">)</span></span>
+<span><span class="va">true_pi</span> <span class="op">&lt;-</span> <span class="fu">true_pi_fun</span><span class="op">(</span><span class="va">Xnew</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">Xnew</span>,<span class="va">true_pi</span>, col <span class="op">=</span> <span class="st">"black"</span>, lwd <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/legend.html" class="external-link">legend</a></span><span class="op">(</span>x <span class="op">=</span> <span class="op">-</span><span class="fl">2.24</span>,y <span class="op">=</span> <span class="fl">0.89</span>, lwd <span class="op">=</span> <span class="fl">2</span>, bty <span class="op">=</span> <span class="st">"n"</span>, col <span class="op">=</span> <span class="st">"black"</span>,</span>
+<span>       legend <span class="op">=</span> <span class="st">"Ture Probability"</span>, inset <span class="op">=</span> <span class="fl">0.02</span><span class="op">)</span></span></code></pre></div>
+<p><img src="BKP-guide_files/figure-html/unnamed-chunk-7-1.png" width="576" style="display: block; margin: auto;"></p>
+</div>
+<div class="section level3">
+<h3 id="example-3">Example 3<a class="anchor" aria-label="anchor" href="#example-3"></a>
+</h3>
+<p>Let
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>x</mi><mo accent="true">→</mo></mover><mo>∈</mo><msup><mrow><mo stretchy="true" form="prefix">[</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="true" form="postfix">]</mo></mrow><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">\vec{x} \in [0,1]^2</annotation></semantics></math>,
+and define the latent surface using a re-scaled version of the
+Goldstein–Price function: <span class="math display">$$\begin{align}\label{eq:Goldstein-Price}
+    f(\vec{x})=&amp;
+\frac{\log[\{1+a(\vec{x})\}\{30+b(\vec{x})\}-8.6928]}{2.4269}, \quad
+\text{with}\\
+    a(\vec{x}) =&amp; \left(4 x_1 + 4 x_2 - 3
+\right)^2  \times  \notag  \\
+    &amp; \{75 - 56 \left(x_1 + x_2 \right) + 3\left(4 x_1 - 2 \right)^2
++ 6\left(4 x_1 - 2 \right)\left(4 x_2 - 2 \right) + 3\left(4 x_2 - 2
+\right)^2\}, \notag \\
+    b(\vec{x}) =&amp; \left(8 x_1 - 12 x_2 +2 \right)^2 \times \notag \\
+    &amp; \{-14 - 128 x_1 + 12\left(4 x_1 - 2 \right)^2 + 192 x_2 -
+36\left(4 x_1 - 2 \right)\left(4 x_2 - 2 \right) + 27\left(4 x_2 - 2
+\right)^2 \}.\notag
+\end{align}$$</span></p>
+<p>The true Bernoulli probability surface is then defined by
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>π</mi><mn>3</mn></msub><mrow><mo stretchy="true" form="prefix">(</mo><mover><mi>x</mi><mo accent="true">→</mo></mover><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mi>Φ</mi><mo stretchy="false" form="prefix">{</mo><mi>f</mi><mrow><mo stretchy="true" form="prefix">(</mo><mover><mi>x</mi><mo accent="true">→</mo></mover><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="false" form="postfix">}</mo><mo>,</mo></mrow><annotation encoding="application/x-tex">
+    \pi_3(\vec{x}) = \Phi\{f(\vec{x})\}, 
+</annotation></semantics></math> where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Φ</mi><mrow><mo stretchy="true" form="prefix">(</mo><mo>⋅</mo><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\Phi(\cdot)</annotation></semantics></math>
+is the cumulative distribution function of the standard normal
+distribution.</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Define 2D latent function and probability transformation</span></span>
+<span><span class="va">true_pi_fun</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">X</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="kw">if</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="va">X</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="va">X</span>, nrow<span class="op">=</span><span class="fl">1</span><span class="op">)</span></span>
+<span>  <span class="va">m</span> <span class="op">&lt;-</span> <span class="fl">8.6928</span></span>
+<span>  <span class="va">s</span> <span class="op">&lt;-</span> <span class="fl">2.4269</span></span>
+<span>  <span class="va">x1</span> <span class="op">&lt;-</span> <span class="fl">4</span><span class="op">*</span><span class="va">X</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span><span class="op">-</span> <span class="fl">2</span></span>
+<span>  <span class="va">x2</span> <span class="op">&lt;-</span> <span class="fl">4</span><span class="op">*</span><span class="va">X</span><span class="op">[</span>,<span class="fl">2</span><span class="op">]</span><span class="op">-</span> <span class="fl">2</span></span>
+<span>  <span class="va">a</span> <span class="op">&lt;-</span> <span class="fl">1</span> <span class="op">+</span> <span class="op">(</span><span class="va">x1</span> <span class="op">+</span> <span class="va">x2</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span> <span class="op">*</span></span>
+<span>    <span class="op">(</span><span class="fl">19</span><span class="op">-</span> <span class="fl">14</span><span class="op">*</span><span class="va">x1</span> <span class="op">+</span> <span class="fl">3</span><span class="op">*</span><span class="va">x1</span><span class="op">^</span><span class="fl">2</span><span class="op">-</span> <span class="fl">14</span><span class="op">*</span><span class="va">x2</span> <span class="op">+</span> <span class="fl">6</span><span class="op">*</span><span class="va">x1</span><span class="op">*</span><span class="va">x2</span> <span class="op">+</span> <span class="fl">3</span><span class="op">*</span><span class="va">x2</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span></span>
+<span>  <span class="va">b</span> <span class="op">&lt;-</span> <span class="fl">30</span> <span class="op">+</span> <span class="op">(</span><span class="fl">2</span><span class="op">*</span><span class="va">x1</span><span class="op">-</span> <span class="fl">3</span><span class="op">*</span><span class="va">x2</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span> <span class="op">*</span></span>
+<span>    <span class="op">(</span><span class="fl">18</span><span class="op">-</span> <span class="fl">32</span><span class="op">*</span><span class="va">x1</span> <span class="op">+</span> <span class="fl">12</span><span class="op">*</span><span class="va">x1</span><span class="op">^</span><span class="fl">2</span> <span class="op">+</span> <span class="fl">48</span><span class="op">*</span><span class="va">x2</span><span class="op">-</span> <span class="fl">36</span><span class="op">*</span><span class="va">x1</span><span class="op">*</span><span class="va">x2</span> <span class="op">+</span> <span class="fl">27</span><span class="op">*</span><span class="va">x2</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span></span>
+<span>  <span class="va">f</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">a</span><span class="op">*</span><span class="va">b</span><span class="op">)</span></span>
+<span>  <span class="va">f</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="va">f</span><span class="op">-</span> <span class="va">m</span><span class="op">)</span><span class="op">/</span><span class="va">s</span></span>
+<span>  <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">pnorm</a></span><span class="op">(</span><span class="va">f</span><span class="op">)</span><span class="op">)</span>  <span class="co"># Transform to probability</span></span>
+<span><span class="op">}</span></span>
+<span><span class="va">x1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, length.out <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
+<span><span class="va">x2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, length.out <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
+<span><span class="va">X</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/expand.grid.html" class="external-link">expand.grid</a></span><span class="op">(</span>x1 <span class="op">=</span> <span class="va">x1</span>, x2 <span class="op">=</span> <span class="va">x2</span><span class="op">)</span></span>
+<span><span class="va">true_pi</span> <span class="op">&lt;-</span> <span class="fu">true_pi_fun</span><span class="op">(</span><span class="va">X</span><span class="op">)</span></span>
+<span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>x1 <span class="op">=</span> <span class="va">X</span><span class="op">$</span><span class="va">x1</span>, x2 <span class="op">=</span> <span class="va">X</span><span class="op">$</span><span class="va">x2</span>, True <span class="op">=</span> <span class="va">true_pi</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/print.html">print</a></span><span class="op">(</span><span class="fu">BKP</span><span class="fu">:::</span><span class="fu">my_2D_plot_fun</span><span class="op">(</span><span class="st">"True"</span>, title <span class="op">=</span> <span class="st">"True Probability"</span>, data <span class="op">=</span> <span class="va">df</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p><img src="BKP-guide_files/figure-html/unnamed-chunk-8-1.png" width="624" style="display: block; margin: auto;"></p>
+<p>To construct the training data, we generate a LHD of size
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>100</mn><annotation encoding="application/x-tex">100</annotation></semantics></math>
+over
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mrow><mo stretchy="true" form="prefix">[</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="true" form="postfix">]</mo></mrow><mn>2</mn></msup><annotation encoding="application/x-tex">[0,1]^2</annotation></semantics></math>.
+Each location is associated with a binomial observation whose number of
+trials is randomly drawn from
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><mn>1</mn><mo>,</mo><mi>…</mi><mo>,</mo><mn>100</mn><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">\{1, \dots, 100\}</annotation></semantics></math>.</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">123</span><span class="op">)</span></span>
+<span><span class="co"># Data generation</span></span>
+<span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">100</span></span>
+<span><span class="va">Xbounds</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span>, nrow <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="va">X</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/tgp/man/lhs.html" class="external-link">lhs</a></span><span class="op">(</span>n <span class="op">=</span> <span class="va">n</span>, rect <span class="op">=</span> <span class="va">Xbounds</span><span class="op">)</span></span>
+<span><span class="va">true_pi</span> <span class="op">&lt;-</span> <span class="fu">true_pi_fun</span><span class="op">(</span><span class="va">X</span><span class="op">)</span></span>
+<span><span class="va">m</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">100</span>, <span class="va">n</span>, replace <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html" class="external-link">rbinom</a></span><span class="op">(</span><span class="va">n</span>, size <span class="op">=</span> <span class="va">m</span>, prob <span class="op">=</span> <span class="va">true_pi</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Fit BKP model</span></span>
+<span><span class="va">BKP_model_2D</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.bkp.html">fit.BKP</a></span><span class="op">(</span><span class="va">X</span>, <span class="va">y</span>, <span class="va">m</span>, Xbounds<span class="op">=</span><span class="va">Xbounds</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Plot results</span></span>
+<span><span class="fu"><a href="../reference/plot.html">plot</a></span><span class="op">(</span><span class="va">BKP_model_2D</span><span class="op">)</span></span></code></pre></div>
+<p><img src="BKP-guide_files/figure-html/unnamed-chunk-9-1.png" width="864" style="display: block; margin: auto;"></p>
+</div>
+<div class="section level3">
+<h3 id="example-4">Example 4<a class="anchor" aria-label="anchor" href="#example-4"></a>
+</h3>
+<p>We next consider a binary classification task using the <em>Two
+Spirals</em> dataset, a well-known benchmark consisting of two
+intertwined spirals in a bounded two-dimensional input space.</p>
+<p>We generate
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>=</mo><mn>200</mn></mrow><annotation encoding="application/x-tex">n = 200</annotation></semantics></math>
+observations using the <code>mlbench.spirals</code> function from the R
+package <a href="https://CRAN.R-project.org/package=mlbench" class="external-link">mlbench</a>, with two
+complete rotations and additive Gaussian noise of standard deviation
+<code>sd = 0.05</code>. The inputs
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mi>x</mi><mo accent="true">→</mo></mover><annotation encoding="application/x-tex">\vec{x}</annotation></semantics></math>
+are constrained to the domain
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mrow><mo stretchy="true" form="prefix">[</mo><mo>−</mo><mn>1.7</mn><mo>,</mo><mn>1.7</mn><mo stretchy="true" form="postfix">]</mo></mrow><mn>2</mn></msup><annotation encoding="application/x-tex">[-1.7, 1.7]^2</annotation></semantics></math>,
+and the binary class labels are encoded as 0 and 1. We fit the BKP model
+using a fixed prior specification with <code>r_0 = 0.1</code> and
+<code>p_0 = 0.5</code>.</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">mlbench</span><span class="op">)</span> </span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">123</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Data</span></span>
+<span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">200</span></span>
+<span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/mlbench/man/mlbench.spirals.html" class="external-link">mlbench.spirals</a></span><span class="op">(</span><span class="va">n</span>, cycles <span class="op">=</span> <span class="fl">2</span>, sd <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span>
+<span><span class="va">X</span> <span class="op">&lt;-</span> <span class="va">data</span><span class="op">$</span><span class="va">x</span></span>
+<span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="va">data</span><span class="op">$</span><span class="va">classes</span><span class="op">)</span> <span class="op">-</span> <span class="fl">1</span>  <span class="co"># Convert to 0/1 for BKP</span></span>
+<span><span class="va">m</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span>, <span class="va">n</span><span class="op">)</span></span>
+<span><span class="va">Xbounds</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1.7</span>, <span class="fl">1.7</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1.7</span>, <span class="fl">1.7</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Fit model</span></span>
+<span><span class="va">BKP_model_Class</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.bkp.html">fit.BKP</a></span><span class="op">(</span></span>
+<span>  <span class="va">X</span>, <span class="va">y</span>, <span class="va">m</span>, Xbounds <span class="op">=</span> <span class="va">Xbounds</span>,</span>
+<span>  prior <span class="op">=</span> <span class="st">"fixed"</span>, r0 <span class="op">=</span> <span class="fl">0.1</span>, loss <span class="op">=</span> <span class="st">"log_loss"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Plot results</span></span>
+<span><span class="fu"><a href="../reference/plot.html">plot</a></span><span class="op">(</span><span class="va">BKP_model_Class</span><span class="op">)</span></span></code></pre></div>
+<p><img src="BKP-guide_files/figure-html/unnamed-chunk-10-1.png" width="1248" style="display: block; margin: auto;"></p>
+</div>
+</div>
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside>
 </div>
 
 
