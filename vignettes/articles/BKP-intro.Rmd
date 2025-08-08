@@ -1,5 +1,8 @@
 ---
 title: "Introduction to Beta Kernel Process"
+output:
+  html_document:
+    mathjax: default
 ---
 
 ## Beta Kernel Process
@@ -154,7 +157,7 @@ provides a smooth estimate of the class probabilities.
 
 For classification tasks, labels are assigned by the maximum a posteriori (MAP) decision rule:
 $$
-\widehat{y}(\vec{x}) = {\rm argmax}_{s \in \{1,\ldots,q\}}\; \widehat{\pi}_{n,s}(\vec{x}).
+\widehat{y}(\vec{x}) = \mathrm{argmax}_{s \in \{1,\ldots,q\}}\; \widehat{\pi}_{n,s}(\vec{x}).
 $$
 
 ---

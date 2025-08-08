@@ -1,5 +1,8 @@
 ---
 title: "A Guide to the BKP R package"
+output:
+  html_document:
+    mathjax: default
 ---
 
 ```{r, include = FALSE}
@@ -128,13 +131,13 @@ legend(x = -2.24,y = 0.89, lwd = 2, bty = "n", col = "black",
 
 Let $\vec{x} \in [0,1]^2$, and define the latent surface using a re-scaled version of the Goldstein–Price function:
 $$
-\begin{aligned}
-	f(\vec{x})=& \frac{\log[\{1+a(\vec{x})\}\{30+b(\vec{x})\}-8.6928]}{2.4269}, \quad \text{with}\\
-	a(\vec{x}) =& \left(4 x_1 + 4 x_2 - 3 \right)^2  \times  \notag  \\
-	& \{75 - 56 \left(x_1 + x_2 \right) + 3\left(4 x_1 - 2 \right)^2 + 6\left(4 x_1 - 2 \right)\left(4 x_2 - 2 \right) + 3\left(4 x_2 - 2 \right)^2\}, \notag \\
-	b(\vec{x}) =& \left(8 x_1 - 12 x_2 +2 \right)^2 \times \notag \\
-	& \{-14 - 128 x_1 + 12\left(4 x_1 - 2 \right)^2 + 192 x_2 - 36\left(4 x_1 - 2 \right)\left(4 x_2 - 2 \right) + 27\left(4 x_2 - 2 \right)^2 \}.\notag 
-\end{aligned}
+\begin{align*}
+f(\vec{x}) &= \frac{\log\left[\left\{1+a(\vec{x})\right\}\left\{30+b(\vec{x})\right\} - 8.6928\right]}{2.4269}, \quad \text{with} \\
+a(\vec{x}) &= \left(4 x_1 + 4 x_2 - 3 \right)^2 \cdot \Big\{75 - 56 (x_1 + x_2) + 3(4 x_1 - 2)^2 \\
+&\quad + 6(4 x_1 - 2)(4 x_2 - 2) + 3(4 x_2 - 2)^2\Big\}, \\
+b(\vec{x}) &= \left(8 x_1 - 12 x_2 +2 \right)^2 \cdot \Big\{-14 - 128 x_1 + 12(4 x_1 - 2)^2 \\
+&\quad + 192 x_2 - 36(4 x_1 - 2)(4 x_2 - 2) + 27(4 x_2 - 2)^2\Big\}.
+\end{align*}
 $$
 
 The true Bernoulli probability surface is then defined by 
