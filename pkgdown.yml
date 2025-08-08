@@ -4,7 +4,7 @@ pkgdown_sha: ~
 articles:
   articles/BKP-guide: BKP-guide.html
   articles/BKP-intro: BKP-intro.html
-last_built: 2025-08-08T08:31Z
+last_built: 2025-08-08T08:54Z
 urls:
   reference: https://jiangyan-zhao.github.io/BKP/reference
   article: https://jiangyan-zhao.github.io/BKP/articles
