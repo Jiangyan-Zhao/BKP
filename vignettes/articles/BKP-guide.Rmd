@@ -198,7 +198,6 @@ We generate $n = 200$ observations using the `mlbench.spirals` function from the
 ```{r, fig.width = 13, fig.height = 6}
 library(mlbench) 
 set.seed(123)
-
 # Data
 n <- 200
 data <- mlbench.spirals(n, cycles = 2, sd = 0.05)
@@ -327,7 +326,6 @@ For visualization purposes, we restrict our analysis to the first two features: 
 
 ```{r, fig.width = 13, fig.height = 6}
 set.seed(123)
-
 # Data
 data(iris)
 X <- as.matrix(iris[, 1:2])
