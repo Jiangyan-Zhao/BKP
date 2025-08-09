@@ -167,6 +167,7 @@ fit.BKP <- function(
       control= list(trace=0))
 
     # ---- Extract optimal kernel parameters and loss ----
+    # opt_res <- opt_res[opt_res$convergence == 0, , drop=FALSE]
     best_index <- which.min(opt_res$value)
     gamma_opt  <- as.numeric(opt_res[best_index, 1:d])
     theta_opt  <- 10^gamma_opt

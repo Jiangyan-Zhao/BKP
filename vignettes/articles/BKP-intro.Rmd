@@ -76,7 +76,7 @@ s^2_n(\vec{x}) =
 $$
 
 which provides a local measure of epistemic uncertainty.  
-These posterior summaries can be used to visualize prediction quality across the input space, particularly highlighting regions with sparse data coverage (see Section \@ref(sec:example) for illustrations).
+These posterior summaries can be used to visualize prediction quality across the input space, particularly highlighting regions with sparse data coverage.
 
 ---
 
