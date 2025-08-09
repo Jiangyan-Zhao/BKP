@@ -61,86 +61,7 @@
 </div>
 <!-- badges: start -->
 
-<p>The <strong>BKP</strong> package provides scalable Bayesian modeling tools for binomial and multinomial response data via the <strong>Beta Kernel Process (BKP)</strong> and its generalization, the <strong>Dirichlet Kernel Process (DKP)</strong>.</p>
-<ul>
-<li>
-<strong>BKP</strong> is designed for binary (or binomial) outcomes.</li>
-<li>
-<strong>DKP</strong> extends BKP to handle multi-class responses via Dirichlet-multinomial modeling.</li>
-</ul>
-<p>Both models leverage kernel-based weighting and conjugate priors to enable efficient posterior inference, probabilistic prediction, and uncertainty quantification.</p>
-<div class="section level2">
-<h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
-</h2>
-<p>You can install the stable version of <strong>BKP</strong> from <a href="https://CRAN.R-project.org/package=BKP" class="external-link">CRAN</a> with:</p>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"BKP"</span><span class="op">)</span></span></code></pre></div>
-<p>Or install the development version from <a href="https://github.com/Jiangyan-Zhao/BKP" class="external-link">GitHub</a> with:</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># install.packages("pak")</span></span>
-<span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"Jiangyan-Zhao/BKP"</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="bkp-binarycount-response-modeling">BKP: Binary/Count Response Modeling<a class="anchor" aria-label="anchor" href="#bkp-binarycount-response-modeling"></a>
-</h2>
-<div class="section level3">
-<h3 id="example">Example<a class="anchor" aria-label="anchor" href="#example"></a>
-</h3>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/Jiangyan-Zhao/BKP" class="external-link">BKP</a></span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Simulate data</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">123</span><span class="op">)</span></span>
-<span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">30</span></span>
-<span><span class="va">Xbounds</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span>, nrow <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
-<span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="op">-</span><span class="fl">2</span>, <span class="fl">2</span>, length.out <span class="op">=</span> <span class="va">n</span><span class="op">)</span>, ncol <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
-<span><span class="va">true_pi</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="fl">1</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="op">-</span><span class="va">x</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">cos</a></span><span class="op">(</span><span class="fl">10</span> <span class="op">*</span> <span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="op">-</span><span class="va">x</span><span class="op">)</span><span class="op">)</span> <span class="op">/</span> <span class="op">(</span><span class="fl">1</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="op">-</span><span class="va">x</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">/</span> <span class="fl">2</span></span>
-<span><span class="va">m</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">50</span><span class="op">:</span><span class="fl">100</span>, <span class="va">n</span>, replace <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html" class="external-link">rbinom</a></span><span class="op">(</span><span class="va">n</span>, size <span class="op">=</span> <span class="va">m</span>, prob <span class="op">=</span> <span class="va">true_pi</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Fit BKP model</span></span>
-<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fit.bkp.html">fit.BKP</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">m</span>, Xbounds <span class="op">=</span> <span class="va">Xbounds</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Predict on new data</span></span>
-<span><span class="va">Xnew</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="op">-</span><span class="fl">2</span>, <span class="fl">2</span>, length.out <span class="op">=</span> <span class="fl">100</span><span class="op">)</span>, ncol <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
-<span><span class="va">pred</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/predict.html">predict</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">Xnew</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Plot results</span></span>
-<span><span class="fu"><a href="reference/plot.html">plot</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/README-BKP-example-1.png" width="100%"></p>
-</div>
-</div>
-<div class="section level2">
-<h2 id="dkp-multi-class-extension">DKP: Multi-class Extension<a class="anchor" aria-label="anchor" href="#dkp-multi-class-extension"></a>
-</h2>
-<p>DKP generalizes BKP to multi-class settings using a Dirichlet-multinomial model.</p>
-<div class="section level3">
-<h3 id="example-1">Example<a class="anchor" aria-label="anchor" href="#example-1"></a>
-</h3>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Simulate 3-class data</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">123</span><span class="op">)</span></span>
-<span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">30</span></span>
-<span><span class="va">Xbounds</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span>, nrow <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
-<span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="op">-</span><span class="fl">2</span>, <span class="fl">2</span>, length.out <span class="op">=</span> <span class="va">n</span><span class="op">)</span>, ncol <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
-<span><span class="va">pi1</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="fl">1</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="op">-</span><span class="va">x</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">cos</a></span><span class="op">(</span><span class="fl">10</span> <span class="op">*</span> <span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="op">-</span><span class="va">x</span><span class="op">)</span><span class="op">)</span> <span class="op">/</span> <span class="op">(</span><span class="fl">1</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="op">-</span><span class="va">x</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">/</span> <span class="fl">2</span></span>
-<span><span class="va">pi_true</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="va">pi1</span><span class="op">/</span><span class="fl">2</span>, <span class="va">pi1</span><span class="op">/</span><span class="fl">2</span>, <span class="fl">1</span> <span class="op">-</span> <span class="va">pi1</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">m</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">50</span><span class="op">:</span><span class="fl">100</span>, <span class="va">n</span>, replace <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="va">Y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="va">n</span>, <span class="kw">function</span><span class="op">(</span><span class="va">i</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/stats/Multinom.html" class="external-link">rmultinom</a></span><span class="op">(</span><span class="fl">1</span>, size <span class="op">=</span> <span class="va">m</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>, prob <span class="op">=</span> <span class="va">pi_true</span><span class="op">[</span><span class="va">i</span>, <span class="op">]</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Fit DKP model</span></span>
-<span><span class="va">model_dkp</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fit.DKP.html">fit.DKP</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">Y</span>, Xbounds <span class="op">=</span> <span class="va">Xbounds</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Predict on new input</span></span>
-<span><span class="va">Xnew</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="op">-</span><span class="fl">2</span>, <span class="fl">2</span>, length.out <span class="op">=</span> <span class="fl">10</span><span class="op">)</span>, ncol <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
-<span><span class="va">pred_dkp</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/predict.html">predict</a></span><span class="op">(</span><span class="va">model_dkp</span>, <span class="va">Xnew</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Plot results</span></span>
-<span><span class="fu"><a href="reference/plot.html">plot</a></span><span class="op">(</span><span class="va">model_dkp</span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/README-DKP-example-1.png" width="100%"></p>
-</div>
-</div>
+<p>We present <strong>BKP</strong>, a user-friendly and extensible <strong>R</strong> package that implements the <strong>Beta Kernel Process (BKP)</strong>—a fully nonparametric and computationally efficient framework for modeling spatially varying binomial probabilities. The BKP model combines localized kernel-weighted likelihoods with conjugate beta priors, resulting in closed-form posterior inference without requiring latent variable augmentation or intensive MCMC sampling. The package supports binary and aggregated binomial responses, allows flexible choices of kernel functions and prior specification, and provides loss-based kernel hyperparameter tuning procedures. In addition, BKP extends naturally to the <strong>Dirichlet Kernel Process (DKP)</strong> for modeling spatially varying multinomial or compositional data.</p>
 <div class="section level2">
 <h2 id="features">Features<a class="anchor" aria-label="anchor" href="#features"></a>
 </h2>
@@ -153,15 +74,13 @@
 </ul>
 </div>
 <div class="section level2">
-<h2 id="simulate-posterior-samples">Simulate Posterior Samples<a class="anchor" aria-label="anchor" href="#simulate-posterior-samples"></a>
+<h2 id="documentation">Documentation<a class="anchor" aria-label="anchor" href="#documentation"></a>
 </h2>
-<p>You can simulate posterior samples using:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># BKP posterior draws</span></span>
-<span><span class="fu"><a href="reference/simulate.html">simulate</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">Xnew</span>, n_sim <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># DKP posterior draws</span></span>
-<span><span class="fu"><a href="reference/simulate.html">simulate</a></span><span class="op">(</span><span class="va">model_dkp</span>, <span class="va">Xnew</span>, n_sim <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></code></pre></div>
+<p>The statistical foundations and example applications are described in the following articles:</p>
+<ul>
+<li><a href="https://jiangyan-zhao.github.io/BKP/articles/BKP-intro.html"><strong>Statistical background</strong></a></li>
+<li><a href="https://jiangyan-zhao.github.io/BKP/articles/BKP-guide.html"><strong>Examples</strong></a></li>
+</ul>
 </div>
 <div class="section level2">
 <h2 id="citing">Citing<a class="anchor" aria-label="anchor" href="#citing"></a>
