@@ -156,9 +156,9 @@ plot.BKP <- function(x, only_mean = FALSE, ...){
     if(is_classification){
       abline(h = prediction$threshold, lty = 2, lwd = 1.2)
       text(x = Xbounds[2],
-           y = prediction$threshold,
+           y = prediction$threshold + 0.02,
            labels = "threshold",
-           pos = 3,
+           adj = c(1, 0.5),
            cex = 0.9,
            col = "black")
     }else{
