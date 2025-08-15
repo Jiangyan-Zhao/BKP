@@ -34,6 +34,25 @@ jobs:
 
       - uses: r-lib/actions/setup-pandoc@v2
 
+      # Cache TinyTeX (to make subsequent builds faster)
+      - name: Cache TinyTeX
+        uses: actions/cache@v4
+        with:
+          path: ~/.TinyTeX
+          key: ${{ runner.os }}-tinytex
+          restore-keys: |
+            ${{ runner.os }}-tinytex
+
+      # Install TinyTeX (if it is not in the cache)
+      - name: Install TinyTeX (for LaTeX / pdflatex)
+        run: |
+          if [ ! -d ~/.TinyTeX ]; then
+            Rscript -e 'install.packages("tinytex")'
+            Rscript -e 'tinytex::install_tinytex()'
+          else
+            echo "Using cached TinyTeX"
+          fi
+
       - uses: r-lib/actions/setup-r@v2
         with:
           r-version: ${{ matrix.config.r }}
