@@ -54,6 +54,11 @@ jobs:
         shell: Rscript {0}
         run: |
           options(repos = c(CRAN = "https://cloud.r-project.org"))
+          # If the tinytex package has not been installed yet, install it first
+          if (!requireNamespace("tinytex", quietly = TRUE)) {
+            install.packages("tinytex")
+          }
+          # Check again whether TinyTeX has already been installed
           if (!tinytex::is_tinytex()) {
             install.packages("tinytex")
             tinytex::install_tinytex()
