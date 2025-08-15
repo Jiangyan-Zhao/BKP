@@ -47,6 +47,7 @@ jobs:
       - name: Install TinyTeX (for LaTeX / pdflatex)
         shell: Rscript {0}
         run: |
+          options(repos = c(CRAN = "https://cloud.r-project.org"))
           if (!dir.exists("~/.TinyTeX")) {
             install.packages("tinytex")
             tinytex::install_tinytex()
