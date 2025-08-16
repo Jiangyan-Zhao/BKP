@@ -35,11 +35,9 @@ compositional data.
 ## Documentation
 
 The statistical foundations and example applications are described in
-the following articles:
+the following vignette:
 
-- [**Statistical
-  background**](https://jiangyan-zhao.github.io/BKP/articles/BKP-intro.html)
-- [**Examples**](https://jiangyan-zhao.github.io/BKP/articles/BKP-guide.html)
+- [**BKP User Guide (PDF)**](../doc/my_vignette.pdf)
 
 ## Citing
 

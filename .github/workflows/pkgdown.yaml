@@ -33,7 +33,7 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::pkgdown, any::devtools, local::.
+          extra-packages: any::pkgdown, any::devtools, any::rmarkdown, local::.
           needs: website
 
       - name: Install TinyTeX
@@ -48,13 +48,19 @@ jobs:
           devtools::build_vignettes()
 
       - name: Build site
-        run: pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE)
         shell: Rscript {0}
+        run: pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE)
+
+      - name: Copy PDF vignettes to docs/
+        run: |
+          mkdir -p docs
+          cp inst/doc/*.pdf docs/ || true
+
 
       - name: Deploy to GitHub pages 🚀
         if: github.event_name != 'pull_request'
         uses: JamesIves/github-pages-deploy-action@v4.5.0
         with:
-          clean: false
+          clean: true
           branch: gh-pages
           folder: docs
