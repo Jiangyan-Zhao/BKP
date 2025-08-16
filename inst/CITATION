@@ -1,0 +1,22 @@
+citHeader("To cite the BKP package in publications use:")
+
+bibentry(
+  bibtype  = "Manual",
+  title    = "BKP: An R Package for Beta Kernel Process Modeling",
+  author   = "Jiangyan Zhao and Kunhai Qing and Jin Xu",
+  year     = "2025",
+  url      = "https://arxiv.org/abs/2508.10447",
+  doi      = "10.48550/arXiv.2508.10447"
+)
+
+bibentry(
+  bibtype = "Manual",
+  title   = "BKP: An R Package for Beta Kernel Process",
+  author  = c(person(given = "Jiangyan", family = "Zhao"),
+    person(given = "Kunhai", family = "Qing"),
+    person(given = "Jin", family = "Xu")),
+  year    = "2025",
+  note    = "R package version 0.1.1",
+  url     = "https://cran.r-project.org/package=BKP",
+  doi     = "10.32614/CRAN.package.BKP"
+)

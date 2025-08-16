@@ -48,6 +48,10 @@
 #' @seealso \code{\link{fit.BKP}}, \code{\link{fit.DKP}},
 #'   \code{\link{predict.BKP}}, \code{\link{predict.DKP}}
 #'
+#' @references Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
+#'   Kernel Process Modeling}.  arXiv.
+#'   https://doi.org/10.48550/arXiv.2508.10447.
+#'
 #' @keywords BKP
 #'
 #' @examples

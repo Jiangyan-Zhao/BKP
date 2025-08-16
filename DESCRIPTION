@@ -1,5 +1,5 @@
 Package: BKP
-Title: Beta and Dirichlet Kernel Processes for Binomial and Multinomial Modeling
+Title: Beta Kernel Process Modeling
 Version: 0.1.1
 Authors@R: c(person(given = "Jiangyan", family = "Zhao", email = "zhaojy2017@126.com", role = c("cre", "aut")),
     person(given = "Kunhai", family = "Qing", email = "kunhaiq@qq.com", role = "aut"),
@@ -7,11 +7,10 @@ Authors@R: c(person(given = "Jiangyan", family = "Zhao", email = "zhaojy2017@126
   )
 Author: Jiangyan Zhao [cre, aut], Kunhai Qing [aut], Jin Xu [aut]
 Maintainer: Jiangyan Zhao <zhaojy2017@126.com>
-Description: Provides methods for nonparametric modeling of binomial and multinomial success probabilities via the Beta Kernel Process and its extension, the Dirichlet Kernel Process.
- Supports model fitting, predictive inference with uncertainty quantification, posterior simulation, and visualization in one- and two-dimensional input spaces.
- The package implements multiple kernel functions (Gaussian, Matern 5/2, and Matern 3/2), and performs hyperparameter optimization using multi-start gradient-based search.
- Applications include spatial statistics, probabilistic classification, and Bayesian experimental design.
- For more details, see MacKenzie, Trafalis, and Barker (2014) <doi:10.1002/sam.11241>.
+Description: Implements the Beta Kernel Process (BKP) for nonparametric modeling of spatially varying binomial probabilities, together with its extension, the Dirichlet Kernel Process (DKP), for categorical or multinomial data.
+ The package provides functions for model fitting, predictive inference with uncertainty quantification, posterior simulation, and visualization in one-and two-dimensional input spaces.
+ Multiple kernel functions (Gaussian, Matern 5/2, and Matern 3/2) are supported, with hyperparameters optimized through multi-start gradient-based search.
+ For more details, see Zhao, Qing, and Xu (2025) <doi:10.48550/arXiv.2508.10447>.
 License: GPL-3
 URL: https://github.com/Jiangyan-Zhao/BKP, https://jiangyan-zhao.github.io/BKP/
 BugReports: https://github.com/Jiangyan-Zhao/BKP/issues

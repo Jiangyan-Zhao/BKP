@@ -49,7 +49,11 @@
 #'   The function performs consistency checks on input dimensions and
 #'   automatically broadcasts \code{theta} when it is a scalar.
 #'
-#' @references Rasmussen, C. E., & Williams, C. K. I. (2006). \emph{Gaussian
+#' @references Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
+#'   Kernel Process Modeling}.  arXiv.
+#'   https://doi.org/10.48550/arXiv.2508.10447.
+#'
+#'   Rasmussen, C. E., & Williams, C. K. I. (2006). \emph{Gaussian
 #'   Processes for Machine Learning}. MIT Press.
 #'
 #' @examples

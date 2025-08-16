@@ -177,6 +177,11 @@ Xnew <- expand.grid(x1 = x1, x2 = x2)
 predict(model2, Xnew)
 
 }
+\references{
+Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
+Kernel Process Modeling}.  arXiv.
+https://doi.org/10.48550/arXiv.2508.10447.
+}
 \seealso{
 \code{\link{fit.BKP}} for fitting Beta Kernel Process models.
 \code{\link{fit.DKP}} for fitting Dirichlet Kernel Process models.

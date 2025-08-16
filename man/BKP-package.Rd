@@ -5,9 +5,9 @@
 \title{Beta and Dirichlet Kernel Process Modeling}
 \description{
 The \pkg{BKP} package provides tools for nonparametric modeling
-of binary, binomial, or multinomial response data using the Beta Kernel
-Process (BKP) and its extension, the Dirichlet Kernel Process (DKP). These
-methods estimate latent probability surfaces through localized kernel
+of binary/binomial or categorical/multinomial response data using the Beta
+Kernel Process (BKP) and its extension, the Dirichlet Kernel Process (DKP).
+These methods estimate latent probability surfaces through localized kernel
 smoothing under a Bayesian framework.
 
 The package includes functionality for model fitting, probabilistic
@@ -41,18 +41,22 @@ Summarize or print details of a fitted BKP or DKP model.
 }
 
 \references{
-Goetschalckx R, Poupart P, Hoey J (2011). \emph{Continuous
-Correlated Beta Processes}. In Proceedings of the Twenty-Second
-International Joint Conference on Artificial Intelligence - Volume Volume
-Two, IJCAI’11, p. 1269-1274. AAAI Press.
-
-MacKenzie CA, Trafalis TB, Barker K (2014). \emph{A Bayesian Beta Kernel Model
-for Binary Classification and Online Learning Problems}. Statistical
-Analysis and Data Mining: The ASA Data Science Journal, 7(6), 434-449.
+Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
+Kernel Process Modeling}.  arXiv.
+https://doi.org/10.48550/arXiv.2508.10447.
 
 Rolland P, Kavis A, Singla A, Cevher V (2019). \emph{Efficient learning of
 smooth probability functions from Bernoulli tests with guarantees}. In
 Proceedings of the 36th International Conference on Machine Learning, ICML
 2019, 9-15 June 2019, Long Beach, California, USA, volume 97 of Proceedings
 of Machine Learning Research, pp. 5459-5467. PMLR.
+
+MacKenzie CA, Trafalis TB, Barker K (2014). \emph{A Bayesian Beta Kernel Model
+for Binary Classification and Online Learning Problems}. Statistical
+Analysis and Data Mining: The ASA Data Science Journal, 7(6), 434-449.
+
+Goetschalckx R, Poupart P, Hoey J (2011). \emph{Continuous
+Correlated Beta Processes}. In Proceedings of the Twenty-Second
+International Joint Conference on Artificial Intelligence - Volume Volume
+Two, IJCAI’11, p. 1269-1274. AAAI Press.
 }

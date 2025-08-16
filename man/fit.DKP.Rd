@@ -75,8 +75,8 @@ If \code{theta} was manually specified by the user, this value is set to \code{N
 }
 }
 \description{
-Fits a DKP model for multinomial response data by locally
-smoothing observed counts to estimate latent Dirichlet parameters.
+Fits a DKP model for categorical or multinomial response data by
+locally smoothing observed counts to estimate latent Dirichlet parameters.
 }
 \examples{
 #-------------------------- 1D Example ---------------------------
@@ -133,6 +133,11 @@ Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 model2 <- fit.DKP(X, Y, Xbounds = Xbounds)
 print(model2)
 
+}
+\references{
+Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
+Kernel Process Modeling}.  arXiv.
+https://doi.org/10.48550/arXiv.2508.10447.
 }
 \seealso{
 \code{\link{fit.BKP}} for modeling binomial responses using the Beta

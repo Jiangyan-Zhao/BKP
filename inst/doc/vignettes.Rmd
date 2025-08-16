@@ -36,8 +36,7 @@ title:
   # For running headers, if needed
   short:     "Beta Kernel Process Modeling in \\proglang{R}"
 abstract: >
- We present \pkg{BKP}, a user-friendly and extensible \proglang{R} package that implements the Beta Kernel Process (BKP) -- a fully nonparametric and computationally efficient framework for modeling spatially varying binomial probabilities. The BKP model combines localized kernel-weighted likelihoods with conjugate beta priors, resulting in closed-form posterior inference without requiring latent variable augmentation or intensive MCMC sampling. The package supports binary and aggregated binomial responses, allows flexible choices of kernel functions and prior specification, and provides loss-based kernel hyperparameter tuning procedures.
- In addition, BKP extends naturally to the Dirichlet Kernel Process (DKP) for modeling spatially varying multinomial or compositional data. To our knowledge, this is the first publicly available \proglang{R} package for implementing BKP-based methods. We illustrate the use of \pkg{BKP} through several synthetic and real-world datasets, highlighting its interpretability, accuracy, and scalability. The package aims to facilitate practical application and future methodological development of kernel-based beta modeling in statistics and machine learning.
+ We present \pkg{BKP}, a user-friendly and extensible \proglang{R} package that implements the Beta Kernel Process (BKP) -- a fully nonparametric and computationally efficient framework for modeling spatially varying binomial probabilities. The BKP model combines localized kernel-weighted likelihoods with conjugate beta priors, resulting in closed-form posterior inference without requiring latent variable augmentation or intensive MCMC sampling. The package supports binary and aggregated binomial responses, allows flexible choices of kernel functions and prior specification, and provides loss-based kernel hyperparameter tuning procedures. In addition, BKP extends naturally to the Dirichlet Kernel Process (DKP) for modeling spatially varying categorical or multinomial data. To our knowledge, this is the first publicly available \proglang{R} package for implementing BKP-based methods. We illustrate the use of \pkg{BKP} through several synthetic and real-world datasets, highlighting its interpretability, accuracy, and scalability. The package aims to facilitate practical application and future methodological development of kernel-based beta modeling in statistics and machine learning.
 keywords:
   # at least one keyword must be supplied
   formatted: [Beta kernel process, Dirichlet kernel process, nonparametric Bayesian modeling, binomial and multinomial data, "\\proglang{R}"]
@@ -60,7 +59,7 @@ preamble: >
 output: rticles::jss_article 
 bibliography: refs.bib
 vignette: >
-  %\VignetteIndexEntry{\\pkg{BKP}: An \\proglang{R} Package for Beta Kernel Process Modeling}
+  %\VignetteIndexEntry{BKP: An R Package for Beta Kernel Process Modeling}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

@@ -2,7 +2,7 @@
 #'
 #' @title Fit a Beta Kernel Process (BKP) Model
 #'
-#' @description Fits a BKP model to binomial or binary response data via local
+#' @description Fits a BKP model to binary or binomial response data via local
 #'   kernel smoothing. The model constructs a flexible latent probability
 #'   surface by updating Beta priors using kernel-weighted observations.
 #'
@@ -62,6 +62,10 @@
 #'   visualizing results, and generating simulations from a fitted BKP model.
 #'   \code{\link{summary.BKP}}, \code{\link{print.BKP}} for inspecting model
 #'   details.
+#'
+#' @references Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
+#'   Kernel Process Modeling}.  arXiv.
+#'   https://doi.org/10.48550/arXiv.2508.10447.
 #'
 #' @examples
 #' #-------------------------- 1D Example ---------------------------

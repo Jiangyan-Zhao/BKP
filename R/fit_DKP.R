@@ -2,8 +2,8 @@
 #'
 #' @title Fit a Dirichlet Kernel Process (DKP) Model
 #'
-#' @description Fits a DKP model for multinomial response data by locally
-#'   smoothing observed counts to estimate latent Dirichlet parameters.
+#' @description Fits a DKP model for categorical or multinomial response data by
+#'   locally smoothing observed counts to estimate latent Dirichlet parameters.
 #'
 #' @inheritParams fit.BKP
 #' @param Y Matrix of observed multinomial counts, with dimension \eqn{n \times
@@ -35,6 +35,10 @@
 #'   \code{\link{simulate.DKP}} for making predictions, visualizing results, and
 #'   generating simulations from a fitted DKP model. \code{\link{summary.DKP}},
 #'   \code{\link{print.DKP}} for inspecting fitted model summaries.
+#'
+#' @references Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
+#'   Kernel Process Modeling}.  arXiv.
+#'   https://doi.org/10.48550/arXiv.2508.10447.
 #'
 #' @examples
 #' #-------------------------- 1D Example ---------------------------

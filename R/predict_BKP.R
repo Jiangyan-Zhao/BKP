@@ -36,6 +36,10 @@
 #'   \code{\link{plot.BKP}} for visualizing fitted BKP models.
 #'   \code{\link{plot.DKP}} for visualizing fitted DKP models.
 #'
+#' @references Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
+#'   Kernel Process Modeling}.  arXiv.
+#'   https://doi.org/10.48550/arXiv.2508.10447.
+#'
 #' @keywords BKP
 #'
 #' @examples

@@ -58,6 +58,11 @@ y = rbinom(n, size = m, prob = runif(n))
 loss_fun(gamma = rep(0, 2), Xnorm = Xnorm, y = y, m = m)
 
 }
+\references{
+Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
+Kernel Process Modeling}.  arXiv.
+https://doi.org/10.48550/arXiv.2508.10447.
+}
 \seealso{
 \code{\link{loss_fun_dkp}}, \code{\link{fit.BKP}}, \code{\link{get_prior}},
 \code{\link{kernel_matrix}}

@@ -68,6 +68,11 @@ K <- kernel_matrix(X)
 prior <- get_prior(prior = "adaptive", r0 = 2, y = y, m = m, K = K)
 
 }
+\references{
+Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
+Kernel Process Modeling}.  arXiv.
+https://doi.org/10.48550/arXiv.2508.10447.
+}
 \seealso{
 \code{\link{get_prior_dkp}}, \code{\link{fit.BKP}},
 \code{\link{predict.BKP}}, \code{\link{kernel_matrix}}
