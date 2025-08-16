@@ -37,7 +37,7 @@ compositional data.
 The statistical foundations and example applications are described in
 the following vignette:
 
-- [**BKP User Guide (PDF)**](../doc/my_vignette.pdf)
+- [**BKP User Guide (PDF)**](inst/doc/vignettes.pdf)
 
 ## Citing
 

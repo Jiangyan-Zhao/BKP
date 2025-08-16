@@ -12,7 +12,7 @@ Description: Implements the Beta Kernel Process (BKP) for nonparametric modeling
  Multiple kernel functions (Gaussian, Matern 5/2, and Matern 3/2) are supported, with hyperparameters optimized through multi-start gradient-based search.
  For more details, see Zhao, Qing, and Xu (2025) <doi:10.48550/arXiv.2508.10447>.
 License: GPL-3
-URL: https://github.com/Jiangyan-Zhao/BKP, https://jiangyan-zhao.github.io/BKP/
+URL: https://github.com/Jiangyan-Zhao/BKP
 BugReports: https://github.com/Jiangyan-Zhao/BKP/issues
 Encoding: UTF-8
 LazyData: true
