@@ -1,5 +1,5 @@
 
-# BKP <img src="man/figures/logo.png" align="right" height="140"/>
+# BKP: An R Package for Beta Kernel Process Modeling <img src="man/figures/logo.png" align="right" height="140"/>
 
 <!-- badges: start -->
 
