@@ -36,6 +36,17 @@ jobs:
           extra-packages: any::pkgdown, local::.
           needs: website
 
+      - name: Install TinyTeX
+        shell: Rscript {0}
+        run: |
+          if (!requireNamespace("tinytex", quietly = TRUE)) install.packages("tinytex")
+          if (!tinytex::is_tinytex()) tinytex::install_tinytex()
+
+      - name: Build vignettes
+        shell: Rscript {0}
+        run: |
+          devtools::build_vignettes()
+
       - name: Build site
         run: pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE)
         shell: Rscript {0}

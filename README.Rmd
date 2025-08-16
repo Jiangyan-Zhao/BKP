@@ -43,7 +43,21 @@ The statistical foundations and example applications are described in the follow
 
 ## Citing
 
-If you use this package in your work, please cite the accompanying methodology papers or package documentation.
+If you use **BKP** in your work, please cite both the methodology paper and the R package:
+
+- **Methodology paper**  
+  Zhao, J., Qing, K., and Xu, J. (2025). *BKP: An R Package for Beta Kernel Process Modeling.*  
+  arXiv:2508.10447. <https://arxiv.org/abs/2508.10447>  
+
+- **R package**  
+  Zhao, J., Qing, K., and Xu, J. (2025). *BKP: An R Package for Beta Kernel Process.*  
+  R package version 0.1.1. <https://cran.r-project.org/package=BKP>  
+
+You can also obtain the citation information directly within R:
+
+```r
+citation("BKP")
+```
 
 ## Development
 
