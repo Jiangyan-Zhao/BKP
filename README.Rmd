@@ -21,7 +21,7 @@ knitr::opts_chunk$set(
 <!-- badges: end -->
 
 
-We present **BKP**, a user-friendly and extensible **R** package that implements the **Beta Kernel Process (BKP)**---a fully nonparametric and computationally efficient framework for modeling spatially varying binomial probabilities. The BKP model combines localized kernel-weighted likelihoods with conjugate beta priors, resulting in closed-form posterior inference without requiring latent variable augmentation or intensive MCMC sampling. The package supports binary and aggregated binomial responses, allows flexible choices of kernel functions and prior specification, and provides loss-based kernel hyperparameter tuning procedures. In addition, BKP extends naturally to the **Dirichlet Kernel Process (DKP)** for modeling spatially varying multinomial or compositional data. 
+We present **BKP**, a user-friendly and extensible **R** package that implements the **Beta Kernel Process (BKP)**---a fully nonparametric and computationally efficient framework for modeling spatially varying binomial probabilities. The BKP model combines localized kernel-weighted likelihoods with conjugate beta priors, resulting in closed-form posterior inference without requiring latent variable augmentation or intensive MCMC sampling. The package supports binary and aggregated binomial responses, allows flexible choices of kernel functions and prior specification, and provides loss-based kernel hyperparameter tuning procedures. In addition, BKP extends naturally to the **Dirichlet Kernel Process (DKP)** for modeling spatially varying multinomial data. 
 
 
 ## Features
@@ -32,6 +32,20 @@ We present **BKP**, a user-friendly and extensible **R** package that implements
 - ✅ Class label prediction using threshold or MAP rule
 - ✅ Simulation from posterior (Beta or Dirichlet) distributions
 
+## Installation
+
+You can install the stable version of **BKP** from [CRAN](https://CRAN.R-project.org/package=BKP) with:
+
+```{r, eval=FALSE}
+install.packages("BKP")
+```
+
+Or install the development version from [GitHub](https://github.com/Jiangyan-Zhao/BKP) with:
+
+```{r, eval=FALSE}
+# install.packages("pak")
+pak::pak("Jiangyan-Zhao/BKP")
+```
 
 ## Documentation
 

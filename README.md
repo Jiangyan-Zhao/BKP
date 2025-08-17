@@ -21,8 +21,7 @@ intensive MCMC sampling. The package supports binary and aggregated
 binomial responses, allows flexible choices of kernel functions and
 prior specification, and provides loss-based kernel hyperparameter
 tuning procedures. In addition, BKP extends naturally to the **Dirichlet
-Kernel Process (DKP)** for modeling spatially varying multinomial or
-compositional data.
+Kernel Process (DKP)** for modeling spatially varying multinomial data.
 
 ## Features
 
@@ -31,6 +30,23 @@ compositional data.
 - ✅ Posterior prediction and uncertainty quantification
 - ✅ Class label prediction using threshold or MAP rule
 - ✅ Simulation from posterior (Beta or Dirichlet) distributions
+
+## Installation
+
+You can install the stable version of **BKP** from
+[CRAN](https://CRAN.R-project.org/package=BKP) with:
+
+``` r
+install.packages("BKP")
+```
+
+Or install the development version from
+[GitHub](https://github.com/Jiangyan-Zhao/BKP) with:
+
+``` r
+# install.packages("pak")
+pak::pak("Jiangyan-Zhao/BKP")
+```
 
 ## Documentation
 

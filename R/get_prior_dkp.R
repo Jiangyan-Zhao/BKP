@@ -77,7 +77,6 @@ get_prior_dkp <- function(prior = c("noninformative", "fixed", "adaptive"),
     # Return a constant prior for all prediction points (say, m points)
     m <- if (!is.null(K)) nrow(K) else 1
     alpha0 <- matrix(1, nrow = m, ncol = q)
-
   } else if (prior == "fixed") {
     # Validate inputs
     if (r0 <= 0) stop("r0 must be positive.")
