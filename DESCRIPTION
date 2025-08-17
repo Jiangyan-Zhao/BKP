@@ -1,34 +1,36 @@
 Package: BKP
 Title: Beta Kernel Process Modeling
 Version: 0.1.1
-Authors@R: c(person(given = "Jiangyan", family = "Zhao", email = "zhaojy2017@126.com", role = c("cre", "aut")),
+Authors@R: c(
+    person(given = "Jiangyan", family = "Zhao", email = "zhaojy2017@126.com", role = c("cre", "aut")),
     person(given = "Kunhai", family = "Qing", email = "kunhaiq@qq.com", role = "aut"),
     person(given = "Jin", family = "Xu", email = "jxu@stat.ecnu.edu.cn", role = "aut")
   )
-Author: Jiangyan Zhao [cre, aut], Kunhai Qing [aut], Jin Xu [aut]
 Maintainer: Jiangyan Zhao <zhaojy2017@126.com>
-Description: Implements the Beta Kernel Process (BKP) for nonparametric modeling of spatially varying binomial probabilities, together with its extension, the Dirichlet Kernel Process (DKP), for categorical or multinomial data.
+Description: The package implements the Beta Kernel Process (BKP) for nonparametric modeling of spatially varying binomial probabilities, together with its extension, the Dirichlet Kernel Process (DKP), for categorical or multinomial data.
  The package provides functions for model fitting, predictive inference with uncertainty quantification, posterior simulation, and visualization in one-and two-dimensional input spaces.
  Multiple kernel functions (Gaussian, Matern 5/2, and Matern 3/2) are supported, with hyperparameters optimized through multi-start gradient-based search.
- For more details, see Zhao, Qing, and Xu (2025) <doi:10.48550/arXiv.2508.10447>.
+ For more details, see Zhao, Qing, and Xu (2025) <arXiv:2508.10447>.
 License: GPL-3
 URL: https://github.com/Jiangyan-Zhao/BKP
 BugReports: https://github.com/Jiangyan-Zhao/BKP/issues
 Encoding: UTF-8
-LazyData: true
 NeedsCompilation: no
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Depends: R (>= 3.5.0)
-Imports: gridExtra, lattice, optimx, tgp
+Imports: 
+    gridExtra, 
+    lattice, 
+    optimx, 
+    tgp
 Suggests: 
     knitr,
     mlbench,
     rmarkdown,
     rticles,
-    stats,
     testthat (>= 3.0.0),
     tinytex
 Config/testthat/edition: 3
-Config/build/clean-inst-doc: FALSE
+BuildVignettes: true
 VignetteBuilder: knitr

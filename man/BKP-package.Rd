@@ -2,7 +2,7 @@
 % Please edit documentation in R/BKP-package.R
 \name{BKP-package}
 \alias{BKP-package}
-\title{Beta and Dirichlet Kernel Process Modeling}
+\title{Beta Kernel Process Modeling}
 \description{
 The \pkg{BKP} package provides tools for nonparametric modeling
 of binary/binomial or categorical/multinomial response data using the Beta
