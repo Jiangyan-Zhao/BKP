@@ -56,7 +56,9 @@ preamble: >
   \renewcommand{\vec}[1]{\mbox{\boldmath ${#1}$}}
   \def\argmin{\mbox{\rm argmin}}
   \def\argmax{\mbox{\rm argmax}}
-output: rticles::jss_article 
+output: 
+  rticles::jss_article: 
+    keep_tex: yes
 bibliography: refs.bib
 vignette: >
   %\VignetteIndexEntry{BKP: An R Package for Beta Kernel Process Modeling}
