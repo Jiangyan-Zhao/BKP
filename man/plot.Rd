@@ -6,9 +6,9 @@
 \alias{plot.DKP}
 \title{Plot Fitted BKP or DKP Models}
 \usage{
-\method{plot}{BKP}(x, only_mean = FALSE, ...)
+\method{plot}{BKP}(x, only_mean = FALSE, n_grid = 80, ...)
 
-\method{plot}{DKP}(x, only_mean = FALSE, ...)
+\method{plot}{DKP}(x, only_mean = FALSE, n_grid = 80, ...)
 }
 \arguments{
 \item{x}{An object of class \code{"BKP"} or \code{"DKP"}, typically returned
@@ -17,6 +17,11 @@ by \code{\link{fit.BKP}} or \code{\link{fit.DKP}}.}
 \item{only_mean}{Logical. If \code{TRUE}, only the predicted mean surface is
 plotted for 2D inputs (only applies to \code{BKP} models). Default is
 \code{FALSE}.}
+
+\item{n_grid}{Integer. Number of grid points used in each dimension to
+construct the prediction grid. A larger value produces a smoother and more
+detailed decision boundary, but increases computational cost.
+Default is \code{80}.}
 
 \item{...}{Additional arguments passed to internal plotting routines
 (currently unused).}
@@ -115,7 +120,7 @@ y <- rbinom(n, size = m, prob = true_pi)
 model2 <- fit.BKP(X, y, m, Xbounds=Xbounds)
 
 # Plot results
-plot(model2)
+plot(model2, n_grid = 50)
 
 # ============================================================== #
 # ========================= DKP Examples ======================= #
@@ -177,7 +182,7 @@ Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 model2 <- fit.DKP(X, Y, Xbounds = Xbounds)
 
 # Plot results
-plot(model2)
+plot(model2, n_grid = 50)
 
 }
 \references{

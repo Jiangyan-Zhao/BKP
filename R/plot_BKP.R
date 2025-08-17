@@ -12,6 +12,10 @@
 #' @param only_mean Logical. If \code{TRUE}, only the predicted mean surface is
 #'   plotted for 2D inputs (only applies to \code{BKP} models). Default is
 #'   \code{FALSE}.
+#' @param n_grid Integer. Number of grid points used in each dimension to
+#'   construct the prediction grid. A larger value produces a smoother and more
+#'   detailed decision boundary, but increases computational cost.
+#'   Default is \code{80}.
 #' @param ... Additional arguments passed to internal plotting routines
 #'   (currently unused).
 #'
@@ -110,12 +114,12 @@
 #' model2 <- fit.BKP(X, y, m, Xbounds=Xbounds)
 #'
 #' # Plot results
-#' plot(model2)
+#' plot(model2, n_grid = 50)
 #'
 #' @export
 #' @method plot BKP
 
-plot.BKP <- function(x, only_mean = FALSE, ...){
+plot.BKP <- function(x, only_mean = FALSE, n_grid = 80, ...){
   if (!inherits(x, "BKP")) {
     stop("The input is not of class 'BKP'. Please provide a model fitted with 'fit.BKP()'.")
   }
@@ -133,7 +137,7 @@ plot.BKP <- function(x, only_mean = FALSE, ...){
   if (d == 1){
     #----- Plotting for 1-dimensional covariate data (d == 1) -----#
     # Generate new X values for a smooth prediction curve.
-    Xnew <- matrix(seq(Xbounds[1], Xbounds[2], length.out = 100), ncol = 1)
+    Xnew <- matrix(seq(Xbounds[1], Xbounds[2], length.out = 10 * n_grid), ncol = 1)
 
     # Get the prediction for the new X values.
     prediction <- predict.BKP(BKPmodel, Xnew, ...)
@@ -178,8 +182,8 @@ plot.BKP <- function(x, only_mean = FALSE, ...){
   } else if (d == 2){
     #----- Plotting for 2-dimensional covariate data (d == 2) -----#
     # Generate 2D prediction grid
-    x1 <- seq(Xbounds[1, 1], Xbounds[1, 2], length.out = 80)
-    x2 <- seq(Xbounds[2, 1], Xbounds[2, 2], length.out = 80)
+    x1 <- seq(Xbounds[1, 1], Xbounds[1, 2], length.out = n_grid)
+    x2 <- seq(Xbounds[2, 1], Xbounds[2, 2], length.out = n_grid)
     grid <- expand.grid(x1 = x1, x2 = x2)
     prediction <- predict.BKP(BKPmodel, as.matrix(grid), ...)
     is_classification <- !is.null(prediction$class)
