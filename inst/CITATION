@@ -11,7 +11,7 @@ bibentry(
 
 bibentry(
   bibtype = "Manual",
-  title   = "BKP: An R Package for Beta Kernel Process",
+  title   = "BKP: Beta Kernel Process Modeling",
   author  = c(person(given = "Jiangyan", family = "Zhao"),
     person(given = "Kunhai", family = "Qing"),
     person(given = "Jin", family = "Xu")),

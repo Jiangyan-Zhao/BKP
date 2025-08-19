@@ -53,7 +53,8 @@ pak::pak("Jiangyan-Zhao/BKP")
 The statistical foundations and example applications are described in
 the following vignette:
 
-- [**BKP User Guide (PDF)**](doc/vignettes.pdf)
+- [**BKP User Guide
+  (PDF)**](https://github.com/Jiangyan-Zhao/BKP/blob/master/doc/vignettes.pdf)
 
 ## Citing
 
@@ -66,8 +67,8 @@ and the R package:
   arXiv:2508.10447. <https://arxiv.org/abs/2508.10447>
 
 - **R package**  
-  Zhao, J., Qing, K., and Xu, J. (2025). *BKP: An R Package for Beta
-  Kernel Process.*  
+  Zhao, J., Qing, K., and Xu, J. (2025). *BKP: Beta Kernel Process
+  Modeling.*  
   R package version 0.1.1. <https://cran.r-project.org/package=BKP>
 
 You can also obtain the citation information directly within R:

@@ -1,4 +1,4 @@
-# BKP 0.1.1 (2025-08-18)
+# BKP 0.1.1 (2025-08-19)
 
 * Added a vignette introducing the package.
 * Fixed minor bugs and improved stability.
