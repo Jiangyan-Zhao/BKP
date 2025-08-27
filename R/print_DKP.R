@@ -64,11 +64,9 @@
 #' @export
 #' @method print DKP
 
-print.DKP <- function(x, ...) {
-  if (!inherits(x, "DKP")) {
-    stop("The input is not of class 'DKP'. Please provide a model fitted with 'fit.DKP()'.")
-  }
-
+print.DKP <- function(x, ...)
+{
+  # Extract components
   n <- nrow(x$X)
   d <- ncol(x$X)
   q <- ncol(x$Y)

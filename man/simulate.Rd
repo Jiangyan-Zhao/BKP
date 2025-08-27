@@ -6,32 +6,32 @@
 \alias{simulate.DKP}
 \title{Simulate from a Fitted BKP or DKP Model}
 \usage{
-\method{simulate}{BKP}(object, Xnew, n_sim = 1, threshold = NULL, seed = NULL, ...)
+\method{simulate}{BKP}(object, nsim = 1, seed = NULL, ..., Xnew = NULL, threshold = NULL)
 
-\method{simulate}{DKP}(object, Xnew, n_sim = 1, seed = NULL, ...)
+\method{simulate}{DKP}(object, nsim = 1, seed = NULL, ..., Xnew = NULL)
 }
 \arguments{
 \item{object}{An object of class \code{"BKP"} or \code{"DKP"}, typically
 returned by \code{\link{fit.BKP}} or \code{\link{fit.DKP}}.}
 
-\item{Xnew}{A numeric matrix or vector of new input locations for simulation.}
-
-\item{n_sim}{Number of posterior samples to generate (default = \code{1}).}
-
-\item{threshold}{Classification threshold for binary output (only used for
-BKP). If specified, the output will include binary class labels with values
-above the threshold classified as 1 (default is \code{NULL}).}
+\item{nsim}{Number of posterior samples to generate (default = \code{1}).}
 
 \item{seed}{Optional integer seed for reproducibility.}
 
 \item{...}{Additional arguments (currently unused).}
+
+\item{Xnew}{A numeric matrix or vector of new input locations for simulation.}
+
+\item{threshold}{Classification threshold for binary output (only used for
+BKP). If specified, the output will include binary class labels with values
+above the threshold classified as 1 (default is \code{NULL}).}
 }
 \value{
 A list with the following components:
 \describe{
 \item{\code{sims}}{
-For \strong{BKP}: A numeric matrix of dimension \code{nrow(Xnew) × n_sim}, containing simulated success probabilities.\cr
-For \strong{DKP}: A numeric array of dimension \code{n_sim × q × nrow(Xnew)}, containing simulated class probabilities
+For \strong{BKP}: A numeric matrix of dimension \code{nrow(Xnew) × nsim}, containing simulated success probabilities.\cr
+For \strong{DKP}: A numeric array of dimension \code{nsim × q × nrow(Xnew)}, containing simulated class probabilities
 from Dirichlet posteriors, where \code{q} is the number of classes.
 }
 
@@ -41,9 +41,9 @@ For \strong{DKP}: A numeric matrix of dimension \code{nrow(Xnew) × q}, containi
 }
 
 \item{\code{class}}{
-For \strong{BKP}: A binary matrix of dimension \code{nrow(Xnew) × n_sim} indicating simulated class labels (0/1),
+For \strong{BKP}: A binary matrix of dimension \code{nrow(Xnew) × nsim} indicating simulated class labels (0/1),
 returned if \code{threshold} is specified.\cr
-For \strong{DKP}: A numeric matrix of dimension \code{nrow(Xnew) × n_sim} containing MAP-predicted class labels,
+For \strong{DKP}: A numeric matrix of dimension \code{nrow(Xnew) × nsim} containing MAP-predicted class labels,
 returned only when training data is single-label (i.e., each row of \code{Y} sums to 1).
 }
 }
@@ -82,10 +82,10 @@ model <- fit.BKP(X, y, m, Xbounds=Xbounds)
 
 # Simulate 5 posterior draws of success probabilities
 Xnew <- matrix(seq(-2, 2, length.out = 100), ncol = 1)
-simulate(model, Xnew, n_sim = 5)
+simulate(model, Xnew = Xnew, nsim = 5)
 
 # Simulate binary classifications (threshold = 0.5)
-simulate(model, Xnew, n_sim = 5, threshold = 0.5)
+simulate(model, Xnew = Xnew, nsim = 5, threshold = 0.5)
 
 ## -------------------- DKP Simulation Example --------------------
 set.seed(123)
@@ -110,7 +110,7 @@ model <- fit.DKP(X, Y, Xbounds = Xbounds)
 
 # Simulate 5 draws from posterior Dirichlet distributions at new point
 Xnew <- matrix(seq(-2, 2, length.out = 100), ncol = 1)
-simulate(model, Xnew = Xnew, n_sim = 5)
+simulate(model, Xnew = Xnew, nsim = 5)
 
 }
 \references{

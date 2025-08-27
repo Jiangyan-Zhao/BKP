@@ -21,16 +21,16 @@ test_that("simulate.BKP returns expected structure and values", {
   Xnew <- matrix(seq(-2, 2, length.out = n_Xnew), ncol = 1)
 
   # 4. Run simulate
-  n_sim <- 5
-  sim_result <- simulate(model, Xnew, n_sim = n_sim, threshold = 0.5)
+  nsim <- 5
+  sim_result <- simulate(model, Xnew = Xnew, nsim = nsim, threshold = 0.5)
 
   # 5. Check class and structure
   expect_type(sim_result, "list")
   expect_in(names(sim_result), c("sims", "mean", "class"))
 
-  # sims: matrix [n_new x n_sim]
+  # sims: matrix [n_new x nsim]
   expect_true(is.matrix(sim_result$sims))
-  expect_equal(dim(sim_result$sims), c(n_Xnew, n_sim))
+  expect_equal(dim(sim_result$sims), c(n_Xnew, nsim))
 
   # mean: numeric vector
   expect_true(is.numeric(sim_result$mean))
@@ -41,5 +41,5 @@ test_that("simulate.BKP returns expected structure and values", {
   expect_true(all(sim_result$class %in% c(0L, 1L)))
 
   # Each column of class corresponds to a simulation
-  expect_equal(dim(sim_result$class), c(n_Xnew, n_sim))
+  expect_equal(dim(sim_result$class), c(n_Xnew, nsim))
 })

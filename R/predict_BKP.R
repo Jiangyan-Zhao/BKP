@@ -110,22 +110,16 @@
 
 predict.BKP <- function(object, Xnew, CI_level = 0.95, threshold = 0.5, ...)
 {
-  if (!inherits(object, "BKP")) {
-    stop("The input is not of class 'BKP'. Please provide a model fitted with 'fit.BKP()'.")
-  }
-
-  BKPmodel <- object
-
   # Extract components
-  Xnorm   <- BKPmodel$Xnorm
-  y       <- BKPmodel$y
-  m       <- BKPmodel$m
-  theta   <- BKPmodel$theta_opt
-  kernel  <- BKPmodel$kernel
-  prior   <- BKPmodel$prior
-  r0      <- BKPmodel$r0
-  p0      <- BKPmodel$p0
-  Xbounds <- BKPmodel$Xbounds
+  Xnorm   <- object$Xnorm
+  y       <- object$y
+  m       <- object$m
+  theta   <- object$theta_opt
+  kernel  <- object$kernel
+  prior   <- object$prior
+  r0      <- object$r0
+  p0      <- object$p0
+  Xbounds <- object$Xbounds
   d       <- ncol(Xnorm)
 
   # Ensure Xnew is a matrix and matches input dimension

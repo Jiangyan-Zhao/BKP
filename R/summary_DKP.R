@@ -65,9 +65,6 @@
 #' @method summary DKP
 
 summary.DKP <- function(object, ...) {
-  if (!inherits(object, "DKP")) {
-    stop("The input is not of class 'DKP'. Please provide a fitted DKP model.")
-  }
 
   # Delegate to print.DKP for now
   print(object, ...)

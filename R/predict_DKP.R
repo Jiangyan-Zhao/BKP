@@ -75,21 +75,15 @@
 
 predict.DKP <- function(object, Xnew, CI_level = 0.95, ...)
 {
-  if (!inherits(object, "DKP")) {
-    stop("The input is not of class 'DKP'. Please provide a model fitted with 'fit.DKP()'.")
-  }
-
-  DKPmodel <- object
-
   # Extract components
-  Xnorm   <- DKPmodel$Xnorm
-  Y       <- DKPmodel$Y
-  theta   <- DKPmodel$theta_opt
-  kernel  <- DKPmodel$kernel
-  prior   <- DKPmodel$prior
-  r0      <- DKPmodel$r0
-  p0      <- DKPmodel$p0
-  Xbounds <- DKPmodel$Xbounds
+  Xnorm   <- object$Xnorm
+  Y       <- object$Y
+  theta   <- object$theta_opt
+  kernel  <- object$kernel
+  prior   <- object$prior
+  r0      <- object$r0
+  p0      <- object$p0
+  Xbounds <- object$Xbounds
   d       <- ncol(Xnorm)
 
   # Ensure Xnew is a matrix and matches input dimension

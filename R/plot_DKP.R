@@ -69,16 +69,10 @@
 #' @method plot DKP
 
 plot.DKP <- function(x, only_mean = FALSE, n_grid = 80, ...){
-  if (!inherits(x, "DKP")) {
-    stop("The input is not of class 'DKP'. Please provide a model fitted with 'fit.DKP()'.")
-  }
-
-  DKPmodel <- x
-
   # Extract necessary components from the DKP model object.
-  X <- DKPmodel$X # Covariate matrix.
-  Y <- DKPmodel$Y # Number of successes.
-  Xbounds <- DKPmodel$Xbounds
+  X <- x$X # Covariate matrix.
+  Y <- x$Y # Number of successes.
+  Xbounds <- x$Xbounds
 
   d <- ncol(X)    # Dimensionality.
   q <- ncol(Y)    # Dimensionality.
@@ -90,7 +84,7 @@ plot.DKP <- function(x, only_mean = FALSE, n_grid = 80, ...){
 
     # Generate new X values for smooth prediction
     Xnew <- matrix(seq(Xbounds[1], Xbounds[2], length.out = 10 * n_grid), ncol = 1)
-    prediction <- predict.DKP(DKPmodel, Xnew, ...)
+    prediction <- predict.DKP(x, Xnew, ...)
     is_classification <- !is.null(prediction$class)
 
     old_par <- par(mfrow = c(2, 2))
@@ -164,7 +158,7 @@ plot.DKP <- function(x, only_mean = FALSE, n_grid = 80, ...){
     x1 <- seq(Xbounds[1, 1], Xbounds[1, 2], length.out = n_grid)
     x2 <- seq(Xbounds[2, 1], Xbounds[2, 2], length.out = n_grid)
     grid <- expand.grid(x1 = x1, x2 = x2)
-    prediction <- predict.DKP(DKPmodel, as.matrix(grid))
+    prediction <- predict.DKP(x, as.matrix(grid))
     is_classification <- !is.null(prediction$class)
 
     if(is_classification){

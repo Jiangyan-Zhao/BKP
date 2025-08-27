@@ -84,9 +84,6 @@
 #' @method summary BKP
 
 summary.BKP <- function(object, ...) {
-  if (!inherits(object, "BKP")) {
-    stop("The input is not of class 'BKP'. Please provide a fitted BKP model.")
-  }
 
   # Delegate to print.BKP for now
   print(object, ...)

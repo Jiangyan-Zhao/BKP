@@ -120,17 +120,11 @@
 #' @method plot BKP
 
 plot.BKP <- function(x, only_mean = FALSE, n_grid = 80, ...){
-  if (!inherits(x, "BKP")) {
-    stop("The input is not of class 'BKP'. Please provide a model fitted with 'fit.BKP()'.")
-  }
-
-  BKPmodel <- x
-
   # Extract necessary components from the BKP model object.
-  X <- BKPmodel$X # Covariate matrix.
-  y <- BKPmodel$y # Number of successes.
-  m <- BKPmodel$m # Number of trials.
-  Xbounds <- BKPmodel$Xbounds
+  X <- x$X # Covariate matrix.
+  y <- x$y # Number of successes.
+  m <- x$m # Number of trials.
+  Xbounds <- x$Xbounds
 
   d <- ncol(X)    # Dimensionality.
 
@@ -140,7 +134,7 @@ plot.BKP <- function(x, only_mean = FALSE, n_grid = 80, ...){
     Xnew <- matrix(seq(Xbounds[1], Xbounds[2], length.out = 10 * n_grid), ncol = 1)
 
     # Get the prediction for the new X values.
-    prediction <- predict.BKP(BKPmodel, Xnew, ...)
+    prediction <- predict.BKP(x, Xnew, ...)
     is_classification <- !is.null(prediction$class)
 
     # Initialize the plot with the estimated probability curve.
@@ -185,7 +179,7 @@ plot.BKP <- function(x, only_mean = FALSE, n_grid = 80, ...){
     x1 <- seq(Xbounds[1, 1], Xbounds[1, 2], length.out = n_grid)
     x2 <- seq(Xbounds[2, 1], Xbounds[2, 2], length.out = n_grid)
     grid <- expand.grid(x1 = x1, x2 = x2)
-    prediction <- predict.BKP(BKPmodel, as.matrix(grid), ...)
+    prediction <- predict.BKP(x, as.matrix(grid), ...)
     is_classification <- !is.null(prediction$class)
 
     # Convert to data frame for levelplot

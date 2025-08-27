@@ -83,11 +83,9 @@
 #' @export
 #' @method print BKP
 
-print.BKP <- function(x, ...) {
-  if (!inherits(x, "BKP")) {
-    stop("The input is not of class 'BKP'. Please provide a model fitted with 'fit.BKP()'.")
-  }
-
+print.BKP <- function(x, ...)
+{
+  # Extract components
   n <- nrow(x$X)
   d <- ncol(x$X)
   theta <- x$theta_opt

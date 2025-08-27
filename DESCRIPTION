@@ -1,6 +1,6 @@
 Package: BKP
 Title: Beta Kernel Process Modeling
-Version: 0.1.1
+Version: 0.1.1.9000
 Authors@R: c(
     person(given = "Jiangyan", family = "Zhao", email = "zhaojy2017@126.com", role = c("cre", "aut")),
     person(given = "Kunhai", family = "Qing", email = "kunhaiq@qq.com", role = "aut"),

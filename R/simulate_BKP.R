@@ -17,7 +17,7 @@
 #' @param object An object of class \code{"BKP"} or \code{"DKP"}, typically
 #'   returned by \code{\link{fit.BKP}} or \code{\link{fit.DKP}}.
 #' @param Xnew A numeric matrix or vector of new input locations for simulation.
-#' @param n_sim Number of posterior samples to generate (default = \code{1}).
+#' @param nsim Number of posterior samples to generate (default = \code{1}).
 #' @param threshold Classification threshold for binary output (only used for
 #'   BKP). If specified, the output will include binary class labels with values
 #'   above the threshold classified as 1 (default is \code{NULL}).
@@ -27,8 +27,8 @@
 #' @return A list with the following components:
 #' \describe{
 #'   \item{\code{sims}}{
-#'     For \strong{BKP}: A numeric matrix of dimension \code{nrow(Xnew) × n_sim}, containing simulated success probabilities.\cr
-#'     For \strong{DKP}: A numeric array of dimension \code{n_sim × q × nrow(Xnew)}, containing simulated class probabilities
+#'     For \strong{BKP}: A numeric matrix of dimension \code{nrow(Xnew) × nsim}, containing simulated success probabilities.\cr
+#'     For \strong{DKP}: A numeric array of dimension \code{nsim × q × nrow(Xnew)}, containing simulated class probabilities
 #'     from Dirichlet posteriors, where \code{q} is the number of classes.
 #'   }
 #'
@@ -38,9 +38,9 @@
 #'   }
 #'
 #'   \item{\code{class}}{
-#'     For \strong{BKP}: A binary matrix of dimension \code{nrow(Xnew) × n_sim} indicating simulated class labels (0/1),
+#'     For \strong{BKP}: A binary matrix of dimension \code{nrow(Xnew) × nsim} indicating simulated class labels (0/1),
 #'     returned if \code{threshold} is specified.\cr
-#'     For \strong{DKP}: A numeric matrix of dimension \code{nrow(Xnew) × n_sim} containing MAP-predicted class labels,
+#'     For \strong{DKP}: A numeric matrix of dimension \code{nrow(Xnew) × nsim} containing MAP-predicted class labels,
 #'     returned only when training data is single-label (i.e., each row of \code{Y} sums to 1).
 #'   }
 #' }
@@ -75,30 +75,28 @@
 #'
 #' # Simulate 5 posterior draws of success probabilities
 #' Xnew <- matrix(seq(-2, 2, length.out = 100), ncol = 1)
-#' simulate(model, Xnew, n_sim = 5)
+#' simulate(model, Xnew = Xnew, nsim = 5)
 #'
 #' # Simulate binary classifications (threshold = 0.5)
-#' simulate(model, Xnew, n_sim = 5, threshold = 0.5)
+#' simulate(model, Xnew = Xnew, nsim = 5, threshold = 0.5)
 #'
 #' @export
 #' @method simulate BKP
 
-simulate.BKP <- function(object, Xnew, n_sim = 1, threshold = NULL, seed = NULL, ...) {
-  if (!inherits(object, "BKP")) {
-    stop("The input must be of class 'BKP'. Please provide a model fitted with 'fit.BKP()'.")
-  }
-  BKPmodel <- object
+simulate.BKP <- function(object, nsim = 1, seed = NULL, ..., Xnew = NULL, threshold = NULL)
+{
+  if (!is.null(seed)) set.seed(seed)
 
   # Extract components
-  Xnorm   <- BKPmodel$Xnorm
-  y       <- BKPmodel$y
-  m       <- BKPmodel$m
-  theta   <- BKPmodel$theta_opt
-  kernel  <- BKPmodel$kernel
-  prior   <- BKPmodel$prior
-  r0      <- BKPmodel$r0
-  p0      <- BKPmodel$p0
-  Xbounds <- BKPmodel$Xbounds
+  Xnorm   <- object$Xnorm
+  y       <- object$y
+  m       <- object$m
+  theta   <- object$theta_opt
+  kernel  <- object$kernel
+  prior   <- object$prior
+  r0      <- object$r0
+  p0      <- object$p0
+  Xbounds <- object$Xbounds
   d       <- ncol(Xnorm)
 
   # --- Check and normalize Xnew ---
@@ -125,11 +123,11 @@ simulate.BKP <- function(object, Xnew, n_sim = 1, threshold = NULL, seed = NULL,
 
   # --- Simulate from posterior Beta distributions ---
   if (!is.null(seed)) set.seed(seed)
-  sims <- matrix(rbeta(n_new * n_sim,
-                       shape1 = rep(alpha_n, n_sim),
-                       shape2 = rep(beta_n, n_sim)),
-                 nrow = n_new, ncol = n_sim)
-  colnames(sims) <- paste0("sim", 1:n_sim)
+  sims <- matrix(rbeta(n_new * nsim,
+                       shape1 = rep(alpha_n, nsim),
+                       shape2 = rep(beta_n, nsim)),
+                 nrow = n_new, ncol = nsim)
+  colnames(sims) <- paste0("sim", 1:nsim)
   rownames(sims) <- paste0("x", 1:n_new)
 
   # --- Optional: binary classification ---
@@ -145,14 +143,14 @@ simulate.BKP <- function(object, Xnew, n_sim = 1, threshold = NULL, seed = NULL,
   pi_mean <- alpha_n / (alpha_n + beta_n)
 
   return(list(
-    sims = sims,        # [n_new × n_sim]: simulated probabilities
+    sims = sims,        # [n_new × nsim]: simulated probabilities
     mean = pi_mean,     # [n_new]: posterior mean
-    class = class_pred  # [n_new × n_sim]: binary labels (if threshold provided)
+    class = class_pred  # [n_new × nsim]: binary labels (if threshold provided)
   ))
 }
 
 
-#' @export
-simulate <- function(object, ...) {
-  UseMethod("simulate")
-}
+#' #' @export
+#' simulate <- function(object, ...) {
+#'   UseMethod("simulate")
+#' }
