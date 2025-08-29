@@ -142,10 +142,11 @@ fit.DKP <- function(
     # ---- Run multi-start L-BFGS-B optimization to find best kernel parameters ----
     opt_res <- multistart(
       parmat = init_gamma,
-      fn     = loss_fun_dkp,
+      fn     = loss_fun,
       method = "L-BFGS-B",
       lower  = rep(-10, d), # relaxed lower bound
       upper  = rep(10, d),  # relaxed upper bound
+      model_type = "DKP",
       prior = prior, r0 = r0, p0 = p0,
       Xnorm = Xnorm, Y = Y,
       loss = loss, kernel = kernel,
@@ -174,7 +175,8 @@ fit.DKP <- function(
   K <- kernel_matrix(Xnorm, theta = theta_opt, kernel = kernel)
 
   # ---- Compute prior parameters (alpha0 and beta0) ----
-  alpha0 <- get_prior_dkp(prior = prior, r0 = r0, p0 = p0, Y = Y, K = K)
+  alpha0 <- get_prior(prior = prior, model_type = "DKP",
+                      r0 = r0, p0 = p0, Y = Y, K = K)
 
   # ---- Compute posterior parameters ----
   alpha_n <- alpha0 + as.matrix(K %*% Y)

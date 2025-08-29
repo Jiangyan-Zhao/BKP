@@ -2,13 +2,15 @@
 % Please edit documentation in R/loss_fun.R
 \name{loss_fun}
 \alias{loss_fun}
-\title{Loss Function for Fitting the BKP Model}
+\title{Loss Function for BKP and DKP Models}
 \usage{
 loss_fun(
   gamma,
   Xnorm,
-  y,
-  m,
+  y = NULL,
+  m = NULL,
+  Y = NULL,
+  model_type = c("BKP", "DKP"),
   prior = c("noninformative", "fixed", "adaptive"),
   r0 = 2,
   p0 = 0.5,
@@ -27,6 +29,12 @@ loss_fun(
 \item{m}{A numeric vector of total binomial trials (length \code{n}),
 corresponding to each \code{y}.}
 
+\item{Y}{Matrix of observed multinomial counts, with dimension \eqn{n \times
+q}.}
+
+\item{model_type}{A character string, either \code{"BKP"} (binary) or
+\code{"DKP"} (multi-class).}
+
 \item{prior}{Type of prior to use. One of \code{"noninformative"},
 \code{"fixed"}, or \code{"adaptive"}.}
 
@@ -42,20 +50,32 @@ corresponding to each \code{y}.}
 \code{"gaussian"}, \code{"matern52"}, or \code{"matern32"}.}
 }
 \value{
-A single numeric value representing the total loss (to be minimized).
+A single numeric value representing the total loss (to be minimized):
+either the mean Brier score (squared error) or the mean negative log-loss
+(cross-entropy), depending on \code{loss}.
 }
 \description{
-Computes the loss used to fit the BKP model. Supports the Brier
-score (mean squared error) and negative log-loss (cross-entropy), under
-different prior specifications.
+Computes the loss used to fit the BKP (binary outcome) or DKP
+(multi-class outcome) model. Supports the Brier score (mean squared error)
+and negative log-loss (cross-entropy), under different prior
+specifications.
 }
 \examples{
+## Binary example (BKP)
 set.seed(123)
-n = 10
-Xnorm = matrix(runif(2 * n), ncol = 2)
-m = rep(10, n)
-y = rbinom(n, size = m, prob = runif(n))
-loss_fun(gamma = rep(0, 2), Xnorm = Xnorm, y = y, m = m)
+n <- 10
+Xnorm <- matrix(runif(2 * n), ncol = 2)
+m <- rep(10, n)
+y <- rbinom(n, size = m, prob = runif(n))
+loss_fun(gamma = rep(0, 2), Xnorm = Xnorm, y = y, m = m, model_type = "BKP")
+
+## Multi-class example (DKP)
+set.seed(123)
+n <- 10
+q <- 3
+Xnorm <- matrix(runif(2 * n), ncol = 2)
+Y <- matrix(rmultinom(n, size = 10, prob = rep(1/q, q)), nrow = n, byrow = TRUE)
+loss_fun(gamma = rep(0, 2), Xnorm = Xnorm, Y = Y, model_type = "DKP")
 
 }
 \references{
@@ -64,6 +84,6 @@ Kernel Process Modeling}.  arXiv.
 https://doi.org/10.48550/arXiv.2508.10447.
 }
 \seealso{
-\code{\link{loss_fun_dkp}}, \code{\link{fit.BKP}}, \code{\link{get_prior}},
-\code{\link{kernel_matrix}}
+\code{\link{fit.BKP}}, \code{\link{fit.DKP}},
+\code{\link{get_prior}}, \code{\link{kernel_matrix}}
 }

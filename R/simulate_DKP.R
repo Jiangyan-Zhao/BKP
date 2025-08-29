@@ -61,7 +61,8 @@ simulate.DKP <- function(object, nsim = 1, seed = NULL, ..., Xnew = NULL)
   K <- kernel_matrix(Xnew_norm, Xnorm, theta = theta, kernel = kernel)
 
   # --- Get Dirichlet prior ---
-  alpha0 <- get_prior_dkp(prior = prior, r0 = r0, p0 = p0, Y = Y, K = K)
+  alpha0 <- get_prior(prior = prior, model_type = "DKP",
+                      r0 = r0, p0 = p0, Y = Y, K = K)
 
   # --- Posterior Dirichlet parameters ---
   alpha_n <- as.matrix(alpha0) + as.matrix(K %*% Y)

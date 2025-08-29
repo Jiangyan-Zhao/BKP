@@ -152,7 +152,8 @@ predict.BKP <- function(object, Xnew = NULL, CI_level = 0.95, threshold = 0.5, .
   }
 
   # get the prior parameters: alpha0(x) and beta0(x)
-  prior_par <- get_prior(prior = prior, r0 = r0, p0 = p0, y = y, m = m, K = K)
+  prior_par <- get_prior(prior = prior, model_type = "BKP",
+                         r0 = r0, p0 = p0, y = y, m = m, K = K)
   alpha0 <- prior_par$alpha0
   beta0 <- prior_par$beta0
 

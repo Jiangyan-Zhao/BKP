@@ -165,6 +165,7 @@ fit.BKP <- function(
       method = "L-BFGS-B",
       lower  = rep(-10, d), # relaxed lower bound
       upper  = rep(10, d),  # relaxed upper bound
+      model_type = "BKP",
       prior = prior, r0 = r0, p0 = p0,
       Xnorm = Xnorm, y = y, m=m,
       loss = loss, kernel = kernel,
@@ -195,7 +196,8 @@ fit.BKP <- function(
   K <- kernel_matrix(Xnorm, theta = theta_opt, kernel = kernel)
 
   # ---- Compute prior parameters (alpha0 and beta0) ----
-  prior_par <- get_prior(prior = prior, r0 = r0, p0 = p0, y = y, m = m, K = K)
+  prior_par <- get_prior(prior = prior, model_type = "BKP",
+                         r0 = r0, p0 = p0, y = y, m = m, K = K)
   alpha0 <- prior_par$alpha0
   beta0  <- prior_par$beta0
 

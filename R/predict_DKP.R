@@ -116,7 +116,8 @@ predict.DKP <- function(object, Xnew = NULL, CI_level = 0.95, ...)
   }
 
   # get the prior parameters: alpha0(x) and beta0(x)
-  alpha0 <- get_prior_dkp(prior = prior, r0 = r0, p0 = p0, Y = Y, K = K)
+  alpha0 <- get_prior(prior = prior, model_type = "DKP",
+                      r0 = r0, p0 = p0, Y = Y, K = K)
 
   # Posterior parameters
   alpha_n <- pmax(alpha0 + as.matrix(K %*% Y), 1e-6) # [n × q]
