@@ -2,13 +2,25 @@
 % Please edit documentation in R/print_BKP.R, R/print_DKP.R
 \name{print}
 \alias{print}
+\alias{print.summary.BKP}
 \alias{print.BKP}
+\alias{print.predict.BKP}
+\alias{print.summary.DKP}
 \alias{print.DKP}
+\alias{print.predict.DKP}
 \title{Print Summary of a Fitted BKP or DKP Model}
 \usage{
+\method{print}{summary.BKP}(x, ...)
+
 \method{print}{BKP}(x, ...)
 
+\method{print}{predict.BKP}(x, ...)
+
+\method{print}{summary.DKP}(x, ...)
+
 \method{print}{DKP}(x, ...)
+
+\method{print}{predict.DKP}(x, ...)
 }
 \arguments{
 \item{x}{An object of class \code{"BKP"} (from \code{\link{fit.BKP}}) or
@@ -26,7 +38,8 @@ summary to the console.
 Displays a concise summary of a fitted BKP or DKP model. The
 output includes key characteristics such as sample size, input
 dimensionality, kernel type, loss function, optimized kernel
-hyperparameters, and minimum loss.
+hyperparameters, and minimum loss. Posterior predictive summaries (means
+and variances) are also provided.
 }
 \examples{
 # ============================================================== #
@@ -107,7 +120,7 @@ Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 
 # Fit DKP model
 model1 <- fit.DKP(X, Y, Xbounds = Xbounds)
-print(model1)
+summary(model1)
 
 
 #-------------------------- 2D Example ---------------------------
@@ -139,7 +152,7 @@ Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 
 # Fit DKP model
 model2 <- fit.DKP(X, Y, Xbounds = Xbounds)
-print(model2)
+summary(model2)
 
 }
 \references{

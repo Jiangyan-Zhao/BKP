@@ -28,6 +28,11 @@
 #' # Fit DKP model
 #' model1 <- fit.DKP(X, Y, Xbounds = Xbounds)
 #'
+#' # Prediction on training data
+#' predict(model1)
+#'
+#' # Prediction on new data
+#'
 #' # Prediction
 #' Xnew = matrix(seq(-2, 2, length = 10), ncol=1) #new data points
 #' predict(model1, Xnew)
@@ -62,9 +67,11 @@
 #'
 #' # Fit DKP model
 #' model2 <- fit.DKP(X, Y, Xbounds = Xbounds)
-#' print(model2)
 #'
-#' # Prediction
+#' # Prediction on training data
+#' predict(model2)
+#'
+#' # Prediction on new data
 #' x1 <- seq(Xbounds[1,1], Xbounds[1,2], length.out = 10)
 #' x2 <- seq(Xbounds[2,1], Xbounds[2,2], length.out = 10)
 #' Xnew <- expand.grid(x1 = x1, x2 = x2)
@@ -73,9 +80,10 @@
 #' @export
 #' @method predict DKP
 
-predict.DKP <- function(object, Xnew, CI_level = 0.95, ...)
+predict.DKP <- function(object, Xnew = NULL, CI_level = 0.95, ...)
 {
   # Extract components
+  X       <- object$X
   Xnorm   <- object$Xnorm
   Y       <- object$Y
   theta   <- object$theta_opt
@@ -86,50 +94,56 @@ predict.DKP <- function(object, Xnew, CI_level = 0.95, ...)
   Xbounds <- object$Xbounds
   d       <- ncol(Xnorm)
 
-  # Ensure Xnew is a matrix and matches input dimension
-  if (is.null(nrow(Xnew))) {
-    Xnew <- matrix(Xnew, nrow = 1)
-  }
-  Xnew <- as.matrix(Xnew)
-  if (ncol(Xnew) != d) {
-    stop("The number of columns in 'Xnew' must match the original input dimension.")
-  }
+  if(!is.null(Xnew)){
+    # Ensure Xnew is a matrix and matches input dimension
+    if (is.null(nrow(Xnew))) {
+      Xnew <- matrix(Xnew, nrow = 1)
+    }
+    Xnew <- as.matrix(Xnew)
+    if (ncol(Xnew) != d) {
+      stop("The number of columns in 'Xnew' must match the original input dimension.")
+    }
 
-  # Normalize Xnew to [0,1]^d
-  Xnew_norm <- sweep(Xnew, 2, Xbounds[, 1], "-")
-  Xnew_norm <- sweep(Xnew_norm, 2, Xbounds[, 2] - Xbounds[, 1], "/")
+    # Normalize Xnew to [0,1]^d
+    Xnew_norm <- sweep(Xnew, 2, Xbounds[, 1], "-")
+    Xnew_norm <- sweep(Xnew_norm, 2, Xbounds[, 2] - Xbounds[, 1], "/")
 
-  # Compute kernel matrix
-  K <- kernel_matrix(Xnew_norm, Xnorm, theta = theta, kernel = kernel) # m*n matrix
+    # Compute kernel matrix
+    K <- kernel_matrix(Xnew_norm, Xnorm, theta = theta, kernel = kernel) # [m × n]
+  }else{
+    # Compute kernel matrix
+    K <- kernel_matrix(Xnorm, theta = theta, kernel = kernel) # [n × n]
+  }
 
   # get the prior parameters: alpha0(x) and beta0(x)
   alpha0 <- get_prior_dkp(prior = prior, r0 = r0, p0 = p0, Y = Y, K = K)
 
   # Posterior parameters
-  alpha_n <- alpha0 + as.matrix(K %*% Y)
+  alpha_n <- pmax(alpha0 + as.matrix(K %*% Y), 1e-6) # [n × q]
 
   # Predictive quantities
   row_sum <- rowSums(alpha_n)
-  beta_n  <- row_sum - alpha_n
   pi_mean <- alpha_n / row_sum
-  pi_var  <- alpha_n * beta_n / (row_sum^2 * (row_sum + 1))
-  pi_lower <- qbeta((1 - CI_level) / 2, alpha_n, beta_n)
-  pi_upper <- qbeta((1 + CI_level) / 2, alpha_n, beta_n)
+  pi_var  <- alpha_n * (row_sum - alpha_n) / (row_sum^2 * (row_sum + 1))
+  pi_lower <- qbeta((1 - CI_level) / 2, alpha_n, row_sum - alpha_n)
+  pi_upper <- qbeta((1 + CI_level) / 2, alpha_n, row_sum - alpha_n)
 
   # Return structured output
   prediction <- list(
-    Xnew     = Xnew,         # [n × d]
-    mean     = pi_mean,      # [n × q]
-    variance = pi_var,       # [n × q]
-    lower    = pi_lower,     # [n × q]
-    upper    = pi_upper,     # [n × q]
-    CI_level  = CI_level     # [1]
+    X        = X,
+    Xnew     = Xnew,
+    mean     = pi_mean,
+    variance = pi_var,
+    lower    = pi_lower,
+    upper    = pi_upper,
+    CI_level  = CI_level
   )
 
   # Posterior classification label (only for classification data)
   if (all(rowSums(Y) == 1)) {
-    prediction$class <- max.col(pi_mean) # [n]
+    prediction$class <- max.col(pi_mean)
   }
 
+  class(prediction) <- "predict.DKP"
   return(prediction)
 }

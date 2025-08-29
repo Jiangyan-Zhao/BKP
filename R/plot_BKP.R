@@ -6,16 +6,20 @@
 #'   the input dimensionality. For 1-dimensional inputs, it displays predicted
 #'   class probabilities with credible intervals and observed data. For
 #'   2-dimensional inputs, it generates contour plots of posterior summaries.
+#'   For higher-dimensional inputs, users can specify which dimensions to plot.
 #'
 #' @param x An object of class \code{"BKP"} or \code{"DKP"}, typically returned
 #'   by \code{\link{fit.BKP}} or \code{\link{fit.DKP}}.
 #' @param only_mean Logical. If \code{TRUE}, only the predicted mean surface is
 #'   plotted for 2D inputs (only applies to \code{BKP} models). Default is
 #'   \code{FALSE}.
-#' @param n_grid Integer. Number of grid points used in each dimension to
+#' @param n_grid Positive integer. Number of grid points used in each dimension to
 #'   construct the prediction grid. A larger value produces a smoother and more
 #'   detailed decision boundary, but increases computational cost.
 #'   Default is \code{80}.
+#' @param dims Integer vector specifying which dimensions of the input space
+#'   to visualize. Should have length 1 (for 1D plot) or 2 (for 2D plot).
+#'   If \code{NULL} (default), uses all dimensions if they are <= 2.
 #' @param ... Additional arguments passed to internal plotting routines
 #'   (currently unused).
 #'
@@ -119,7 +123,13 @@
 #' @export
 #' @method plot BKP
 
-plot.BKP <- function(x, only_mean = FALSE, n_grid = 80, ...){
+plot.BKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL, ...){
+  # check inputs
+  if (!is.numeric(n_grid) || length(n_grid) != 1 || n_grid <= 0) {
+    stop("'n_grid' must be a positive integer.")
+  }
+  n_grid <- as.integer(n_grid)
+
   # Extract necessary components from the BKP model object.
   X <- x$X # Covariate matrix.
   y <- x$y # Number of successes.
@@ -128,10 +138,31 @@ plot.BKP <- function(x, only_mean = FALSE, n_grid = 80, ...){
 
   d <- ncol(X)    # Dimensionality.
 
-  if (d == 1){
+  # Handle dims argument
+  if (is.null(dims)) {
+    if (d > 2) {
+      stop("X has more than 2 dimensions. Please specify `dims` for plotting.")
+    }
+    dims <- seq_len(d)
+  } else {
+    if (!is.numeric(dims) || any(dims != as.integer(dims))) {
+      stop("`dims` must be an integer vector.")
+    }
+    if (length(dims) < 1 || length(dims) > 2) {
+      stop("`dims` must have length 1 or 2.")
+    }
+    if (any(dims < 1 | dims > d)) {
+      stop("`dims` must be within the range [1, ", d, "].")
+    }
+  }
+
+  # Subset data to selected dimensions
+  X_sub <- X[, dims, drop = FALSE]
+
+  if (length(dims) == 1){
     #----- Plotting for 1-dimensional covariate data (d == 1) -----#
     # Generate new X values for a smooth prediction curve.
-    Xnew <- matrix(seq(Xbounds[1], Xbounds[2], length.out = 10 * n_grid), ncol = 1)
+    Xnew <- matrix(seq(Xbounds[dims, 1], Xbounds[dims, 2], length.out = 10 * n_grid), ncol = 1)
 
     # Get the prediction for the new X values.
     prediction <- predict.BKP(x, Xnew, ...)
@@ -140,7 +171,8 @@ plot.BKP <- function(x, only_mean = FALSE, n_grid = 80, ...){
     # Initialize the plot with the estimated probability curve.
     plot(Xnew, prediction$mean,
          type = "l", col = "blue", lwd = 2,
-         xlab = "x", ylab = "Probability",
+         xlab = ifelse(d > 1, paste0("x", dims), "x"),
+         ylab = "Probability",
          main = "Estimated Probability",
          xlim = Xbounds,
          ylim = c(min(prediction$lower) * 0.9,
@@ -153,11 +185,11 @@ plot.BKP <- function(x, only_mean = FALSE, n_grid = 80, ...){
     lines(Xnew, prediction$mean, col = "blue", lwd = 2)
 
     # Overlay observed proportions (y/m) as points.
-    points(X, y / m, pch = 20, col = "red")
+    points(X_sub, y / m, pch = 20, col = "red")
 
     if(is_classification){
       abline(h = prediction$threshold, lty = 2, lwd = 1.2)
-      text(x = Xbounds[2],
+      text(x = Xbounds[dims, 2],
            y = prediction$threshold + 0.02,
            labels = "threshold",
            adj = c(1, 0.5),
@@ -173,11 +205,11 @@ plot.BKP <- function(x, only_mean = FALSE, n_grid = 80, ...){
              lwd = c(2, 8, NA), pch = c(NA, NA, 20), lty = c(1, 1, NA))
     }
 
-  } else if (d == 2){
+  } else {
     #----- Plotting for 2-dimensional covariate data (d == 2) -----#
     # Generate 2D prediction grid
-    x1 <- seq(Xbounds[1, 1], Xbounds[1, 2], length.out = n_grid)
-    x2 <- seq(Xbounds[2, 1], Xbounds[2, 2], length.out = n_grid)
+    x1 <- seq(Xbounds[dims[1], 1], Xbounds[dims[1], 2], length.out = n_grid)
+    x2 <- seq(Xbounds[dims[2], 1], Xbounds[dims[2], 2], length.out = n_grid)
     grid <- expand.grid(x1 = x1, x2 = x2)
     prediction <- predict.BKP(x, as.matrix(grid), ...)
     is_classification <- !is.null(prediction$class)
@@ -193,7 +225,7 @@ plot.BKP <- function(x, only_mean = FALSE, n_grid = 80, ...){
     if (only_mean) {
       # Only plot the predicted mean graphs
       if(is_classification){
-        p1 <- my_2D_plot_fun("Mean", "Predicted Class Probability (Predictive Mean)", df, X = X, y = y)
+        p1 <- my_2D_plot_fun("Mean", "Predicted Class Probability (Predictive Mean)", df, X = X_sub, y = y)
       }else{
         p1 <- my_2D_plot_fun("Mean", "Predictive Mean", df)
       }
@@ -201,24 +233,21 @@ plot.BKP <- function(x, only_mean = FALSE, n_grid = 80, ...){
     } else {
       # Create 2 or 4 plots
       if(is_classification){
-        p1 <- my_2D_plot_fun("Mean", "Predictive Mean", df, X = X, y = y)
-        p3 <- my_2D_plot_fun("Variance", "Predictive Variance", df, X = X, y = y)
+        p1 <- my_2D_plot_fun("Mean", "Predictive Mean", df, X = X_sub, y = y, dims= dims)
+        p3 <- my_2D_plot_fun("Variance", "Predictive Variance", df, X = X_sub, y = y, dims= dims)
       }else{
-        p1 <- my_2D_plot_fun("Mean", "Predictive Mean", df)
-        p3 <- my_2D_plot_fun("Variance", "Predictive Variance", df)
+        p1 <- my_2D_plot_fun("Mean", "Predictive Mean", df, dims= dims)
+        p3 <- my_2D_plot_fun("Variance", "Predictive Variance", df, dims= dims)
       }
       if(is_classification){
         # Arrange into 1×2 layout
         grid.arrange(p1, p3, ncol = 2)
       }else{
-        p2 <- my_2D_plot_fun("Upper", paste0(prediction$CI_level * 100, "% CI Upper"), df)
-        p4 <- my_2D_plot_fun("Lower", paste0(prediction$CI_level * 100, "% CI Lower"), df)
+        p2 <- my_2D_plot_fun("Upper", paste0(prediction$CI_level * 100, "% CI Upper"), df, dims= dims)
+        p4 <- my_2D_plot_fun("Lower", paste0(prediction$CI_level * 100, "% CI Lower"), df, dims= dims)
         # Arrange into 2×2 layout
         grid.arrange(p1, p2, p3, p4, ncol = 2)
       }
     }
-  } else {
-    # --- Error handling for higher dimensions ---
-    stop("plot.BKP() only supports data where the dimensionality of X is 1 or 2.")
   }
 }

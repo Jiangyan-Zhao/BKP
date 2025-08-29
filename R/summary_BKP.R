@@ -17,7 +17,7 @@
 #'   fitted model.
 #'
 #' @seealso \code{\link{fit.BKP}}, \code{\link{fit.DKP}},
-#'   \code{\link{print.BKP}}, \code{\link{print.DKP}}.
+#'   \code{\link{print.summary.BKP}}, \code{\link{print.DKP}}.
 #'
 #' @references Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
 #'   Kernel Process Modeling}.  arXiv.
@@ -84,8 +84,28 @@
 #' @method summary BKP
 
 summary.BKP <- function(object, ...) {
+  # Extract information from the BKP object
+  n_obs <- nrow(object$X)
+  d     <- ncol(object$X)
 
-  # Delegate to print.BKP for now
-  print(object, ...)
+  # Posterior summaries at training points
+  post_mean <- object$alpha_n / (object$alpha_n + object$beta_n)
+  post_var  <- post_mean * (1 - post_mean) / (object$alpha_n + object$beta_n + 1)
+
+  res <- list(
+    n_obs       = n_obs,
+    input_dim   = d,
+    kernel      = object$kernel,
+    theta_opt   = object$theta_opt,
+    loss        = object$loss,
+    loss_min    = object$loss_min,
+    prior       = object$prior,
+    r0          = object$r0,
+    p0          = object$p0,
+    post_mean   = post_mean,
+    post_var    = post_var
+  )
+
+  class(res) <- "summary.BKP"
+  return(res)
 }
-

@@ -60,7 +60,7 @@
 #'   Dirichlet Kernel Process. \code{\link{predict.BKP}},
 #'   \code{\link{plot.BKP}}, \code{\link{simulate.BKP}} for making predictions,
 #'   visualizing results, and generating simulations from a fitted BKP model.
-#'   \code{\link{summary.BKP}}, \code{\link{print.BKP}} for inspecting model
+#'   \code{\link{summary.BKP}}, \code{\link{print.summary.BKP}} for inspecting model
 #'   details.
 #'
 #' @references Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta

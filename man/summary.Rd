@@ -149,7 +149,7 @@ https://doi.org/10.48550/arXiv.2508.10447.
 }
 \seealso{
 \code{\link{fit.BKP}}, \code{\link{fit.DKP}},
-\code{\link{print.BKP}}, \code{\link{print.DKP}}.
+\code{\link{print.summary.BKP}}, \code{\link{print.DKP}}.
 }
 \keyword{BKP}
 \keyword{DKP}

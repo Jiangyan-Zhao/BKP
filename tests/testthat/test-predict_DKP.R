@@ -24,7 +24,7 @@ test_that("predict.DKP returns expected structure and values", {
   # 4. Check structure
   expect_type(prediction, "list")
   expect_in(names(prediction),
-            c("Xnew", "mean", "variance", "lower", "upper", "CI_level", "class"))
+            c("X", "Xnew", "mean", "variance", "lower", "upper", "CI_level", "class"))
 
   # 5. Dimensions and types
   expect_equal(nrow(prediction$Xnew), n_Xnew)

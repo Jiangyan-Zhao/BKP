@@ -65,8 +65,34 @@
 #' @method summary DKP
 
 summary.DKP <- function(object, ...) {
+  # Extract info
+  n_obs <- nrow(object$X)
+  d     <- ncol(object$X)
+  q     <- ncol(object$Y)
 
-  # Delegate to print.DKP for now
-  print(object, ...)
+  # Posterior Dirichlet parameters
+  alpha_n <- object$alpha_n
+  row_sum <- rowSums(alpha_n)
+
+  # Posterior mean and variance for each category at each training point
+  post_mean <- alpha_n / row_sum
+  post_var <- (alpha_n * (row_sum - alpha_n)) / (row_sum^2 * (row_sum + 1))
+
+  res <- list(
+    n_obs     = n_obs,
+    input_dim = d,
+    n_class   = q,
+    kernel    = object$kernel,
+    theta_opt = object$theta_opt,
+    loss      = object$loss,
+    loss_min  = object$loss_min,
+    prior     = object$prior,
+    r0        = object$r0,
+    p0        = object$p0,
+    post_mean = post_mean,
+    post_var  = post_var
+  )
+  class(res) <- "summary.DKP"
+  return(res)
 }
 

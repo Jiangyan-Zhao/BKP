@@ -68,7 +68,13 @@
 #' @export
 #' @method plot DKP
 
-plot.DKP <- function(x, only_mean = FALSE, n_grid = 80, ...){
+plot.DKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL, ...){
+  # check inputs
+  if (!is.numeric(n_grid) || length(n_grid) != 1 || n_grid <= 0) {
+    stop("'n_grid' must be a positive integer.")
+  }
+  n_grid <- as.integer(n_grid)
+
   # Extract necessary components from the DKP model object.
   X <- x$X # Covariate matrix.
   Y <- x$Y # Number of successes.
@@ -77,13 +83,34 @@ plot.DKP <- function(x, only_mean = FALSE, n_grid = 80, ...){
   d <- ncol(X)    # Dimensionality.
   q <- ncol(Y)    # Dimensionality.
 
+  # Handle dims argument
+  if (is.null(dims)) {
+    if (d > 2) {
+      stop("X has more than 2 dimensions. Please specify `dims` for plotting.")
+    }
+    dims <- seq_len(d)
+  } else {
+    if (!is.numeric(dims) || any(dims != as.integer(dims))) {
+      stop("`dims` must be an integer vector.")
+    }
+    if (length(dims) < 1 || length(dims) > 2) {
+      stop("`dims` must have length 1 or 2.")
+    }
+    if (any(dims < 1 | dims > d)) {
+      stop("`dims` must be within the range [1, ", d, "].")
+    }
+  }
+
+  # Subset data to selected dimensions
+  X_sub <- X[, dims, drop = FALSE]
+
   # old_par <- par(ask = TRUE)
 
-  if (d == 1){
+  if (length(dims) == 1){
     #----- Plotting for 1-dimensional covariate data (d == 1) -----#
 
     # Generate new X values for smooth prediction
-    Xnew <- matrix(seq(Xbounds[1], Xbounds[2], length.out = 10 * n_grid), ncol = 1)
+    Xnew <- matrix(seq(Xbounds[dims, 1], Xbounds[dims, 2], length.out = 10 * n_grid), ncol = 1)
     prediction <- predict.DKP(x, Xnew, ...)
     is_classification <- !is.null(prediction$class)
 
@@ -94,14 +121,15 @@ plot.DKP <- function(x, only_mean = FALSE, n_grid = 80, ...){
     if(is_classification){
       cols <- rainbow(q)
       plot(NA, xlim = Xbounds, ylim = c(-0.1, 1.1),
-           xlab = "x", ylab = "Probability",
+           xlab = ifelse(d > 1, paste0("x", dims), "x"),
+           ylab = "Probability",
            main = "Estimated Mean Curves (All Classes)")
       for (j in 1:q) {
         lines(Xnew, prediction$mean[, j], col = cols[j], lwd = 2)
       }
       for (i in 1:nrow(X)) {
         class_idx <- which.max(Y[i, ])
-        points(X[i], -0.05, col = cols[class_idx], pch = 20)
+        points(X_sub[i], -0.05, col = cols[class_idx], pch = 20)
       }
       legend("top", legend = paste("Class", 1:q), col = cols, lty = 1, lwd = 2,
              horiz = TRUE, bty = "n")
@@ -121,7 +149,8 @@ plot.DKP <- function(x, only_mean = FALSE, n_grid = 80, ...){
       }
       plot(Xnew, mean_j,
            type = "l", col = "blue", lwd = 2,
-           xlab = "x", ylab = "Probability",
+           xlab = ifelse(d > 1, paste0("x", dims), "x"),
+           ylab = "Probability",
            main = paste0("Estimated Probability (Class ", j, ")"),
            xlim = Xbounds,
            ylim = ylim)
@@ -135,10 +164,10 @@ plot.DKP <- function(x, only_mean = FALSE, n_grid = 80, ...){
       # If class label is known, show binary observed indicator (1 if this class, 0 otherwise)
       if (is_classification) {
         obs_j <- as.integer(apply(Y, 1, which.max) == j)
-        points(X, obs_j, pch = 20, col = "red")
+        points(X_sub, obs_j, pch = 20, col = "red")
       } else {
         # Proportions from multinomial
-        points(X, Y[, j] / rowSums(Y), pch = 20, col = "red")
+        points(X_sub, Y[, j] / rowSums(Y), pch = 20, col = "red")
 
         # Legend
         if(j == 1) {
@@ -152,11 +181,11 @@ plot.DKP <- function(x, only_mean = FALSE, n_grid = 80, ...){
         }
       }
     }
-  } else if (d == 2){
+  } else {
     #----- Plotting for 2-dimensional covariate data (d == 2) -----#
     # Generate 2D prediction grid
-    x1 <- seq(Xbounds[1, 1], Xbounds[1, 2], length.out = n_grid)
-    x2 <- seq(Xbounds[2, 1], Xbounds[2, 2], length.out = n_grid)
+    x1 <- seq(Xbounds[dims[1], 1], Xbounds[dims[1], 2], length.out = n_grid)
+    x2 <- seq(Xbounds[dims[2], 1], Xbounds[dims[2], 2], length.out = n_grid)
     grid <- expand.grid(x1 = x1, x2 = x2)
     prediction <- predict.DKP(x, as.matrix(grid))
     is_classification <- !is.null(prediction$class)
@@ -166,8 +195,8 @@ plot.DKP <- function(x, only_mean = FALSE, n_grid = 80, ...){
                        class = factor(prediction$class),
                        max_prob = apply(prediction$mean, 1, max))
 
-      p1 <- my_2D_plot_fun_class("class", "Predicted Classes", df, X, Y)
-      p2 <- my_2D_plot_fun_class("max_prob", "Maximum Predicted Probability", df, X, Y, classification = FALSE)
+      p1 <- my_2D_plot_fun_class("class", "Predicted Classes", df, X_sub, Y, dims= dims)
+      p2 <- my_2D_plot_fun_class("max_prob", "Maximum Predicted Probability", df, X_sub, Y, classification = FALSE, dims= dims)
       grid.arrange(p1, p2, ncol = 2)
     }else{
       for (j in 1:q) {
@@ -179,14 +208,14 @@ plot.DKP <- function(x, only_mean = FALSE, n_grid = 80, ...){
 
         if (only_mean) {
           # Only plot the predicted mean graphs
-          p1 <- my_2D_plot_fun("Mean", "Predictive Mean", df)
+          p1 <- my_2D_plot_fun("Mean", "Predictive Mean", df, dims= dims)
           print(p1)
         } else {
           # Create 4 plots
-          p1 <- my_2D_plot_fun("Mean", "Predictive Mean", df)
-          p2 <- my_2D_plot_fun("Upper", paste0(prediction$CI_level * 100, "% CI Upper"), df)
-          p3 <- my_2D_plot_fun("Variance", "Predictive Variance", df)
-          p4 <- my_2D_plot_fun("Lower", paste0(prediction$CI_level * 100, "% CI Lower"), df)
+          p1 <- my_2D_plot_fun("Mean", "Predictive Mean", df, dims= dims)
+          p2 <- my_2D_plot_fun("Upper", paste0(prediction$CI_level * 100, "% CI Upper"), df, dims= dims)
+          p3 <- my_2D_plot_fun("Variance", "Predictive Variance", df, dims= dims)
+          p4 <- my_2D_plot_fun("Lower", paste0(prediction$CI_level * 100, "% CI Lower"), df, dims= dims)
           # Arrange into 2×2 layout
           grid.arrange(p1, p2, p3, p4, ncol = 2,
                        top = textGrob(paste0("Estimated Probability (Class ", j, ")"),
@@ -194,9 +223,6 @@ plot.DKP <- function(x, only_mean = FALSE, n_grid = 80, ...){
         }
       }
     }
-  } else {
-    # --- Error handling for higher dimensions ---
-    stop("plot.DKP() only supports data where the dimensionality of X is 1 or 2.")
   }
 
   # par(old_par)

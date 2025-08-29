@@ -6,9 +6,9 @@
 \alias{predict.DKP}
 \title{Predict Method for BKP or DKP Models}
 \usage{
-\method{predict}{BKP}(object, Xnew, CI_level = 0.95, threshold = 0.5, ...)
+\method{predict}{BKP}(object, Xnew = NULL, CI_level = 0.95, threshold = 0.5, ...)
 
-\method{predict}{DKP}(object, Xnew, CI_level = 0.95, ...)
+\method{predict}{DKP}(object, Xnew = NULL, CI_level = 0.95, ...)
 }
 \arguments{
 \item{object}{An object of class \code{"BKP"} or \code{"DKP"}, typically
@@ -29,7 +29,8 @@ posterior mean (used only for BKP; default is \code{0.5}).}
 \value{
 A list with the following components:
 \describe{
-\item{\code{Xnew}}{The new input locations.}
+\item{\code{X}}{The training data points.}
+\item{\code{Xnew}}{The new data points.}
 \item{\code{mean}}{BKP: Posterior mean of the success probability at each location.
 DKP: A matrix of posterior mean class probabilities (rows = inputs, columns = classes).}
 \item{\code{variance}}{BKP: Posterior variance of the success probability.
@@ -69,9 +70,12 @@ y <- rbinom(n, size = m, prob = true_pi)
 # Fit BKP model
 model1 <- fit.BKP(X, y, m, Xbounds=Xbounds)
 
-# Prediction
+# Prediction on training data
+predict(model1)
+
+# Prediction on new data
 Xnew = matrix(seq(-2, 2, length = 10), ncol=1) #new data points
-predict(model1, Xnew)
+predict(model1, Xnew = Xnew)
 
 
 #-------------------------- 2D Example ---------------------------
@@ -103,11 +107,14 @@ y <- rbinom(n, size = m, prob = true_pi)
 # Fit BKP model
 model2 <- fit.BKP(X, y, m, Xbounds=Xbounds)
 
-# Prediction
+# Prediction on training data
+predict(model2)
+
+# Prediction on new data
 x1 <- seq(Xbounds[1,1], Xbounds[1,2], length.out = 10)
 x2 <- seq(Xbounds[2,1], Xbounds[2,2], length.out = 10)
 Xnew <- expand.grid(x1 = x1, x2 = x2)
-predict(model2, Xnew)
+predict(model2, Xnew = Xnew)
 
 # ============================================================== #
 # ========================= DKP Examples ======================= #
@@ -133,6 +140,11 @@ Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 
 # Fit DKP model
 model1 <- fit.DKP(X, Y, Xbounds = Xbounds)
+
+# Prediction on training data
+predict(model1)
+
+# Prediction on new data
 
 # Prediction
 Xnew = matrix(seq(-2, 2, length = 10), ncol=1) #new data points
@@ -168,9 +180,11 @@ Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 
 # Fit DKP model
 model2 <- fit.DKP(X, Y, Xbounds = Xbounds)
-print(model2)
 
-# Prediction
+# Prediction on training data
+predict(model2)
+
+# Prediction on new data
 x1 <- seq(Xbounds[1,1], Xbounds[1,2], length.out = 10)
 x2 <- seq(Xbounds[2,1], Xbounds[2,2], length.out = 10)
 Xnew <- expand.grid(x1 = x1, x2 = x2)

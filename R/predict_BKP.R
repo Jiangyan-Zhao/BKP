@@ -18,7 +18,8 @@
 #'
 #' @return A list with the following components:
 #' \describe{
-#'   \item{\code{Xnew}}{The new input locations.}
+#'   \item{\code{X}}{The training data points.}
+#'   \item{\code{Xnew}}{The new data points.}
 #'   \item{\code{mean}}{BKP: Posterior mean of the success probability at each location.
 #'                      DKP: A matrix of posterior mean class probabilities (rows = inputs, columns = classes).}
 #'   \item{\code{variance}}{BKP: Posterior variance of the success probability.
@@ -65,9 +66,12 @@
 #' # Fit BKP model
 #' model1 <- fit.BKP(X, y, m, Xbounds=Xbounds)
 #'
-#' # Prediction
+#' # Prediction on training data
+#' predict(model1)
+#'
+#' # Prediction on new data
 #' Xnew = matrix(seq(-2, 2, length = 10), ncol=1) #new data points
-#' predict(model1, Xnew)
+#' predict(model1, Xnew = Xnew)
 #'
 #'
 #' #-------------------------- 2D Example ---------------------------
@@ -99,18 +103,22 @@
 #' # Fit BKP model
 #' model2 <- fit.BKP(X, y, m, Xbounds=Xbounds)
 #'
-#' # Prediction
+#' # Prediction on training data
+#' predict(model2)
+#'
+#' # Prediction on new data
 #' x1 <- seq(Xbounds[1,1], Xbounds[1,2], length.out = 10)
 #' x2 <- seq(Xbounds[2,1], Xbounds[2,2], length.out = 10)
 #' Xnew <- expand.grid(x1 = x1, x2 = x2)
-#' predict(model2, Xnew)
+#' predict(model2, Xnew = Xnew)
 #'
 #' @export
 #' @method predict BKP
 
-predict.BKP <- function(object, Xnew, CI_level = 0.95, threshold = 0.5, ...)
+predict.BKP <- function(object, Xnew = NULL, CI_level = 0.95, threshold = 0.5, ...)
 {
   # Extract components
+  X       <- object$X
   Xnorm   <- object$Xnorm
   y       <- object$y
   m       <- object$m
@@ -122,21 +130,26 @@ predict.BKP <- function(object, Xnew, CI_level = 0.95, threshold = 0.5, ...)
   Xbounds <- object$Xbounds
   d       <- ncol(Xnorm)
 
-  # Ensure Xnew is a matrix and matches input dimension
-  if (is.null(nrow(Xnew))) {
-    Xnew <- matrix(Xnew, nrow = 1)
-  }
-  Xnew <- as.matrix(Xnew)
-  if (ncol(Xnew) != d) {
-    stop("The number of columns in 'Xnew' must match the original input dimension.")
-  }
+  if(!is.null(Xnew)){
+    # Ensure Xnew is a matrix and matches input dimension
+    if (is.null(nrow(Xnew))) {
+      Xnew <- matrix(Xnew, nrow = 1)
+    }
+    Xnew <- as.matrix(Xnew)
+    if (ncol(Xnew) != d) {
+      stop("The number of columns in 'Xnew' must match the original input dimension.")
+    }
 
-  # Normalize Xnew to [0,1]^d
-  Xnew_norm <- sweep(Xnew, 2, Xbounds[, 1], "-")
-  Xnew_norm <- sweep(Xnew_norm, 2, Xbounds[, 2] - Xbounds[, 1], "/")
+    # Normalize Xnew to [0,1]^d
+    Xnew_norm <- sweep(Xnew, 2, Xbounds[, 1], "-")
+    Xnew_norm <- sweep(Xnew_norm, 2, Xbounds[, 2] - Xbounds[, 1], "/")
 
-  # Compute kernel matrix
-  K <- kernel_matrix(Xnew_norm, Xnorm, theta = theta, kernel = kernel) # m*n matrix
+    # Compute kernel matrix
+    K <- kernel_matrix(Xnew_norm, Xnorm, theta = theta, kernel = kernel) # m*n matrix
+  }else{
+    # Compute kernel matrix
+    K <- kernel_matrix(Xnorm, theta = theta, kernel = kernel) # n*n matrix
+  }
 
   # get the prior parameters: alpha0(x) and beta0(x)
   prior_par <- get_prior(prior = prior, r0 = r0, p0 = p0, y = y, m = m, K = K)
@@ -156,8 +169,9 @@ predict.BKP <- function(object, Xnew, CI_level = 0.95, threshold = 0.5, ...)
   pi_upper <- qbeta((1 + CI_level) / 2, alpha_n, beta_n)
 
 
-  # Output
+  # Output list
   prediction <- list(
+    X        = X,
     Xnew     = Xnew,
     mean     = pi_mean,
     variance = pi_var,
@@ -171,5 +185,6 @@ predict.BKP <- function(object, Xnew, CI_level = 0.95, threshold = 0.5, ...)
     prediction$threshold <- threshold
   }
 
+  class(prediction) <- "predict.BKP"
   return(prediction)
 }

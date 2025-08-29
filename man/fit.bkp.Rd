@@ -147,6 +147,6 @@ https://doi.org/10.48550/arXiv.2508.10447.
 Dirichlet Kernel Process. \code{\link{predict.BKP}},
 \code{\link{plot.BKP}}, \code{\link{simulate.BKP}} for making predictions,
 visualizing results, and generating simulations from a fitted BKP model.
-\code{\link{summary.BKP}}, \code{\link{print.BKP}} for inspecting model
+\code{\link{summary.BKP}}, \code{\link{print.summary.BKP}} for inspecting model
 details.
 }

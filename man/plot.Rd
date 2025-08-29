@@ -6,9 +6,9 @@
 \alias{plot.DKP}
 \title{Plot Fitted BKP or DKP Models}
 \usage{
-\method{plot}{BKP}(x, only_mean = FALSE, n_grid = 80, ...)
+\method{plot}{BKP}(x, only_mean = FALSE, n_grid = 80, dims = NULL, ...)
 
-\method{plot}{DKP}(x, only_mean = FALSE, n_grid = 80, ...)
+\method{plot}{DKP}(x, only_mean = FALSE, n_grid = 80, dims = NULL, ...)
 }
 \arguments{
 \item{x}{An object of class \code{"BKP"} or \code{"DKP"}, typically returned
@@ -18,10 +18,14 @@ by \code{\link{fit.BKP}} or \code{\link{fit.DKP}}.}
 plotted for 2D inputs (only applies to \code{BKP} models). Default is
 \code{FALSE}.}
 
-\item{n_grid}{Integer. Number of grid points used in each dimension to
+\item{n_grid}{Positive integer. Number of grid points used in each dimension to
 construct the prediction grid. A larger value produces a smoother and more
 detailed decision boundary, but increases computational cost.
 Default is \code{80}.}
+
+\item{dims}{Integer vector specifying which dimensions of the input space
+to visualize. Should have length 1 (for 1D plot) or 2 (for 2D plot).
+If \code{NULL} (default), uses all dimensions if they are <= 2.}
 
 \item{...}{Additional arguments passed to internal plotting routines
 (currently unused).}
@@ -36,6 +40,7 @@ Visualizes fitted \code{BKP} or \code{DKP} models depending on
 the input dimensionality. For 1-dimensional inputs, it displays predicted
 class probabilities with credible intervals and observed data. For
 2-dimensional inputs, it generates contour plots of posterior summaries.
+For higher-dimensional inputs, users can specify which dimensions to plot.
 }
 \details{
 The plotting behavior depends on the dimensionality of the input

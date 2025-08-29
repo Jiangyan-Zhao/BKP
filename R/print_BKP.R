@@ -5,7 +5,8 @@
 #' @description Displays a concise summary of a fitted BKP or DKP model. The
 #'   output includes key characteristics such as sample size, input
 #'   dimensionality, kernel type, loss function, optimized kernel
-#'   hyperparameters, and minimum loss.
+#'   hyperparameters, and minimum loss. Posterior predictive summaries (means
+#'   and variances) are also provided.
 #'
 #' @param x An object of class \code{"BKP"} (from \code{\link{fit.BKP}}) or
 #'   \code{"DKP"} (from \code{\link{fit.DKP}}).
@@ -81,50 +82,132 @@
 #' print(model2)
 #'
 #' @export
-#' @method print BKP
+#' @method print summary.BKP
 
-print.BKP <- function(x, ...)
-{
-  # Extract components
-  n <- nrow(x$X)
-  d <- ncol(x$X)
-  theta <- x$theta_opt
-  kernel <- x$kernel
-  loss <- x$loss
-  loss_min <- x$loss_min
-  prior <- x$prior
-  r0 <- x$r0
-  p0 <- x$p0
-
+print.summary.BKP <- function(x, ...) {
   cat("--------------------------------------------------\n")
-  cat("           Beta Kernel Process (BKP) Model        \n")
+  cat("        Summary of Beta Kernel Process (BKP)      \n")
   cat("--------------------------------------------------\n")
-  cat(sprintf("Number of observations (n):  %d\n", n))
-  cat(sprintf("Input dimensionality (d):    %d\n", d))
-  cat(sprintf("Kernel type:                 %s\n", kernel))
-  cat(sprintf("Loss function used:          %s\n", loss))
+  cat(sprintf("Number of observations (n):  %d\n", x$n_obs))
+  cat(sprintf("Input dimensionality (d):    %d\n", x$input_dim))
+  cat(sprintf("Kernel type:                 %s\n", x$kernel))
   cat(sprintf("Optimized kernel parameters: %s\n",
-              paste(sprintf("%.4f", theta), collapse = ", ")))
-  if (!is.na(loss_min)) {
-    cat(sprintf("Minimum achieved loss:       %.5f\n", loss_min))
-    cat("Kernel parameters were obtained by optimization.\n")
-  } else {
-    cat("Note: Kernel parameters were user-specified (no optimization).\n")
+              paste(sprintf("%.4f", x$theta_opt), collapse = ", ")))
+  if (!is.na(x$loss_min)) {
+    cat(sprintf("Minimum achieved loss:       %.5f\n", x$loss_min))
   }
-  cat("\n")
-
-  cat("Prior specification:\n")
-  if (prior == "adaptive") {
-    cat("  Data-adaptive informative prior used.\n")
-    cat(sprintf("  r0:      %.3f\n", r0))
-  } else if (prior == "fixed") {
-    cat("  Fixed informative prior shared across locations.\n")
-    cat(sprintf("  r0:      %.3f\n", r0))
-    cat(sprintf("  p0:      %.3f\n", p0))
-  } else if (prior == "noninformative") {
-    cat("  Noninformative prior: Beta(1,1).\n")
+  cat(sprintf("Loss function:               %s\n", x$loss))
+  cat(sprintf("Prior type:                  %s\n", x$prior))
+  if (x$prior == "fixed" || x$prior == "adaptive") {
+    cat(sprintf("r0: %.3f\n", x$r0))
+  }
+  if (x$prior == "fixed") {
+    cat(sprintf("p0: %.3f\n", x$p0))
   }
 
+  # Posterior predictive summary
+  cat("Posterior predictive summary (training points):\n")
+  print(posterior_summary(x$post_mean, x$post_var))
   cat("--------------------------------------------------\n")
+
+  invisible(x)
 }
 
+
+#' @rdname print
+#'
+#' @keywords BKP
+#'
+#' @export
+
+print.BKP <- function(x, ...) {
+  s <- summary.BKP(x)
+  print(s)  # call print.summary.BKP
+  invisible(x)
+}
+
+
+#' @rdname print
+#'
+#' @keywords BKP
+#'
+#' @export
+
+print.predict.BKP <- function(x, ...) {
+  n <- length(x$mean)
+
+  # Determine prediction input
+  if (is.null(x$Xnew)) {
+    cat("Prediction results on training data (X).\n")
+    cat("Total number of training points:", n, "\n")
+    X_disp <- x$X
+  } else {
+    cat("Prediction results on new data (Xnew).\n")
+    cat("Total number of prediction points:", n, "\n")
+    X_disp <- x$Xnew
+  }
+
+  d <- ncol(X_disp)
+
+  # Determine how many rows to preview
+  k <- min(6, n)
+  if (n > k) {
+    if (is.null(x$Xnew)) {
+      cat("\nPreview of predictions for training data (first", k, "of", n, "points):\n")
+    } else {
+      cat("\nPreview of predictions for new data (first", k, "of", n, "points):\n")
+    }
+  } else {
+    if (is.null(x$Xnew)) {
+      cat("\nPredictions for all training data points:\n")
+    } else {
+      cat("\nPredictions for all new data points:\n")
+    }
+  }
+
+  # Format X_disp for display
+  X_preview <- head(X_disp, k)
+  if (d == 1) {
+    X_preview <- data.frame(x1 = round(X_preview, 4))
+    names(X_preview) <- "x"
+  } else if (d == 2) {
+    X_preview <- as.data.frame(round(X_preview, 4))
+    names(X_preview) <- c("x1", "x2")
+  } else {
+    # Only display first and last columns with ... in between
+    X_preview_vals <- round(X_preview[, c(1, d)], 3)
+    X_preview <- as.data.frame(X_preview_vals)
+    names(X_preview) <- c("x1", paste0("x", d))
+    # Add a ... column
+    X_preview$... <- rep("...", nrow(X_preview))
+    # Reorder columns: x1, ..., xd
+    X_preview <- X_preview[, c("x1", "...", paste0("x", d))]
+  }
+
+  # Construct results table
+  pred_summary <- data.frame(
+    mean     = round(head(x$mean, k), 4),
+    variance = round(head(x$variance, k), 4),
+    lower    = round(head(x$lower, k), 4),
+    upper    = round(head(x$upper, k), 4)
+  )
+
+  # Update CI column names
+  ci_low  <- round((1 - x$CI_level)/2 * 100, 2)
+  ci_high <- round((1 + x$CI_level)/2 * 100, 2)
+  names(pred_summary)[3:4] <- paste0(c(ci_low, ci_high), "% quantile")
+
+  # Include predicted class if available
+  if (!is.null(x$class)) {
+    pred_summary$class <- head(x$class, k)
+  }
+
+  # Combine X preview and prediction
+  res <- cbind(X_preview, pred_summary)
+
+  print(res, row.names = FALSE)
+
+  if (n > k) cat(" ...\n")
+
+  invisible(x)
+}

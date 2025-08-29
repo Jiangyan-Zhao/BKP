@@ -33,7 +33,7 @@
 #'   \item{\code{\link{plot.BKP}}, \code{\link{plot.DKP}}}{
 #'     Visualize model predictions and uncertainty bands in 1D and 2D input spaces.
 #'   }
-#'   \item{\code{\link{summary.BKP}}, \code{\link{summary.DKP}}, \code{\link{print.BKP}}, \code{\link{print.DKP}}}{
+#'   \item{\code{\link{summary.BKP}}, \code{\link{summary.DKP}}, \code{\link{print.BKP}}, \code{\link{print.DKP}}, \code{\link{print.summary.BKP}}, \code{\link{print.summary.DKP}}}{
 #'     Summarize or print details of a fitted BKP or DKP model.
 #'   }
 #' }
@@ -63,6 +63,7 @@
 #' @importFrom gridExtra grid.arrange
 #' @importFrom lattice levelplot panel.contourplot panel.levelplot panel.points
 #' @importFrom optimx multistart
-#' @importFrom stats as.formula qbeta rbeta rgamma simulate
+#' @importFrom stats as.formula median qbeta rbeta rgamma sd simulate
 #' @importFrom tgp lhs
+#' @importFrom utils head
 NULL
