@@ -56,7 +56,7 @@
 #'   Correlated Beta Processes}. In Proceedings of the Twenty-Second
 #'   International Joint Conference on Artificial Intelligence - Volume Volume
 #'   Two, IJCAI’11, p. 1269-1274. AAAI Press.
-#'
+#' @importFrom dirmult rdirichlet
 #' @importFrom graphics abline legend lines par points polygon text
 #' @importFrom grDevices hcl.colors rainbow
 #' @importFrom grid gpar textGrob

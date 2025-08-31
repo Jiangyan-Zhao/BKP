@@ -10,7 +10,7 @@ loss_fun(
   y = NULL,
   m = NULL,
   Y = NULL,
-  model_type = c("BKP", "DKP"),
+  model = c("BKP", "DKP"),
   prior = c("noninformative", "fixed", "adaptive"),
   r0 = 2,
   p0 = 0.5,
@@ -32,7 +32,7 @@ corresponding to each \code{y}.}
 \item{Y}{Matrix of observed multinomial counts, with dimension \eqn{n \times
 q}.}
 
-\item{model_type}{A character string, either \code{"BKP"} (binary) or
+\item{model}{A character string, either \code{"BKP"} (binary) or
 \code{"DKP"} (multi-class).}
 
 \item{prior}{Type of prior to use. One of \code{"noninformative"},
@@ -67,7 +67,7 @@ n <- 10
 Xnorm <- matrix(runif(2 * n), ncol = 2)
 m <- rep(10, n)
 y <- rbinom(n, size = m, prob = runif(n))
-loss_fun(gamma = rep(0, 2), Xnorm = Xnorm, y = y, m = m, model_type = "BKP")
+loss_fun(gamma = rep(0, 2), Xnorm = Xnorm, y = y, m = m, model = "BKP")
 
 ## Multi-class example (DKP)
 set.seed(123)
@@ -75,7 +75,7 @@ n <- 10
 q <- 3
 Xnorm <- matrix(runif(2 * n), ncol = 2)
 Y <- matrix(rmultinom(n, size = 10, prob = rep(1/q, q)), nrow = n, byrow = TRUE)
-loss_fun(gamma = rep(0, 2), Xnorm = Xnorm, Y = Y, model_type = "DKP")
+loss_fun(gamma = rep(0, 2), Xnorm = Xnorm, Y = Y, model = "DKP")
 
 }
 \references{

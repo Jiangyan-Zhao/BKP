@@ -124,7 +124,11 @@
 #' @method plot BKP
 
 plot.BKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL, ...){
-  # check inputs
+  # ---------------- Argument Checking ----------------
+  if (!is.logical(only_mean) || length(only_mean) != 1) {
+    stop("`only_mean` must be a single logical value (TRUE or FALSE).")
+  }
+
   if (!is.numeric(n_grid) || length(n_grid) != 1 || n_grid <= 0) {
     stop("'n_grid' must be a positive integer.")
   }
@@ -152,7 +156,10 @@ plot.BKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL, ...){
       stop("`dims` must have length 1 or 2.")
     }
     if (any(dims < 1 | dims > d)) {
-      stop("`dims` must be within the range [1, ", d, "].")
+      stop(sprintf("`dims` must be within the range [1, %d].", d))
+    }
+    if (any(duplicated(dims))) {
+      stop("`dims` cannot contain duplicate indices.")
     }
   }
 

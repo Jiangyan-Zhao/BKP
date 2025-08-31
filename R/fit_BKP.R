@@ -127,25 +127,78 @@ fit.BKP <- function(
     loss = c("brier", "log_loss"),
     n_multi_start = NULL, theta = NULL
 ){
-  # ---- Parse and validate arguments ----
-  prior <- match.arg(prior)
-  kernel <- match.arg(kernel)
-  loss <- match.arg(loss)
+  # ---- Argument checking ----
+  if (missing(X) || missing(y) || missing(m)) {
+    stop("Arguments 'X', 'y', and 'm' must be provided.")
+  }
+  if (!is.matrix(X) && !is.data.frame(X)) {
+    stop("'X' must be a numeric matrix or data frame.")
+  }
+  if (!is.numeric(as.matrix(X))) {
+    stop("'X' must contain numeric values only.")
+  }
+  if (!is.numeric(y)) stop("'y' must be numeric.")
+  if (!is.numeric(m)) stop("'m' must be numeric.")
 
-  # Convert input to proper form
   X <- as.matrix(X)
   y <- matrix(y, ncol = 1)
   m <- matrix(m, ncol = 1)
+
   d <- ncol(X)
   n <- nrow(X)
 
-  # ---- Validity checks on inputs ----
-  if (nrow(y) != n || nrow(m) != n) stop("'y' and 'm' must match nrow(X).")
-  if (any(y < 0) || any(m <= 0) || any(y > m)) stop("'y' must be in [0, m] and 'm' > 0.")
+  if (nrow(y) != n) stop("'y' must have the same number of rows as 'X'.")
+  if (nrow(m) != n) stop("'m' must have the same number of rows as 'X'.")
+  if (any(y < 0)) stop("'y' must be nonnegative.")
+  if (any(m <= 0)) stop("'m' must be strictly positive.")
+  if (any(y > m)) stop("Each element of 'y' must be less than or equal to corresponding element of 'm'.")
+  if (anyNA(X) || anyNA(y) || anyNA(m)) stop("Missing values are not allowed in 'X', 'y', or 'm'.")
+
+  # ---- prior, kernel, loss ----
+  prior  <- match.arg(prior)
+  kernel <- match.arg(kernel)
+  loss   <- match.arg(loss)
+
+  # ---- Xbounds checks ----
+  if (is.null(Xbounds)) {
+    Xbounds <- cbind(rep(0, d), rep(1, d))
+  } else {
+    if (!is.matrix(Xbounds)) stop("'Xbounds' must be a numeric matrix.")
+    if (!is.numeric(Xbounds)) stop("'Xbounds' must contain numeric values.")
+    if (!all(dim(Xbounds) == c(d, 2))) {
+      stop(paste0("'Xbounds' must be a matrix with dimensions d x 2, where d = ", d, "."))
+    }
+    if (any(Xbounds[,2] <= Xbounds[,1])) {
+      stop("Each row of 'Xbounds' must satisfy lower < upper.")
+    }
+  }
+
+  # ---- prior parameters checks ----
+  if (!is.numeric(r0) || length(r0) != 1 || r0 <= 0) {
+    stop("'r0' must be a positive scalar.")
+  }
+
+  if (!is.numeric(p0) || length(p0) != 1 || p0 <= 0) {
+    stop("'p0' must be a positive scalar.")
+  }
+
+  # ---- hyperparameters checks ----
+  if (!is.null(n_multi_start)) {
+    if (!is.numeric(n_multi_start) || length(n_multi_start) != 1 || n_multi_start <= 0) {
+      stop("'n_multi_start' must be a positive integer.")
+    }
+  }
+  if (!is.null(theta)) {
+    if (!is.numeric(theta)) stop("'theta' must be numeric.")
+    if (length(theta) == 1) {
+      theta <- rep(theta, d)
+    } else if (length(theta) != d) {
+      stop(paste0("'theta' must be either a scalar or a vector of length ", d, "."))
+    }
+    if (any(theta <= 0)) stop("'theta' must be strictly positive.")
+  }
 
   # ---- Normalize input X to [0,1]^d ----
-  if (is.null(Xbounds)) Xbounds <- cbind(rep(0, d), rep(1, d))
-  if (!all(dim(Xbounds) == c(d, 2))) stop("'Xbounds' must be a d x 2 matrix.")
   Xnorm <- sweep(X, 2, Xbounds[,1], "-")
   Xnorm <- sweep(Xnorm, 2, Xbounds[,2] - Xbounds[,1], "/")
 
@@ -165,10 +218,9 @@ fit.BKP <- function(
       method = "L-BFGS-B",
       lower  = rep(-10, d), # relaxed lower bound
       upper  = rep(10, d),  # relaxed upper bound
-      model_type = "BKP",
       prior = prior, r0 = r0, p0 = p0,
       Xnorm = Xnorm, y = y, m=m,
-      loss = loss, kernel = kernel,
+      model = "BKP", loss = loss, kernel = kernel,
       control= list(trace=0))
 
     # ---- Extract optimal kernel parameters and loss ----
@@ -179,24 +231,15 @@ fit.BKP <- function(
     loss_min   <- opt_res$value[best_index]
   }else{
     # ---- Use user-provided theta ----
-    if (length(theta) == 1) {
-      theta <- rep(theta, d)
-    } else if (length(theta) != d) {
-      stop("'theta' must be a positive scalar or a vector of length equal to ncol(X).")
-    }
-    if (any(theta <= 0)) {
-      stop("'theta' must be strictly positive.")
-    }
     theta_opt <- theta
     loss_min <- NA  # No optimization, so loss value not meaningful
   }
-
 
   # ---- Compute kernel matrix at optimized hyperparameters ----
   K <- kernel_matrix(Xnorm, theta = theta_opt, kernel = kernel)
 
   # ---- Compute prior parameters (alpha0 and beta0) ----
-  prior_par <- get_prior(prior = prior, model_type = "BKP",
+  prior_par <- get_prior(prior = prior, model = "BKP",
                          r0 = r0, p0 = p0, y = y, m = m, K = K)
   alpha0 <- prior_par$alpha0
   beta0  <- prior_par$beta0
@@ -205,14 +248,14 @@ fit.BKP <- function(
   alpha_n <- alpha0 + as.vector(K %*% y)
   beta_n  <- beta0 + as.vector(K %*% (m - y))
 
-  # ---- Construct and return the fitted model object ----
-  model <- list(
+  # ---- Construct and return the fitted model ----
+  BKP_model <- list(
     theta_opt = theta_opt, kernel = kernel,
     loss = loss, loss_min = loss_min,
     X = X, Xnorm = Xnorm, Xbounds = Xbounds, y = y, m = m,
     prior = prior, r0 = r0, p0 = p0, alpha0 = alpha0, beta0 = beta0,
     alpha_n = alpha_n, beta_n = beta_n
   )
-  class(model) <- "BKP"
-  return(model)
+  class(BKP_model) <- "BKP"
+  return(BKP_model)
 }

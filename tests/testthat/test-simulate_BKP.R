@@ -26,11 +26,11 @@ test_that("simulate.BKP returns expected structure and values", {
 
   # 5. Check class and structure
   expect_type(sim_result, "list")
-  expect_in(names(sim_result), c("sims", "mean", "class"))
+  expect_in(names(sim_result), c("samples", "mean", "class", "X", "Xnew", "threshold"))
 
   # sims: matrix [n_new x nsim]
-  expect_true(is.matrix(sim_result$sims))
-  expect_equal(dim(sim_result$sims), c(n_Xnew, nsim))
+  expect_true(is.matrix(sim_result$samples))
+  expect_equal(dim(sim_result$samples), c(n_Xnew, nsim))
 
   # mean: numeric vector
   expect_true(is.numeric(sim_result$mean))

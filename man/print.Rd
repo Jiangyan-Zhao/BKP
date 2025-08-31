@@ -5,10 +5,12 @@
 \alias{print.summary.BKP}
 \alias{print.BKP}
 \alias{print.predict.BKP}
+\alias{print.simulate.BKP}
 \alias{print.summary.DKP}
 \alias{print.DKP}
 \alias{print.predict.DKP}
-\title{Print Summary of a Fitted BKP or DKP Model}
+\alias{print.simulate.DKP}
+\title{Print Method for BKP and DKP Objects}
 \usage{
 \method{print}{summary.BKP}(x, ...)
 
@@ -16,30 +18,35 @@
 
 \method{print}{predict.BKP}(x, ...)
 
+\method{print}{simulate.BKP}(x, ...)
+
 \method{print}{summary.DKP}(x, ...)
 
 \method{print}{DKP}(x, ...)
 
 \method{print}{predict.DKP}(x, ...)
+
+\method{print}{simulate.DKP}(x, ...)
 }
 \arguments{
-\item{x}{An object of class \code{"BKP"} (from \code{\link{fit.BKP}}) or
-\code{"DKP"} (from \code{\link{fit.DKP}}).}
+\item{x}{An object of class \code{"BKP"} or \code{"DKP"}, or a summary/predict
+object derived from them.}
 
 \item{...}{Additional arguments passed to the generic \code{print} method
 (currently not used).}
 }
 \value{
-Invisibly returns the input object (of class \code{"BKP"} or
-\code{"DKP"}). The function is called for its side effect of printing a
-summary to the console.
+Invisibly returns the input object. Called for the side effect of
+printing human-readable summaries to the console.
 }
 \description{
-Displays a concise summary of a fitted BKP or DKP model. The
-output includes key characteristics such as sample size, input
-dimensionality, kernel type, loss function, optimized kernel
-hyperparameters, and minimum loss. Posterior predictive summaries (means
-and variances) are also provided.
+Provides formatted console output for fitted BKP and DKP model
+objects, as well as their summaries and predictions. This includes:
+\itemize{
+\item \code{print.BKP} / \code{print.DKP} for fitted models,
+\item \code{print.summary.BKP} / \code{print.summary.DKP} for summaries,
+\item \code{print.predict.BKP} / \code{print.predict.DKP} for predictions.
+}
 }
 \examples{
 # ============================================================== #
@@ -162,7 +169,8 @@ https://doi.org/10.48550/arXiv.2508.10447.
 }
 \seealso{
 \code{\link{fit.BKP}}, \code{\link{fit.DKP}},
-\code{\link{summary.BKP}}, \code{\link{summary.DKP}}.
+\code{\link{summary.BKP}}, \code{\link{summary.DKP}},
+\code{\link{predict.BKP}}, \code{\link{predict.DKP}}
 }
 \keyword{BKP}
 \keyword{DKP}

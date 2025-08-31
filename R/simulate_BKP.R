@@ -26,7 +26,7 @@
 #'
 #' @return A list with the following components:
 #' \describe{
-#'   \item{\code{sims}}{
+#'   \item{\code{samples}}{
 #'     For \strong{BKP}: A numeric matrix of dimension \code{nrow(Xnew) × nsim}, containing simulated success probabilities.\cr
 #'     For \strong{DKP}: A numeric array of dimension \code{nsim × q × nrow(Xnew)}, containing simulated class probabilities
 #'     from Dirichlet posteriors, where \code{q} is the number of classes.
@@ -74,7 +74,7 @@
 #' model <- fit.BKP(X, y, m, Xbounds=Xbounds)
 #'
 #' # Simulate 5 posterior draws of success probabilities
-#' Xnew <- matrix(seq(-2, 2, length.out = 100), ncol = 1)
+#' Xnew <- matrix(seq(-2, 2, length.out = 5), ncol = 1)
 #' simulate(model, Xnew = Xnew, nsim = 5)
 #'
 #' # Simulate binary classifications (threshold = 0.5)
@@ -85,73 +85,99 @@
 
 simulate.BKP <- function(object, nsim = 1, seed = NULL, ..., Xnew = NULL, threshold = NULL)
 {
+  # ---------------- Argument Checking ----------------
+  if (!is.numeric(nsim) || length(nsim) != 1 || nsim <= 0 || nsim != as.integer(nsim)) {
+    stop("`nsim` must be a positive integer.")
+  }
+  nsim <- as.integer(nsim)
+
+  if (!is.null(seed) && (!is.numeric(seed) || length(seed) != 1 || seed != as.integer(seed))) {
+    stop("`seed` must be a single integer or NULL.")
+  }
+
+  d <- ncol(object$Xnorm)
+  if (!is.null(Xnew)) {
+    if (is.null(nrow(Xnew))) Xnew <- matrix(Xnew, nrow = 1)
+    if (!is.numeric(Xnew)) {
+      stop("`Xnew` must be numeric.")
+    }
+    Xnew <- as.matrix(Xnew)
+    if (ncol(Xnew) != d) {
+      stop(sprintf("`Xnew` must have %d columns, matching the training inputs.", d))
+    }
+  }
+
+  if (!is.null(threshold)) {
+    if (!is.numeric(threshold) || length(threshold) != 1 || threshold <= 0 || threshold >= 1) {
+      stop("`threshold` must be a numeric value strictly between 0 and 1 (e.g., 0.5).")
+    }
+  }
+
+  # ---------------- Core Computation ----------------
   if (!is.null(seed)) set.seed(seed)
 
-  # Extract components
-  Xnorm   <- object$Xnorm
-  y       <- object$y
-  m       <- object$m
-  theta   <- object$theta_opt
-  kernel  <- object$kernel
-  prior   <- object$prior
-  r0      <- object$r0
-  p0      <- object$p0
-  Xbounds <- object$Xbounds
-  d       <- ncol(Xnorm)
+  if (!is.null(Xnew)) {
+    # complete posterior parameters at new inputs
+    # Extract components
+    Xnorm   <- object$Xnorm
+    y       <- object$y
+    m       <- object$m
+    theta   <- object$theta_opt
+    kernel  <- object$kernel
+    prior   <- object$prior
+    r0      <- object$r0
+    p0      <- object$p0
+    Xbounds <- object$Xbounds
 
-  # --- Check and normalize Xnew ---
-  if (is.null(nrow(Xnew))) Xnew <- matrix(Xnew, nrow = 1)
-  Xnew <- as.matrix(Xnew)
-  if (ncol(Xnew) != d) {
-    stop("Xnew must have the same number of columns as the training input.")
+    # --- Normalize new inputs ---
+    Xnew_norm <- sweep(Xnew, 2, Xbounds[, 1], "-")
+    Xnew_norm <- sweep(Xnew_norm, 2, Xbounds[, 2] - Xbounds[, 1], "/")
+
+    # --- Compute kernel matrix between Xnew and training X ---
+    K <- kernel_matrix(Xnew_norm, Xnorm, theta = theta, kernel = kernel)
+
+    # --- Get prior parameters ---
+    prior_par <- get_prior(prior = prior, model = "BKP",
+                           r0 = r0, p0 = p0, y = y, m = m, K = K)
+    alpha0 <- prior_par$alpha0
+    beta0 <- prior_par$beta0
+
+    # --- Compute posterior Beta parameters ---
+    alpha_n <- pmax(alpha0 + as.vector(K %*% y), 1e-10)
+    beta_n  <- pmax(beta0 + as.vector(K %*% (m - y)), 1e-10)
+  }else{
+    # Use training data
+    alpha_n <- pmax(object$alpha_n, 1e-10)
+    beta_n  <- pmax(object$beta_n, 1e-10)
   }
-  n_new <- nrow(Xnew)
-  Xnew_norm <- sweep(Xnew, 2, Xbounds[, 1], "-")
-  Xnew_norm <- sweep(Xnew_norm, 2, Xbounds[, 2] - Xbounds[, 1], "/")
-
-  # --- Compute kernel matrix between Xnew and training X ---
-  K <- kernel_matrix(Xnew_norm, Xnorm, theta = theta, kernel = kernel)
-
-  # --- Get prior parameters ---
-  prior_par <- get_prior(prior = prior, model_type = "BKP",
-                         r0 = r0, p0 = p0, y = y, m = m, K = K)
-  alpha0 <- prior_par$alpha0
-  beta0 <- prior_par$beta0
-
-  # --- Compute posterior Beta parameters ---
-  alpha_n <- pmax(alpha0 + as.vector(K %*% y), 1e-10)
-  beta_n  <- pmax(beta0 + as.vector(K %*% (m - y)), 1e-10)
 
   # --- Simulate from posterior Beta distributions ---
-  if (!is.null(seed)) set.seed(seed)
-  sims <- matrix(rbeta(n_new * nsim,
+  n_new <- ifelse(!is.null(Xnew), nrow(Xnew), nrow(object$X))
+  samples <- matrix(rbeta(n_new * nsim,
                        shape1 = rep(alpha_n, nsim),
                        shape2 = rep(beta_n, nsim)),
                  nrow = n_new, ncol = nsim)
-  colnames(sims) <- paste0("sim", 1:nsim)
-  rownames(sims) <- paste0("x", 1:n_new)
+  colnames(samples) <- paste0("sim", 1:nsim)
+  rownames(samples) <- paste0("x", 1:n_new)
 
   # --- Optional: binary classification ---
   class_pred <- NULL
   if (!is.null(threshold)) {
-    if (!is.numeric(threshold) || length(threshold) != 1 || threshold <= 0 || threshold >= 1) {
-      stop("Threshold must be a numeric value strictly between 0 and 1.")
-    }
-    class_pred <- ifelse(sims > threshold, 1L, 0L)
+    class_pred <- ifelse(samples > threshold, 1L, 0L)
   }
 
   # --- Posterior mean ---
   pi_mean <- alpha_n / (alpha_n + beta_n)
 
-  return(list(
-    sims = sims,        # [n_new × nsim]: simulated probabilities
-    mean = pi_mean,     # [n_new]: posterior mean
-    class = class_pred  # [n_new × nsim]: binary labels (if threshold provided)
-  ))
+  simulation <- list(
+    samples   = samples,    # [n_new × nsim]: simulated probabilities
+    mean      = pi_mean,    # [n_new]: posterior mean
+    class     = class_pred, # [n_new × nsim]: binary labels (if threshold provided)
+    X         = object$X,   # [n × d]: training inputs
+    Xnew      = Xnew,       # [n_new × d]: new inputs (if provided)
+    threshold = threshold   # classification threshold
+  )
+
+  class(simulation) <- "simulate.BKP"
+  return(simulation)
 }
-
-
-#' #' @export
-#' simulate <- function(object, ...) {
-#'   UseMethod("simulate")
-#' }

@@ -76,10 +76,19 @@
 kernel_matrix <- function(X, Xprime = NULL, theta = 0.1,
                           kernel = c("gaussian", "matern52", "matern32"),
                           anisotropic = TRUE) {
-  # Match the kernel argument explicitly
-  kernel <- match.arg(kernel)
+  # ---- Argument checking ----
+  if (!is.numeric(X) && !is.matrix(X)) stop("'X' must be numeric or a numeric matrix.")
+  if (anyNA(X)) stop("'X' contains NA values.")
 
-  if (is.null(Xprime)) Xprime <- X
+  if (!is.null(Xprime)) {
+    if (!is.numeric(Xprime) && !is.matrix(Xprime)) stop("'Xprime' must be numeric or a numeric matrix.")
+    if (anyNA(Xprime)) stop("'Xprime' contains NA values.")
+  }
+
+  if (!is.numeric(theta) || any(theta <= 0)) stop("'theta' must be numeric and strictly positive.")
+  if (!is.logical(anisotropic) || length(anisotropic) != 1) stop("'anisotropic' must be a single logical value.")
+
+  kernel <- match.arg(kernel)
 
   # Convert vectors to matrices
   if (is.vector(X)) X <- matrix(X, ncol = 1)
@@ -93,19 +102,19 @@ kernel_matrix <- function(X, Xprime = NULL, theta = 0.1,
 
   # Check that input dimensions match
   if (ncol(X) != ncol(Xprime)) {
-    stop("X and Xprime must have the same number of columns (i.e., input dimensions).")
+    stop("'X' and 'Xprime' must have the same number of columns (input dimensions).")
   }
 
   # Expand or validate theta
   d <- ncol(X)
   if (anisotropic) {
     if (length(theta) == 1) theta <- rep(theta, d)
-    if (length(theta) != d) stop("For anisotropic=TRUE, theta must be of length 1 or equal to number of columns.")
+    if (length(theta) != d) stop("For anisotropic=TRUE, 'theta' must be scalar or of length equal to ncol(X).")
     # Rescale inputs by theta
     X_scaled <- sweep(X, 2, theta, "/")
     Xp_scaled <- sweep(Xprime, 2, theta, "/")
   } else {
-    if (length(theta) != 1) stop("For anisotropic=FALSE, theta must be a scalar.")
+    if (length(theta) != 1) stop("For anisotropic=FALSE, 'theta' must be a scalar.")
     X_scaled <- X / theta
     Xp_scaled <- Xprime / theta
   }
@@ -136,8 +145,6 @@ kernel_matrix <- function(X, Xprime = NULL, theta = 0.1,
   } else if (kernel == "matern32") {
     sqrt3 <- sqrt(3)
     K <- (1 + sqrt3 * dist) * exp(-sqrt3 * dist)
-  } else {
-    stop(paste("Unsupported kernel type:", kernel))
   }
 
   return(K)

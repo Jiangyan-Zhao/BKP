@@ -27,15 +27,15 @@ test_that("simulate.DKP returns expected structure and dimensions", {
 
   # 5. Check output structure
   expect_type(sim_result, "list")
-  expect_named(sim_result, c("sims", "mean", "class"))
+  expect_named(sim_result, c('samples', 'mean', 'class', 'X', 'Xnew'))
 
   # sims: array of dimension [nsim × q × n_new]
-  expect_true(is.array(sim_result$sims))
-  expect_equal(dim(sim_result$sims), c(nsim, q, n_Xnew))
+  expect_true(is.array(sim_result$samples))
+  expect_equal(dim(sim_result$samples), c(n_Xnew, q, nsim))
 
   # mean: matrix of dimension [n_new × q]
   expect_true(is.matrix(sim_result$mean))
-  expect_in(names(sim_result), c("sims", "mean", "class"))
+  expect_in(names(sim_result), c('samples', 'mean', 'class', 'X', 'Xnew'))
 
   # class: binary matrix
   expect_true(is.matrix(sim_result$class))

@@ -25,7 +25,7 @@
 #' model <- fit.DKP(X, Y, Xbounds = Xbounds)
 #'
 #' # Simulate 5 draws from posterior Dirichlet distributions at new point
-#' Xnew <- matrix(seq(-2, 2, length.out = 100), ncol = 1)
+#' Xnew <- matrix(seq(-2, 2, length.out = 5), ncol = 1)
 #' simulate(model, Xnew = Xnew, nsim = 5)
 #'
 #' @export
@@ -33,72 +33,99 @@
 
 simulate.DKP <- function(object, nsim = 1, seed = NULL, ..., Xnew = NULL)
 {
+  # ---------------- Argument Checking ----------------
+  if (!is.numeric(nsim) || length(nsim) != 1 || nsim <= 0 || nsim != as.integer(nsim)) {
+    stop("`nsim` must be a positive integer.")
+  }
+  nsim <- as.integer(nsim)
+
+  if (!is.null(seed) && (!is.numeric(seed) || length(seed) != 1 || seed != as.integer(seed))) {
+    stop("`seed` must be a single integer or NULL.")
+  }
+
+  d <- ncol(object$Xnorm)
+  if (!is.null(Xnew)) {
+    if (is.null(nrow(Xnew))) Xnew <- matrix(Xnew, nrow = 1)
+    if (!is.numeric(Xnew)) {
+      stop("`Xnew` must be numeric.")
+    }
+    Xnew <- as.matrix(Xnew)
+    if (ncol(Xnew) != d) {
+      stop(sprintf("`Xnew` must have %d columns, matching the training inputs.", d))
+    }
+  }
+
+  # ---------------- Core Computation ----------------
   if (!is.null(seed)) set.seed(seed)
 
-  # Extract components
-  Xnorm   <- object$Xnorm
-  Y       <- object$Y
-  theta   <- object$theta_opt
-  kernel  <- object$kernel
-  prior   <- object$prior
-  r0      <- object$r0
-  p0      <- object$p0
-  Xbounds <- object$Xbounds
-  d       <- ncol(Xnorm)
-  q       <- ncol(Y)
+  if (!is.null(Xnew)) {
+    # complete posterior parameters at new inputs
+    # Extract components
+    Xnorm   <- object$Xnorm
+    Y       <- object$Y
+    theta   <- object$theta_opt
+    kernel  <- object$kernel
+    prior   <- object$prior
+    r0      <- object$r0
+    p0      <- object$p0
+    Xbounds <- object$Xbounds
+    q       <- ncol(Y)
 
-  # --- Check and normalize Xnew ---
-  if (is.null(nrow(Xnew))) Xnew <- matrix(Xnew, nrow = 1)
-  Xnew <- as.matrix(Xnew)
-  if (ncol(Xnew) != d) {
-    stop("Xnew must have the same number of columns as the training input.")
+    # --- Normalize new inputs ---
+    Xnew_norm <- sweep(Xnew, 2, Xbounds[, 1], "-")
+    Xnew_norm <- sweep(Xnew_norm, 2, Xbounds[, 2] - Xbounds[, 1], "/")
+
+    # --- Compute kernel matrix ---
+    K <- kernel_matrix(Xnew_norm, Xnorm, theta = theta, kernel = kernel)
+
+    # --- Get Dirichlet prior ---
+    alpha0 <- get_prior(prior = prior, model = "DKP",
+                        r0 = r0, p0 = p0, Y = Y, K = K)
+
+    # --- Posterior Dirichlet parameters ---
+    alpha_n <- as.matrix(alpha0) + as.matrix(K %*% Y)
+    alpha_n <- pmax(alpha_n, 1e-10) # Avoid numerical issues
+  }else{
+    # Use training data
+    q       <- ncol(object$Y)
+    alpha_n <- pmax(object$alpha_n, 1e-10) # Avoid numerical issues
   }
-  n_new <- nrow(Xnew)
-  Xnew_norm <- sweep(Xnew, 2, Xbounds[, 1], "-")
-  Xnew_norm <- sweep(Xnew_norm, 2, Xbounds[, 2] - Xbounds[, 1], "/")
 
-  # --- Compute kernel matrix ---
-  K <- kernel_matrix(Xnew_norm, Xnorm, theta = theta, kernel = kernel)
-
-  # --- Get Dirichlet prior ---
-  alpha0 <- get_prior(prior = prior, model_type = "DKP",
-                      r0 = r0, p0 = p0, Y = Y, K = K)
-
-  # --- Posterior Dirichlet parameters ---
-  alpha_n <- as.matrix(alpha0) + as.matrix(K %*% Y)
-  alpha_n <- pmax(alpha_n, 1e-10) # Avoid numerical issues
 
   # --- Simulate from Dirichlet posterior ---
-  if (!is.null(seed)) set.seed(seed)
-  sims <- array(0, dim = c(nsim, q, n_new))
+  n_new <- ifelse(!is.null(Xnew), nrow(Xnew), nrow(object$X))
+  samples <- array(0, dim = c(n_new, q, nsim))
   for (i in 1:n_new) {
-    shape_mat <- matrix(rgamma(nsim * q, shape = rep(alpha_n[i, ], each = nsim), rate = 1),
-                        nrow = nsim)
-    sims[,,i] <- shape_mat / rowSums(shape_mat)
+    samples[i,,] <- t(rdirichlet(n = nsim, alpha = alpha_n[i, ]))  # [q × nsim]
   }
 
-  dimnames(sims) <- list(
-    paste0("sim", 1:nsim),
+  dimnames(samples) <- list(
+    paste0("x", 1:n_new),
     paste0("Class", 1:q),
-    paste0("x", 1:n_new)
+    paste0("sim", 1:nsim)
   )
-
-  # --- Posterior mean ---
-  pi_mean <- alpha_n / rowSums(alpha_n)
 
   # --- Optional: MAP prediction (only if data are single-label multinomial) ---
   class_pred <- NULL
   if (all(rowSums(Y) == 1)) {
     class_pred <- matrix(NA, nrow = n_new, ncol = nsim)
     for (i in 1:nsim) {
-      class_pred[, i] <- max.col(t(sims[i,,]))  # [n_new]
+      class_pred[, i] <- max.col(samples[,,i])  # [n_new]
     }
   }
 
-  return(list(
-    sims = sims,        # [nsim × q × n_new]: posterior samples
-    mean = pi_mean,     # [n_new × q]: posterior mean
-    class = class_pred  # [n_new × nsim]: MAP class (if available)
-  ))
+  # --- Posterior mean ---
+  pi_mean <- alpha_n / rowSums(alpha_n)
+
+  simulation <- list(
+    samples = samples,    # [n_new × q × nsim]: posterior samples
+    mean    = pi_mean,    # [n_new × q]: posterior mean
+    class   = class_pred, # [n_new × nsim]: MAP class (if available)
+    X       = object$X,   # [n × d]: training inputs
+    Xnew    = Xnew        # [n_new × d]: new inputs (if provided)
+  )
+
+  class(simulation) <- "simulate.DKP"
+  return(simulation)
 }
 

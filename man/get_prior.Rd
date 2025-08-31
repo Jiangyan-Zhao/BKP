@@ -6,7 +6,7 @@
 \usage{
 get_prior(
   prior = c("noninformative", "fixed", "adaptive"),
-  model_type = c("BKP", "DKP"),
+  model = c("BKP", "DKP"),
   r0 = 2,
   p0 = 0.5,
   y = NULL,
@@ -19,7 +19,7 @@ get_prior(
 \item{prior}{Type of prior to use. One of \code{"noninformative"},
 \code{"fixed"}, or \code{"adaptive"}.}
 
-\item{model_type}{A character string, either \code{"BKP"} (binary outcome) or
+\item{model}{A character string, either \code{"BKP"} (binary outcome) or
 \code{"DKP"} (multi-class outcome).}
 
 \item{r0}{Global prior precision (only used when \code{prior = "fixed"} or
@@ -40,7 +40,7 @@ specifying the global prior mean (must sum to 1).
 corresponding to each \code{y}.}
 
 \item{Y}{A numeric matrix of observed class counts of size \code{n × q} (only
-required when \code{model_type = "DKP"}), where \code{n} is the number of
+required when \code{model = "DKP"}), where \code{n} is the number of
 observations and \code{q} the number of classes.}
 
 \item{K}{A precomputed kernel matrix of size \code{n × n}, typically obtained
@@ -48,14 +48,14 @@ from \code{\link{kernel_matrix}}.}
 }
 \value{
 \itemize{
-\item If \code{model_type = "BKP"}: a list with two numeric vectors
+\item If \code{model = "BKP"}: a list with two numeric vectors
 \describe{
 \item{\code{alpha0}}{Prior alpha parameters of the Beta distribution,
 length \code{n}.}
 \item{\code{beta0}}{Prior beta parameters of the Beta distribution,
 length \code{n}.}
 }
-\item If \code{model_type = "DKP"}: a list containing
+\item If \code{model = "DKP"}: a list containing
 \describe{
 \item{\code{alpha0}}{A numeric matrix of prior Dirichlet parameters at
 each input location, dimension \code{n × q}.}
@@ -99,7 +99,7 @@ y <- rbinom(n, size = 5, prob = 0.6)
 m <- rep(5, n)
 K <- kernel_matrix(X)
 prior_bkp <- get_prior(
-  model_type = "BKP", prior = "adaptive", r0 = 2, y = y, m = m, K = K
+  model = "BKP", prior = "adaptive", r0 = 2, y = y, m = m, K = K
 )
 
 ## DKP example
@@ -118,7 +118,7 @@ m <- sample(10:20, n, replace = TRUE)
 Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 K <- kernel_matrix(X, theta = rep(0.2, 2), kernel = "gaussian")
 prior_dkp <- get_prior(
-  model_type = "DKP", prior = "adaptive", r0 = 2, Y = Y, K = K
+  model = "DKP", prior = "adaptive", r0 = 2, Y = Y, K = K
 )
 
 }

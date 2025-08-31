@@ -31,12 +31,12 @@ test_that("adaptive prior computes alpha0 and beta0 correctly", {
 })
 
 test_that("adaptive prior errors on missing inputs", {
-  expect_error(get_prior(prior = "adaptive"), "y, m, and K must be provided")
-  expect_error(get_prior(prior = "adaptive", y = y, m = m), "y, m, and K must be provided")
+  expect_error(get_prior(prior = "adaptive"), "For adaptive prior in BKP, 'y', 'm', and 'K' must be provided.")
+  expect_error(get_prior(prior = "adaptive", y = y, m = m), "For adaptive prior in BKP, 'y', 'm', and 'K' must be provided.")
 })
 
 test_that("fixed prior errors on invalid r0 or p0", {
-  expect_error(get_prior(prior = "fixed", r0 = -1, p0 = 0.5, K = K), "r0 must be positive")
-  expect_error(get_prior(prior = "fixed", r0 = 1, p0 = 0, K = K), "p0 must be in \\(0, 1\\)")
-  expect_error(get_prior(prior = "fixed", r0 = 1, p0 = 1, K = K), "p0 must be in \\(0, 1\\)")
+  expect_error(get_prior(prior = "fixed", r0 = -1, p0 = 0.5, K = K), "'r0' must be a positive scalar.")
+  expect_error(get_prior(prior = "fixed", r0 = 1, p0 = 0, K = K), "For fixed prior in BKP, 'p0' must be in \\(0,1\\).")
+  expect_error(get_prior(prior = "fixed", r0 = 1, p0 = 1, K = K), "For fixed prior in BKP, 'p0' must be in \\(0,1\\).")
 })

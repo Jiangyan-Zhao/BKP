@@ -29,7 +29,7 @@ above the threshold classified as 1 (default is \code{NULL}).}
 \value{
 A list with the following components:
 \describe{
-\item{\code{sims}}{
+\item{\code{samples}}{
 For \strong{BKP}: A numeric matrix of dimension \code{nrow(Xnew) × nsim}, containing simulated success probabilities.\cr
 For \strong{DKP}: A numeric array of dimension \code{nsim × q × nrow(Xnew)}, containing simulated class probabilities
 from Dirichlet posteriors, where \code{q} is the number of classes.
@@ -81,7 +81,7 @@ y <- rbinom(n, size = m, prob = true_pi)
 model <- fit.BKP(X, y, m, Xbounds=Xbounds)
 
 # Simulate 5 posterior draws of success probabilities
-Xnew <- matrix(seq(-2, 2, length.out = 100), ncol = 1)
+Xnew <- matrix(seq(-2, 2, length.out = 5), ncol = 1)
 simulate(model, Xnew = Xnew, nsim = 5)
 
 # Simulate binary classifications (threshold = 0.5)
@@ -109,7 +109,7 @@ Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 model <- fit.DKP(X, Y, Xbounds = Xbounds)
 
 # Simulate 5 draws from posterior Dirichlet distributions at new point
-Xnew <- matrix(seq(-2, 2, length.out = 100), ncol = 1)
+Xnew <- matrix(seq(-2, 2, length.out = 5), ncol = 1)
 simulate(model, Xnew = Xnew, nsim = 5)
 
 }

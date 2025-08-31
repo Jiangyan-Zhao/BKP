@@ -9,7 +9,7 @@
 #' @inheritParams fit.DKP
 #' @param K A precomputed kernel matrix of size \code{n × n}, typically obtained
 #'   from \code{\link{kernel_matrix}}.
-#' @param model_type A character string, either \code{"BKP"} (binary outcome) or
+#' @param model A character string, either \code{"BKP"} (binary outcome) or
 #'   \code{"DKP"} (multi-class outcome).
 #' @param p0
 #'   - For BKP: a scalar in \code{(0,1)} specifying the prior mean of success
@@ -17,18 +17,18 @@
 #'   - For DKP: a numeric vector of length equal to the number of classes,
 #'   specifying the global prior mean (must sum to 1).
 #' @param Y A numeric matrix of observed class counts of size \code{n × q} (only
-#'   required when \code{model_type = "DKP"}), where \code{n} is the number of
+#'   required when \code{model = "DKP"}), where \code{n} is the number of
 #'   observations and \code{q} the number of classes.
 #'
 #' @return
-#' - If \code{model_type = "BKP"}: a list with two numeric vectors
+#' - If \code{model = "BKP"}: a list with two numeric vectors
 #'   \describe{
 #'     \item{\code{alpha0}}{Prior alpha parameters of the Beta distribution,
 #'       length \code{n}.}
 #'     \item{\code{beta0}}{Prior beta parameters of the Beta distribution,
 #'       length \code{n}.}
 #'   }
-#' - If \code{model_type = "DKP"}: a list containing
+#' - If \code{model = "DKP"}: a list containing
 #'   \describe{
 #'     \item{\code{alpha0}}{A numeric matrix of prior Dirichlet parameters at
 #'       each input location, dimension \code{n × q}.}
@@ -62,7 +62,7 @@
 #' m <- rep(5, n)
 #' K <- kernel_matrix(X)
 #' prior_bkp <- get_prior(
-#'   model_type = "BKP", prior = "adaptive", r0 = 2, y = y, m = m, K = K
+#'   model = "BKP", prior = "adaptive", r0 = 2, y = y, m = m, K = K
 #' )
 #'
 #' ## DKP example
@@ -81,7 +81,7 @@
 #' Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 #' K <- kernel_matrix(X, theta = rep(0.2, 2), kernel = "gaussian")
 #' prior_dkp <- get_prior(
-#'   model_type = "DKP", prior = "adaptive", r0 = 2, Y = Y, K = K
+#'   model = "DKP", prior = "adaptive", r0 = 2, Y = Y, K = K
 #' )
 #'
 #' @seealso \code{\link{fit.BKP}}, \code{\link{fit.DKP}},
@@ -90,13 +90,41 @@
 #'
 #' @export
 get_prior <- function(prior = c("noninformative", "fixed", "adaptive"),
-                      model_type = c("BKP", "DKP"),
+                      model = c("BKP", "DKP"),
                       r0 = 2, p0 = 0.5, y = NULL, m = NULL, Y = NULL, K = NULL)
 {
-  model_type <- match.arg(model_type)
+  # ---- Argument checking ----
+  model <- match.arg(model)
   prior <- match.arg(prior)
 
-  if (model_type == "BKP") {
+  if (!is.numeric(r0) || length(r0) != 1 || r0 <= 0) {
+    stop("'r0' must be a positive scalar.")
+  }
+
+  if (!is.null(p0)) {
+    if (!is.numeric(p0) || any(p0 < 0)) {
+      stop("'p0' must be numeric and nonnegative.")
+    }
+  }
+
+  if (model == "BKP") {
+    if (!is.null(y) && (!is.numeric(y) || anyNA(y))) {
+      stop("'y' must be a numeric vector with no NA values.")
+    }
+    if (!is.null(m) && (!is.numeric(m) || anyNA(m))) {
+      stop("'m' must be a numeric vector with no NA values.")
+    }
+  }else{
+    if (!is.null(Y) && (!is.matrix(Y) || anyNA(Y))) {
+      stop("'Y' must be a numeric matrix with no NA values.")
+    }
+  }
+
+  if (!is.null(K) && (!is.matrix(K) || anyNA(K))) {
+    stop("'K' must be a numeric matrix with no NA values.")
+  }
+
+  if (model == "BKP") {
     # ============ Binary case ============
     if (prior == "noninformative") {
       # Assign uniform prior for each prediction location
@@ -104,23 +132,18 @@ get_prior <- function(prior = c("noninformative", "fixed", "adaptive"),
       alpha0 <- rep(1, nrowK)
       beta0  <- rep(1, nrowK)
     } else if (prior == "fixed") {
-      # Validate inputs
-      if (r0 <= 0) stop("r0 must be positive.")
-      if (p0 <= 0 || p0 >= 1) stop("p0 must be in (0, 1).")
-
+      if (!is.numeric(p0) || length(p0) != 1 || p0 <= 0 || p0 >= 1) {
+        stop("For fixed prior in BKP, 'p0' must be in (0,1).")
+      }
       nrowK <- if (!is.null(K)) nrow(K) else 1
       alpha0 <- rep(r0 * p0, nrowK)
       beta0  <- rep(r0 * (1 - p0), nrowK)
     } else if (prior == "adaptive") {
-      # Validate required inputs
       if (is.null(y) || is.null(m) || is.null(K)) {
-        stop("y, m, and K must be provided for adaptive prior.")
+        stop("For adaptive prior in BKP, 'y', 'm', and 'K' must be provided.")
       }
-      if (length(y) != length(m)) stop("y and m must have the same length.")
-      if (!is.matrix(K) || ncol(K) != length(y)) {
-        stop("K must be an m * n matrix with n = length(y).")
-      }
-      if (r0 <= 0) stop("r0 must be positive.")
+      if (length(y) != length(m)) stop("'y' and 'm' must have the same length.")
+      if (ncol(K) != length(y)) stop("'K' must have ncol = length(y).")
 
       # Row-normalized kernel weights
       W <- K / rowSums(K)   # m * n
@@ -143,7 +166,7 @@ get_prior <- function(prior = c("noninformative", "fixed", "adaptive"),
     } else if (!is.null(p0)) {
       q <- length(p0)
     } else {
-      stop("Either Y or p0 must be provided to determine class dimension q.")
+      stop("Either 'Y' or 'p0' must be provided to determine class dimension q.")
     }
 
     if (prior == "noninformative") {
@@ -152,22 +175,19 @@ get_prior <- function(prior = c("noninformative", "fixed", "adaptive"),
       alpha0 <- matrix(1, nrow = m, ncol = q)
     } else if (prior == "fixed") {
       # Validate inputs
-      if (r0 <= 0) stop("r0 must be positive.")
-      if (is.null(p0)) stop("p0 must be provided for fixed prior.")
-      if (length(p0) != q) stop("Length of p0 must match the number of classes.")
-      if (any(p0 < 0) || abs(sum(p0) - 1) > 1e-6) {
-        stop("p0 must be a valid probability vector (nonnegative, sums to 1).")
+      if (is.null(p0)) stop("'p0' must be provided for fixed prior in DKP.")
+      if (length(p0) != q) stop("length(p0) must match number of classes.")
+      if (!isTRUE(all.equal(sum(p0), 1, tolerance = 1e-8))) {
+        stop("'p0' must sum to 1.")
       }
 
       m <- if (!is.null(K)) nrow(K) else 1
       alpha0 <- matrix(rep(r0 * p0, each = m), nrow = m, byrow = TRUE)
     } else if (prior == "adaptive") {
       # Validate inputs
-      if (is.null(Y) || is.null(K)) stop("Y and K must be provided for adaptive prior.")
-      if (!is.matrix(K) || ncol(K) != nrow(Y)) {
-        stop("K must be an m * n matrix where n = nrow(Y).")
-      }
-      if (r0 <= 0) stop("r0 must be positive.")
+      if (is.null(Y) || is.null(K)) stop("'Y' and 'K' must be provided for adaptive prior in DKP.")
+      if (ncol(K) != nrow(Y)) stop("'K' must have ncol = nrow(Y).")
+      if (any(rowSums(Y) == 0)) stop("each row of Y must have positive sum for adaptive prior.")
 
       # Normalize kernel weights
       W <- K / rowSums(K)  # m * n
@@ -182,6 +202,6 @@ get_prior <- function(prior = c("noninformative", "fixed", "adaptive"),
       alpha0 <- Pi_hat * r_hat
     }
     alpha0 <- pmax(alpha0, 1e-3)
-    return(alpha0 = alpha0)
+    return(alpha0)
   }
 }

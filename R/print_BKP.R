@@ -1,24 +1,24 @@
 #' @name print
 #'
-#' @title Print Summary of a Fitted BKP or DKP Model
+#' @title Print Method for BKP and DKP Objects
 #'
-#' @description Displays a concise summary of a fitted BKP or DKP model. The
-#'   output includes key characteristics such as sample size, input
-#'   dimensionality, kernel type, loss function, optimized kernel
-#'   hyperparameters, and minimum loss. Posterior predictive summaries (means
-#'   and variances) are also provided.
+#' @description Provides formatted console output for fitted BKP and DKP model
+#'   objects, as well as their summaries and predictions. This includes:
+#'   - \code{print.BKP} / \code{print.DKP} for fitted models,
+#'   - \code{print.summary.BKP} / \code{print.summary.DKP} for summaries,
+#'   - \code{print.predict.BKP} / \code{print.predict.DKP} for predictions.
 #'
-#' @param x An object of class \code{"BKP"} (from \code{\link{fit.BKP}}) or
-#'   \code{"DKP"} (from \code{\link{fit.DKP}}).
+#' @param x An object of class \code{"BKP"} or \code{"DKP"}, or a summary/predict
+#'   object derived from them.
 #' @param ... Additional arguments passed to the generic \code{print} method
 #'   (currently not used).
 #'
-#' @return Invisibly returns the input object (of class \code{"BKP"} or
-#'   \code{"DKP"}). The function is called for its side effect of printing a
-#'   summary to the console.
+#' @return Invisibly returns the input object. Called for the side effect of
+#'   printing human-readable summaries to the console.
 #'
 #' @seealso \code{\link{fit.BKP}}, \code{\link{fit.DKP}},
-#'   \code{\link{summary.BKP}}, \code{\link{summary.DKP}}.
+#'   \code{\link{summary.BKP}}, \code{\link{summary.DKP}},
+#'   \code{\link{predict.BKP}}, \code{\link{predict.DKP}}
 #'
 #' @references Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
 #'   Kernel Process Modeling}.  arXiv.
@@ -85,9 +85,7 @@
 #' @method print summary.BKP
 
 print.summary.BKP <- function(x, ...) {
-  cat("--------------------------------------------------\n")
-  cat("        Summary of Beta Kernel Process (BKP)      \n")
-  cat("--------------------------------------------------\n")
+  cat("\n       Beta Kernel Process (BKP)    \n\n")
   cat(sprintf("Number of observations (n):  %d\n", x$n_obs))
   cat(sprintf("Input dimensionality (d):    %d\n", x$input_dim))
   cat(sprintf("Kernel type:                 %s\n", x$kernel))
@@ -106,9 +104,8 @@ print.summary.BKP <- function(x, ...) {
   }
 
   # Posterior predictive summary
-  cat("Posterior predictive summary (training points):\n")
+  cat("\nPosterior predictive summary (training points):\n")
   print(posterior_summary(x$post_mean, x$post_var))
-  cat("--------------------------------------------------\n")
 
   invisible(x)
 }
@@ -121,8 +118,24 @@ print.summary.BKP <- function(x, ...) {
 #' @export
 
 print.BKP <- function(x, ...) {
-  s <- summary.BKP(x)
-  print(s)  # call print.summary.BKP
+  cat("\n       Beta Kernel Process (BKP)    \n\n")
+  cat(sprintf("Number of observations (n):  %d\n", nrow(x$X)))
+  cat(sprintf("Input dimensionality (d):    %d\n", ncol(x$X)))
+  cat(sprintf("Kernel type:                 %s\n", x$kernel))
+  cat(sprintf("Optimized kernel parameters: %s\n",
+              paste(sprintf("%.4f", x$theta_opt), collapse = ", ")))
+  if (!is.na(x$loss_min)) {
+    cat(sprintf("Minimum achieved loss:       %.5f\n", x$loss_min))
+  }
+  cat(sprintf("Loss function:               %s\n", x$loss))
+  cat(sprintf("Prior type:                  %s\n", x$prior))
+  if (x$prior == "fixed" || x$prior == "adaptive") {
+    cat(sprintf("r0: %.3f\n", x$r0))
+  }
+  if (x$prior == "fixed") {
+    cat(sprintf("p0: %.3f\n", x$p0))
+  }
+
   invisible(x)
 }
 
@@ -175,7 +188,7 @@ print.predict.BKP <- function(x, ...) {
     names(X_preview) <- c("x1", "x2")
   } else {
     # Only display first and last columns with ... in between
-    X_preview_vals <- round(X_preview[, c(1, d)], 3)
+    X_preview_vals <- round(X_preview[, c(1, d)], 4)
     X_preview <- as.data.frame(X_preview_vals)
     names(X_preview) <- c("x1", paste0("x", d))
     # Add a ... column
@@ -208,6 +221,107 @@ print.predict.BKP <- function(x, ...) {
   print(res, row.names = FALSE)
 
   if (n > k) cat(" ...\n")
+
+  invisible(x)
+}
+
+#' @rdname print
+#'
+#' @keywords BKP
+#'
+#' @export
+
+print.simulate.BKP <- function(x, ...) {
+  n <- length(x$mean)
+  nsim <- ncol(x$samples)
+
+  # Determine simulation input
+  if (is.null(x$Xnew)) {
+    cat("Simulation results on training data (X).\n")
+    cat("Total number of training points:", n, "\n")
+    X_disp <- x$X
+  } else {
+    cat("Simulation results on new data (Xnew).\n")
+    cat("Total number of simulation points:", n, "\n")
+    X_disp <- x$Xnew
+  }
+  cat("Number of posterior draws (nsim):", nsim, "\n")
+
+  d <- ncol(X_disp)
+
+  # Determine how many rows to preview
+  k <- min(6, n)
+  if (n > k) {
+    if (is.null(x$Xnew)) {
+      cat("\nPreview of simulations for training data (first", k, "of", n, "points):\n")
+    } else {
+      cat("\nPreview of simulations for new data (first", k, "of", n, "points):\n")
+    }
+  } else {
+    if (is.null(x$Xnew)) {
+      cat("\nSimulations for all training data points:\n")
+    } else {
+      cat("\nSimulations for all new data points:\n")
+    }
+  }
+
+  # Format X for display
+  X_preview <- head(X_disp, k)
+  if (d == 1) {
+    X_preview <- data.frame(x1 = round(X_preview, 4))
+    names(X_preview) <- "x"
+  } else if (d == 2) {
+    X_preview <- as.data.frame(round(X_preview, 4))
+    names(X_preview) <- c("x1", "x2")
+  } else {
+    # Only display first and last columns with ... in between
+    X_preview_vals <- round(X_preview[, c(1, d)], 4)
+    X_preview <- as.data.frame(X_preview_vals)
+    names(X_preview) <- c("x1", paste0("x", d))
+    # Add a ... column
+    X_preview$... <- rep("...", nrow(X_preview))
+    # Reorder columns: x1, ..., xd
+    X_preview <- X_preview[, c("x1", "...", paste0("x", d))]
+  }
+
+  # Add first few simulation columns
+  samples_preview <- head(x$samples, k)
+  if (nsim <= 3) {
+    samples_preview <- round(samples_preview, 4)
+    samples_preview <- as.data.frame(samples_preview)
+  } else {
+    # show first 2 and last sim with "..."
+    samples_preview <- cbind(
+      round(samples_preview[, 1:2, drop = FALSE], 4),
+      "..." = rep("...", k),
+      round(samples_preview[, nsim, drop = FALSE], 4)
+    )
+    colnames(samples_preview)[c(1,2,ncol(samples_preview))] <-
+      c("sim1", "sim2", paste0("sim", nsim))
+  }
+
+  cat("\n--- Posterior Probability Simulations ---\n")
+  print(cbind(X_preview, samples_preview), row.names = FALSE)
+  if (n > k) cat(" ...\n")
+
+  # If class predictions exist, include preview
+  if (!is.null(x$class)) {
+    class_preview <- head(x$class, k)
+    if (nsim <= 3) {
+      class_preview <- as.data.frame(class_preview)
+    } else {
+      class_preview <- cbind(
+        class_preview[, 1:2, drop = FALSE],
+        "..." = rep("...", k),
+        class_preview[, nsim, drop = FALSE]
+      )
+      colnames(class_preview)[c(1,2,ncol(class_preview))] <-
+        c("sim1", "sim2", paste0("sim", nsim))
+    }
+    cat(paste0("\n--- Binary Classifications (threshold = ", x$threshold, ") ---\n"))
+    print(cbind(X_preview, class_preview), row.names = FALSE)
+    if (n > k) cat(" ...\n")
+  }
 
   invisible(x)
 }

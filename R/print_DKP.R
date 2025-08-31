@@ -65,9 +65,7 @@
 #' @method print summary.DKP
 
 print.summary.DKP <- function(x, ...) {
-  cat("--------------------------------------------------\n")
-  cat("      Summary of Dirichlet Kernel Process (DKP)    \n")
-  cat("--------------------------------------------------\n")
+  cat("\n      Summary of Dirichlet Kernel Process (DKP)    \n\n")
   cat(sprintf("Number of observations (n):  %d\n", x$n_obs))
   cat(sprintf("Input dimensionality (d):    %d\n", x$input_dim))
   cat(sprintf("Number of classes (q):       %d\n", x$n_class))
@@ -87,12 +85,19 @@ print.summary.DKP <- function(x, ...) {
   }
 
   # Posterior predictive summary
-  cat("Posterior predictive summary (training points):\n")
+  n_class <- min(3, x$n_class)
+  cat("\nPosterior predictive summary (training points):\n")
+
   for (j in 1:x$n_class) {
     cat(sprintf("\nClass %d:\n", j))
     print(posterior_summary(x$post_mean[, j], x$post_var[, j]))
   }
-  cat("--------------------------------------------------\n")
+
+  if (x$n_class > 3) {
+    cat("\n ...\n")
+    cat("\nNote: Only the first 3 classes are displayed out of", x$n_class, "classes.\n")
+  }
+
   invisible(x)
 }
 
@@ -102,8 +107,25 @@ print.summary.DKP <- function(x, ...) {
 #'
 #' @export
 print.DKP <- function(x, ...) {
-  s <- summary.DKP(x)
-  print(s)  # call print.summary.DKP
+  cat("\n       Dirichlet Kernel Process (DKP)    \n\n")
+  cat(sprintf("Number of observations (n):  %d\n", nrow(x$X)))
+  cat(sprintf("Input dimensionality (d):    %d\n", ncol(x$X)))
+  cat(sprintf("Number of classes (q):       %d\n", ncol(x$Y)))
+  cat(sprintf("Kernel type:                 %s\n", x$kernel))
+  cat(sprintf("Optimized kernel parameters: %s\n",
+              paste(sprintf("%.4f", x$theta_opt), collapse = ", ")))
+  if (!is.na(x$loss_min)) {
+    cat(sprintf("Minimum achieved loss:       %.5f\n", x$loss_min))
+  }
+  cat(sprintf("Loss function:               %s\n", x$loss))
+  cat(sprintf("Prior type:                  %s\n", x$prior))
+  if (x$prior == "fixed" || x$prior == "adaptive") {
+    cat(sprintf("r0: %.3f\n", x$r0))
+  }
+  if (x$prior == "fixed") {
+    cat("p0: ", paste(round(x$p0, 3), collapse = ", "), "\n")
+  }
+
   invisible(x)
 }
 
@@ -184,16 +206,126 @@ print.predict.DKP <- function(x, ...) {
 
     res <- cbind(X_preview, pred_summary)
 
-    # Add predicted class if available
-    if (!is.null(x$class)) {
-      res$Predicted_Class <- head(x$class, k)
-    }
-
     print(res, row.names = FALSE)
     if (n > k) cat(" ...\n")
   }
-
   if (ncol(x$mean) > n_class) cat("\n ...\n")
+
+  # Add predicted class if available
+  if (!is.null(x$class)) {
+    cat("\nOverall predicted class (MAP):\n")
+    print(head(x$class, k))
+  }
+
+  invisible(x)
+}
+
+#' @rdname print
+#'
+#' @keywords DKP
+#'
+#' @export
+
+print.simulate.DKP <- function(x, ...) {
+  n <- dim(x$samples)[1]  # number of points
+  q <- dim(x$samples)[2]  # number of classes
+  nsim <- dim(x$samples)[3]  # number of simulations
+
+  # Determine simulation input
+  if (is.null(x$Xnew)) {
+    cat("Simulation results on training data (X).\n")
+    cat("Total number of training points:", n, "\n")
+    X_disp <- x$X
+  } else {
+    cat("Simulation results on new data (Xnew).\n")
+    cat("Total number of simulation points:", n, "\n")
+    X_disp <- x$Xnew
+  }
+  cat("Number of posterior draws (nsim):", nsim, "\n")
+
+  d <- ncol(X_disp)
+
+  # Determine how many rows to preview
+  k <- min(6, n)
+  if (n > k) {
+    if (is.null(x$Xnew)) {
+      cat("\nPreview of simulations for training data (first", k, "of", n, "points):\n")
+    } else {
+      cat("\nPreview of simulations for new data (first", k, "of", n, "points):\n")
+    }
+  } else {
+    if (is.null(x$Xnew)) {
+      cat("\nSimulations for all training data points:\n")
+    } else {
+      cat("\nSimulations for all new data points:\n")
+    }
+  }
+
+  # Format X for display
+  X_preview <- head(X_disp, k)
+  if (d == 1) {
+    X_preview <- data.frame(x1 = round(X_preview, 4))
+    names(X_preview) <- "x"
+  } else if (d == 2) {
+    X_preview <- as.data.frame(round(X_preview, 4))
+    names(X_preview) <- c("x1", "x2")
+  } else {
+    # Only display first and last columns with ... in between
+    X_preview_vals <- round(X_preview[, c(1, d)], 4)
+    X_preview <- as.data.frame(X_preview_vals)
+    names(X_preview) <- c("x1", paste0("x", d))
+    # Add a ... column
+    X_preview$... <- rep("...", nrow(X_preview))
+    # Reorder columns: x1, ..., xd
+    X_preview <- X_preview[, c("x1", "...", paste0("x", d))]
+  }
+
+  # --- Posterior probabilities per simulation ---
+  cat("\n--- Posterior Probability Simulations ---\n")
+
+  nsim_to_show <- min(3, nsim)  # first 3 simulations
+  for (i in 1:nsim_to_show) {
+    cat("\nSimulation", i, ":\n")
+    # Extract first 2 and last class
+    prob_mat <- as.matrix(x$samples[1:k, , i])  # all classes for this sim
+    if (q <= 3) {
+      samples_preview <- round(prob_mat[, 1:q, drop = FALSE], 4)
+      colnames(samples_preview) <- paste0("Class", 1:q)
+    } else {
+      samples_preview <- cbind(
+        round(prob_mat[, 1:2, drop = FALSE], 4),
+        "..." = rep("...", k),
+        round(prob_mat[, q, drop = FALSE], 4)
+      )
+      colnames(samples_preview)[c(1,2,ncol(samples_preview))] <- c("Class1", "Class2", paste0("Class", q))
+    }
+
+    print(cbind(X_preview, samples_preview), row.names = FALSE)
+    if (n > k) cat(" ...\n")
+  }
+
+  if (nsim > 3) cat("\nNote: only first 3 simulations are displayed out of", nsim, "simulations.\n")
+
+
+  # If class predictions exist, include preview
+  if (!is.null(x$class)) {
+    class_preview <- head(x$class, k)
+    if (nsim <= 3) {
+      class_preview <- as.data.frame(class_preview)
+      colnames(class_preview) <- paste0("sim", 1:nsim)
+    } else {
+      class_preview <- cbind(
+        class_preview[, 1:2, drop = FALSE],
+        "..." = rep("...", k),
+        class_preview[, nsim, drop = FALSE]
+      )
+      colnames(class_preview)[c(1,2,ncol(class_preview))] <-
+        c("sim1", "sim2", paste0("sim", nsim))
+    }
+    cat(paste0("\n--- Classifications ---\n"))
+    print(cbind(X_preview, class_preview), row.names = FALSE)
+    if (n > k) cat(" ...\n")
+  }
 
   invisible(x)
 }

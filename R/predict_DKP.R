@@ -116,7 +116,7 @@ predict.DKP <- function(object, Xnew = NULL, CI_level = 0.95, ...)
   }
 
   # get the prior parameters: alpha0(x) and beta0(x)
-  alpha0 <- get_prior(prior = prior, model_type = "DKP",
+  alpha0 <- get_prior(prior = prior, model = "DKP",
                       r0 = r0, p0 = p0, Y = Y, K = K)
 
   # Posterior parameters
