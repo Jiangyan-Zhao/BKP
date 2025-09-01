@@ -91,7 +91,7 @@
 #' @export
 get_prior <- function(prior = c("noninformative", "fixed", "adaptive"),
                       model = c("BKP", "DKP"),
-                      r0 = 2, p0 = 0.5, y = NULL, m = NULL, Y = NULL, K = NULL)
+                      r0 = 2, p0 = NULL, y = NULL, m = NULL, Y = NULL, K = NULL)
 {
   # ---- Argument checking ----
   model <- match.arg(model)
@@ -146,7 +146,7 @@ get_prior <- function(prior = c("noninformative", "fixed", "adaptive"),
       if (ncol(K) != length(y)) stop("'K' must have ncol = length(y).")
 
       # Row-normalized kernel weights
-      W <- K / rowSums(K)   # m * n
+      W <- K / rowSums(K)    # m * n
 
       # Estimated mean and precision
       p_hat <- as.vector(W %*% (y / m))   # Estimated prior mean
@@ -154,8 +154,8 @@ get_prior <- function(prior = c("noninformative", "fixed", "adaptive"),
 
       alpha0 <- r_hat * p_hat
       beta0  <- r_hat * (1 - p_hat)
-      alpha0 <- pmax(alpha0, 1e-3)
-      beta0 <- pmax(beta0, 1e-3)
+      alpha0 <- pmax(alpha0, 1e-2) # Avoid numerical issues
+      beta0 <- pmax(beta0, 1e-2)   # Avoid numerical issues
     }
     return(list(alpha0 = alpha0, beta0 = beta0))
   } else {
@@ -201,7 +201,7 @@ get_prior <- function(prior = c("noninformative", "fixed", "adaptive"),
       # Compute prior parameters
       alpha0 <- Pi_hat * r_hat
     }
-    alpha0 <- pmax(alpha0, 1e-3)
+    alpha0 <- pmax(alpha0, 1e-2)  # Avoid numerical issues
     return(alpha0)
   }
 }

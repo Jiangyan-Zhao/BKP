@@ -95,15 +95,17 @@ simulate.BKP <- function(object, nsim = 1, seed = NULL, ..., Xnew = NULL, thresh
     stop("`seed` must be a single integer or NULL.")
   }
 
-  d <- ncol(object$Xnorm)
+  d <- ncol(object$X)
   if (!is.null(Xnew)) {
-    if (is.null(nrow(Xnew))) Xnew <- matrix(Xnew, nrow = 1)
-    if (!is.numeric(Xnew)) {
-      stop("`Xnew` must be numeric.")
+    if (is.null(nrow(Xnew))) {
+      Xnew <- matrix(Xnew, nrow = 1)
     }
     Xnew <- as.matrix(Xnew)
+    if (!is.numeric(Xnew)) {
+      stop("'Xnew' must be numeric.")
+    }
     if (ncol(Xnew) != d) {
-      stop(sprintf("`Xnew` must have %d columns, matching the training inputs.", d))
+      stop("The number of columns in 'Xnew' must match the original input dimension.")
     }
   }
 
@@ -143,12 +145,12 @@ simulate.BKP <- function(object, nsim = 1, seed = NULL, ..., Xnew = NULL, thresh
     beta0 <- prior_par$beta0
 
     # --- Compute posterior Beta parameters ---
-    alpha_n <- pmax(alpha0 + as.vector(K %*% y), 1e-10)
-    beta_n  <- pmax(beta0 + as.vector(K %*% (m - y)), 1e-10)
+    alpha_n <- pmax(alpha0 + as.vector(K %*% y), 1e-3)
+    beta_n  <- pmax(beta0 + as.vector(K %*% (m - y)), 1e-3)
   }else{
     # Use training data
-    alpha_n <- pmax(object$alpha_n, 1e-10)
-    beta_n  <- pmax(object$beta_n, 1e-10)
+    alpha_n <- pmax(object$alpha_n, 1e-3)
+    beta_n  <- pmax(object$beta_n, 1e-3)
   }
 
   # --- Simulate from posterior Beta distributions ---

@@ -82,27 +82,36 @@
 
 predict.DKP <- function(object, Xnew = NULL, CI_level = 0.95, ...)
 {
-  # Extract components
+  #---- Argument checks ----
   X       <- object$X
-  Xnorm   <- object$Xnorm
-  Y       <- object$Y
-  theta   <- object$theta_opt
-  kernel  <- object$kernel
-  prior   <- object$prior
-  r0      <- object$r0
-  p0      <- object$p0
-  Xbounds <- object$Xbounds
-  d       <- ncol(Xnorm)
-
-  if(!is.null(Xnew)){
-    # Ensure Xnew is a matrix and matches input dimension
+  d       <- ncol(X)
+  if (!is.null(Xnew)) {
     if (is.null(nrow(Xnew))) {
       Xnew <- matrix(Xnew, nrow = 1)
     }
     Xnew <- as.matrix(Xnew)
+    if (!is.numeric(Xnew)) {
+      stop("'Xnew' must be numeric.")
+    }
     if (ncol(Xnew) != d) {
       stop("The number of columns in 'Xnew' must match the original input dimension.")
     }
+  }
+
+  if (!is.numeric(CI_level) || length(CI_level) != 1 || CI_level <= 0 || CI_level >= 1) {
+    stop("'CI_level' must be a single numeric value strictly between 0 and 1.")
+  }
+
+  if(!is.null(Xnew)){
+    # Extract components
+    Xnorm   <- object$Xnorm
+    Y       <- object$Y
+    theta   <- object$theta_opt
+    kernel  <- object$kernel
+    prior   <- object$prior
+    r0      <- object$r0
+    p0      <- object$p0
+    Xbounds <- object$Xbounds
 
     # Normalize Xnew to [0,1]^d
     Xnew_norm <- sweep(Xnew, 2, Xbounds[, 1], "-")
@@ -110,39 +119,39 @@ predict.DKP <- function(object, Xnew = NULL, CI_level = 0.95, ...)
 
     # Compute kernel matrix
     K <- kernel_matrix(Xnew_norm, Xnorm, theta = theta, kernel = kernel) # [m × n]
+
+    # get the prior parameters: alpha0(x) and beta0(x)
+    alpha0 <- get_prior(prior = prior, model = "DKP",
+                        r0 = r0, p0 = p0, Y = Y, K = K)
+
+    # Posterior parameters
+    alpha_n <- alpha0 + as.matrix(K %*% Y) # [n × q]
   }else{
-    # Compute kernel matrix
-    K <- kernel_matrix(Xnorm, theta = theta, kernel = kernel) # [n × n]
+    # Use training data
+    alpha_n <- object$alpha_n
   }
-
-  # get the prior parameters: alpha0(x) and beta0(x)
-  alpha0 <- get_prior(prior = prior, model = "DKP",
-                      r0 = r0, p0 = p0, Y = Y, K = K)
-
-  # Posterior parameters
-  alpha_n <- pmax(alpha0 + as.matrix(K %*% Y), 1e-6) # [n × q]
 
   # Predictive quantities
   row_sum <- rowSums(alpha_n)
-  pi_mean <- alpha_n / row_sum
-  pi_var  <- alpha_n * (row_sum - alpha_n) / (row_sum^2 * (row_sum + 1))
-  pi_lower <- qbeta((1 - CI_level) / 2, alpha_n, row_sum - alpha_n)
-  pi_upper <- qbeta((1 + CI_level) / 2, alpha_n, row_sum - alpha_n)
+  pred_mean <- alpha_n / row_sum
+  pred_var  <- alpha_n * (row_sum - alpha_n) / (row_sum^2 * (row_sum + 1))
+  pred_lower <- qbeta((1 - CI_level) / 2, alpha_n, row_sum - alpha_n)
+  pred_upper <- qbeta((1 + CI_level) / 2, alpha_n, row_sum - alpha_n)
 
   # Return structured output
   prediction <- list(
     X        = X,
     Xnew     = Xnew,
-    mean     = pi_mean,
-    variance = pi_var,
-    lower    = pi_lower,
-    upper    = pi_upper,
+    mean     = pred_mean,
+    variance = pred_var,
+    lower    = pred_lower,
+    upper    = pred_upper,
     CI_level  = CI_level
   )
 
   # Posterior classification label (only for classification data)
   if (all(rowSums(Y) == 1)) {
-    prediction$class <- max.col(pi_mean)
+    prediction$class <- max.col(pred_mean)
   }
 
   class(prediction) <- "predict.DKP"

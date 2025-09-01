@@ -8,7 +8,7 @@ get_prior(
   prior = c("noninformative", "fixed", "adaptive"),
   model = c("BKP", "DKP"),
   r0 = 2,
-  p0 = 0.5,
+  p0 = NULL,
   y = NULL,
   m = NULL,
   Y = NULL,

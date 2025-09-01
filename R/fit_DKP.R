@@ -99,7 +99,7 @@
 
 fit.DKP <- function(
     X, Y, Xbounds = NULL,
-    prior = c("noninformative", "fixed", "adaptive"), r0 = 2, p0 = NULL,
+    prior = c("noninformative", "fixed", "adaptive"), r0 = 2, p0 = colMeans(Y / rowSums(Y)),
     kernel = c("gaussian", "matern52", "matern32"),
     loss = c("brier", "log_loss"),
     n_multi_start = NULL, theta = NULL
@@ -165,10 +165,8 @@ fit.DKP <- function(
     stop("'r0' must be a positive scalar.")
   }
 
-  if (!is.null(p0)) {
-    if (!is.numeric(p0) || any(p0 < 0)) {
-      stop("'p0' must be numeric and nonnegative.")
-    }
+  if (!is.numeric(p0) || any(p0 < 0) || !all.equal(sum(p0), 1)) {
+    stop("'p0' must be numeric, nonnegative, and sum to 1.")
   }
 
   if (prior == "fixed" && is.null(p0) && length(p0) != q) {

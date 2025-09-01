@@ -117,28 +117,40 @@
 
 predict.BKP <- function(object, Xnew = NULL, CI_level = 0.95, threshold = 0.5, ...)
 {
-  # Extract components
+  #---- Argument checks ----
   X       <- object$X
-  Xnorm   <- object$Xnorm
-  y       <- object$y
-  m       <- object$m
-  theta   <- object$theta_opt
-  kernel  <- object$kernel
-  prior   <- object$prior
-  r0      <- object$r0
-  p0      <- object$p0
-  Xbounds <- object$Xbounds
-  d       <- ncol(Xnorm)
-
-  if(!is.null(Xnew)){
-    # Ensure Xnew is a matrix and matches input dimension
+  d       <- ncol(X)
+  if (!is.null(Xnew)) {
     if (is.null(nrow(Xnew))) {
       Xnew <- matrix(Xnew, nrow = 1)
     }
     Xnew <- as.matrix(Xnew)
+    if (!is.numeric(Xnew)) {
+      stop("'Xnew' must be numeric.")
+    }
     if (ncol(Xnew) != d) {
       stop("The number of columns in 'Xnew' must match the original input dimension.")
     }
+  }
+  if (!is.numeric(CI_level) || length(CI_level) != 1 || CI_level <= 0 || CI_level >= 1) {
+    stop("'CI_level' must be a single numeric value strictly between 0 and 1.")
+  }
+  if (!is.numeric(threshold) || length(threshold) != 1 || threshold <= 0 || threshold >= 1) {
+    stop("'threshold' must be a single numeric value strictly between 0 and 1.")
+  }
+
+
+  if(!is.null(Xnew)){
+    # Extract components
+    Xnorm   <- object$Xnorm
+    y       <- object$y
+    m       <- object$m
+    theta   <- object$theta_opt
+    kernel  <- object$kernel
+    prior   <- object$prior
+    r0      <- object$r0
+    p0      <- object$p0
+    Xbounds <- object$Xbounds
 
     # Normalize Xnew to [0,1]^d
     Xnew_norm <- sweep(Xnew, 2, Xbounds[, 1], "-")
@@ -146,43 +158,43 @@ predict.BKP <- function(object, Xnew = NULL, CI_level = 0.95, threshold = 0.5, .
 
     # Compute kernel matrix
     K <- kernel_matrix(Xnew_norm, Xnorm, theta = theta, kernel = kernel) # m*n matrix
+
+    # get the prior parameters: alpha0(x) and beta0(x)
+    prior_par <- get_prior(prior = prior, model = "BKP",
+                           r0 = r0, p0 = p0, y = y, m = m, K = K)
+    alpha0 <- prior_par$alpha0
+    beta0 <- prior_par$beta0
+
+    # Posterior parameters
+    alpha_n <- alpha0 + as.vector(K %*% y)
+    beta_n  <- beta0 + as.vector(K %*% (m - y))
   }else{
-    # Compute kernel matrix
-    K <- kernel_matrix(Xnorm, theta = theta, kernel = kernel) # n*n matrix
+    # Use training data
+    alpha_n <- object$alpha_n
+    beta_n  <- object$beta_n
   }
 
-  # get the prior parameters: alpha0(x) and beta0(x)
-  prior_par <- get_prior(prior = prior, model = "BKP",
-                         r0 = r0, p0 = p0, y = y, m = m, K = K)
-  alpha0 <- prior_par$alpha0
-  beta0 <- prior_par$beta0
-
-  # Posterior parameters
-  alpha_n <- pmax(alpha0 + as.vector(K %*% y), 1e-6)
-  beta_n  <- pmax(beta0 + as.vector(K %*% (m - y)), 1e-6)
-
   # Predictive mean and variance
-  pi_mean <- alpha_n / (alpha_n + beta_n)
-  pi_var  <- pi_mean * (1 - pi_mean) / (alpha_n + beta_n + 1)
+  pred_mean <- alpha_n / (alpha_n + beta_n)
+  pred_var  <- pred_mean * (1 - pred_mean) / (alpha_n + beta_n + 1)
 
   # Credible intervals
-  pi_lower <- qbeta((1 - CI_level) / 2, alpha_n, beta_n)
-  pi_upper <- qbeta((1 + CI_level) / 2, alpha_n, beta_n)
-
+  pred_lower <- qbeta((1 - CI_level) / 2, alpha_n, beta_n)
+  pred_upper <- qbeta((1 + CI_level) / 2, alpha_n, beta_n)
 
   # Output list
   prediction <- list(
     X        = X,
     Xnew     = Xnew,
-    mean     = pi_mean,
-    variance = pi_var,
-    lower    = pi_lower,
-    upper    = pi_upper,
+    mean     = pred_mean,
+    variance = pred_var,
+    lower    = pred_lower,
+    upper    = pred_upper,
     CI_level  = CI_level)
 
   # Posterior classification label (only for classification data)
   if (all(m == 1)) {
-    prediction$class <- ifelse(pi_mean > threshold, 1, 0)
+    prediction$class <- ifelse(pred_mean > threshold, 1, 0)
     prediction$threshold <- threshold
   }
 

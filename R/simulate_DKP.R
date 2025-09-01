@@ -45,13 +45,15 @@ simulate.DKP <- function(object, nsim = 1, seed = NULL, ..., Xnew = NULL)
 
   d <- ncol(object$Xnorm)
   if (!is.null(Xnew)) {
-    if (is.null(nrow(Xnew))) Xnew <- matrix(Xnew, nrow = 1)
-    if (!is.numeric(Xnew)) {
-      stop("`Xnew` must be numeric.")
+    if (is.null(nrow(Xnew))) {
+      Xnew <- matrix(Xnew, nrow = 1)
     }
     Xnew <- as.matrix(Xnew)
+    if (!is.numeric(Xnew)) {
+      stop("'Xnew' must be numeric.")
+    }
     if (ncol(Xnew) != d) {
-      stop(sprintf("`Xnew` must have %d columns, matching the training inputs.", d))
+      stop("The number of columns in 'Xnew' must match the original input dimension.")
     }
   }
 

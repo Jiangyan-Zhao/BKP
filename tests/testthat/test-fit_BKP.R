@@ -85,7 +85,7 @@ test_that("Default Values: Default 'r0' and 'p0' are used when prior is 'fixed'"
   # r0=2, p0=0.5 are defaults in function signature
   model <- fit.BKP(X, y, m, Xbounds, prior = "fixed")
   expect_equal(model$r0, 2)
-  expect_equal(model$p0, 0.5)
+  expect_equal(model$p0, mean(y/m))
 })
 
 test_that("Default Values: Default 'kernel' is 'gaussian'", {
