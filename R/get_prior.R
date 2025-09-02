@@ -5,8 +5,8 @@
 #'   The function supports \code{prior = "noninformative"}, \code{"fixed"}, and
 #'   \code{"adaptive"} strategies.
 #'
-#' @inheritParams fit.BKP
-#' @inheritParams fit.DKP
+#' @inheritParams fit_BKP
+#' @inheritParams fit_DKP
 #' @param K A precomputed kernel matrix of size \code{n × n}, typically obtained
 #'   from \code{\link{kernel_matrix}}.
 #' @param model A character string, either \code{"BKP"} (binary outcome) or
@@ -84,7 +84,7 @@
 #'   model = "DKP", prior = "adaptive", r0 = 2, Y = Y, K = K
 #' )
 #'
-#' @seealso \code{\link{fit.BKP}}, \code{\link{fit.DKP}},
+#' @seealso \code{\link{fit_BKP}}, \code{\link{fit_DKP}},
 #'   \code{\link{predict.BKP}}, \code{\link{predict.DKP}},
 #'   \code{\link{kernel_matrix}}
 #'

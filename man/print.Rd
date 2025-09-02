@@ -2,31 +2,31 @@
 % Please edit documentation in R/print_BKP.R, R/print_DKP.R
 \name{print}
 \alias{print}
-\alias{print.summary.BKP}
 \alias{print.BKP}
-\alias{print.predict.BKP}
-\alias{print.simulate.BKP}
-\alias{print.summary.DKP}
+\alias{print.summary_BKP}
+\alias{print.predict_BKP}
+\alias{print.simulate_BKP}
 \alias{print.DKP}
-\alias{print.predict.DKP}
-\alias{print.simulate.DKP}
+\alias{print.summary_DKP}
+\alias{print.predict_DKP}
+\alias{print.simulate_DKP}
 \title{Print Method for BKP and DKP Objects}
 \usage{
-\method{print}{summary.BKP}(x, ...)
-
 \method{print}{BKP}(x, ...)
 
-\method{print}{predict.BKP}(x, ...)
+\method{print}{summary_BKP}(x, ...)
 
-\method{print}{simulate.BKP}(x, ...)
+\method{print}{predict_BKP}(x, ...)
 
-\method{print}{summary.DKP}(x, ...)
+\method{print}{simulate_BKP}(x, ...)
 
 \method{print}{DKP}(x, ...)
 
-\method{print}{predict.DKP}(x, ...)
+\method{print}{summary_DKP}(x, ...)
 
-\method{print}{simulate.DKP}(x, ...)
+\method{print}{predict_DKP}(x, ...)
+
+\method{print}{simulate_DKP}(x, ...)
 }
 \arguments{
 \item{x}{An object of class \code{"BKP"} or \code{"DKP"}, or a summary/predict
@@ -69,7 +69,7 @@ m <- sample(100, n, replace = TRUE)
 y <- rbinom(n, size = m, prob = true_pi)
 
 # Fit BKP model
-model1 <- fit.BKP(X, y, m, Xbounds=Xbounds)
+model1 <- fit_BKP(X, y, m, Xbounds=Xbounds)
 print(model1)
 
 
@@ -100,7 +100,7 @@ m <- sample(100, n, replace = TRUE)
 y <- rbinom(n, size = m, prob = true_pi)
 
 # Fit BKP model
-model2 <- fit.BKP(X, y, m, Xbounds=Xbounds)
+model2 <- fit_BKP(X, y, m, Xbounds=Xbounds)
 print(model2)
 
 # ============================================================== #
@@ -126,7 +126,7 @@ m <- sample(100, n, replace = TRUE)
 Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 
 # Fit DKP model
-model1 <- fit.DKP(X, Y, Xbounds = Xbounds)
+model1 <- fit_DKP(X, Y, Xbounds = Xbounds)
 summary(model1)
 
 
@@ -158,7 +158,7 @@ m <- sample(100, n, replace = TRUE)
 Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 
 # Fit DKP model
-model2 <- fit.DKP(X, Y, Xbounds = Xbounds)
+model2 <- fit_DKP(X, Y, Xbounds = Xbounds)
 summary(model2)
 
 }
@@ -168,7 +168,7 @@ Kernel Process Modeling}.  arXiv.
 https://doi.org/10.48550/arXiv.2508.10447.
 }
 \seealso{
-\code{\link{fit.BKP}}, \code{\link{fit.DKP}},
+\code{\link{fit_BKP}}, \code{\link{fit_DKP}},
 \code{\link{summary.BKP}}, \code{\link{summary.DKP}},
 \code{\link{predict.BKP}}, \code{\link{predict.DKP}}
 }

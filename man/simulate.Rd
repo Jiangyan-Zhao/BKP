@@ -6,25 +6,25 @@
 \alias{simulate.DKP}
 \title{Simulate from a Fitted BKP or DKP Model}
 \usage{
-\method{simulate}{BKP}(object, nsim = 1, seed = NULL, ..., Xnew = NULL, threshold = NULL)
+\method{simulate}{BKP}(object, nsim = 1, seed = NULL, Xnew = NULL, threshold = NULL, ...)
 
-\method{simulate}{DKP}(object, nsim = 1, seed = NULL, ..., Xnew = NULL)
+\method{simulate}{DKP}(object, nsim = 1, seed = NULL, Xnew = NULL, ...)
 }
 \arguments{
 \item{object}{An object of class \code{"BKP"} or \code{"DKP"}, typically
-returned by \code{\link{fit.BKP}} or \code{\link{fit.DKP}}.}
+returned by \code{\link{fit_BKP}} or \code{\link{fit_DKP}}.}
 
 \item{nsim}{Number of posterior samples to generate (default = \code{1}).}
 
 \item{seed}{Optional integer seed for reproducibility.}
-
-\item{...}{Additional arguments (currently unused).}
 
 \item{Xnew}{A numeric matrix or vector of new input locations for simulation.}
 
 \item{threshold}{Classification threshold for binary output (only used for
 BKP). If specified, the output will include binary class labels with values
 above the threshold classified as 1 (default is \code{NULL}).}
+
+\item{...}{Additional arguments (currently unused).}
 }
 \value{
 A list with the following components:
@@ -78,7 +78,7 @@ m <- sample(100, n, replace = TRUE)
 y <- rbinom(n, size = m, prob = true_pi)
 
 # Fit BKP model
-model <- fit.BKP(X, y, m, Xbounds=Xbounds)
+model <- fit_BKP(X, y, m, Xbounds=Xbounds)
 
 # Simulate 5 posterior draws of success probabilities
 Xnew <- matrix(seq(-2, 2, length.out = 5), ncol = 1)
@@ -106,7 +106,7 @@ m <- sample(100, n, replace = TRUE)
 Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 
 # Fit DKP model
-model <- fit.DKP(X, Y, Xbounds = Xbounds)
+model <- fit_DKP(X, Y, Xbounds = Xbounds)
 
 # Simulate 5 draws from posterior Dirichlet distributions at new point
 Xnew <- matrix(seq(-2, 2, length.out = 5), ncol = 1)
@@ -119,7 +119,7 @@ Kernel Process Modeling}.  arXiv.
 https://doi.org/10.48550/arXiv.2508.10447.
 }
 \seealso{
-\code{\link{fit.BKP}}, \code{\link{fit.DKP}},
+\code{\link{fit_BKP}}, \code{\link{fit_DKP}},
 \code{\link{predict.BKP}}, \code{\link{predict.DKP}}
 }
 \keyword{BKP}

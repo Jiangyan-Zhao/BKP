@@ -6,7 +6,7 @@
 #'   DKP model at new input locations.
 #'
 #' @param object An object of class \code{"BKP"} or \code{"DKP"}, typically
-#'   returned by \code{\link{fit.BKP}} or \code{\link{fit.DKP}}.
+#'   returned by \code{\link{fit_BKP}} or \code{\link{fit_DKP}}.
 #' @param Xnew A numeric matrix (or vector) of new input locations where
 #'   predictions are desired.
 #' @param CI_level Credible level for prediction intervals (default is
@@ -32,8 +32,8 @@
 #'                       DKP: Predicted class label (i.e., the class with the highest posterior mean probability).}
 #' }
 #'
-#' @seealso \code{\link{fit.BKP}} for fitting Beta Kernel Process models.
-#'   \code{\link{fit.DKP}} for fitting Dirichlet Kernel Process models.
+#' @seealso \code{\link{fit_BKP}} for fitting Beta Kernel Process models.
+#'   \code{\link{fit_DKP}} for fitting Dirichlet Kernel Process models.
 #'   \code{\link{plot.BKP}} for visualizing fitted BKP models.
 #'   \code{\link{plot.DKP}} for visualizing fitted DKP models.
 #'
@@ -64,7 +64,7 @@
 #' y <- rbinom(n, size = m, prob = true_pi)
 #'
 #' # Fit BKP model
-#' model1 <- fit.BKP(X, y, m, Xbounds=Xbounds)
+#' model1 <- fit_BKP(X, y, m, Xbounds=Xbounds)
 #'
 #' # Prediction on training data
 #' predict(model1)
@@ -101,7 +101,7 @@
 #' y <- rbinom(n, size = m, prob = true_pi)
 #'
 #' # Fit BKP model
-#' model2 <- fit.BKP(X, y, m, Xbounds=Xbounds)
+#' model2 <- fit_BKP(X, y, m, Xbounds=Xbounds)
 #'
 #' # Prediction on training data
 #' predict(model2)
@@ -198,6 +198,6 @@ predict.BKP <- function(object, Xnew = NULL, CI_level = 0.95, threshold = 0.5, .
     prediction$threshold <- threshold
   }
 
-  class(prediction) <- "predict.BKP"
+  class(prediction) <- "predict_BKP"
   return(prediction)
 }

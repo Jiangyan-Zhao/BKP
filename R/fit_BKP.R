@@ -1,4 +1,4 @@
-#' @name fit.BKP
+#' @name fit_BKP
 #'
 #' @title Fit a Beta Kernel Process (BKP) Model
 #'
@@ -56,12 +56,11 @@
 #'   \item{\code{beta_n}}{Posterior shape parameter \eqn{\beta_n(\mathbf{x})}.}
 #' }
 #'
-#' @seealso \code{\link{fit.DKP}} for modeling multinomial responses using the
+#' @seealso \code{\link{fit_DKP}} for modeling multinomial responses using the
 #'   Dirichlet Kernel Process. \code{\link{predict.BKP}},
 #'   \code{\link{plot.BKP}}, \code{\link{simulate.BKP}} for making predictions,
 #'   visualizing results, and generating simulations from a fitted BKP model.
-#'   \code{\link{summary.BKP}}, \code{\link{print.summary.BKP}} for inspecting model
-#'   details.
+#'   \code{\link{summary.BKP}} for inspecting model details.
 #'
 #' @references Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
 #'   Kernel Process Modeling}.  arXiv.
@@ -84,7 +83,7 @@
 #' y <- rbinom(n, size = m, prob = true_pi)
 #'
 #' # Fit BKP model
-#' model1 <- fit.BKP(X, y, m, Xbounds=Xbounds)
+#' model1 <- fit_BKP(X, y, m, Xbounds=Xbounds)
 #' print(model1)
 #'
 #'
@@ -115,12 +114,12 @@
 #' y <- rbinom(n, size = m, prob = true_pi)
 #'
 #' # Fit BKP model
-#' model2 <- fit.BKP(X, y, m, Xbounds=Xbounds)
+#' model2 <- fit_BKP(X, y, m, Xbounds=Xbounds)
 #' print(model2)
 #'
 #' @export
 
-fit.BKP <- function(
+fit_BKP <- function(
     X, y, m, Xbounds = NULL,
     prior = c("noninformative", "fixed", "adaptive"), r0 = 2, p0 = mean(y/m),
     kernel = c("gaussian", "matern52", "matern32"),

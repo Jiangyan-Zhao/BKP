@@ -14,7 +14,7 @@ test_that("simulate.BKP returns expected structure and values", {
   y <- rbinom(n, size = m, prob = true_pi)
 
   # 2. Fit BKP model
-  model <- fit.BKP(X, y, m, Xbounds = Xbounds)
+  model <- fit_BKP(X, y, m, Xbounds = Xbounds)
 
   # 3. Make predictions
   n_Xnew <- 10

@@ -7,8 +7,8 @@
 #'   wrapper for \code{\link{print.BKP}} or \code{\link{print.DKP}}, delivering
 #'   a concise overview of key model characteristics and fitting results.
 #'
-#' @param object An object of class \code{"BKP"} (from \code{\link{fit.BKP}}) or
-#'   \code{"DKP"} (from \code{\link{fit.DKP}}).
+#' @param object An object of class \code{"BKP"} (from \code{\link{fit_BKP}}) or
+#'   \code{"DKP"} (from \code{\link{fit_DKP}}).
 #' @param ... Additional arguments passed to the generic \code{summary} method
 #'   (currently not used).
 #'
@@ -16,8 +16,7 @@
 #'   \code{"DKP"}). Called for side effects: prints a concise summary of the
 #'   fitted model.
 #'
-#' @seealso \code{\link{fit.BKP}}, \code{\link{fit.DKP}},
-#'   \code{\link{print.summary.BKP}}, \code{\link{print.DKP}}.
+#' @seealso \code{\link{fit_BKP}}, \code{\link{fit_DKP}}.
 #'
 #' @references Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
 #'   Kernel Process Modeling}.  arXiv.
@@ -46,7 +45,7 @@
 #' y <- rbinom(n, size = m, prob = true_pi)
 #'
 #' # Fit BKP model
-#' model1 <- fit.BKP(X, y, m, Xbounds=Xbounds)
+#' model1 <- fit_BKP(X, y, m, Xbounds=Xbounds)
 #' summary(model1)
 #'
 #'
@@ -77,7 +76,7 @@
 #' y <- rbinom(n, size = m, prob = true_pi)
 #'
 #' # Fit BKP model
-#' model2 <- fit.BKP(X, y, m, Xbounds=Xbounds)
+#' model2 <- fit_BKP(X, y, m, Xbounds=Xbounds)
 #' summary(model2)
 #'
 #' @export
@@ -106,6 +105,6 @@ summary.BKP <- function(object, ...) {
     post_var    = post_var
   )
 
-  class(res) <- "summary.BKP"
+  class(res) <- "summary_BKP"
   return(res)
 }

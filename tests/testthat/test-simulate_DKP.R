@@ -15,7 +15,7 @@ test_that("simulate.DKP returns expected structure and dimensions", {
   q <- ncol(Y)  # neumber of class
 
   # 2. Fit DKP model
-  model <- fit.DKP(X, Y, Xbounds = Xbounds)
+  model <- fit_DKP(X, Y, Xbounds = Xbounds)
 
   # 3. New prediction locations
   n_Xnew <- 10

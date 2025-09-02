@@ -12,7 +12,7 @@
 }
 \arguments{
 \item{object}{An object of class \code{"BKP"} or \code{"DKP"}, typically
-returned by \code{\link{fit.BKP}} or \code{\link{fit.DKP}}.}
+returned by \code{\link{fit_BKP}} or \code{\link{fit_DKP}}.}
 
 \item{Xnew}{A numeric matrix (or vector) of new input locations where
 predictions are desired.}
@@ -68,7 +68,7 @@ m <- sample(100, n, replace = TRUE)
 y <- rbinom(n, size = m, prob = true_pi)
 
 # Fit BKP model
-model1 <- fit.BKP(X, y, m, Xbounds=Xbounds)
+model1 <- fit_BKP(X, y, m, Xbounds=Xbounds)
 
 # Prediction on training data
 predict(model1)
@@ -105,7 +105,7 @@ m <- sample(100, n, replace = TRUE)
 y <- rbinom(n, size = m, prob = true_pi)
 
 # Fit BKP model
-model2 <- fit.BKP(X, y, m, Xbounds=Xbounds)
+model2 <- fit_BKP(X, y, m, Xbounds=Xbounds)
 
 # Prediction on training data
 predict(model2)
@@ -139,7 +139,7 @@ m <- sample(100, n, replace = TRUE)
 Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 
 # Fit DKP model
-model1 <- fit.DKP(X, Y, Xbounds = Xbounds)
+model1 <- fit_DKP(X, Y, Xbounds = Xbounds)
 
 # Prediction on training data
 predict(model1)
@@ -179,7 +179,7 @@ m <- sample(100, n, replace = TRUE)
 Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 
 # Fit DKP model
-model2 <- fit.DKP(X, Y, Xbounds = Xbounds)
+model2 <- fit_DKP(X, Y, Xbounds = Xbounds)
 
 # Prediction on training data
 predict(model2)
@@ -197,8 +197,8 @@ Kernel Process Modeling}.  arXiv.
 https://doi.org/10.48550/arXiv.2508.10447.
 }
 \seealso{
-\code{\link{fit.BKP}} for fitting Beta Kernel Process models.
-\code{\link{fit.DKP}} for fitting Dirichlet Kernel Process models.
+\code{\link{fit_BKP}} for fitting Beta Kernel Process models.
+\code{\link{fit_DKP}} for fitting Dirichlet Kernel Process models.
 \code{\link{plot.BKP}} for visualizing fitted BKP models.
 \code{\link{plot.DKP}} for visualizing fitted DKP models.
 }

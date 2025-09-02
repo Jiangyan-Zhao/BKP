@@ -84,6 +84,6 @@ Kernel Process Modeling}.  arXiv.
 https://doi.org/10.48550/arXiv.2508.10447.
 }
 \seealso{
-\code{\link{fit.BKP}}, \code{\link{fit.DKP}},
+\code{\link{fit_BKP}}, \code{\link{fit_DKP}},
 \code{\link{get_prior}}, \code{\link{kernel_matrix}}
 }

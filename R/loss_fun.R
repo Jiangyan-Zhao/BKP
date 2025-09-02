@@ -5,8 +5,8 @@
 #'   and negative log-loss (cross-entropy), under different prior
 #'   specifications.
 #'
-#' @inheritParams fit.BKP
-#' @inheritParams fit.DKP
+#' @inheritParams fit_BKP
+#' @inheritParams fit_DKP
 #' @param gamma A numeric vector of log-transformed kernel hyperparameters.
 #' @param Xnorm A numeric matrix of normalized inputs (each column scaled to
 #'   \code{[0,1]}).
@@ -17,7 +17,7 @@
 #'   either the mean Brier score (squared error) or the mean negative log-loss
 #'   (cross-entropy), depending on \code{loss}.
 #'
-#' @seealso \code{\link{fit.BKP}}, \code{\link{fit.DKP}},
+#' @seealso \code{\link{fit_BKP}}, \code{\link{fit_DKP}},
 #'   \code{\link{get_prior}}, \code{\link{kernel_matrix}}
 #'
 #' @references Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta

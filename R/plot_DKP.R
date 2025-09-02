@@ -26,7 +26,7 @@
 #' Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 #'
 #' # Fit DKP model
-#' model1 <- fit.DKP(X, Y, Xbounds = Xbounds)
+#' model1 <- fit_DKP(X, Y, Xbounds = Xbounds)
 #'
 #' # Plot results
 #' plot(model1)
@@ -60,7 +60,7 @@
 #' Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 #'
 #' # Fit DKP model
-#' model2 <- fit.DKP(X, Y, Xbounds = Xbounds)
+#' model2 <- fit_DKP(X, Y, Xbounds = Xbounds)
 #'
 #' # Plot results
 #' plot(model2, n_grid = 50)

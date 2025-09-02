@@ -22,7 +22,7 @@
 #' Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 #'
 #' # Fit DKP model
-#' model <- fit.DKP(X, Y, Xbounds = Xbounds)
+#' model <- fit_DKP(X, Y, Xbounds = Xbounds)
 #'
 #' # Simulate 5 draws from posterior Dirichlet distributions at new point
 #' Xnew <- matrix(seq(-2, 2, length.out = 5), ncol = 1)
@@ -31,7 +31,7 @@
 #' @export
 #' @method simulate DKP
 
-simulate.DKP <- function(object, nsim = 1, seed = NULL, ..., Xnew = NULL)
+simulate.DKP <- function(object, nsim = 1, seed = NULL, Xnew = NULL, ...)
 {
   # ---------------- Argument Checking ----------------
   if (!is.numeric(nsim) || length(nsim) != 1 || nsim <= 0 || nsim != as.integer(nsim)) {
@@ -127,7 +127,6 @@ simulate.DKP <- function(object, nsim = 1, seed = NULL, ..., Xnew = NULL)
     Xnew    = Xnew        # [n_new × d]: new inputs (if provided)
   )
 
-  class(simulation) <- "simulate.DKP"
+  class(simulation) <- "simulate_DKP"
   return(simulation)
 }
-

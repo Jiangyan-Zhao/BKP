@@ -16,7 +16,7 @@
 #' @return Invisibly returns the input object. Called for the side effect of
 #'   printing human-readable summaries to the console.
 #'
-#' @seealso \code{\link{fit.BKP}}, \code{\link{fit.DKP}},
+#' @seealso \code{\link{fit_BKP}}, \code{\link{fit_DKP}},
 #'   \code{\link{summary.BKP}}, \code{\link{summary.DKP}},
 #'   \code{\link{predict.BKP}}, \code{\link{predict.DKP}}
 #'
@@ -47,7 +47,7 @@
 #' y <- rbinom(n, size = m, prob = true_pi)
 #'
 #' # Fit BKP model
-#' model1 <- fit.BKP(X, y, m, Xbounds=Xbounds)
+#' model1 <- fit_BKP(X, y, m, Xbounds=Xbounds)
 #' print(model1)
 #'
 #'
@@ -78,13 +78,42 @@
 #' y <- rbinom(n, size = m, prob = true_pi)
 #'
 #' # Fit BKP model
-#' model2 <- fit.BKP(X, y, m, Xbounds=Xbounds)
+#' model2 <- fit_BKP(X, y, m, Xbounds=Xbounds)
 #' print(model2)
 #'
 #' @export
-#' @method print summary.BKP
+#' @method print BKP
 
-print.summary.BKP <- function(x, ...) {
+print.BKP <- function(x, ...) {
+  cat("\n       Beta Kernel Process (BKP)    \n\n")
+  cat(sprintf("Number of observations (n):  %d\n", nrow(x$X)))
+  cat(sprintf("Input dimensionality (d):    %d\n", ncol(x$X)))
+  cat(sprintf("Kernel type:                 %s\n", x$kernel))
+  cat(sprintf("Optimized kernel parameters: %s\n",
+              paste(sprintf("%.4f", x$theta_opt), collapse = ", ")))
+  if (!is.na(x$loss_min)) {
+    cat(sprintf("Minimum achieved loss:       %.5f\n", x$loss_min))
+  }
+  cat(sprintf("Loss function:               %s\n", x$loss))
+  cat(sprintf("Prior type:                  %s\n", x$prior))
+  if (x$prior == "fixed" || x$prior == "adaptive") {
+    cat(sprintf("r0: %.3f\n", x$r0))
+  }
+  if (x$prior == "fixed") {
+    cat(sprintf("p0: %.3f\n", x$p0))
+  }
+
+  invisible(x)
+}
+
+
+#' @rdname print
+#'
+#' @keywords BKP
+#'
+#' @export
+
+print.summary_BKP <- function(x, ...) {
   cat("\n       Beta Kernel Process (BKP)    \n\n")
   cat(sprintf("Number of observations (n):  %d\n", x$n_obs))
   cat(sprintf("Input dimensionality (d):    %d\n", x$input_dim))
@@ -117,36 +146,7 @@ print.summary.BKP <- function(x, ...) {
 #'
 #' @export
 
-print.BKP <- function(x, ...) {
-  cat("\n       Beta Kernel Process (BKP)    \n\n")
-  cat(sprintf("Number of observations (n):  %d\n", nrow(x$X)))
-  cat(sprintf("Input dimensionality (d):    %d\n", ncol(x$X)))
-  cat(sprintf("Kernel type:                 %s\n", x$kernel))
-  cat(sprintf("Optimized kernel parameters: %s\n",
-              paste(sprintf("%.4f", x$theta_opt), collapse = ", ")))
-  if (!is.na(x$loss_min)) {
-    cat(sprintf("Minimum achieved loss:       %.5f\n", x$loss_min))
-  }
-  cat(sprintf("Loss function:               %s\n", x$loss))
-  cat(sprintf("Prior type:                  %s\n", x$prior))
-  if (x$prior == "fixed" || x$prior == "adaptive") {
-    cat(sprintf("r0: %.3f\n", x$r0))
-  }
-  if (x$prior == "fixed") {
-    cat(sprintf("p0: %.3f\n", x$p0))
-  }
-
-  invisible(x)
-}
-
-
-#' @rdname print
-#'
-#' @keywords BKP
-#'
-#' @export
-
-print.predict.BKP <- function(x, ...) {
+print.predict_BKP <- function(x, ...) {
   n <- length(x$mean)
 
   # Determine prediction input
@@ -225,13 +225,14 @@ print.predict.BKP <- function(x, ...) {
   invisible(x)
 }
 
+
 #' @rdname print
 #'
 #' @keywords BKP
 #'
 #' @export
 
-print.simulate.BKP <- function(x, ...) {
+print.simulate_BKP <- function(x, ...) {
   n <- length(x$mean)
   nsim <- ncol(x$samples)
 

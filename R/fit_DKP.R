@@ -1,11 +1,11 @@
-#' @name fit.DKP
+#' @name fit_DKP
 #'
 #' @title Fit a Dirichlet Kernel Process (DKP) Model
 #'
 #' @description Fits a DKP model for categorical or multinomial response data by
 #'   locally smoothing observed counts to estimate latent Dirichlet parameters.
 #'
-#' @inheritParams fit.BKP
+#' @inheritParams fit_BKP
 #' @param Y Matrix of observed multinomial counts, with dimension \eqn{n \times
 #'   q}.
 #' @param p0 Global prior mean vector (only used when \code{prior = "fixed"}).
@@ -30,7 +30,7 @@
 #'   \item{\code{alpha_n}}{Posterior Dirichlet parameters after kernel smoothing.}
 #' }
 #'
-#' @seealso \code{\link{fit.BKP}} for modeling binomial responses using the Beta
+#' @seealso \code{\link{fit_BKP}} for modeling binomial responses using the Beta
 #'   Kernel Process. \code{\link{predict.DKP}}, \code{\link{plot.DKP}},
 #'   \code{\link{simulate.DKP}} for making predictions, visualizing results, and
 #'   generating simulations from a fitted DKP model. \code{\link{summary.DKP}},
@@ -60,7 +60,7 @@
 #' Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 #'
 #' # Fit DKP model
-#' model1 <- fit.DKP(X, Y, Xbounds = Xbounds)
+#' model1 <- fit_DKP(X, Y, Xbounds = Xbounds)
 #' print(model1)
 #'
 #'
@@ -92,12 +92,12 @@
 #' Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 #'
 #' # Fit DKP model
-#' model2 <- fit.DKP(X, Y, Xbounds = Xbounds)
+#' model2 <- fit_DKP(X, Y, Xbounds = Xbounds)
 #' print(model2)
 #'
 #' @export
 
-fit.DKP <- function(
+fit_DKP <- function(
     X, Y, Xbounds = NULL,
     prior = c("noninformative", "fixed", "adaptive"), r0 = 2, p0 = colMeans(Y / rowSums(Y)),
     kernel = c("gaussian", "matern52", "matern32"),

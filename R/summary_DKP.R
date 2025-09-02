@@ -26,7 +26,7 @@
 #' Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 #'
 #' # Fit DKP model
-#' model1 <- fit.DKP(X, Y, Xbounds = Xbounds)
+#' model1 <- fit_DKP(X, Y, Xbounds = Xbounds)
 #' summary(model1)
 #'
 #'
@@ -58,7 +58,7 @@
 #' Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 #'
 #' # Fit DKP model
-#' model2 <- fit.DKP(X, Y, Xbounds = Xbounds)
+#' model2 <- fit_DKP(X, Y, Xbounds = Xbounds)
 #' summary(model2)
 #'
 #' @export
@@ -92,7 +92,6 @@ summary.DKP <- function(object, ...) {
     post_mean = post_mean,
     post_var  = post_var
   )
-  class(res) <- "summary.DKP"
+  class(res) <- "summary_DKP"
   return(res)
 }
-

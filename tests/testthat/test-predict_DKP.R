@@ -14,7 +14,7 @@ test_that("predict.DKP returns expected structure and values", {
   Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 
   # 2. Fit DKP model
-  model <- fit.DKP(X, Y, Xbounds = Xbounds)
+  model <- fit_DKP(X, Y, Xbounds = Xbounds)
 
   # 3. Predict on new input
   n_Xnew <- 10

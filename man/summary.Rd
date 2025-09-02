@@ -11,8 +11,8 @@
 \method{summary}{DKP}(object, ...)
 }
 \arguments{
-\item{object}{An object of class \code{"BKP"} (from \code{\link{fit.BKP}}) or
-\code{"DKP"} (from \code{\link{fit.DKP}}).}
+\item{object}{An object of class \code{"BKP"} (from \code{\link{fit_BKP}}) or
+\code{"DKP"} (from \code{\link{fit_DKP}}).}
 
 \item{...}{Additional arguments passed to the generic \code{summary} method
 (currently not used).}
@@ -49,7 +49,7 @@ m <- sample(100, n, replace = TRUE)
 y <- rbinom(n, size = m, prob = true_pi)
 
 # Fit BKP model
-model1 <- fit.BKP(X, y, m, Xbounds=Xbounds)
+model1 <- fit_BKP(X, y, m, Xbounds=Xbounds)
 summary(model1)
 
 
@@ -80,7 +80,7 @@ m <- sample(100, n, replace = TRUE)
 y <- rbinom(n, size = m, prob = true_pi)
 
 # Fit BKP model
-model2 <- fit.BKP(X, y, m, Xbounds=Xbounds)
+model2 <- fit_BKP(X, y, m, Xbounds=Xbounds)
 summary(model2)
 
 # ============================================================== #
@@ -106,7 +106,7 @@ m <- sample(100, n, replace = TRUE)
 Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 
 # Fit DKP model
-model1 <- fit.DKP(X, Y, Xbounds = Xbounds)
+model1 <- fit_DKP(X, Y, Xbounds = Xbounds)
 summary(model1)
 
 
@@ -138,7 +138,7 @@ m <- sample(100, n, replace = TRUE)
 Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 
 # Fit DKP model
-model2 <- fit.DKP(X, Y, Xbounds = Xbounds)
+model2 <- fit_DKP(X, Y, Xbounds = Xbounds)
 summary(model2)
 
 }
@@ -148,8 +148,7 @@ Kernel Process Modeling}.  arXiv.
 https://doi.org/10.48550/arXiv.2508.10447.
 }
 \seealso{
-\code{\link{fit.BKP}}, \code{\link{fit.DKP}},
-\code{\link{print.summary.BKP}}, \code{\link{print.DKP}}.
+\code{\link{fit_BKP}}, \code{\link{fit_DKP}}.
 }
 \keyword{BKP}
 \keyword{DKP}

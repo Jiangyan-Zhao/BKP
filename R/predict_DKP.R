@@ -26,7 +26,7 @@
 #' Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 #'
 #' # Fit DKP model
-#' model1 <- fit.DKP(X, Y, Xbounds = Xbounds)
+#' model1 <- fit_DKP(X, Y, Xbounds = Xbounds)
 #'
 #' # Prediction on training data
 #' predict(model1)
@@ -66,7 +66,7 @@
 #' Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 #'
 #' # Fit DKP model
-#' model2 <- fit.DKP(X, Y, Xbounds = Xbounds)
+#' model2 <- fit_DKP(X, Y, Xbounds = Xbounds)
 #'
 #' # Prediction on training data
 #' predict(model2)
@@ -137,6 +137,8 @@ predict.DKP <- function(object, Xnew = NULL, CI_level = 0.95, ...)
   pred_var  <- alpha_n * (row_sum - alpha_n) / (row_sum^2 * (row_sum + 1))
   pred_lower <- qbeta((1 - CI_level) / 2, alpha_n, row_sum - alpha_n)
   pred_upper <- qbeta((1 + CI_level) / 2, alpha_n, row_sum - alpha_n)
+  colnames(pred_lower) <- paste0("class", seq_len(ncol(alpha_n)))
+  colnames(pred_upper) <- colnames(pred_lower)
 
   # Return structured output
   prediction <- list(
@@ -154,6 +156,6 @@ predict.DKP <- function(object, Xnew = NULL, CI_level = 0.95, ...)
     prediction$class <- max.col(pred_mean)
   }
 
-  class(prediction) <- "predict.DKP"
+  class(prediction) <- "predict_DKP"
   return(prediction)
 }

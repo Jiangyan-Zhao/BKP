@@ -15,7 +15,7 @@
 #'   encoded.
 #'
 #' @param object An object of class \code{"BKP"} or \code{"DKP"}, typically
-#'   returned by \code{\link{fit.BKP}} or \code{\link{fit.DKP}}.
+#'   returned by \code{\link{fit_BKP}} or \code{\link{fit_DKP}}.
 #' @param Xnew A numeric matrix or vector of new input locations for simulation.
 #' @param nsim Number of posterior samples to generate (default = \code{1}).
 #' @param threshold Classification threshold for binary output (only used for
@@ -45,7 +45,7 @@
 #'   }
 #' }
 #'
-#' @seealso \code{\link{fit.BKP}}, \code{\link{fit.DKP}},
+#' @seealso \code{\link{fit_BKP}}, \code{\link{fit_DKP}},
 #'   \code{\link{predict.BKP}}, \code{\link{predict.DKP}}
 #'
 #' @references Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
@@ -71,7 +71,7 @@
 #' y <- rbinom(n, size = m, prob = true_pi)
 #'
 #' # Fit BKP model
-#' model <- fit.BKP(X, y, m, Xbounds=Xbounds)
+#' model <- fit_BKP(X, y, m, Xbounds=Xbounds)
 #'
 #' # Simulate 5 posterior draws of success probabilities
 #' Xnew <- matrix(seq(-2, 2, length.out = 5), ncol = 1)
@@ -83,7 +83,7 @@
 #' @export
 #' @method simulate BKP
 
-simulate.BKP <- function(object, nsim = 1, seed = NULL, ..., Xnew = NULL, threshold = NULL)
+simulate.BKP <- function(object, nsim = 1, seed = NULL, Xnew = NULL, threshold = NULL, ...)
 {
   # ---------------- Argument Checking ----------------
   if (!is.numeric(nsim) || length(nsim) != 1 || nsim <= 0 || nsim != as.integer(nsim)) {
@@ -180,6 +180,6 @@ simulate.BKP <- function(object, nsim = 1, seed = NULL, ..., Xnew = NULL, thresh
     threshold = threshold   # classification threshold
   )
 
-  class(simulation) <- "simulate.BKP"
+  class(simulation) <- "simulate_BKP"
   return(simulation)
 }

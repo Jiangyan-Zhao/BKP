@@ -9,7 +9,7 @@
 #'   For higher-dimensional inputs, users can specify which dimensions to plot.
 #'
 #' @param x An object of class \code{"BKP"} or \code{"DKP"}, typically returned
-#'   by \code{\link{fit.BKP}} or \code{\link{fit.DKP}}.
+#'   by \code{\link{fit_BKP}} or \code{\link{fit_DKP}}.
 #' @param only_mean Logical. If \code{TRUE}, only the predicted mean surface is
 #'   plotted for 2D inputs (only applies to \code{BKP} models). Default is
 #'   \code{FALSE}.
@@ -52,8 +52,8 @@
 #'   For input dimensions greater than two, the function terminates with an
 #'   error message.
 #'
-#' @seealso \code{\link{fit.BKP}}, \code{\link{predict.BKP}},
-#'   \code{\link{fit.DKP}}, \code{\link{predict.DKP}}
+#' @seealso \code{\link{fit_BKP}}, \code{\link{predict.BKP}},
+#'   \code{\link{fit_DKP}}, \code{\link{predict.DKP}}
 #'
 #' @references Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
 #'   Kernel Process Modeling}.  arXiv.
@@ -82,7 +82,7 @@
 #' y <- rbinom(n, size = m, prob = true_pi)
 #'
 #' # Fit BKP model
-#' model1 <- fit.BKP(X, y, m, Xbounds=Xbounds)
+#' model1 <- fit_BKP(X, y, m, Xbounds=Xbounds)
 #'
 #' # Plot results
 #' plot(model1)
@@ -115,7 +115,7 @@
 #' y <- rbinom(n, size = m, prob = true_pi)
 #'
 #' # Fit BKP model
-#' model2 <- fit.BKP(X, y, m, Xbounds=Xbounds)
+#' model2 <- fit_BKP(X, y, m, Xbounds=Xbounds)
 #'
 #' # Plot results
 #' plot(model2, n_grid = 50)

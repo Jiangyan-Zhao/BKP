@@ -26,7 +26,7 @@
 #' Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 #'
 #' # Fit DKP model
-#' model1 <- fit.DKP(X, Y, Xbounds = Xbounds)
+#' model1 <- fit_DKP(X, Y, Xbounds = Xbounds)
 #' summary(model1)
 #'
 #'
@@ -58,13 +58,43 @@
 #' Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 #'
 #' # Fit DKP model
-#' model2 <- fit.DKP(X, Y, Xbounds = Xbounds)
+#' model2 <- fit_DKP(X, Y, Xbounds = Xbounds)
 #' summary(model2)
 #'
 #' @export
-#' @method print summary.DKP
+#' @method print DKP
 
-print.summary.DKP <- function(x, ...) {
+print.DKP <- function(x, ...) {
+  cat("\n       Dirichlet Kernel Process (DKP)    \n\n")
+  cat(sprintf("Number of observations (n):  %d\n", nrow(x$X)))
+  cat(sprintf("Input dimensionality (d):    %d\n", ncol(x$X)))
+  cat(sprintf("Number of classes (q):       %d\n", ncol(x$Y)))
+  cat(sprintf("Kernel type:                 %s\n", x$kernel))
+  cat(sprintf("Optimized kernel parameters: %s\n",
+              paste(sprintf("%.4f", x$theta_opt), collapse = ", ")))
+  if (!is.na(x$loss_min)) {
+    cat(sprintf("Minimum achieved loss:       %.5f\n", x$loss_min))
+  }
+  cat(sprintf("Loss function:               %s\n", x$loss))
+  cat(sprintf("Prior type:                  %s\n", x$prior))
+  if (x$prior == "fixed" || x$prior == "adaptive") {
+    cat(sprintf("r0: %.3f\n", x$r0))
+  }
+  if (x$prior == "fixed") {
+    cat("p0: ", paste(round(x$p0, 3), collapse = ", "), "\n")
+  }
+
+  invisible(x)
+}
+
+
+#' @rdname print
+#'
+#' @keywords DKP
+#'
+#' @export
+
+print.summary_DKP <- function(x, ...) {
   cat("\n      Summary of Dirichlet Kernel Process (DKP)    \n\n")
   cat(sprintf("Number of observations (n):  %d\n", x$n_obs))
   cat(sprintf("Input dimensionality (d):    %d\n", x$input_dim))
@@ -101,40 +131,14 @@ print.summary.DKP <- function(x, ...) {
   invisible(x)
 }
 
-#' @rdname print
-#'
-#' @keywords DKP
-#'
-#' @export
-print.DKP <- function(x, ...) {
-  cat("\n       Dirichlet Kernel Process (DKP)    \n\n")
-  cat(sprintf("Number of observations (n):  %d\n", nrow(x$X)))
-  cat(sprintf("Input dimensionality (d):    %d\n", ncol(x$X)))
-  cat(sprintf("Number of classes (q):       %d\n", ncol(x$Y)))
-  cat(sprintf("Kernel type:                 %s\n", x$kernel))
-  cat(sprintf("Optimized kernel parameters: %s\n",
-              paste(sprintf("%.4f", x$theta_opt), collapse = ", ")))
-  if (!is.na(x$loss_min)) {
-    cat(sprintf("Minimum achieved loss:       %.5f\n", x$loss_min))
-  }
-  cat(sprintf("Loss function:               %s\n", x$loss))
-  cat(sprintf("Prior type:                  %s\n", x$prior))
-  if (x$prior == "fixed" || x$prior == "adaptive") {
-    cat(sprintf("r0: %.3f\n", x$r0))
-  }
-  if (x$prior == "fixed") {
-    cat("p0: ", paste(round(x$p0, 3), collapse = ", "), "\n")
-  }
-
-  invisible(x)
-}
 
 #' @rdname print
 #'
 #' @keywords DKP
 #'
 #' @export
-print.predict.DKP <- function(x, ...) {
+
+print.predict_DKP <- function(x, ...) {
   n <- nrow(x$mean)
 
   # Determine prediction input
@@ -220,13 +224,14 @@ print.predict.DKP <- function(x, ...) {
   invisible(x)
 }
 
+
 #' @rdname print
 #'
 #' @keywords DKP
 #'
 #' @export
 
-print.simulate.DKP <- function(x, ...) {
+print.simulate_DKP <- function(x, ...) {
   n <- dim(x$samples)[1]  # number of points
   q <- dim(x$samples)[2]  # number of classes
   nsim <- dim(x$samples)[3]  # number of simulations
@@ -329,3 +334,4 @@ print.simulate.DKP <- function(x, ...) {
 
   invisible(x)
 }
+

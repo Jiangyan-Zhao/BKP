@@ -12,7 +12,7 @@
 }
 \arguments{
 \item{x}{An object of class \code{"BKP"} or \code{"DKP"}, typically returned
-by \code{\link{fit.BKP}} or \code{\link{fit.DKP}}.}
+by \code{\link{fit_BKP}} or \code{\link{fit_DKP}}.}
 
 \item{only_mean}{Logical. If \code{TRUE}, only the predicted mean surface is
 plotted for 2D inputs (only applies to \code{BKP} models). Default is
@@ -89,7 +89,7 @@ m <- sample(100, n, replace = TRUE)
 y <- rbinom(n, size = m, prob = true_pi)
 
 # Fit BKP model
-model1 <- fit.BKP(X, y, m, Xbounds=Xbounds)
+model1 <- fit_BKP(X, y, m, Xbounds=Xbounds)
 
 # Plot results
 plot(model1)
@@ -122,7 +122,7 @@ m <- sample(100, n, replace = TRUE)
 y <- rbinom(n, size = m, prob = true_pi)
 
 # Fit BKP model
-model2 <- fit.BKP(X, y, m, Xbounds=Xbounds)
+model2 <- fit_BKP(X, y, m, Xbounds=Xbounds)
 
 # Plot results
 plot(model2, n_grid = 50)
@@ -150,7 +150,7 @@ m <- sample(100, n, replace = TRUE)
 Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 
 # Fit DKP model
-model1 <- fit.DKP(X, Y, Xbounds = Xbounds)
+model1 <- fit_DKP(X, Y, Xbounds = Xbounds)
 
 # Plot results
 plot(model1)
@@ -184,7 +184,7 @@ m <- sample(100, n, replace = TRUE)
 Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 
 # Fit DKP model
-model2 <- fit.DKP(X, Y, Xbounds = Xbounds)
+model2 <- fit_DKP(X, Y, Xbounds = Xbounds)
 
 # Plot results
 plot(model2, n_grid = 50)
@@ -196,8 +196,8 @@ Kernel Process Modeling}.  arXiv.
 https://doi.org/10.48550/arXiv.2508.10447.
 }
 \seealso{
-\code{\link{fit.BKP}}, \code{\link{predict.BKP}},
-\code{\link{fit.DKP}}, \code{\link{predict.DKP}}
+\code{\link{fit_BKP}}, \code{\link{predict.BKP}},
+\code{\link{fit_DKP}}, \code{\link{predict.DKP}}
 }
 \keyword{BKP}
 \keyword{DKP}

@@ -19,7 +19,7 @@ supports hyperparameter tuning and flexible prior specification.
  Core functionality is organized into the following
 groups:
 \describe{
-\item{\code{\link{fit.BKP}}, \code{\link{fit.DKP}}}{
+\item{\code{\link{fit_BKP}}, \code{\link{fit_DKP}}}{
 Fit a BKP or DKP model to (multi)binomial response data.
 }
 \item{\code{\link{predict.BKP}}, \code{\link{predict.DKP}}}{
@@ -34,7 +34,7 @@ Draw simulated responses from the posterior predictive distribution of a fitted 
 \item{\code{\link{plot.BKP}}, \code{\link{plot.DKP}}}{
 Visualize model predictions and uncertainty bands in 1D and 2D input spaces.
 }
-\item{\code{\link{summary.BKP}}, \code{\link{summary.DKP}}, \code{\link{print.BKP}}, \code{\link{print.DKP}}, \code{\link{print.summary.BKP}}, \code{\link{print.summary.DKP}}}{
+\item{\code{\link{summary.BKP}}, \code{\link{summary.DKP}}, \code{\link{print.BKP}}, \code{\link{print.DKP}}}{
 Summarize or print details of a fitted BKP or DKP model.
 }
 }
