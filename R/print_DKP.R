@@ -108,10 +108,10 @@ print.summary_DKP <- function(x, ...) {
   cat(sprintf("Loss function:               %s\n", x$loss))
   cat(sprintf("Prior type:                  %s\n", x$prior))
   if (x$prior == "fixed" || x$prior == "adaptive") {
-    cat(sprintf("r0: %.3f\n", x$r0))
+    cat(sprintf("    r0: %.3f\n", x$r0))
   }
   if (x$prior == "fixed") {
-    cat("p0: ", paste(round(x$p0, 3), collapse = ", "), "\n")
+    cat("    p0: ", paste(round(x$p0, 3), collapse = ", "), "\n")
   }
 
   # Posterior predictive summary

@@ -30,6 +30,11 @@
 #' @method quantile DKP
 
 quantile.DKP <- function(x, probs = c(0.025, 0.5, 0.975), ...) {
+  # arguments checking
+  if (!is.numeric(probs) || any(probs < 0 | probs > 1)) {
+    stop("'probs' must be a numeric vector with all values in [0, 1].")
+  }
+
   # Extract posterior Dirichlet parameters
   alpha_n <- x$alpha_n  # n x q matrix (n obs, q classes)
   n <- nrow(alpha_n)

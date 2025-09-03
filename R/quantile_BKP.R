@@ -56,6 +56,11 @@
 #' @method quantile BKP
 
 quantile.BKP <- function(x, probs = c(0.025, 0.5, 0.975), ...) {
+  # arguments checking
+  if (!is.numeric(probs) || any(probs < 0 | probs > 1)) {
+    stop("'probs' must be a numeric vector with all values in [0, 1].")
+  }
+
   # Extract posterior beta parameters
   alpha_n <- x$alpha_n
   beta_n  <- x$beta_n
