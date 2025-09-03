@@ -22,11 +22,13 @@
 #'   array (if \code{length(probs) > 1}) of posterior quantiles. Dimensions
 #'   correspond to observations × classes × probabilities.
 #'
-#' @details #' For a \code{BKP} model, posterior quantiles are computed from the
+#' @details For a \code{BKP} model, posterior quantiles are computed from the
 #'   Beta Kernel Process for the positive class probability. For a \code{DKP}
 #'   model, posterior quantiles for each class are approximated using the Beta
 #'   approximation of the marginal distributions of the posterior Dirichlet
 #'   distribution.
+#'
+#' @seealso \code{\link{fit_BKP}}, \code{\link{fit_DKP}} for model fitting.
 #'
 #' @keywords BKP DKP
 #'

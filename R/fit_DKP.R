@@ -4,12 +4,15 @@
 #'
 #' @description Fits a DKP model for categorical or multinomial response data by
 #'   locally smoothing observed counts to estimate latent Dirichlet parameters.
+#'   The model constructs flexible latent probability surfaces by updating
+#'   Dirichlet priors using kernel-weighted observations.
 #'
 #' @inheritParams fit_BKP
-#' @param Y Matrix of observed multinomial counts, with dimension \eqn{n \times
-#'   q}.
-#' @param p0 Global prior mean vector (only used when \code{prior = "fixed"}).
-#'   Must be of length \eqn{q}.
+#' @param Y Numeric matrix of observed multinomial counts, with dimension
+#'   \eqn{n \times q}.
+#' @param p0 Global prior mean vector (used only when \code{prior = "fixed"}).
+#'   Defaults to the empirical class proportions \code{colMeans(Y / rowSums(Y))}.
+#'   Must have length equal to the number of categories \eqn{q}.
 #'
 #' @return A list of class \code{"DKP"} representing the fitted DKP model, with
 #'   the following components:
@@ -17,8 +20,8 @@
 #'   \item{\code{theta_opt}}{Optimized kernel hyperparameters (lengthscales).}
 #'   \item{\code{kernel}}{Kernel function used, as a string.}
 #'   \item{\code{loss}}{Loss function used for hyperparameter tuning.}
-#'   \item{\code{loss_min}}{Minimum loss value achieved during kernel hyperparameter optimization.
-#'   If \code{theta} was manually specified by the user, this value is set to \code{NA}.}
+#'   \item{\code{loss_min}}{Minimum loss value achieved during kernel
+#'     hyperparameter optimization. Set to \code{NA} if \code{theta} is user-specified.}
 #'   \item{\code{X}}{Original (unnormalized) input matrix of size \code{n × d}.}
 #'   \item{\code{Xnorm}}{Normalized input matrix scaled to \eqn{[0,1]^d}.}
 #'   \item{\code{Xbounds}}{Matrix specifying normalization bounds for each input dimension.}
@@ -30,11 +33,11 @@
 #'   \item{\code{alpha_n}}{Posterior Dirichlet parameters after kernel smoothing.}
 #' }
 #'
-#' @seealso \code{\link{fit_BKP}} for modeling binomial responses using the Beta
+#' @seealso \code{\link{fit_BKP}} for modeling binomial responses via the Beta
 #'   Kernel Process. \code{\link{predict.DKP}}, \code{\link{plot.DKP}},
-#'   \code{\link{simulate.DKP}} for making predictions, visualizing results, and
-#'   generating simulations from a fitted DKP model. \code{\link{summary.DKP}},
-#'   \code{\link{print.DKP}} for inspecting fitted model summaries.
+#'   \code{\link{simulate.DKP}} for prediction, visualization, and posterior
+#'   simulation from a fitted DKP model. \code{\link{summary.DKP}},
+#'   \code{\link{print.DKP}} for inspecting model summaries.
 #'
 #' @references Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
 #'   Kernel Process Modeling}.  arXiv.
@@ -46,15 +49,16 @@
 #'
 #' # Define true class probability function (3-class)
 #' true_pi_fun <- function(X) {
-#'   p <- (1 + exp(-X^2) * cos(10 * (1 - exp(-X)) / (1 + exp(-X)))) / 2
-#'   return(matrix(c(p/2, p/2, 1 - p), nrow = length(p)))
+#'   p1 <- 1/(1+exp(-3*X))
+#'   p2 <- (1 + exp(-X^2) * cos(10 * (1 - exp(-X)) / (1 + exp(-X)))) / 2
+#'   return(matrix(c(p1/2, p2/2, 1 - (p1+p2)/2), nrow = length(p1)))
 #' }
 #'
 #' n <- 30
 #' Xbounds <- matrix(c(-2, 2), nrow = 1)
 #' X <- tgp::lhs(n = n, rect = Xbounds)
 #' true_pi <- true_pi_fun(X)
-#' m <- sample(100, n, replace = TRUE)
+#' m <- sample(150, n, replace = TRUE)
 #'
 #' # Generate multinomial responses
 #' Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
@@ -77,16 +81,17 @@
 #'     (19 - 14*x1 + 3*x1^2 - 14*x2 + 6*x1*x2 + 3*x2^2)
 #'   b <- 30 + (2*x1 - 3*x2)^2 *
 #'     (18 - 32*x1 + 12*x1^2 + 48*x2 - 36*x1*x2 + 27*x2^2)
-#'   f <- (log(a * b) - m) / s
-#'   p <- pnorm(f)
-#'   return(matrix(c(p/2, p/2, 1 - p), nrow = length(p)))
+#'   f <- (log(a*b)- m)/s
+#'   p1 <- pnorm(f) # Transform to probability
+#'   p2 <- sin(pi * X[,1]) * sin(pi * X[,2])
+#'   return(matrix(c(p1/2, p2/2, 1 - (p1+p2)/2), nrow = length(p1)))
 #' }
 #'
 #' n <- 100
 #' Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
 #' X <- tgp::lhs(n = n, rect = Xbounds)
 #' true_pi <- true_pi_fun(X)
-#' m <- sample(100, n, replace = TRUE)
+#' m <- sample(150, n, replace = TRUE)
 #'
 #' # Generate multinomial responses
 #' Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))

@@ -1,41 +1,60 @@
 #' @name predict
 #'
-#' @title Predict Method for BKP or DKP Models
+#' @title Posterior Prediction for BKP or DKP Models
 #'
-#' @description Generates posterior predictive summaries from a fitted BKP or
-#'   DKP model at new input locations.
+#' @description Generates posterior predictive summaries from a fitted Beta
+#'   Kernel Process (BKP) or Dirichlet Kernel Process (DKP) model at new input
+#'   locations. Supports prediction of posterior mean, variance, credible
+#'   intervals, and classification labels (where applicable).
 #'
 #' @param object An object of class \code{"BKP"} or \code{"DKP"}, typically
 #'   returned by \code{\link{fit_BKP}} or \code{\link{fit_DKP}}.
-#' @param Xnew A numeric matrix (or vector) of new input locations where
-#'   predictions are desired.
-#' @param CI_level Credible level for prediction intervals (default is
-#'   \code{0.95}, corresponding to 95% CI).
-#' @param threshold Classification threshold for binary prediction based on
-#'   posterior mean (used only for BKP; default is \code{0.5}).
+#' @param Xnew A numeric vector or matrix of new input locations at which to
+#'   generate predictions. If \code{NULL}, predictions are returned for the
+#'   training data.
+#' @param CI_level Numeric between 0 and 1 specifying the credible level for
+#'   posterior intervals (default \code{0.95} for 95% credible interval).
+#' @param threshold Numeric between 0 and 1 specifying the classification
+#'   threshold for binary predictions based on posterior mean (used only for
+#'   BKP; default is \code{0.5}).
 #' @param ... Additional arguments passed to generic \code{predict} methods
 #'   (currently not used; included for S3 method consistency).
 #'
-#' @return A list with the following components:
+#' @return A list containing posterior predictive summaries:
 #' \describe{
-#'   \item{\code{X}}{The training data points.}
-#'   \item{\code{Xnew}}{The new data points.}
-#'   \item{\code{mean}}{BKP: Posterior mean of the success probability at each location.
-#'                      DKP: A matrix of posterior mean class probabilities (rows = inputs, columns = classes).}
-#'   \item{\code{variance}}{BKP: Posterior variance of the success probability.
-#'                          DKP: A matrix of posterior variances for each class.}
-#'   \item{\code{lower}}{BKP: Lower bound of the prediction interval (e.g., 2.5th percentile for 95% CI).
-#'                       DKP: A matrix of lower bounds for each class (e.g., 2.5th percentile).}
-#'   \item{\code{upper}}{BKP: Upper bound of the prediction interval (e.g., 97.5th percentile for 95% CI).
-#'                       DKP: A matrix of upper bounds for each class (e.g., 97.5th percentile).}
-#'   \item{\code{class}}{BKP: Predicted binary label (0 or 1), based on posterior mean and threshold, if \code{m = 1}.
-#'                       DKP: Predicted class label (i.e., the class with the highest posterior mean probability).}
+#'   \item{\code{X}}{The original training input locations.}
+#'   \item{\code{Xnew}}{The new input locations for prediction (same as \code{Xnew} if provided).}
+#'   \item{\code{mean}}{Posterior mean prediction:
+#'     \itemize{
+#'       \item BKP: Posterior mean success probability at each location.
+#'       \item DKP: Matrix of posterior mean class probabilities (rows = inputs, columns = classes).
+#'     }}
+#'   \item{\code{variance}}{Posterior predictive variance:
+#'     \itemize{
+#'       \item BKP: Variance of success probability.
+#'       \item DKP: Matrix of predictive variances for each class.
+#'     }}
+#'   \item{\code{lower}}{Lower bound of the posterior credible interval:
+#'     \itemize{
+#'       \item BKP: Lower bound (e.g., 2.5th percentile for 95\% CI).
+#'       \item DKP: Matrix of lower bounds for each class.
+#'     }}
+#'   \item{\code{upper}}{Upper bound of the posterior credible interval:
+#'     \itemize{
+#'       \item BKP: Upper bound (e.g., 97.5th percentile for 95\% CI).
+#'       \item DKP: Matrix of upper bounds for each class.
+#'     }}
+#'   \item{\code{class}}{Predicted label:
+#'     \itemize{
+#'       \item BKP: Binary class (0 or 1) based on posterior mean and \code{threshold}, only if \code{m = 1}.
+#'       \item DKP: Predicted class label with highest posterior mean probability.
+#'     }}
+#'   \item{\code{CI_level}}{The specified credible interval level.}
 #' }
 #'
-#' @seealso \code{\link{fit_BKP}} for fitting Beta Kernel Process models.
-#'   \code{\link{fit_DKP}} for fitting Dirichlet Kernel Process models.
-#'   \code{\link{plot.BKP}} for visualizing fitted BKP models.
-#'   \code{\link{plot.DKP}} for visualizing fitted DKP models.
+#' @seealso \code{\link{fit_BKP}} and \code{\link{fit_DKP}} for model fitting;
+#'   \code{\link{plot.BKP}} and \code{\link{plot.DKP}} for visualization of
+#'   fitted models.
 #'
 #' @references Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
 #'   Kernel Process Modeling}.  arXiv.

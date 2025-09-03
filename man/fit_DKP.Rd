@@ -19,40 +19,39 @@ fit_DKP(
 }
 \arguments{
 \item{X}{A numeric input matrix of size \eqn{n \times d}, where each row
-represents a covariate vector.}
+corresponds to a covariate vector.}
 
-\item{Y}{Matrix of observed multinomial counts, with dimension \eqn{n \times
-q}.}
+\item{Y}{Numeric matrix of observed multinomial counts, with dimension
+\eqn{n \times q}.}
 
 \item{Xbounds}{Optional \eqn{d \times 2} matrix specifying the lower and
 upper bounds of each input dimension. Used to normalize inputs to
-\eqn{[0,1]^d}. If \code{Xbounds} is \code{NULL}, the input is assumed to
-have already been normalized, and the default bounds are set to
-\eqn{[0,1]^d}.}
+\eqn{[0,1]^d}. If \code{NULL}, inputs are assumed to be pre-normalized, and
+default bounds \eqn{[0,1]^d} are applied.}
 
-\item{prior}{Type of prior to use. One of \code{"noninformative"},
+\item{prior}{Type of prior: \code{"noninformative"} (default),
 \code{"fixed"}, or \code{"adaptive"}.}
 
-\item{r0}{Global prior precision (only used when \code{prior = "fixed"} or
+\item{r0}{Global prior precision (used when \code{prior = "fixed"} or
 \code{"adaptive"}).}
 
-\item{p0}{Global prior mean vector (only used when \code{prior = "fixed"}).
-Must be of length \eqn{q}.}
+\item{p0}{Global prior mean vector (used only when \code{prior = "fixed"}).
+Defaults to the empirical class proportions \code{colMeans(Y / rowSums(Y))}.
+Must have length equal to the number of categories \eqn{q}.}
 
-\item{kernel}{Kernel function for local weighting. Choose from
-\code{"gaussian"}, \code{"matern52"}, or \code{"matern32"}.}
+\item{kernel}{Kernel function for local weighting: \code{"gaussian"}
+(default), \code{"matern52"}, or \code{"matern32"}.}
 
-\item{loss}{Loss function for kernel hyperparameter tuning. One of
-\code{"brier"} (default) or \code{"log_loss"}.}
+\item{loss}{Loss function for kernel hyperparameter tuning: \code{"brier"}
+(default) or \code{"log_loss"}.}
 
 \item{n_multi_start}{Number of random initializations for multi-start
-optimization. Default is \code{10 × d}.}
+optimization. Default is \eqn{10 \times d}.}
 
-\item{theta}{Optional. A positive scalar or a numeric vector of length equal
-to the input dimension \code{d}. If specified, these values will be used
-directly as the kernel lengthscale parameters, bypassing the internal
-optimization procedure. If \code{NULL} (default), the kernel parameters are
-optimized via (multi-start) L-BFGS-B to minimize the chosen loss function.}
+\item{theta}{Optional. A positive scalar or numeric vector of length \code{d}
+specifying kernel lengthscale parameters directly. If \code{NULL}
+(default), lengthscales are optimized using multi-start L-BFGS-B to
+minimize the specified loss.}
 }
 \value{
 A list of class \code{"DKP"} representing the fitted DKP model, with
@@ -61,8 +60,8 @@ the following components:
 \item{\code{theta_opt}}{Optimized kernel hyperparameters (lengthscales).}
 \item{\code{kernel}}{Kernel function used, as a string.}
 \item{\code{loss}}{Loss function used for hyperparameter tuning.}
-\item{\code{loss_min}}{Minimum loss value achieved during kernel hyperparameter optimization.
-If \code{theta} was manually specified by the user, this value is set to \code{NA}.}
+\item{\code{loss_min}}{Minimum loss value achieved during kernel
+hyperparameter optimization. Set to \code{NA} if \code{theta} is user-specified.}
 \item{\code{X}}{Original (unnormalized) input matrix of size \code{n × d}.}
 \item{\code{Xnorm}}{Normalized input matrix scaled to \eqn{[0,1]^d}.}
 \item{\code{Xbounds}}{Matrix specifying normalization bounds for each input dimension.}
@@ -77,6 +76,8 @@ If \code{theta} was manually specified by the user, this value is set to \code{N
 \description{
 Fits a DKP model for categorical or multinomial response data by
 locally smoothing observed counts to estimate latent Dirichlet parameters.
+The model constructs flexible latent probability surfaces by updating
+Dirichlet priors using kernel-weighted observations.
 }
 \examples{
 #-------------------------- 1D Example ---------------------------
@@ -84,15 +85,16 @@ set.seed(123)
 
 # Define true class probability function (3-class)
 true_pi_fun <- function(X) {
-  p <- (1 + exp(-X^2) * cos(10 * (1 - exp(-X)) / (1 + exp(-X)))) / 2
-  return(matrix(c(p/2, p/2, 1 - p), nrow = length(p)))
+  p1 <- 1/(1+exp(-3*X))
+  p2 <- (1 + exp(-X^2) * cos(10 * (1 - exp(-X)) / (1 + exp(-X)))) / 2
+  return(matrix(c(p1/2, p2/2, 1 - (p1+p2)/2), nrow = length(p1)))
 }
 
 n <- 30
 Xbounds <- matrix(c(-2, 2), nrow = 1)
 X <- tgp::lhs(n = n, rect = Xbounds)
 true_pi <- true_pi_fun(X)
-m <- sample(100, n, replace = TRUE)
+m <- sample(150, n, replace = TRUE)
 
 # Generate multinomial responses
 Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
@@ -115,16 +117,17 @@ true_pi_fun <- function(X) {
     (19 - 14*x1 + 3*x1^2 - 14*x2 + 6*x1*x2 + 3*x2^2)
   b <- 30 + (2*x1 - 3*x2)^2 *
     (18 - 32*x1 + 12*x1^2 + 48*x2 - 36*x1*x2 + 27*x2^2)
-  f <- (log(a * b) - m) / s
-  p <- pnorm(f)
-  return(matrix(c(p/2, p/2, 1 - p), nrow = length(p)))
+  f <- (log(a*b)- m)/s
+  p1 <- pnorm(f) # Transform to probability
+  p2 <- sin(pi * X[,1]) * sin(pi * X[,2])
+  return(matrix(c(p1/2, p2/2, 1 - (p1+p2)/2), nrow = length(p1)))
 }
 
 n <- 100
 Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
 X <- tgp::lhs(n = n, rect = Xbounds)
 true_pi <- true_pi_fun(X)
-m <- sample(100, n, replace = TRUE)
+m <- sample(150, n, replace = TRUE)
 
 # Generate multinomial responses
 Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
@@ -140,9 +143,9 @@ Kernel Process Modeling}.  arXiv.
 https://doi.org/10.48550/arXiv.2508.10447.
 }
 \seealso{
-\code{\link{fit_BKP}} for modeling binomial responses using the Beta
+\code{\link{fit_BKP}} for modeling binomial responses via the Beta
 Kernel Process. \code{\link{predict.DKP}}, \code{\link{plot.DKP}},
-\code{\link{simulate.DKP}} for making predictions, visualizing results, and
-generating simulations from a fitted DKP model. \code{\link{summary.DKP}},
-\code{\link{print.DKP}} for inspecting fitted model summaries.
+\code{\link{simulate.DKP}} for prediction, visualization, and posterior
+simulation from a fitted DKP model. \code{\link{summary.DKP}},
+\code{\link{print.DKP}} for inspecting model summaries.
 }

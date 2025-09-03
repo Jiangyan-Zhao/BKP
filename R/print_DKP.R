@@ -12,22 +12,26 @@
 #'
 #' # Define true class probability function (3-class)
 #' true_pi_fun <- function(X) {
-#'   p <- (1 + exp(-X^2) * cos(10 * (1 - exp(-X)) / (1 + exp(-X)))) / 2
-#'   return(matrix(c(p/2, p/2, 1 - p), nrow = length(p)))
+#'   p1 <- 1/(1+exp(-3*X))
+#'   p2 <- (1 + exp(-X^2) * cos(10 * (1 - exp(-X)) / (1 + exp(-X)))) / 2
+#'   return(matrix(c(p1/2, p2/2, 1 - (p1+p2)/2), nrow = length(p1)))
 #' }
 #'
 #' n <- 30
 #' Xbounds <- matrix(c(-2, 2), nrow = 1)
 #' X <- tgp::lhs(n = n, rect = Xbounds)
 #' true_pi <- true_pi_fun(X)
-#' m <- sample(100, n, replace = TRUE)
+#' m <- sample(150, n, replace = TRUE)
 #'
 #' # Generate multinomial responses
 #' Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 #'
 #' # Fit DKP model
 #' model1 <- fit_DKP(X, Y, Xbounds = Xbounds)
-#' summary(model1)
+#' print(model1)                    # fitted object
+#' print(summary(model1))           # summary
+#' print(predict(model1))           # predictions
+#' print(simulate(model1, nsim=3))  # posterior simulations
 #'
 #'
 #' #-------------------------- 2D Example ---------------------------
@@ -43,29 +47,33 @@
 #'     (19 - 14*x1 + 3*x1^2 - 14*x2 + 6*x1*x2 + 3*x2^2)
 #'   b <- 30 + (2*x1 - 3*x2)^2 *
 #'     (18 - 32*x1 + 12*x1^2 + 48*x2 - 36*x1*x2 + 27*x2^2)
-#'   f <- (log(a * b) - m) / s
-#'   p <- pnorm(f)
-#'   return(matrix(c(p/2, p/2, 1 - p), nrow = length(p)))
+#'   f <- (log(a*b)- m)/s
+#'   p1 <- pnorm(f) # Transform to probability
+#'   p2 <- sin(pi * X[,1]) * sin(pi * X[,2])
+#'   return(matrix(c(p1/2, p2/2, 1 - (p1+p2)/2), nrow = length(p1)))
 #' }
 #'
 #' n <- 100
 #' Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
 #' X <- tgp::lhs(n = n, rect = Xbounds)
 #' true_pi <- true_pi_fun(X)
-#' m <- sample(100, n, replace = TRUE)
+#' m <- sample(150, n, replace = TRUE)
 #'
 #' # Generate multinomial responses
 #' Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 #'
 #' # Fit DKP model
 #' model2 <- fit_DKP(X, Y, Xbounds = Xbounds)
-#' summary(model2)
+#' print(model2)                    # fitted object
+#' print(summary(model2))           # summary
+#' print(predict(model2))           # predictions
+#' print(simulate(model2, nsim=3))  # posterior simulations
 #'
 #' @export
 #' @method print DKP
 
 print.DKP <- function(x, ...) {
-  cat("\n       Dirichlet Kernel Process (DKP)    \n\n")
+  cat("\n       Dirichlet Kernel Process (DKP) Model   \n\n")
   cat(sprintf("Number of observations (n):  %d\n", nrow(x$X)))
   cat(sprintf("Input dimensionality (d):    %d\n", ncol(x$X)))
   cat(sprintf("Number of classes (q):       %d\n", ncol(x$Y)))
@@ -95,7 +103,7 @@ print.DKP <- function(x, ...) {
 #' @export
 
 print.summary_DKP <- function(x, ...) {
-  cat("\n      Summary of Dirichlet Kernel Process (DKP)    \n\n")
+  cat("\n      Summary of Dirichlet Kernel Process (DKP) Model   \n\n")
   cat(sprintf("Number of observations (n):  %d\n", x$n_obs))
   cat(sprintf("Input dimensionality (d):    %d\n", x$input_dim))
   cat(sprintf("Number of classes (q):       %d\n", x$n_class))

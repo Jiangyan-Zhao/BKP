@@ -21,10 +21,9 @@ result of a call to \code{\link{fit_BKP}} or \code{\link{fit_DKP}}.}
 \value{
 A named list containing:
 \itemize{
-\item \code{kernel_hyperparameters}: Estimated kernel hyperparameters
-(typically the optimized \eqn{\theta} values).
-\item \code{posterior_alpha}: Posterior Dirichlet/Beta \eqn{\alpha} parameters.
-\item \code{posterior_beta}: (BKP only) Posterior Beta \eqn{\beta} parameters.
+\item \code{theta}: Estimated kernel hyperparameters.
+\item \code{alpha_n}: Posterior Dirichlet/Beta \eqn{\alpha} parameters.
+\item \code{beta_n}: (BKP only) Posterior Beta \eqn{\beta} parameters.
 }
 }
 \description{
@@ -33,14 +32,6 @@ Retrieve the key model parameters from a fitted \code{BKP} or
 optimized kernel hyperparameters and posterior Beta parameters. For a
 \code{DKP} model, this includes the kernel hyperparameters and posterior
 Dirichlet parameters.
-}
-\details{
-These methods provide structured access to the fitted model
-parameters, playing a role analogous to \code{coef()} for linear models.
-While BKP and DKP are Bayesian nonparametric models rather than linear
-models, exposing kernel hyperparameters and posterior distribution
-parameters in a unified way makes it easier for users to inspect model fits
-and conduct downstream analyses.
 }
 \examples{
 # -------------------------- BKP ---------------------------
@@ -69,15 +60,16 @@ parameter(model)
 
 # Define true class probability function (3-class)
 true_pi_fun <- function(X) {
-  p <- (1 + exp(-X^2) * cos(10 * (1 - exp(-X)) / (1 + exp(-X)))) / 2
-  return(matrix(c(p/2, p/2, 1 - p), nrow = length(p)))
+  p1 <- 1/(1+exp(-3*X))
+  p2 <- (1 + exp(-X^2) * cos(10 * (1 - exp(-X)) / (1 + exp(-X)))) / 2
+  return(matrix(c(p1/2, p2/2, 1 - (p1+p2)/2), nrow = length(p1)))
 }
 
 n <- 30
 Xbounds <- matrix(c(-2, 2), nrow = 1)
 X <- tgp::lhs(n = n, rect = Xbounds)
 true_pi <- true_pi_fun(X)
-m <- sample(100, n, replace = TRUE)
+m <- sample(150, n, replace = TRUE)
 
 # Generate multinomial responses
 Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
@@ -88,6 +80,15 @@ model <- fit_DKP(X, Y, Xbounds = Xbounds)
 # Extract posterior quantiles
 parameter(model)
 
+}
+\references{
+Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
+Kernel Process Modeling}.  arXiv.
+https://doi.org/10.48550/arXiv.2508.10447.
+}
+\seealso{
+\code{\link{fit_BKP}} for fitting BKP models, \code{\link{fit_DKP}}
+for fitting DKP models.
 }
 \keyword{BKP}
 \keyword{DKP}

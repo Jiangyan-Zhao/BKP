@@ -4,20 +4,19 @@
 \alias{BKP-package}
 \title{Beta Kernel Process Modeling}
 \description{
-The \pkg{BKP} package provides tools for nonparametric modeling
-of binary/binomial or categorical/multinomial response data using the Beta
-Kernel Process (BKP) and its extension, the Dirichlet Kernel Process (DKP).
-These methods estimate latent probability surfaces through localized kernel
-smoothing under a Bayesian framework.
+The \pkg{BKP} package provides tools for Bayesian nonparametric
+modeling of binary/binomial or categorical/multinomial response data using
+the Beta Kernel Process (BKP) and its extension, the Dirichlet Kernel
+Process (DKP). These methods estimate latent probability surfaces through
+localized kernel smoothing under a Bayesian framework.
 
-The package includes functionality for model fitting, probabilistic
-prediction with uncertainty quantification, posterior simulation, and
-visualization in both one- and two-dimensional input spaces. It also
-supports hyperparameter tuning and flexible prior specification.
+The package offers functionality for model fitting, posterior predictive
+inference with uncertainty quantification, simulation of posterior draws,
+and visualization in both one- and two-dimensional input spaces. It also
+supports flexible prior specification and hyperparameter tuning.
 }
 \section{Main Functions}{
- Core functionality is organized into the following
-groups:
+ Core functionality is organized as follows:
 \describe{
 \item{\code{\link{fit_BKP}}, \code{\link{fit_DKP}}}{
 Fit a BKP or DKP model to (multi)binomial response data.
@@ -25,17 +24,20 @@ Fit a BKP or DKP model to (multi)binomial response data.
 \item{\code{\link{predict.BKP}}, \code{\link{predict.DKP}}}{
 Perform posterior predictive inference at new input locations, including
 predictive means, variances, and credible intervals.
-Classification labels are returned automatically
-when observations represent single trials (i.e., binary outcomes).
+When observations correspond to single trials (binary or categorical responses),
+predicted class labels are returned automatically.
 }
 \item{\code{\link{simulate.BKP}}, \code{\link{simulate.DKP}}}{
-Draw simulated responses from the posterior predictive distribution of a fitted model.
+Generate simulated responses from the posterior predictive distribution
+of a fitted model.
 }
 \item{\code{\link{plot.BKP}}, \code{\link{plot.DKP}}}{
-Visualize model predictions and uncertainty bands in 1D and 2D input spaces.
+Visualize model predictions and associated uncertainty in one- and two-dimensional input spaces;
+for inputs with more than two dimensions, users can select one or two dimensions
+to display via the \code{dims} argument.
 }
 \item{\code{\link{summary.BKP}}, \code{\link{summary.DKP}}, \code{\link{print.BKP}}, \code{\link{print.DKP}}}{
-Summarize or print details of a fitted BKP or DKP model.
+Summarize or print the details of a fitted BKP or DKP model.
 }
 }
 }

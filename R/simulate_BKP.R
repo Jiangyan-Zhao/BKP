@@ -2,60 +2,75 @@
 #'
 #' @title Simulate from a Fitted BKP or DKP Model
 #'
-#' @description Generates random samples from the posterior predictive
-#'   distribution of a fitted BKP or DKP model at new input locations.
+#' @description Generates random draws from the posterior predictive
+#'   distribution of a fitted BKP or DKP model at specified input locations.
 #'
-#'   For BKP models, posterior samples are drawn from Beta distributions
-#'   representing success probabilities, with optional binary class labels
-#'   determined by a threshold.
+#'   For BKP models, posterior samples are generated from Beta distributions
+#'   characterizing success probabilities. Optionally, binary class labels can
+#'   be derived by applying a user-specified classification threshold.
 #'
-#'   For DKP models, posterior samples are drawn from Dirichlet distributions
-#'   representing class probabilities, with optional class labels determined by
-#'   the maximum a posteriori (MAP) rule if training responses are one-hot
-#'   encoded.
+#'   For DKP models, posterior samples are generated from Dirichlet
+#'   distributions characterizing class probabilities. If training responses are
+#'   single-label (i.e., one-hot encoded), class labels may additionally be
+#'   assigned using the maximum a posteriori (MAP) rule.
 #'
 #' @param object An object of class \code{"BKP"} or \code{"DKP"}, typically
 #'   returned by \code{\link{fit_BKP}} or \code{\link{fit_DKP}}.
-#' @param Xnew A numeric matrix or vector of new input locations for simulation.
+#' @param Xnew A numeric matrix or vector of new input locations at which
+#'   simulations are generated.
 #' @param nsim Number of posterior samples to generate (default = \code{1}).
-#' @param threshold Classification threshold for binary output (only used for
-#'   BKP). If specified, the output will include binary class labels with values
-#'   above the threshold classified as 1 (default is \code{NULL}).
+#' @param threshold Classification threshold for binary decisions (BKP only).
+#'   When specified, posterior draws exceeding the threshold are classified as
+#'   1, and those below as 0. The default is \code{NULL}.
 #' @param seed Optional integer seed for reproducibility.
 #' @param ... Additional arguments (currently unused).
 #'
 #' @return A list with the following components:
 #' \describe{
 #'   \item{\code{samples}}{
-#'     For \strong{BKP}: A numeric matrix of dimension \code{nrow(Xnew) × nsim}, containing simulated success probabilities.\cr
-#'     For \strong{DKP}: A numeric array of dimension \code{nsim × q × nrow(Xnew)}, containing simulated class probabilities
-#'     from Dirichlet posteriors, where \code{q} is the number of classes.
+#'     For \strong{BKP}: A numeric matrix of size \code{nrow(Xnew) × nsim}, where
+#'     each column corresponds to one posterior draw of success probabilities.\cr
+#'     For \strong{DKP}: A numeric array of dimension \code{nsim × q × nrow(Xnew)},
+#'     containing simulated class probabilities from Dirichlet posteriors, where
+#'     \code{q} is the number of classes.
 #'   }
 #'
 #'   \item{\code{mean}}{
-#'     For \strong{BKP}: A numeric vector of posterior mean success probabilities at each \code{Xnew}.\cr
-#'     For \strong{DKP}: A numeric matrix of dimension \code{nrow(Xnew) × q}, containing posterior mean class probabilities.
+#'     For \strong{BKP}: A numeric vector of posterior mean success probabilities
+#'     at each \code{Xnew}.\cr
+#'     For \strong{DKP}: A numeric matrix of dimension \code{nrow(Xnew) × q},
+#'     containing posterior mean class probabilities.
 #'   }
 #'
 #'   \item{\code{class}}{
-#'     For \strong{BKP}: A binary matrix of dimension \code{nrow(Xnew) × nsim} indicating simulated class labels (0/1),
-#'     returned if \code{threshold} is specified.\cr
-#'     For \strong{DKP}: A numeric matrix of dimension \code{nrow(Xnew) × nsim} containing MAP-predicted class labels,
-#'     returned only when training data is single-label (i.e., each row of \code{Y} sums to 1).
+#'     For \strong{BKP}: An integer matrix of dimension
+#'     \code{nrow(Xnew) × nsim}, indicating simulated binary class labels (0/1),
+#'     returned when \code{threshold} is specified.\cr
+#'     For \strong{DKP}: An integer matrix of dimension
+#'     \code{nrow(Xnew) × nsim}, where each entry corresponds to a MAP-predicted
+#'     class label, returned only when training data is single-label.
 #'   }
+#'
+#'   \item{\code{X}}{The training input matrix used to fit the BKP/DKP model.}
+#'
+#'   \item{\code{Xnew}}{The new input locations at which simulations are generated.}
+#'
+#'   \item{\code{threshold}}{The classification threshold used for generating
+#'     binary class labels (if provided).}
 #' }
 #'
-#' @seealso \code{\link{fit_BKP}}, \code{\link{fit_DKP}},
-#'   \code{\link{predict.BKP}}, \code{\link{predict.DKP}}
+#' @seealso \code{\link{fit_BKP}}, \code{\link{fit_DKP}} for model fitting;
+#'   \code{\link{predict.BKP}}, \code{\link{predict.DKP}} for posterior
+#'   prediction.
 #'
 #' @references Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
 #'   Kernel Process Modeling}.  arXiv.
 #'   https://doi.org/10.48550/arXiv.2508.10447.
 #'
-#' @keywords BKP
+#' @keywords BKP DKP
 #'
 #' @examples
-#' ## -------------------- BKP Simulation Example --------------------
+#' ## -------------------- BKP --------------------
 #' set.seed(123)
 #'
 #' # Define true success probability function

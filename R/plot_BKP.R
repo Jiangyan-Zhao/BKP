@@ -2,58 +2,68 @@
 #'
 #' @title Plot Fitted BKP or DKP Models
 #'
-#' @description Visualizes fitted \code{BKP} or \code{DKP} models depending on
-#'   the input dimensionality. For 1-dimensional inputs, it displays predicted
-#'   class probabilities with credible intervals and observed data. For
-#'   2-dimensional inputs, it generates contour plots of posterior summaries.
-#'   For higher-dimensional inputs, users can specify which dimensions to plot.
+#' @description Visualizes fitted \code{BKP} (binary) or \code{DKP}
+#'   (multi-class) models according to the input dimensionality. For 1D inputs,
+#'   it shows predicted class probabilities with credible intervals and observed
+#'   data. For 2D inputs, it generates contour plots of posterior summaries. For
+#'   higher-dimensional inputs, users must specify which dimensions to plot.
 #'
 #' @param x An object of class \code{"BKP"} or \code{"DKP"}, typically returned
 #'   by \code{\link{fit_BKP}} or \code{\link{fit_DKP}}.
 #' @param only_mean Logical. If \code{TRUE}, only the predicted mean surface is
-#'   plotted for 2D inputs (only applies to \code{BKP} models). Default is
-#'   \code{FALSE}.
-#' @param n_grid Positive integer. Number of grid points used in each dimension to
-#'   construct the prediction grid. A larger value produces a smoother and more
-#'   detailed decision boundary, but increases computational cost.
-#'   Default is \code{80}.
-#' @param dims Integer vector specifying which dimensions of the input space
-#'   to visualize. Should have length 1 (for 1D plot) or 2 (for 2D plot).
-#'   If \code{NULL} (default), uses all dimensions if they are <= 2.
+#'   plotted for 2D inputs (applies to both BKP and DKP models for mean
+#'   visualization). Default is \code{FALSE}.
+#' @param n_grid Positive integer specifying the number of grid points per
+#'   dimension for constructing the prediction grid. Larger values produce
+#'   smoother and more detailed surfaces, but increase computation time. Default
+#'   is \code{80}.
+#' @param dims Integer vector indicating which input dimensions to plot. Must
+#'   have length 1 (for 1D) or 2 (for 2D). If \code{NULL} (default), all
+#'   dimensions are used when their number is <= 2.
 #' @param ... Additional arguments passed to internal plotting routines
 #'   (currently unused).
 #'
-#' @return This function does not return a value. It is called for its side
-#'   effects, producing plots that visualize the model predictions and
-#'   uncertainty.
+#' @return This function is called for its side effects and does not return a
+#'   value. It produces plots visualizing the predicted probabilities, credible
+#'   intervals, and posterior summaries.
 #'
-#' @details The plotting behavior depends on the dimensionality of the input
-#'   covariates:
+#' @details
+#' The plotting behavior depends on the dimensionality of the input covariates:
 #'
 #' \itemize{
 #'   \item \strong{1D inputs:}
 #'     \itemize{
-#'       \item For \code{BKP} (binary/binomial data), plots the posterior mean curve with a 95% credible band, overlaid with the observed proportions (\eqn{y/m}).
-#'       \item For \code{DKP} (categorical/multinomial data), plots one curve per class, each with a shaded credible interval and the observed class frequencies.
+#'       \item For \code{BKP} (binary/binomial data), the function plots the posterior mean curve with a shaded 95% credible interval, overlaid with the observed proportions (\eqn{y/m}).
+#'       \item For \code{DKP} (categorical/multinomial data), it plots one curve per class, each with a shaded credible interval and the observed class frequencies.
 #'       \item For classification tasks, an optional curve of the maximum posterior class probability can be displayed to visualize decision confidence.
 #'     }
 #'
 #'   \item \strong{2D inputs:}
 #'     \itemize{
-#'       \item For both models, produces either:
+#'       \item For both BKP and DKP models, the function generates contour plots over a 2D prediction grid.
+#'       \item Users can choose to plot only the predictive mean surface (\code{only_mean = TRUE}) or a set of four summary plots (\code{only_mean = FALSE}):
 #'         \enumerate{
-#'           \item A predictive mean surface (optionally maximum posterior probability for classification), or
-#'           \item A 2-by-2 panel of contour plots showing: predictive mean, predictive 97.5th percentile (upper bound of 95% credible interval), predictive variance, and predictive 2.5th percentile (lower bound).
+#'           \item Predictive mean
+#'           \item 97.5th percentile (upper bound of 95% credible interval)
+#'           \item Predictive variance
+#'           \item 2.5th percentile (lower bound of 95% credible interval)
 #'         }
 #'       \item For DKP, these surfaces are generated separately for each class.
+#'       \item For classification tasks, predictive class probabilities can also be visualized as the maximum posterior probability surface.
+#'     }
+#'
+#'   \item \strong{Input dimensions greater than 2:}
+#'     \itemize{
+#'       \item The function does not automatically support visualization and will terminate with an error.
+#'       \item Users must specify which dimensions to visualize via the \code{dims} argument (length 1 or 2).
 #'     }
 #' }
 #'
-#'   For input dimensions greater than two, the function terminates with an
-#'   error message.
-#'
-#' @seealso \code{\link{fit_BKP}}, \code{\link{predict.BKP}},
-#'   \code{\link{fit_DKP}}, \code{\link{predict.DKP}}
+#' @seealso \code{\link{fit_BKP}} and \code{\link{fit_DKP}} for fitting BKP and
+#'   DKP models, respectively; \code{\link{predict.BKP}} and
+#'   \code{\link{predict.DKP}} for generating predictions from fitted BKP and
+#'   DKP models.
+
 #'
 #' @references Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
 #'   Kernel Process Modeling}.  arXiv.

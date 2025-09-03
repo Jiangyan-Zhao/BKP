@@ -1,31 +1,30 @@
 #' @title Loss Function for BKP and DKP Models
 #'
-#' @description Computes the loss used to fit the BKP (binary outcome) or DKP
-#'   (multi-class outcome) model. Supports the Brier score (mean squared error)
-#'   and negative log-loss (cross-entropy), under different prior
-#'   specifications.
+#' @description Computes the loss for fitting BKP (binary) or DKP (multi-class)
+#'   models. Supports Brier score (mean squared error) and log-loss
+#'   (cross-entropy) under different prior specifications.
 #'
+#' @inheritParams get_prior
 #' @inheritParams fit_BKP
-#' @inheritParams fit_DKP
-#' @param gamma A numeric vector of log-transformed kernel hyperparameters.
-#' @param Xnorm A numeric matrix of normalized inputs (each column scaled to
-#'   \code{[0,1]}).
-#' @param model A character string, either \code{"BKP"} (binary) or
-#'   \code{"DKP"} (multi-class).
+#' @param gamma A numeric vector of log10-transformed kernel hyperparameters.
+#' @param Xnorm A numeric matrix of normalized input features (\code{[0,1]^d}).
+#' @param model A character string specifying the model type: \code{"BKP"}
+#'   (binary) or \code{"DKP"} (multi-class).
 #'
-#' @return A single numeric value representing the total loss (to be minimized):
-#'   either the mean Brier score (squared error) or the mean negative log-loss
-#'   (cross-entropy), depending on \code{loss}.
+#' @return A single numeric value representing the total loss (to be minimized).
+#'   The value corresponds to either the Brier score (squared error) or the
+#'   log-loss (cross-entropy).
 #'
-#' @seealso \code{\link{fit_BKP}}, \code{\link{fit_DKP}},
-#'   \code{\link{get_prior}}, \code{\link{kernel_matrix}}
+#' @seealso \code{\link{fit_BKP}} for fitting BKP models, \code{\link{fit_DKP}}
+#'   for fitting DKP models, \code{\link{get_prior}} for constructing prior
+#'   parameters, \code{\link{kernel_matrix}} for computing kernel matrices.
 #'
 #' @references Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
 #'   Kernel Process Modeling}.  arXiv.
 #'   https://doi.org/10.48550/arXiv.2508.10447.
 #'
 #' @examples
-#' ## Binary example (BKP)
+#' # -------------------------- BKP ---------------------------
 #' set.seed(123)
 #' n <- 10
 #' Xnorm <- matrix(runif(2 * n), ncol = 2)
@@ -33,7 +32,7 @@
 #' y <- rbinom(n, size = m, prob = runif(n))
 #' loss_fun(gamma = rep(0, 2), Xnorm = Xnorm, y = y, m = m, model = "BKP")
 #'
-#' ## Multi-class example (DKP)
+#' # -------------------------- DKP ---------------------------
 #' set.seed(123)
 #' n <- 10
 #' q <- 3
@@ -47,7 +46,7 @@ loss_fun <- function(
     gamma, Xnorm,
     y = NULL, m = NULL, Y = NULL,
     model = c("BKP", "DKP"),
-    prior = c("noninformative", "fixed", "adaptive"), r0 = 2, p0 = 0.5,
+    prior = c("noninformative", "fixed", "adaptive"), r0 = 2, p0 = NULL,
     loss = c("brier", "log_loss"),
     kernel = c("gaussian", "matern52", "matern32"))
 {

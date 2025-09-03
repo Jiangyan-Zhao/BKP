@@ -1,52 +1,50 @@
 #' @title Construct Prior Parameters for BKP/DKP Models
 #'
-#' @description Computes the prior parameters for the Beta Kernel Process (BKP,
-#'   binary outcomes) or Dirichlet Kernel Process (DKP, multi-class outcomes).
-#'   The function supports \code{prior = "noninformative"}, \code{"fixed"}, and
+#' @description Computes prior parameters for the Beta Kernel Process (BKP, for
+#'   binary outcomes) or Dirichlet Kernel Process (DKP, for multi-class
+#'   outcomes). Supports \code{prior = "noninformative"}, \code{"fixed"}, and
 #'   \code{"adaptive"} strategies.
 #'
 #' @inheritParams fit_BKP
 #' @inheritParams fit_DKP
-#' @param K A precomputed kernel matrix of size \code{n × n}, typically obtained
-#'   from \code{\link{kernel_matrix}}.
-#' @param model A character string, either \code{"BKP"} (binary outcome) or
-#'   \code{"DKP"} (multi-class outcome).
-#' @param p0
-#'   - For BKP: a scalar in \code{(0,1)} specifying the prior mean of success
-#'   probability when \code{prior = "fixed"}.
-#'   - For DKP: a numeric vector of length equal to the number of classes,
-#'   specifying the global prior mean (must sum to 1).
-#' @param Y A numeric matrix of observed class counts of size \code{n × q} (only
-#'   required when \code{model = "DKP"}), where \code{n} is the number of
+#' @param K A precomputed kernel matrix, typically obtained from
+#'   \code{\link{kernel_matrix}}. Can be rectangular (\code{m × n}), where
+#'   \code{n} is the number of observed points and \code{m} the number of
+#'   prediction locations.
+#' @param model A character string specifying the model type: \code{"BKP"}
+#'   (binary outcome) or \code{"DKP"} (multi-class outcome).
+#' @param p0 For BKP, a scalar in \code{(0,1)} specifying the prior mean of
+#'   success probability when \code{prior = "fixed"}. For DKP, a numeric vector
+#'   of length equal to the number of classes specifying the global prior mean,
+#'   which must sum to 1.
+#' @param Y A numeric matrix of observed class counts (\code{n × q}), required
+#'   only when \code{model = "DKP"}, where \code{n} is the number of
 #'   observations and \code{q} the number of classes.
 #'
 #' @return
-#' - If \code{model = "BKP"}: a list with two numeric vectors
+#' - If \code{model = "BKP"}: a list with
 #'   \describe{
-#'     \item{\code{alpha0}}{Prior alpha parameters of the Beta distribution,
-#'       length \code{n}.}
-#'     \item{\code{beta0}}{Prior beta parameters of the Beta distribution,
-#'       length \code{n}.}
+#'     \item{\code{alpha0}}{Vector of prior alpha parameters for the Beta
+#'       distribution, length \code{n}.}
+#'     \item{\code{beta0}}{Vector of prior beta parameters for the Beta
+#'       distribution, length \code{n}.}
 #'   }
 #' - If \code{model = "DKP"}: a list containing
 #'   \describe{
-#'     \item{\code{alpha0}}{A numeric matrix of prior Dirichlet parameters at
-#'       each input location, dimension \code{n × q}.}
+#'     \item{\code{alpha0}}{Matrix of prior Dirichlet parameters at each input
+#'       location (\code{n × q}).}
 #'   }
 #'
 #' @details
-#' - When \code{prior = "noninformative"}:
-#'   - BKP: all prior parameters are set to 1 (flat Beta).
-#'   - DKP: all entries in \code{alpha0} are set to 1 (flat Dirichlet).
-#' - When \code{prior = "fixed"}:
-#'   - BKP: all locations share the same Beta prior
-#' \code{Beta(r0 * p0, r0 * (1 - p0))}.
-#'   - DKP: all rows of \code{alpha0} are set to \code{r0 * p0}.
-#' - When \code{prior = "adaptive"}:
-#'   - BKP: the prior mean at each location is computed by kernel smoothing
-#' of the observed proportions \code{y/m}, with precision \code{r0}.
-#'   - DKP: each row of \code{alpha0} is computed by kernel-weighted smoothing
-#' of the observed relative frequencies in \code{Y}, scaled by \code{r0}.
+#' - \code{prior = "noninformative"}: flat prior; all parameters set to 1.
+#' - \code{prior = "fixed"}:
+#'   - BKP: uniform Beta prior \code{Beta(r0 * p0, r0 * (1 - p0))} across locations.
+#'   - DKP: all rows of \code{alpha0} set to \code{r0 * p0}.
+#' - \code{prior = "adaptive"}:
+#'   - BKP: prior mean estimated at each location via kernel smoothing of observed
+#' proportions \code{y/m}, with precision \code{r0}.
+#'   - DKP: prior parameters computed by kernel-weighted smoothing of observed
+#' class frequencies in \code{Y}, scaled by \code{r0}.
 #'
 #' @references
 #' Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
@@ -54,7 +52,7 @@
 #' https://doi.org/10.48550/arXiv.2508.10447
 #'
 #' @examples
-#' ## BKP example
+#' # -------------------------- BKP ---------------------------
 #' set.seed(123)
 #' n <- 10
 #' X <- matrix(runif(n * 2), ncol = 2)
@@ -65,7 +63,7 @@
 #'   model = "BKP", prior = "adaptive", r0 = 2, y = y, m = m, K = K
 #' )
 #'
-#' ## DKP example
+#' # -------------------------- DKP ---------------------------
 #' set.seed(123)
 #' n <- 15; q <- 3
 #' X <- matrix(runif(n * 2), ncol = 2)
@@ -84,9 +82,11 @@
 #'   model = "DKP", prior = "adaptive", r0 = 2, Y = Y, K = K
 #' )
 #'
-#' @seealso \code{\link{fit_BKP}}, \code{\link{fit_DKP}},
-#'   \code{\link{predict.BKP}}, \code{\link{predict.DKP}},
-#'   \code{\link{kernel_matrix}}
+#' @seealso \code{\link{fit_BKP}} for fitting Beta Kernel Process models,
+#'   \code{\link{fit_DKP}} for fitting Dirichlet Kernel Process models,
+#'   \code{\link{predict.BKP}} and \code{\link{predict.DKP}} for making
+#'   predictions, \code{\link{kernel_matrix}} for computing kernel matrices used
+#'   in prior construction.
 #'
 #' @export
 get_prior <- function(prior = c("noninformative", "fixed", "adaptive"),

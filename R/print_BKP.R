@@ -1,30 +1,39 @@
 #' @name print
 #'
-#' @title Print Method for BKP and DKP Objects
+#' @title Print Methods for BKP and DKP Objects
 #'
-#' @description Provides formatted console output for fitted BKP and DKP model
-#'   objects, as well as their summaries and predictions. This includes:
-#'   - \code{print.BKP} / \code{print.DKP} for fitted models,
-#'   - \code{print.summary.BKP} / \code{print.summary.DKP} for summaries,
-#'   - \code{print.predict.BKP} / \code{print.predict.DKP} for predictions.
+#' @description Provides formatted console output for fitted BKP/DKP model
+#'   objects, their summaries, predictions, and simulations. The following
+#'   specialized methods are supported:
+#'   \itemize{
+#'     \item \code{print.BKP}, \code{print.DKP} – display fitted model objects.
+#'     \item \code{print.summary_BKP}, \code{print.summary_DKP} – display
+#'       model summaries.
+#'     \item \code{print.predict_BKP}, \code{print.predict_DKP} – display
+#'       posterior predictive results.
+#'     \item \code{print.simulate_BKP}, \code{print.simulate_DKP} – display
+#'       posterior simulations.
+#'   }
 #'
-#' @param x An object of class \code{"BKP"} or \code{"DKP"}, or a summary/predict
-#'   object derived from them.
+#' @param x An object of class \code{"BKP"} or \code{"DKP"}, or a derived object
+#'   such as \code{summary}, \code{predict}, or \code{simulate}.
 #' @param ... Additional arguments passed to the generic \code{print} method
-#'   (currently not used).
+#'   (currently unused; included for S3 consistency).
 #'
 #' @return Invisibly returns the input object. Called for the side effect of
 #'   printing human-readable summaries to the console.
 #'
-#' @seealso \code{\link{fit_BKP}}, \code{\link{fit_DKP}},
-#'   \code{\link{summary.BKP}}, \code{\link{summary.DKP}},
-#'   \code{\link{predict.BKP}}, \code{\link{predict.DKP}}
+#' @seealso \code{\link{fit_BKP}}, \code{\link{fit_DKP}} for model fitting;
+#'   \code{\link{summary.BKP}}, \code{\link{summary.DKP}} for model summaries;
+#'   \code{\link{predict.BKP}}, \code{\link{predict.DKP}} for posterior
+#'   prediction; \code{\link{simulate.BKP}}, \code{\link{simulate.DKP}} for
+#'   posterior simulations.
 #'
 #' @references Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
 #'   Kernel Process Modeling}.  arXiv.
 #'   https://doi.org/10.48550/arXiv.2508.10447.
 #'
-#' @keywords BKP
+#' @keywords BKP DKP
 #'
 #' @examples
 #' # ============================================================== #
@@ -48,8 +57,10 @@
 #'
 #' # Fit BKP model
 #' model1 <- fit_BKP(X, y, m, Xbounds=Xbounds)
-#' print(model1)
-#'
+#' print(model1)                    # fitted object
+#' print(summary(model1))           # summary
+#' print(predict(model1))           # predictions
+#' print(simulate(model1, nsim=3))  # posterior simulations
 #'
 #' #-------------------------- 2D Example ---------------------------
 #' set.seed(123)
@@ -79,13 +90,16 @@
 #'
 #' # Fit BKP model
 #' model2 <- fit_BKP(X, y, m, Xbounds=Xbounds)
-#' print(model2)
+#' print(model2)                    # fitted object
+#' print(summary(model2))           # summary
+#' print(predict(model2))           # predictions
+#' print(simulate(model2, nsim=3))  # posterior simulations
 #'
 #' @export
 #' @method print BKP
 
 print.BKP <- function(x, ...) {
-  cat("\n       Beta Kernel Process (BKP)    \n\n")
+  cat("\n       Beta Kernel Process (BKP) Model    \n\n")
   cat(sprintf("Number of observations (n):  %d\n", nrow(x$X)))
   cat(sprintf("Input dimensionality (d):    %d\n", ncol(x$X)))
   cat(sprintf("Kernel type:                 %s\n", x$kernel))
@@ -114,7 +128,7 @@ print.BKP <- function(x, ...) {
 #' @export
 
 print.summary_BKP <- function(x, ...) {
-  cat("\n       Beta Kernel Process (BKP)    \n\n")
+  cat("\n       Beta Kernel Process (BKP) Model   \n\n")
   cat(sprintf("Number of observations (n):  %d\n", x$n_obs))
   cat(sprintf("Input dimensionality (d):    %d\n", x$input_dim))
   cat(sprintf("Kernel type:                 %s\n", x$kernel))

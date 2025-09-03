@@ -13,55 +13,57 @@ loss_fun(
   model = c("BKP", "DKP"),
   prior = c("noninformative", "fixed", "adaptive"),
   r0 = 2,
-  p0 = 0.5,
+  p0 = NULL,
   loss = c("brier", "log_loss"),
   kernel = c("gaussian", "matern52", "matern32")
 )
 }
 \arguments{
-\item{gamma}{A numeric vector of log-transformed kernel hyperparameters.}
+\item{gamma}{A numeric vector of log10-transformed kernel hyperparameters.}
 
-\item{Xnorm}{A numeric matrix of normalized inputs (each column scaled to
-\code{[0,1]}).}
+\item{Xnorm}{A numeric matrix of normalized input features (\code{[0,1]^d}).}
 
 \item{y}{A numeric vector of observed successes (length \code{n}).}
 
 \item{m}{A numeric vector of total binomial trials (length \code{n}),
 corresponding to each \code{y}.}
 
-\item{Y}{Matrix of observed multinomial counts, with dimension \eqn{n \times
-q}.}
+\item{Y}{A numeric matrix of observed class counts (\code{n × q}), required
+only when \code{model = "DKP"}, where \code{n} is the number of
+observations and \code{q} the number of classes.}
 
-\item{model}{A character string, either \code{"BKP"} (binary) or
-\code{"DKP"} (multi-class).}
+\item{model}{A character string specifying the model type: \code{"BKP"}
+(binary) or \code{"DKP"} (multi-class).}
 
-\item{prior}{Type of prior to use. One of \code{"noninformative"},
+\item{prior}{Type of prior: \code{"noninformative"} (default),
 \code{"fixed"}, or \code{"adaptive"}.}
 
-\item{r0}{Global prior precision (only used when \code{prior = "fixed"} or
+\item{r0}{Global prior precision (used when \code{prior = "fixed"} or
 \code{"adaptive"}).}
 
-\item{p0}{Global prior mean (only used when \code{prior = "fixed"}).}
+\item{p0}{For BKP, a scalar in \code{(0,1)} specifying the prior mean of
+success probability when \code{prior = "fixed"}. For DKP, a numeric vector
+of length equal to the number of classes specifying the global prior mean,
+which must sum to 1.}
 
-\item{loss}{Loss function for kernel hyperparameter tuning. One of
-\code{"brier"} (default) or \code{"log_loss"}.}
+\item{loss}{Loss function for kernel hyperparameter tuning: \code{"brier"}
+(default) or \code{"log_loss"}.}
 
-\item{kernel}{Kernel function for local weighting. Choose from
-\code{"gaussian"}, \code{"matern52"}, or \code{"matern32"}.}
+\item{kernel}{Kernel function for local weighting: \code{"gaussian"}
+(default), \code{"matern52"}, or \code{"matern32"}.}
 }
 \value{
-A single numeric value representing the total loss (to be minimized):
-either the mean Brier score (squared error) or the mean negative log-loss
-(cross-entropy), depending on \code{loss}.
+A single numeric value representing the total loss (to be minimized).
+The value corresponds to either the Brier score (squared error) or the
+log-loss (cross-entropy).
 }
 \description{
-Computes the loss used to fit the BKP (binary outcome) or DKP
-(multi-class outcome) model. Supports the Brier score (mean squared error)
-and negative log-loss (cross-entropy), under different prior
-specifications.
+Computes the loss for fitting BKP (binary) or DKP (multi-class)
+models. Supports Brier score (mean squared error) and log-loss
+(cross-entropy) under different prior specifications.
 }
 \examples{
-## Binary example (BKP)
+# -------------------------- BKP ---------------------------
 set.seed(123)
 n <- 10
 Xnorm <- matrix(runif(2 * n), ncol = 2)
@@ -69,7 +71,7 @@ m <- rep(10, n)
 y <- rbinom(n, size = m, prob = runif(n))
 loss_fun(gamma = rep(0, 2), Xnorm = Xnorm, y = y, m = m, model = "BKP")
 
-## Multi-class example (DKP)
+# -------------------------- DKP ---------------------------
 set.seed(123)
 n <- 10
 q <- 3
@@ -84,6 +86,7 @@ Kernel Process Modeling}.  arXiv.
 https://doi.org/10.48550/arXiv.2508.10447.
 }
 \seealso{
-\code{\link{fit_BKP}}, \code{\link{fit_DKP}},
-\code{\link{get_prior}}, \code{\link{kernel_matrix}}
+\code{\link{fit_BKP}} for fitting BKP models, \code{\link{fit_DKP}}
+for fitting DKP models, \code{\link{get_prior}} for constructing prior
+parameters, \code{\link{kernel_matrix}} for computing kernel matrices.
 }

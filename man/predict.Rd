@@ -4,7 +4,7 @@
 \alias{predict}
 \alias{predict.BKP}
 \alias{predict.DKP}
-\title{Predict Method for BKP or DKP Models}
+\title{Posterior Prediction for BKP or DKP Models}
 \usage{
 \method{predict}{BKP}(object, Xnew = NULL, CI_level = 0.95, threshold = 0.5, ...)
 
@@ -14,38 +14,58 @@
 \item{object}{An object of class \code{"BKP"} or \code{"DKP"}, typically
 returned by \code{\link{fit_BKP}} or \code{\link{fit_DKP}}.}
 
-\item{Xnew}{A numeric matrix (or vector) of new input locations where
-predictions are desired.}
+\item{Xnew}{A numeric vector or matrix of new input locations at which to
+generate predictions. If \code{NULL}, predictions are returned for the
+training data.}
 
-\item{CI_level}{Credible level for prediction intervals (default is
-\code{0.95}, corresponding to 95\% CI).}
+\item{CI_level}{Numeric between 0 and 1 specifying the credible level for
+posterior intervals (default \code{0.95} for 95\% credible interval).}
 
-\item{threshold}{Classification threshold for binary prediction based on
-posterior mean (used only for BKP; default is \code{0.5}).}
+\item{threshold}{Numeric between 0 and 1 specifying the classification
+threshold for binary predictions based on posterior mean (used only for
+BKP; default is \code{0.5}).}
 
 \item{...}{Additional arguments passed to generic \code{predict} methods
 (currently not used; included for S3 method consistency).}
 }
 \value{
-A list with the following components:
+A list containing posterior predictive summaries:
 \describe{
-\item{\code{X}}{The training data points.}
-\item{\code{Xnew}}{The new data points.}
-\item{\code{mean}}{BKP: Posterior mean of the success probability at each location.
-DKP: A matrix of posterior mean class probabilities (rows = inputs, columns = classes).}
-\item{\code{variance}}{BKP: Posterior variance of the success probability.
-DKP: A matrix of posterior variances for each class.}
-\item{\code{lower}}{BKP: Lower bound of the prediction interval (e.g., 2.5th percentile for 95\% CI).
-DKP: A matrix of lower bounds for each class (e.g., 2.5th percentile).}
-\item{\code{upper}}{BKP: Upper bound of the prediction interval (e.g., 97.5th percentile for 95\% CI).
-DKP: A matrix of upper bounds for each class (e.g., 97.5th percentile).}
-\item{\code{class}}{BKP: Predicted binary label (0 or 1), based on posterior mean and threshold, if \code{m = 1}.
-DKP: Predicted class label (i.e., the class with the highest posterior mean probability).}
+\item{\code{X}}{The original training input locations.}
+\item{\code{Xnew}}{The new input locations for prediction (same as \code{Xnew} if provided).}
+\item{\code{mean}}{Posterior mean prediction:
+\itemize{
+\item BKP: Posterior mean success probability at each location.
+\item DKP: Matrix of posterior mean class probabilities (rows = inputs, columns = classes).
+}}
+\item{\code{variance}}{Posterior predictive variance:
+\itemize{
+\item BKP: Variance of success probability.
+\item DKP: Matrix of predictive variances for each class.
+}}
+\item{\code{lower}}{Lower bound of the posterior credible interval:
+\itemize{
+\item BKP: Lower bound (e.g., 2.5th percentile for 95\\% CI).
+\item DKP: Matrix of lower bounds for each class.
+}}
+\item{\code{upper}}{Upper bound of the posterior credible interval:
+\itemize{
+\item BKP: Upper bound (e.g., 97.5th percentile for 95\\% CI).
+\item DKP: Matrix of upper bounds for each class.
+}}
+\item{\code{class}}{Predicted label:
+\itemize{
+\item BKP: Binary class (0 or 1) based on posterior mean and \code{threshold}, only if \code{m = 1}.
+\item DKP: Predicted class label with highest posterior mean probability.
+}}
+\item{\code{CI_level}}{The specified credible interval level.}
 }
 }
 \description{
-Generates posterior predictive summaries from a fitted BKP or
-DKP model at new input locations.
+Generates posterior predictive summaries from a fitted Beta
+Kernel Process (BKP) or Dirichlet Kernel Process (DKP) model at new input
+locations. Supports prediction of posterior mean, variance, credible
+intervals, and classification labels (where applicable).
 }
 \examples{
 # ============================================================== #
@@ -125,15 +145,16 @@ set.seed(123)
 
 # Define true class probability function (3-class)
 true_pi_fun <- function(X) {
-  p <- (1 + exp(-X^2) * cos(10 * (1 - exp(-X)) / (1 + exp(-X)))) / 2
-  return(matrix(c(p/2, p/2, 1 - p), nrow = length(p)))
+  p1 <- 1/(1+exp(-3*X))
+  p2 <- (1 + exp(-X^2) * cos(10 * (1 - exp(-X)) / (1 + exp(-X)))) / 2
+  return(matrix(c(p1/2, p2/2, 1 - (p1+p2)/2), nrow = length(p1)))
 }
 
 n <- 30
 Xbounds <- matrix(c(-2, 2), nrow = 1)
 X <- tgp::lhs(n = n, rect = Xbounds)
 true_pi <- true_pi_fun(X)
-m <- sample(100, n, replace = TRUE)
+m <- sample(150, n, replace = TRUE)
 
 # Generate multinomial responses
 Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
@@ -145,8 +166,6 @@ model1 <- fit_DKP(X, Y, Xbounds = Xbounds)
 predict(model1)
 
 # Prediction on new data
-
-# Prediction
 Xnew = matrix(seq(-2, 2, length = 10), ncol=1) #new data points
 predict(model1, Xnew)
 
@@ -164,16 +183,17 @@ true_pi_fun <- function(X) {
     (19 - 14*x1 + 3*x1^2 - 14*x2 + 6*x1*x2 + 3*x2^2)
   b <- 30 + (2*x1 - 3*x2)^2 *
     (18 - 32*x1 + 12*x1^2 + 48*x2 - 36*x1*x2 + 27*x2^2)
-  f <- (log(a * b) - m) / s
-  p <- pnorm(f)
-  return(matrix(c(p/2, p/2, 1 - p), nrow = length(p)))
+  f <- (log(a*b)- m)/s
+  p1 <- pnorm(f) # Transform to probability
+  p2 <- sin(pi * X[,1]) * sin(pi * X[,2])
+  return(matrix(c(p1/2, p2/2, 1 - (p1+p2)/2), nrow = length(p1)))
 }
 
 n <- 100
 Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
 X <- tgp::lhs(n = n, rect = Xbounds)
 true_pi <- true_pi_fun(X)
-m <- sample(100, n, replace = TRUE)
+m <- sample(150, n, replace = TRUE)
 
 # Generate multinomial responses
 Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
@@ -197,10 +217,9 @@ Kernel Process Modeling}.  arXiv.
 https://doi.org/10.48550/arXiv.2508.10447.
 }
 \seealso{
-\code{\link{fit_BKP}} for fitting Beta Kernel Process models.
-\code{\link{fit_DKP}} for fitting Dirichlet Kernel Process models.
-\code{\link{plot.BKP}} for visualizing fitted BKP models.
-\code{\link{plot.DKP}} for visualizing fitted DKP models.
+\code{\link{fit_BKP}} and \code{\link{fit_DKP}} for model fitting;
+\code{\link{plot.BKP}} and \code{\link{plot.DKP}} for visualization of
+fitted models.
 }
 \keyword{BKP}
 \keyword{DKP}

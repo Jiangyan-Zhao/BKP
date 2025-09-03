@@ -2,21 +2,38 @@
 #'
 #' @title Summary of a Fitted BKP or DKP Model
 #'
-#' @description Provides a summary of a fitted Beta Kernel Process (BKP) or
-#'   Dirichlet Kernel Process (DKP) model. Currently, this function acts as a
-#'   wrapper for \code{\link{print.BKP}} or \code{\link{print.DKP}}, delivering
-#'   a concise overview of key model characteristics and fitting results.
+#' @description Provides a structured summary of a fitted Beta Kernel Process
+#'   (BKP) or Dirichlet Kernel Process (DKP) model. This function reports the
+#'   model configuration, prior specification, kernel settings, and key
+#'   posterior quantities, giving users a concise overview of the fitting
+#'   results.
 #'
 #' @param object An object of class \code{"BKP"} (from \code{\link{fit_BKP}}) or
 #'   \code{"DKP"} (from \code{\link{fit_DKP}}).
 #' @param ... Additional arguments passed to the generic \code{summary} method
 #'   (currently not used).
 #'
-#' @return Invisibly returns the input object (of class \code{"BKP"} or
-#'   \code{"DKP"}). Called for side effects: prints a concise summary of the
-#'   fitted model.
+#' @return A list containing key summaries of the fitted model:
+#' \describe{
+#'   \item{\code{n_obs}}{Number of training observations.}
+#'   \item{\code{input_dim}}{Input dimensionality (number of columns in X).}
+#'   \item{\code{kernel}}{Kernel type used in the model.}
+#'   \item{\code{theta_opt}}{Estimated kernel hyperparameters.}
+#'   \item{\code{loss}}{Loss function type used in the model.}
+#'   \item{\code{loss_min}}{Minimum value of the loss function achieved.}
+#'   \item{\code{prior}}{Prior type used (e.g., "noninformative", "fixed", "adaptive").}
+#'   \item{\code{r0}}{Prior precision parameter.}
+#'   \item{\code{p0}}{Prior mean parameter.}
+#'   \item{\code{post_mean}}{Posterior mean estimates.
+#'     For BKP: posterior mean success probabilities at training points.
+#'     For DKP: posterior mean class probabilities (\eqn{n_\text{obs} \times q}).}
+#'   \item{\code{post_var}}{Posterior variance estimates.
+#'     For BKP: variance of success probabilities.
+#'     For DKP: variance for each class probability.}
+#'   \item{\code{n_class}}{(Only for DKP) Number of classes in the response.}
+#' }
 #'
-#' @seealso \code{\link{fit_BKP}}, \code{\link{fit_DKP}}.
+#' @seealso \code{\link{fit_BKP}}, \code{\link{fit_DKP}} for model fitting.
 #'
 #' @references Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
 #'   Kernel Process Modeling}.  arXiv.

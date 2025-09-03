@@ -18,15 +18,32 @@
 (currently not used).}
 }
 \value{
-Invisibly returns the input object (of class \code{"BKP"} or
-\code{"DKP"}). Called for side effects: prints a concise summary of the
-fitted model.
+A list containing key summaries of the fitted model:
+\describe{
+\item{\code{n_obs}}{Number of training observations.}
+\item{\code{input_dim}}{Input dimensionality (number of columns in X).}
+\item{\code{kernel}}{Kernel type used in the model.}
+\item{\code{theta_opt}}{Estimated kernel hyperparameters.}
+\item{\code{loss}}{Loss function type used in the model.}
+\item{\code{loss_min}}{Minimum value of the loss function achieved.}
+\item{\code{prior}}{Prior type used (e.g., "noninformative", "fixed", "adaptive").}
+\item{\code{r0}}{Prior precision parameter.}
+\item{\code{p0}}{Prior mean parameter.}
+\item{\code{post_mean}}{Posterior mean estimates.
+For BKP: posterior mean success probabilities at training points.
+For DKP: posterior mean class probabilities (\eqn{n_\text{obs} \times q}).}
+\item{\code{post_var}}{Posterior variance estimates.
+For BKP: variance of success probabilities.
+For DKP: variance for each class probability.}
+\item{\code{n_class}}{(Only for DKP) Number of classes in the response.}
+}
 }
 \description{
-Provides a summary of a fitted Beta Kernel Process (BKP) or
-Dirichlet Kernel Process (DKP) model. Currently, this function acts as a
-wrapper for \code{\link{print.BKP}} or \code{\link{print.DKP}}, delivering
-a concise overview of key model characteristics and fitting results.
+Provides a structured summary of a fitted Beta Kernel Process
+(BKP) or Dirichlet Kernel Process (DKP) model. This function reports the
+model configuration, prior specification, kernel settings, and key
+posterior quantities, giving users a concise overview of the fitting
+results.
 }
 \examples{
 # ============================================================== #
@@ -92,15 +109,16 @@ set.seed(123)
 
 # Define true class probability function (3-class)
 true_pi_fun <- function(X) {
-  p <- (1 + exp(-X^2) * cos(10 * (1 - exp(-X)) / (1 + exp(-X)))) / 2
-  return(matrix(c(p/2, p/2, 1 - p), nrow = length(p)))
+  p1 <- 1/(1+exp(-3*X))
+  p2 <- (1 + exp(-X^2) * cos(10 * (1 - exp(-X)) / (1 + exp(-X)))) / 2
+  return(matrix(c(p1/2, p2/2, 1 - (p1+p2)/2), nrow = length(p1)))
 }
 
 n <- 30
 Xbounds <- matrix(c(-2, 2), nrow = 1)
 X <- tgp::lhs(n = n, rect = Xbounds)
 true_pi <- true_pi_fun(X)
-m <- sample(100, n, replace = TRUE)
+m <- sample(150, n, replace = TRUE)
 
 # Generate multinomial responses
 Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
@@ -123,16 +141,17 @@ true_pi_fun <- function(X) {
     (19 - 14*x1 + 3*x1^2 - 14*x2 + 6*x1*x2 + 3*x2^2)
   b <- 30 + (2*x1 - 3*x2)^2 *
     (18 - 32*x1 + 12*x1^2 + 48*x2 - 36*x1*x2 + 27*x2^2)
-  f <- (log(a * b) - m) / s
-  p <- pnorm(f)
-  return(matrix(c(p/2, p/2, 1 - p), nrow = length(p)))
+  f <- (log(a*b)- m)/s
+  p1 <- pnorm(f) # Transform to probability
+  p2 <- sin(pi * X[,1]) * sin(pi * X[,2])
+  return(matrix(c(p1/2, p2/2, 1 - (p1+p2)/2), nrow = length(p1)))
 }
 
 n <- 100
 Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
 X <- tgp::lhs(n = n, rect = Xbounds)
 true_pi <- true_pi_fun(X)
-m <- sample(100, n, replace = TRUE)
+m <- sample(150, n, replace = TRUE)
 
 # Generate multinomial responses
 Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
@@ -148,7 +167,7 @@ Kernel Process Modeling}.  arXiv.
 https://doi.org/10.48550/arXiv.2508.10447.
 }
 \seealso{
-\code{\link{fit_BKP}}, \code{\link{fit_DKP}}.
+\code{\link{fit_BKP}}, \code{\link{fit_DKP}} for model fitting.
 }
 \keyword{BKP}
 \keyword{DKP}

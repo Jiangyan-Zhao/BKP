@@ -14,21 +14,19 @@
 #'
 #' @return A named list containing:
 #' \itemize{
-#'   \item \code{kernel_hyperparameters}: Estimated kernel hyperparameters
-#'     (typically the optimized \eqn{\theta} values).
-#'   \item \code{posterior_alpha}: Posterior Dirichlet/Beta \eqn{\alpha} parameters.
-#'   \item \code{posterior_beta}: (BKP only) Posterior Beta \eqn{\beta} parameters.
+#'   \item \code{theta}: Estimated kernel hyperparameters.
+#'   \item \code{alpha_n}: Posterior Dirichlet/Beta \eqn{\alpha} parameters.
+#'   \item \code{beta_n}: (BKP only) Posterior Beta \eqn{\beta} parameters.
 #' }
 #'
-#' @details These methods provide structured access to the fitted model
-#'   parameters, playing a role analogous to \code{coef()} for linear models.
-#'   While BKP and DKP are Bayesian nonparametric models rather than linear
-#'   models, exposing kernel hyperparameters and posterior distribution
-#'   parameters in a unified way makes it easier for users to inspect model fits
-#'   and conduct downstream analyses.
-
-#'
 #' @keywords BKP DKP
+#'
+#' @seealso \code{\link{fit_BKP}} for fitting BKP models, \code{\link{fit_DKP}}
+#'   for fitting DKP models.
+#'
+#' @references Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
+#'   Kernel Process Modeling}.  arXiv.
+#'   https://doi.org/10.48550/arXiv.2508.10447.
 #'
 #' @examples
 #' # -------------------------- BKP ---------------------------
@@ -62,8 +60,8 @@ parameter <- function(object, ...) {
 #' @method parameter BKP
 parameter.BKP <- function(object, ...) {
   list(
-    theta_opt = object$theta_opt,
-    alpha_n   = object$alpha_n,
-    beta_n    = object$beta_n
+    theta   = object$theta_opt,
+    alpha_n = object$alpha_n,
+    beta_n  = object$beta_n
   )
 }

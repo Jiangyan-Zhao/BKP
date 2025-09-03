@@ -36,7 +36,7 @@ quantiles of the positive class probability. For a \code{DKP} object, this
 returns posterior quantiles for each class probability.
 }
 \details{
-#' For a \code{BKP} model, posterior quantiles are computed from the
+For a \code{BKP} model, posterior quantiles are computed from the
 Beta Kernel Process for the positive class probability. For a \code{DKP}
 model, posterior quantiles for each class are approximated using the Beta
 approximation of the marginal distributions of the posterior Dirichlet
@@ -69,8 +69,9 @@ quantile(model)
 
 # Define true class probability function (3-class)
 true_pi_fun <- function(X) {
-  p <- (1 + exp(-X^2) * cos(10 * (1 - exp(-X)) / (1 + exp(-X)))) / 2
-  return(matrix(c(p/2, p/2, 1 - p), nrow = length(p)))
+  p1 <- 1/(1+exp(-3*X))
+  p2 <- (1 + exp(-X^2) * cos(10 * (1 - exp(-X)) / (1 + exp(-X)))) / 2
+  return(matrix(c(p1/2, p2/2, 1 - (p1+p2)/2), nrow = length(p1)))
 }
 
 n <- 30
@@ -88,6 +89,9 @@ model <- fit_DKP(X, Y, Xbounds = Xbounds)
 # Extract posterior quantiles
 quantile(model)
 
+}
+\seealso{
+\code{\link{fit_BKP}}, \code{\link{fit_DKP}} for model fitting.
 }
 \keyword{BKP}
 \keyword{DKP}

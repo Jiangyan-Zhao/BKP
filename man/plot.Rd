@@ -15,58 +15,64 @@
 by \code{\link{fit_BKP}} or \code{\link{fit_DKP}}.}
 
 \item{only_mean}{Logical. If \code{TRUE}, only the predicted mean surface is
-plotted for 2D inputs (only applies to \code{BKP} models). Default is
-\code{FALSE}.}
+plotted for 2D inputs (applies to both BKP and DKP models for mean
+visualization). Default is \code{FALSE}.}
 
-\item{n_grid}{Positive integer. Number of grid points used in each dimension to
-construct the prediction grid. A larger value produces a smoother and more
-detailed decision boundary, but increases computational cost.
-Default is \code{80}.}
+\item{n_grid}{Positive integer specifying the number of grid points per
+dimension for constructing the prediction grid. Larger values produce
+smoother and more detailed surfaces, but increase computation time. Default
+is \code{80}.}
 
-\item{dims}{Integer vector specifying which dimensions of the input space
-to visualize. Should have length 1 (for 1D plot) or 2 (for 2D plot).
-If \code{NULL} (default), uses all dimensions if they are <= 2.}
+\item{dims}{Integer vector indicating which input dimensions to plot. Must
+have length 1 (for 1D) or 2 (for 2D). If \code{NULL} (default), all
+dimensions are used when their number is <= 2.}
 
 \item{...}{Additional arguments passed to internal plotting routines
 (currently unused).}
 }
 \value{
-This function does not return a value. It is called for its side
-effects, producing plots that visualize the model predictions and
-uncertainty.
+This function is called for its side effects and does not return a
+value. It produces plots visualizing the predicted probabilities, credible
+intervals, and posterior summaries.
 }
 \description{
-Visualizes fitted \code{BKP} or \code{DKP} models depending on
-the input dimensionality. For 1-dimensional inputs, it displays predicted
-class probabilities with credible intervals and observed data. For
-2-dimensional inputs, it generates contour plots of posterior summaries.
-For higher-dimensional inputs, users can specify which dimensions to plot.
+Visualizes fitted \code{BKP} (binary) or \code{DKP}
+(multi-class) models according to the input dimensionality. For 1D inputs,
+it shows predicted class probabilities with credible intervals and observed
+data. For 2D inputs, it generates contour plots of posterior summaries. For
+higher-dimensional inputs, users must specify which dimensions to plot.
 }
 \details{
-The plotting behavior depends on the dimensionality of the input
-covariates:
+The plotting behavior depends on the dimensionality of the input covariates:
 
 \itemize{
 \item \strong{1D inputs:}
 \itemize{
-\item For \code{BKP} (binary/binomial data), plots the posterior mean curve with a 95\% credible band, overlaid with the observed proportions (\eqn{y/m}).
-\item For \code{DKP} (categorical/multinomial data), plots one curve per class, each with a shaded credible interval and the observed class frequencies.
+\item For \code{BKP} (binary/binomial data), the function plots the posterior mean curve with a shaded 95\% credible interval, overlaid with the observed proportions (\eqn{y/m}).
+\item For \code{DKP} (categorical/multinomial data), it plots one curve per class, each with a shaded credible interval and the observed class frequencies.
 \item For classification tasks, an optional curve of the maximum posterior class probability can be displayed to visualize decision confidence.
 }
 
 \item \strong{2D inputs:}
 \itemize{
-\item For both models, produces either:
+\item For both BKP and DKP models, the function generates contour plots over a 2D prediction grid.
+\item Users can choose to plot only the predictive mean surface (\code{only_mean = TRUE}) or a set of four summary plots (\code{only_mean = FALSE}):
 \enumerate{
-\item A predictive mean surface (optionally maximum posterior probability for classification), or
-\item A 2-by-2 panel of contour plots showing: predictive mean, predictive 97.5th percentile (upper bound of 95\% credible interval), predictive variance, and predictive 2.5th percentile (lower bound).
+\item Predictive mean
+\item 97.5th percentile (upper bound of 95\% credible interval)
+\item Predictive variance
+\item 2.5th percentile (lower bound of 95\% credible interval)
 }
 \item For DKP, these surfaces are generated separately for each class.
-}
+\item For classification tasks, predictive class probabilities can also be visualized as the maximum posterior probability surface.
 }
 
-For input dimensions greater than two, the function terminates with an
-error message.
+\item \strong{Input dimensions greater than 2:}
+\itemize{
+\item The function does not automatically support visualization and will terminate with an error.
+\item Users must specify which dimensions to visualize via the \code{dims} argument (length 1 or 2).
+}
+}
 }
 \examples{
 # ============================================================== #
@@ -136,15 +142,16 @@ set.seed(123)
 
 # Define true class probability function (3-class)
 true_pi_fun <- function(X) {
-  p <- (1 + exp(-X^2) * cos(10 * (1 - exp(-X)) / (1 + exp(-X)))) / 2
-  return(matrix(c(p/2, p/2, 1 - p), nrow = length(p)))
+  p1 <- 1/(1+exp(-3*X))
+  p2 <- (1 + exp(-X^2) * cos(10 * (1 - exp(-X)) / (1 + exp(-X)))) / 2
+  return(matrix(c(p1/2, p2/2, 1 - (p1+p2)/2), nrow = length(p1)))
 }
 
 n <- 30
 Xbounds <- matrix(c(-2, 2), nrow = 1)
 X <- tgp::lhs(n = n, rect = Xbounds)
 true_pi <- true_pi_fun(X)
-m <- sample(100, n, replace = TRUE)
+m <- sample(150, n, replace = TRUE)
 
 # Generate multinomial responses
 Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
@@ -169,16 +176,17 @@ true_pi_fun <- function(X) {
     (19 - 14*x1 + 3*x1^2 - 14*x2 + 6*x1*x2 + 3*x2^2)
   b <- 30 + (2*x1 - 3*x2)^2 *
     (18 - 32*x1 + 12*x1^2 + 48*x2 - 36*x1*x2 + 27*x2^2)
-  f <- (log(a * b) - m) / s
-  p <- pnorm(f)
-  return(matrix(c(p/2, p/2, 1 - p), nrow = length(p)))
+  f <- (log(a*b)- m)/s
+  p1 <- pnorm(f) # Transform to probability
+  p2 <- sin(pi * X[,1]) * sin(pi * X[,2])
+  return(matrix(c(p1/2, p2/2, 1 - (p1+p2)/2), nrow = length(p1)))
 }
 
 n <- 100
 Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
 X <- tgp::lhs(n = n, rect = Xbounds)
 true_pi <- true_pi_fun(X)
-m <- sample(100, n, replace = TRUE)
+m <- sample(150, n, replace = TRUE)
 
 # Generate multinomial responses
 Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
@@ -196,8 +204,10 @@ Kernel Process Modeling}.  arXiv.
 https://doi.org/10.48550/arXiv.2508.10447.
 }
 \seealso{
-\code{\link{fit_BKP}}, \code{\link{predict.BKP}},
-\code{\link{fit_DKP}}, \code{\link{predict.DKP}}
+\code{\link{fit_BKP}} and \code{\link{fit_DKP}} for fitting BKP and
+DKP models, respectively; \code{\link{predict.BKP}} and
+\code{\link{predict.DKP}} for generating predictions from fitted BKP and
+DKP models.
 }
 \keyword{BKP}
 \keyword{DKP}

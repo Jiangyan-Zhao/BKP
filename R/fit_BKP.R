@@ -2,65 +2,64 @@
 #'
 #' @title Fit a Beta Kernel Process (BKP) Model
 #'
-#' @description Fits a BKP model to binary or binomial response data via local
-#'   kernel smoothing. The model constructs a flexible latent probability
-#'   surface by updating Beta priors using kernel-weighted observations.
+#' @description Fits a Beta Kernel Process (BKP) model to binary or binomial
+#'   response data using local kernel smoothing. The method constructs a
+#'   flexible latent probability surface by updating Beta priors with
+#'   kernel-weighted observations.
 #'
 #' @param X A numeric input matrix of size \eqn{n \times d}, where each row
-#'   represents a covariate vector.
+#'   corresponds to a covariate vector.
 #' @param y A numeric vector of observed successes (length \code{n}).
 #' @param m A numeric vector of total binomial trials (length \code{n}),
 #'   corresponding to each \code{y}.
 #' @param Xbounds Optional \eqn{d \times 2} matrix specifying the lower and
 #'   upper bounds of each input dimension. Used to normalize inputs to
-#'   \eqn{[0,1]^d}. If \code{Xbounds} is \code{NULL}, the input is assumed to
-#'   have already been normalized, and the default bounds are set to
-#'   \eqn{[0,1]^d}.
-#' @param prior Type of prior to use. One of \code{"noninformative"},
+#'   \eqn{[0,1]^d}. If \code{NULL}, inputs are assumed to be pre-normalized, and
+#'   default bounds \eqn{[0,1]^d} are applied.
+#' @param prior Type of prior: \code{"noninformative"} (default),
 #'   \code{"fixed"}, or \code{"adaptive"}.
-#' @param r0 Global prior precision (only used when \code{prior = "fixed"} or
+#' @param r0 Global prior precision (used when \code{prior = "fixed"} or
 #'   \code{"adaptive"}).
-#' @param p0 Global prior mean (only used when \code{prior = "fixed"}).
-#' @param kernel Kernel function for local weighting. Choose from
-#'   \code{"gaussian"}, \code{"matern52"}, or \code{"matern32"}.
-#' @param loss Loss function for kernel hyperparameter tuning. One of
-#'   \code{"brier"} (default) or \code{"log_loss"}.
+#' @param p0 Global prior mean (used when \code{prior = "fixed"}). Default is
+#'   \code{mean(y/m)}.
+#' @param kernel Kernel function for local weighting: \code{"gaussian"}
+#'   (default), \code{"matern52"}, or \code{"matern32"}.
+#' @param loss Loss function for kernel hyperparameter tuning: \code{"brier"}
+#'   (default) or \code{"log_loss"}.
 #' @param n_multi_start Number of random initializations for multi-start
-#'   optimization. Default is \code{10 × d}.
-#' @param theta Optional. A positive scalar or a numeric vector of length equal
-#'   to the input dimension \code{d}. If specified, these values will be used
-#'   directly as the kernel lengthscale parameters, bypassing the internal
-#'   optimization procedure. If \code{NULL} (default), the kernel parameters are
-#'   optimized via (multi-start) L-BFGS-B to minimize the chosen loss function.
+#'   optimization. Default is \eqn{10 \times d}.
+#' @param theta Optional. A positive scalar or numeric vector of length \code{d}
+#'   specifying kernel lengthscale parameters directly. If \code{NULL}
+#'   (default), lengthscales are optimized using multi-start L-BFGS-B to
+#'   minimize the specified loss.
 #'
-#' @return A list of class \code{"BKP"} containing the fitted BKP model, with
-#'   the following elements:
+#' @return A list of class \code{"BKP"} containing the fitted BKP model,
+#'   including:
 #' \describe{
 #'   \item{\code{theta_opt}}{Optimized kernel hyperparameters (lengthscales).}
 #'   \item{\code{kernel}}{Kernel function used, as a string.}
 #'   \item{\code{loss}}{Loss function used for hyperparameter tuning.}
-#'   \item{\code{loss_min}}{Minimum loss value achieved during optimization.}
-#'   \item{\code{loss_min}}{Minimum loss value achieved during kernel hyperparameter optimization.
-#'   If \code{theta} was manually specified by the user, this value is set to \code{NA}.}
-#'   \item{\code{X}}{Original (unnormalized) input matrix of size \code{n × d}.}
+#'   \item{\code{loss_min}}{Minimum loss achieved during optimization, or
+#'     \code{NA} if \code{theta} was user-specified.}
+#'   \item{\code{X}}{Original input matrix (\eqn{n \times d}).}
 #'   \item{\code{Xnorm}}{Normalized input matrix scaled to \eqn{[0,1]^d}.}
-#'   \item{\code{Xbounds}}{Matrix specifying normalization bounds for each input dimension.}
+#'   \item{\code{Xbounds}}{Normalization bounds for each input dimension (\eqn{d \times 2}).}
 #'   \item{\code{y}}{Observed success counts.}
 #'   \item{\code{m}}{Observed binomial trial counts.}
 #'   \item{\code{prior}}{Type of prior used.}
 #'   \item{\code{r0}}{Prior precision parameter.}
 #'   \item{\code{p0}}{Prior mean (for fixed priors).}
-#'   \item{\code{alpha0}}{Prior shape parameter \eqn{\alpha_0(\mathbf{x})}, either a scalar or vector.}
-#'   \item{\code{beta0}}{Prior shape parameter \eqn{\beta_0(\mathbf{x})}, either a scalar or vector.}
+#'   \item{\code{alpha0}}{Prior Beta shape parameter \eqn{\alpha_0(\mathbf{x})}.}
+#'   \item{\code{beta0}}{Prior Beta shape parameter \eqn{\beta_0(\mathbf{x})}.}
 #'   \item{\code{alpha_n}}{Posterior shape parameter \eqn{\alpha_n(\mathbf{x})}.}
 #'   \item{\code{beta_n}}{Posterior shape parameter \eqn{\beta_n(\mathbf{x})}.}
 #' }
 #'
-#' @seealso \code{\link{fit_DKP}} for modeling multinomial responses using the
+#' @seealso \code{\link{fit_DKP}} for modeling multinomial responses via the
 #'   Dirichlet Kernel Process. \code{\link{predict.BKP}},
-#'   \code{\link{plot.BKP}}, \code{\link{simulate.BKP}} for making predictions,
-#'   visualizing results, and generating simulations from a fitted BKP model.
-#'   \code{\link{summary.BKP}} for inspecting model details.
+#'   \code{\link{plot.BKP}}, \code{\link{simulate.BKP}}, and
+#'   \code{\link{summary.BKP}} for prediction, visualization, posterior
+#'   simulation, and summarization of a fitted BKP model.
 #'
 #' @references Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
 #'   Kernel Process Modeling}.  arXiv.
