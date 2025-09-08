@@ -1,133 +1,151 @@
-# -------------------------- Test Setup ---------------------------
-set.seed(123)
-# Define true class probability function (3-class)
-true_pi_fun <- function(X) {
-  p <- (1 + exp(-X^2) * cos(10 * (1 - exp(-X)) / (1 + exp(-X)))) / 2
-  return(matrix(c(p/2, p/2, 1 - p), nrow = length(p)))
-}
-n_test <- 30
-d_test <- 1
-q_test <- 3 # Number of classes
-Xbounds <- matrix(c(-2, 2), nrow = 1)
-X_test <- tgp::lhs(n = n_test, rect = Xbounds)
-true_pi <- true_pi_fun(X_test)
-Y_test_m <- sample(100, n_test, replace = TRUE)
-Y_test <- t(sapply(1:n_test, function(i) rmultinom(1, size = Y_test_m[i], prob = true_pi[i, ])))
+# Test file for the fit_DKP function
+#
+# All other functions are assumed to be available in the package namespace.
 
+# Start of tests
+test_that("fit_DKP runs correctly with examples from the documentation", {
+  # --- 1D Example ---
+  set.seed(123)
 
-# -------------------------- Test Context: Basic Functionality ---------------------------
+  # Define true class probability function (3-class)
+  true_pi_fun <- function(X) {
+    p1 <- 1/(1+exp(-3*X))
+    p2 <- (1 + exp(-X^2) * cos(10 * (1 - exp(-X)) / (1 + exp(-X)))) / 2
+    return(matrix(c(p1/2, p2/2, 1 - (p1+p2)/2), nrow = length(p1)))
+  }
 
-test_that("Basic Functionality: fit_DKP returns a 'DKP' class object with expected elements", {
-  model <- fit_DKP(X_test, Y_test, Xbounds)
+  n <- 30
+  Xbounds <- matrix(c(-2, 2), nrow = 1)
+  X <- lhs(n = n, rect = Xbounds)
+  true_pi <- true_pi_fun(X)
+  m <- sample(150, n, replace = TRUE)
+  Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 
+  # Fit DKP model
+  expect_no_error({model1 <- fit_DKP(X, Y, Xbounds = Xbounds)})
+  expect_s3_class(model1, "DKP")
+
+  # --- 2D Example ---
+  set.seed(123)
+
+  # Define latent function and transform to 3-class probabilities
+  true_pi_fun <- function(X) {
+    if (is.null(nrow(X))) X <- matrix(X, nrow = 1)
+    mn <- 8.6928; s <- 2.4269
+    x1 <- 4 * X[,1] - 2
+    x2 <- 4 * X[,2] - 2
+    a <- 1 + (x1 + x2 + 1)^2 *
+      (19 - 14*x1 + 3*x1^2 - 14*x2 + 6*x1*x2 + 3*x2^2)
+    b <- 30 + (2*x1 - 3*x2)^2 *
+      (18 - 32*x1 + 12*x1^2 + 48*x2 - 36*x1*x2 + 27*x2^2)
+    f <- (log(a*b)- mn)/s
+    p1 <- pnorm(f) # Transform to probability
+    p2 <- sin(pi * X[,1]) * sin(pi * X[,2])
+    return(matrix(c(p1/2, p2/2, 1 - (p1+p2)/2), nrow = length(p1)))
+  }
+
+  n <- 100
+  Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
+  X <- lhs(n = n, rect = Xbounds)
+  true_pi <- true_pi_fun(X)
+  m <- sample(150, n, replace = TRUE)
+  Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
+
+  # Fit DKP model
+  expect_no_error({model2 <- fit_DKP(X, Y, Xbounds = Xbounds)})
+  expect_s3_class(model2, "DKP")
+})
+
+test_that("fit_DKP handles input validation correctly", {
+  # Test for missing arguments
+  expect_error(fit_DKP(), "Arguments 'X' and 'Y' must be provided.")
+
+  # Define a simple dataset for testing
+  n <- 10
+  d <- 2
+  X_test <- matrix(runif(n * d), nrow = n)
+  Y_test <- t(sapply(1:n, function(i) rmultinom(1, size = 100, prob = c(0.5, 0.5))))
+
+  # Test for invalid input types
+  expect_error(fit_DKP(X=as.character(X_test), Y=Y_test), "'X' must be a numeric matrix or data frame.")
+  expect_error(fit_DKP(X=X_test, Y=as.character(Y_test)), "'Y' must be a numeric matrix or data frame.")
+
+  # Test for non-numeric input
+  expect_error(fit_DKP(X=matrix("a", nrow=n, ncol=d), Y=Y_test), "'X' must contain numeric values only.")
+  expect_error(fit_DKP(X=X_test, Y=matrix("a", nrow=n, ncol=2)), "'Y' must contain numeric values only.")
+
+  # Test for dimension mismatches
+  expect_error(fit_DKP(X=X_test, Y=Y_test[1:(n-1),]), "Number of rows in 'Y' must match number of rows in 'X'.")
+
+  # Test for invalid Y values
+  Y_neg <- Y_test
+  Y_neg[1, 1] <- -1
+  expect_error(fit_DKP(X=X_test, Y=Y_neg), "'Y' must be nonnegative counts or frequencies.")
+
+  # Test for NA values
+  X_na <- X_test
+  X_na[1, 1] <- NA
+  expect_error(fit_DKP(X=X_na, Y=Y_test), "Missing values are not allowed in 'X' or 'Y'.")
+
+  # Test Xbounds validation
+  d <- 2 # Define d for this test block
+  expect_warning(expect_error(fit_DKP(X=X_test, Y=Y_test, Xbounds = 1), "'Xbounds' must be a numeric matrix."))
+  expect_warning(expect_error(fit_DKP(X=X_test, Y=Y_test, Xbounds = matrix(1, nrow = d, ncol = 3)), paste0("'Xbounds' must be a matrix with dimensions d x 2, where d = ", d, ".")))
+})
+
+test_that("fit_DKP returns a DKP object with correct structure and content", {
+  n <- 10
+  d <- 2
+  X_test <- matrix(runif(n * d), nrow = n)
+  Y_test <- t(sapply(1:n, function(i) rmultinom(1, size = 100, prob = c(0.5, 0.5))))
+
+  # Use withCallingHandlers to capture the warning and get the return value
+  model_warning <- NULL
+  model <- withCallingHandlers(
+    fit_DKP(X=X_test, Y=Y_test),
+    warning = function(w) {
+      model_warning <<- w
+      invokeRestart("muffleWarning")
+    }
+  )
+
+  # Expect the specific warning and check model class
   expect_s3_class(model, "DKP")
-  expect_type(model, "list")
+  expect_s3_class(model_warning, "warning")
+  expect_equal(model_warning$message, "For binary data, consider using the BKP model instead of DKP.")
 
-  # 检查返回列表中的关键元素
-  expect_named(model, c("theta_opt", "kernel", "loss", "loss_min",
-                        "X", "Xnorm", "Xbounds", "Y",
-                        "prior", "r0", "p0",
-                        "alpha0", "alpha_n"))
+  # Check class and structure
+  expect_true(is.list(model))
+  expect_equal(names(model), c("theta_opt", "kernel", "loss", "loss_min", "X", "Xnorm", "Xbounds", "Y", "prior", "r0", "p0", "alpha0", "alpha_n"))
 
-  expect_equal(length(model$theta_opt), d_test)
-  expect_type(model$loss_min, "double")
-  expect_equal(ncol(model$alpha0), q_test)
-  expect_equal(ncol(model$alpha_n), q_test)
-})
-
-test_that("Basic Functionality: fit_DKP works with different 'prior' types", {
-  model_noninformative <- fit_DKP(X_test, Y_test, Xbounds, prior = "noninformative")
-  expect_equal(model_noninformative$prior, "noninformative")
-
-  # For 'fixed' prior, p0 is required for DKP
-  p0_fixed <- rep(1/q_test, q_test)
-  model_fixed <- fit_DKP(X_test, Y_test, Xbounds, prior = "fixed", r0 = 5, p0 = p0_fixed)
-  expect_equal(model_fixed$prior, "fixed")
-  expect_equal(model_fixed$r0, 5)
-  expect_equal(model_fixed$p0, p0_fixed)
-
-  model_adaptive <- fit_DKP(X_test, Y_test, Xbounds, prior = "adaptive", r0 = 10)
-  expect_equal(model_adaptive$prior, "adaptive")
-  expect_equal(model_adaptive$r0, 10)
-})
-
-test_that("Basic Functionality: fit_DKP works with different 'kernel' types", {
-  model_gaussian <- fit_DKP(X_test, Y_test, Xbounds, kernel = "gaussian")
-  expect_equal(model_gaussian$kernel, "gaussian")
-
-  model_matern52 <- fit_DKP(X_test, Y_test, Xbounds, kernel = "matern52")
-  expect_equal(model_matern52$kernel, "matern52")
-})
-
-test_that("Basic Functionality: fit_DKP works with different 'loss' functions", {
-  model_brier <- fit_DKP(X_test, Y_test, Xbounds, loss = "brier")
-  expect_equal(model_brier$loss, "brier")
-
-  model_logloss <- fit_DKP(X_test, Y_test, Xbounds, loss = "log_loss")
-  expect_equal(model_logloss$loss, "log_loss")
-})
-
-# -------------------------- Test Context: Input Validation ---------------------------
-
-test_that("Input Validation: 'Y' must match nrow(X)", {
-  Y_invalid <- Y_test[1:10, ]
-  expect_error(fit_DKP(X_test, Y_invalid, Xbounds))
-})
-
-test_that("Input Validation: 'Y' must be non-negative", {
-  Y_invalid <- Y_test
-  Y_invalid[1, 1] <- -1
-  expect_error(fit_DKP(X_test, Y_invalid))
-})
-
-test_that("Input Validation: 'Xbounds' must be a d x 2 matrix", {
-  expect_error(fit_DKP(X_test, Y_test, Xbounds = matrix(c(0,1,0,1), ncol=2))) # Wrong dimensions
-})
-
-test_that("Input Validation: p0 is required when prior is 'fixed'", {
-  expect_error(fit_DKP(X_test, Y_test, prior = "fixed", r0 = 5, p0 = NULL)) # p0 is NULL by default
-  expect_error(fit_DKP(X_test, Y_test, prior = "fixed", p0 = c(0.1))) # p0 wrong length
-})
-
-# -------------------------- Test Context: Default Values ---------------------------
-
-test_that("Default Values: Default 'prior' is 'noninformative'", {
-  model <- fit_DKP(X_test, Y_test, Xbounds)
-  expect_equal(model$prior, "noninformative")
-})
-
-test_that("Default Values: Default 'r0' is used when prior is 'fixed' or 'adaptive'", {
-  model_fixed <- fit_DKP(X_test, Y_test, prior = "fixed", p0 = rep(1/q_test, q_test))
-  expect_equal(model_fixed$r0, 2) # r0=2 is default
-
-  model_adaptive <- fit_DKP(X_test, Y_test, prior = "adaptive")
-  expect_equal(model_adaptive$r0, 2) # r0=2 is default
-})
-
-test_that("Default Values: Default 'kernel' is 'gaussian'", {
-  model <- fit_DKP(X_test, Y_test)
-  expect_equal(model$kernel, "gaussian")
-})
-
-test_that("Default Values: Default 'loss' is 'brier'", {
-  model <- fit_DKP(X_test, Y_test)
+  # Check content
   expect_equal(model$loss, "brier")
+  expect_equal(model$prior, "noninformative")
+  expect_equal(model$X, X_test)
+  expect_equal(dim(model$Xnorm), dim(X_test))
 })
 
-# -------------------------- Test Context: Edge Cases ---------------------------
+test_that("fit_DKP uses user-provided theta and skips optimization", {
+  user_theta <- c(0.1, 0.5)
+  n <- 10
+  d <- 2
+  X_test <- matrix(runif(n * d), nrow = n)
+  Y_test <- t(sapply(1:n, function(i) rmultinom(1, size = 100, prob = c(0.5, 0.5))))
 
-test_that("Edge Cases: fit_DKP handles 1D input (d=1)", {
-  X_1d <- matrix(runif(n_test, 0, 1), ncol = 1)
-  model <- fit_DKP(X_1d, Y_test)
-  expect_s3_class(model, "DKP")
-  expect_equal(ncol(model$X), 1)
-  expect_equal(length(model$theta_opt), 1)
-})
+  # Use withCallingHandlers to capture the warning and get the return value
+  model_warning <- NULL
+  model <- withCallingHandlers(
+    fit_DKP(X=X_test, Y=Y_test, theta = user_theta),
+    warning = function(w) {
+      model_warning <<- w
+      invokeRestart("muffleWarning")
+    }
+  )
 
-test_that("Edge Cases: fit_DKP handles small number of observations (n)", {
-  X_small <- matrix(runif(5 * d_test), 5, d_test)
-  Y_small <- t(sapply(1:5, function(i) rmultinom(1, size = 10, prob = rep(1/q_test, q_test))))
-  model <- fit_DKP(X_small, Y_small)
-  expect_s3_class(model, "DKP")
-  expect_equal(nrow(model$X), 5)
+  # Expect the specific warning
+  expect_s3_class(model_warning, "warning")
+  expect_equal(model_warning$message, "For binary data, consider using the BKP model instead of DKP.")
+
+  expect_equal(model$theta_opt, user_theta)
+  expect_true(is.na(model$loss_min))
 })

@@ -182,7 +182,11 @@ plot.BKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL, ...){
     Xnew <- matrix(seq(Xbounds[dims, 1], Xbounds[dims, 2], length.out = 10 * n_grid), ncol = 1)
 
     # Get the prediction for the new X values.
-    prediction <- predict.BKP(x, Xnew, ...)
+    Xnew_full <- lhs(nrow(Xnew), Xbounds)
+    Xnew_full[, dims] <- Xnew
+    prediction <- predict.BKP(x, Xnew_full, ...)
+
+    # Determine whether it is a classification problem
     is_classification <- !is.null(prediction$class)
 
     # Initialize the plot with the estimated probability curve.
@@ -228,7 +232,13 @@ plot.BKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL, ...){
     x1 <- seq(Xbounds[dims[1], 1], Xbounds[dims[1], 2], length.out = n_grid)
     x2 <- seq(Xbounds[dims[2], 1], Xbounds[dims[2], 2], length.out = n_grid)
     grid <- expand.grid(x1 = x1, x2 = x2)
-    prediction <- predict.BKP(x, as.matrix(grid), ...)
+
+    # Get the prediction for the new X values.
+    Xnew_full <- lhs(nrow(grid), Xbounds)
+    Xnew_full[, dims] <- as.matrix(grid)
+    prediction <- predict.BKP(x, Xnew_full, ...)
+
+    # Determine whether it is a classification problem
     is_classification <- !is.null(prediction$class)
 
     # Convert to data frame for levelplot
@@ -237,7 +247,6 @@ plot.BKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL, ...){
                      Upper = prediction$upper,
                      Lower = prediction$lower,
                      Variance = prediction$variance)
-                     # Width = prediction$upper - prediction$lower)
 
     if (only_mean) {
       # Only plot the predicted mean graphs

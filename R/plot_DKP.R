@@ -120,7 +120,13 @@ plot.DKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL, ...){
 
     # Generate new X values for smooth prediction
     Xnew <- matrix(seq(Xbounds[dims, 1], Xbounds[dims, 2], length.out = 10 * n_grid), ncol = 1)
-    prediction <- predict.DKP(x, Xnew, ...)
+
+    # Get the prediction for the new X values.
+    Xnew_full <- lhs(nrow(Xnew), Xbounds)
+    Xnew_full[, dims] <- Xnew
+    prediction <- predict.DKP(x, Xnew_full, ...)
+
+    # Determine whether it is a classification problem
     is_classification <- !is.null(prediction$class)
 
     old_par <- par(mfrow = c(2, 2))
@@ -196,7 +202,13 @@ plot.DKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL, ...){
     x1 <- seq(Xbounds[dims[1], 1], Xbounds[dims[1], 2], length.out = n_grid)
     x2 <- seq(Xbounds[dims[2], 1], Xbounds[dims[2], 2], length.out = n_grid)
     grid <- expand.grid(x1 = x1, x2 = x2)
-    prediction <- predict.DKP(x, as.matrix(grid))
+
+    # Get the prediction for the new X values.
+    Xnew_full <- lhs(nrow(grid), Xbounds)
+    Xnew_full[, dims] <- as.matrix(grid)
+    prediction <- predict.DKP(x, Xnew_full, ...)
+
+    # Determine whether it is a classification problem
     is_classification <- !is.null(prediction$class)
 
     if(is_classification){

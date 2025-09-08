@@ -191,6 +191,7 @@ predict.BKP <- function(object, Xnew = NULL, CI_level = 0.95, threshold = 0.5, .
     # Use training data
     alpha_n <- object$alpha_n
     beta_n  <- object$beta_n
+    m <- object$m
   }
 
   # Predictive mean and variance

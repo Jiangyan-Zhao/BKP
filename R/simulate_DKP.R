@@ -92,6 +92,7 @@ simulate.DKP <- function(object, nsim = 1, seed = NULL, Xnew = NULL, ...)
     # Use training data
     q       <- ncol(object$Y)
     alpha_n <- pmax(object$alpha_n, 1e-10) # Avoid numerical issues
+    Y       <- object$Y
   }
 
 

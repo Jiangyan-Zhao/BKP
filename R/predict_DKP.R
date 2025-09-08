@@ -129,6 +129,7 @@ predict.DKP <- function(object, Xnew = NULL, CI_level = 0.95, ...)
   }else{
     # Use training data
     alpha_n <- object$alpha_n
+    Y       <- object$Y
   }
 
   # Predictive quantities
