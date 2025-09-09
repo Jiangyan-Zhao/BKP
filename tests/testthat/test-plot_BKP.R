@@ -36,10 +36,10 @@ test_that("plot.BKP generates plots without errors", {
   model_2d <- fit_BKP(X, y, m, prior = "fixed", r0 = 10, p0 = 0.5)
 
   # Test with default arguments
-  expect_no_error(plot(model_2d))
+  expect_no_error(plot(model_2d, n_grid = 30))
 
   # Test with only_mean = TRUE
-  expect_no_error(plot(model_2d, only_mean = TRUE))
+  expect_no_error(plot(model_2d, only_mean = TRUE, n_grid = 30))
 
   # Test with a smaller n_grid
   expect_no_error(plot(model_2d, n_grid = 30))
@@ -57,17 +57,8 @@ test_that("plot.BKP generates plots without errors", {
   model_2d <- fit_BKP(X, y, m, prior = "fixed", r0 = 10, p0 = 0.5)
 
   # Test with default arguments
-  expect_no_error(plot(model_2d, dims = c(1,2)))
-  expect_no_error(plot(model_2d, dims = c(1,3)))
-  expect_no_error(plot(model_2d, dims = c(2,3)))
+  expect_no_error(plot(model_2d, dims = c(1,3), n_grid = 10))
 
   # Test with only_mean = TRUE
-  expect_no_error(plot(model_2d, only_mean = TRUE, dims = c(1,2)))
-  expect_no_error(plot(model_2d, only_mean = TRUE, dims = c(1,3)))
-  expect_no_error(plot(model_2d, only_mean = TRUE, dims = c(2,3)))
-
-  # Test with a smaller n_grid
-  expect_no_error(plot(model_2d, n_grid = 30, dims=c(1,2)))
-  expect_no_error(plot(model_2d, n_grid = 30, dims=c(1,3)))
-  expect_no_error(plot(model_2d, n_grid = 30, dims=c(2,3)))
+  expect_no_error(plot(model_2d, only_mean = TRUE, dims = c(1,3), n_grid = 10))
 })

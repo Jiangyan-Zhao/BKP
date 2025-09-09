@@ -147,5 +147,4 @@ test_that("fit_DKP uses user-provided theta and skips optimization", {
   expect_equal(model_warning$message, "For binary data, consider using the BKP model instead of DKP.")
 
   expect_equal(model$theta_opt, user_theta)
-  expect_true(is.na(model$loss_min))
 })

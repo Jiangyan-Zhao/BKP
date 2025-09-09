@@ -33,7 +33,7 @@ only when \code{model = "DKP"}, where \code{n} is the number of
 observations and \code{q} the number of classes.}
 
 \item{model}{A character string specifying the model type: \code{"BKP"}
-(binary) or \code{"DKP"} (multi-class).}
+(binary outcome) or \code{"DKP"} (multi-class outcome).}
 
 \item{prior}{Type of prior: \code{"noninformative"} (default),
 \code{"fixed"}, or \code{"adaptive"}.}

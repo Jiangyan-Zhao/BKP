@@ -212,8 +212,8 @@ fit_DKP <- function(
       parmat = init_gamma,
       fn     = loss_fun,
       method = "L-BFGS-B",
-      lower  = rep(-10, d), # relaxed lower bound
-      upper  = rep(10, d),  # relaxed upper bound
+      lower  = rep(-3, d), # relaxed lower bound
+      upper  = rep(3, d),  # relaxed upper bound
       prior = prior, r0 = r0, p0 = p0,
       Xnorm = Xnorm, Y = Y,
       model = "DKP", loss = loss, kernel = kernel,
@@ -227,7 +227,9 @@ fit_DKP <- function(
   }else{
     # ---- Use user-provided theta ----
     theta_opt <- theta
-    loss_min <- NA  # No optimization, so loss value not meaningful
+    loss_min <- loss_fun(gamma = log10(theta_opt), Xnorm = Xnorm, Y = Y,
+                         prior = prior, r0 = r0, p0 = p0,
+                         model = "DKP", loss = loss, kernel = kernel)
   }
 
   # ---- Compute kernel matrix at optimized hyperparameters ----

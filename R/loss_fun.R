@@ -8,8 +8,6 @@
 #' @inheritParams fit_BKP
 #' @param gamma A numeric vector of log10-transformed kernel hyperparameters.
 #' @param Xnorm A numeric matrix of normalized input features (\code{[0,1]^d}).
-#' @param model A character string specifying the model type: \code{"BKP"}
-#'   (binary) or \code{"DKP"} (multi-class).
 #'
 #' @return A single numeric value representing the total loss (to be minimized).
 #'   The value corresponds to either the Brier score (squared error) or the
@@ -97,16 +95,18 @@ loss_fun <- function(
     pi_hat <- alpha_n / (alpha_n + beta_n)
     pi_hat <- pmin(pmax(pi_hat, 1e-10), 1 - 1e-10)   # avoid log(0)
 
+    # Empirical success rate
+    pi_tilde <- y / m
+
+    # ---------------- Loss computation ----------------
     if (loss == "brier") {
-      # Brier score (Mean Squared Error)
-      # Empirical success rate
-      pi_tilde <- y / m
-      # Brier score: mean squared error between predicted and observed
+      # Standard Brier score (mean squared error)
       brier <- mean((pi_hat - pi_tilde)^2)
       return(brier)
     } else {
-      # log-loss (cross-entropy)
-      log_loss <- -mean(y * log(pi_hat) + (m - y) * log(1 - pi_hat))
+      # Standard log-loss (cross-entropy)
+      # log_loss <- -mean(y * log(pi_hat) + (m - y) * log(1 - pi_hat))
+      log_loss <- -mean(pi_tilde * log(pi_hat) + (1 - pi_tilde) * log(1 - pi_hat))
       return(log_loss)
     }
   } else {
@@ -121,16 +121,16 @@ loss_fun <- function(
     pi_hat <- alpha_n / rowSums(alpha_n)
     pi_hat <- pmin(pmax(pi_hat, 1e-6), 1 - 1e-6)   # avoid log(0)
 
+    # Empirical class probabilities
+    pi_tilde <- Y / rowSums(Y)
+
     if (loss == "brier") {
       # Brier score (Mean Squared Error)
-      # Empirical success rate
-      pi_tilde <- Y / rowSums(Y)
-      # Brier score: mean squared error between predicted and observed
       brier <- mean((pi_hat - pi_tilde)^2)
       return(brier)
     } else {
       # log-loss (cross-entropy)
-      log_loss <- -mean(Y * log(pi_hat))
+      log_loss <- -mean(pi_tilde * log(pi_hat))
       return(log_loss)
     }
   }

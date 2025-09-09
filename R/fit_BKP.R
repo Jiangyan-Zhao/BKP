@@ -203,8 +203,8 @@ fit_BKP <- function(
   if (is.null(theta)) {
     # ---- Determine initial search space for log10(theta) ----
     # We work in log10(theta) space for numerical stability
-    gamma_bounds <- matrix(c((log10(d)-log10(500))/2,       # lower bound
-                             (log10(d)+2)/2),               # upper bound
+    gamma_bounds <- matrix(c((log10(d) - log10(500))/2,   # lower bound
+                             (log10(d) + 2)/2),           # upper bound
                            ncol = 2, nrow = d, byrow = TRUE)
     if (is.null(n_multi_start)) n_multi_start <- 10 * d
     init_gamma <- lhs(n_multi_start, gamma_bounds)
@@ -214,8 +214,8 @@ fit_BKP <- function(
       parmat = init_gamma,
       fn     = loss_fun,
       method = "L-BFGS-B",
-      lower  = rep(-10, d), # relaxed lower bound
-      upper  = rep(10, d),  # relaxed upper bound
+      lower  = rep(-3, d), # relaxed lower bound
+      upper  = rep(3, d),  # relaxed upper bound
       prior = prior, r0 = r0, p0 = p0,
       Xnorm = Xnorm, y = y, m=m,
       model = "BKP", loss = loss, kernel = kernel,
@@ -230,7 +230,9 @@ fit_BKP <- function(
   }else{
     # ---- Use user-provided theta ----
     theta_opt <- theta
-    loss_min <- NA  # No optimization, so loss value not meaningful
+    loss_min <- loss_fun(gamma = log10(theta_opt), Xnorm = Xnorm, y = y, m=m,
+                         prior = prior, r0 = r0, p0 = p0,
+                         model = "BKP", loss = loss, kernel = kernel)
   }
 
   # ---- Compute kernel matrix at optimized hyperparameters ----

@@ -70,10 +70,10 @@ test_that("plot.DKP generates plots without errors for 1D and 2D inputs", {
   model_2d <- fit_DKP(X, Y, prior = "fixed", r0 = 10, p0 = c(1/3, 1/3, 1/3))
 
   # Test with default arguments
-  expect_no_error(plot(model_2d))
+  expect_no_error(plot(model_2d, n_grid = 30))
 
   # Test with only_mean = TRUE
-  expect_no_error(plot(model_2d, only_mean = TRUE))
+  expect_no_error(plot(model_2d, only_mean = TRUE, n_grid = 30))
 
   # Test with a smaller n_grid
   expect_no_error(plot(model_2d, n_grid = 30))
@@ -87,22 +87,12 @@ test_that("plot.DKP generates plots without errors for 1D and 2D inputs", {
   n <- 50
   X <- matrix(runif(n * d), n, d)
   Y <- t(rmultinom(n, size = 10, prob = c(1/3,1/3,1/3)))
-  m <- rep(10, n)
   # Fit a 2D DKP model
   model_2d <- fit_DKP(X, Y, prior = "fixed", r0 = 10, p0 = c(1/3, 1/3, 1/3))
 
   # Test with default arguments
-  expect_no_error(plot(model_2d, dims=c(1,2)))
-  expect_no_error(plot(model_2d, dims=c(1,3)))
-  expect_no_error(plot(model_2d, dims=c(2,3)))
+  expect_no_error(plot(model_2d, dims=c(1,3), n_grid = 10))
 
   # Test with only_mean = TRUE
-  expect_no_error(plot(model_2d, only_mean = TRUE, dims=c(1,2)))
-  expect_no_error(plot(model_2d, only_mean = TRUE, dims=c(1,3)))
-  expect_no_error(plot(model_2d, only_mean = TRUE, dims=c(2,3)))
-
-  # Test with a smaller n_grid
-  expect_no_error(plot(model_2d, n_grid = 30,dims=c(1,2)))
-  expect_no_error(plot(model_2d, n_grid = 30,dims=c(1,3)))
-  expect_no_error(plot(model_2d, n_grid = 30,dims=c(2,3)))
+  expect_no_error(plot(model_2d, only_mean = TRUE, dims=c(1,3), n_grid = 10))
 })

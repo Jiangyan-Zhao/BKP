@@ -114,5 +114,4 @@ test_that("fit_BKP uses user-provided theta and skips optimization", {
   model <- fit_BKP(X=X_test, y=y_test, m=m_test, theta = user_theta)
 
   expect_equal(model$theta_opt, user_theta)
-  expect_true(is.na(model$loss_min))
 })

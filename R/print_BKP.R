@@ -105,9 +105,7 @@ print.BKP <- function(x, ...) {
   cat(sprintf("Kernel type:                 %s\n", x$kernel))
   cat(sprintf("Optimized kernel parameters: %s\n",
               paste(sprintf("%.4f", x$theta_opt), collapse = ", ")))
-  if (!is.na(x$loss_min)) {
-    cat(sprintf("Minimum achieved loss:       %.5f\n", x$loss_min))
-  }
+  cat(sprintf("Minimum achieved loss:       %.5f\n", x$loss_min))
   cat(sprintf("Loss function:               %s\n", x$loss))
   cat(sprintf("Prior type:                  %s\n", x$prior))
   if (x$prior == "fixed" || x$prior == "adaptive") {
@@ -134,9 +132,7 @@ print.summary_BKP <- function(x, ...) {
   cat(sprintf("Kernel type:                 %s\n", x$kernel))
   cat(sprintf("Optimized kernel parameters: %s\n",
               paste(sprintf("%.4f", x$theta_opt), collapse = ", ")))
-  if (!is.na(x$loss_min)) {
-    cat(sprintf("Minimum achieved loss:       %.5f\n", x$loss_min))
-  }
+  cat(sprintf("Minimum achieved loss:       %.5f\n", x$loss_min))
   cat(sprintf("Loss function:               %s\n", x$loss))
   cat(sprintf("Prior type:                  %s\n", x$prior))
   if (x$prior == "fixed" || x$prior == "adaptive") {
