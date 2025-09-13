@@ -145,6 +145,7 @@ predict.DKP <- function(object, Xnew = NULL, CI_level = 0.95, ...)
   prediction <- list(
     X        = X,
     Xnew     = Xnew,
+    alpha_n  = alpha_n,
     mean     = pred_mean,
     variance = pred_var,
     lower    = pred_lower,

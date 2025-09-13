@@ -33,6 +33,11 @@ A list containing posterior predictive summaries:
 \describe{
 \item{\code{X}}{The original training input locations.}
 \item{\code{Xnew}}{The new input locations for prediction (same as \code{Xnew} if provided).}
+\item{\code{alpha_n}, \code{beta_n}}{Posterior shape parameters for each location:
+\itemize{
+\item BKP: Vectors of posterior shape parameters (\code{alpha_n}, \code{beta_n}) for each input location.
+\item DKP: Posterior shape parameter matrix \code{alpha_n} (rows = input locations, columns = classes).
+}}
 \item{\code{mean}}{Posterior mean prediction:
 \itemize{
 \item BKP: Posterior mean success probability at each location.
@@ -45,12 +50,12 @@ A list containing posterior predictive summaries:
 }}
 \item{\code{lower}}{Lower bound of the posterior credible interval:
 \itemize{
-\item BKP: Lower bound (e.g., 2.5th percentile for 95\\% CI).
+\item BKP: Lower bound (e.g., 2.5th percentile for 95\% CI).
 \item DKP: Matrix of lower bounds for each class.
 }}
 \item{\code{upper}}{Upper bound of the posterior credible interval:
 \itemize{
-\item BKP: Upper bound (e.g., 97.5th percentile for 95\\% CI).
+\item BKP: Upper bound (e.g., 97.5th percentile for 95\% CI).
 \item DKP: Matrix of upper bounds for each class.
 }}
 \item{\code{class}}{Predicted label:

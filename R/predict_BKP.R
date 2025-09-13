@@ -24,6 +24,11 @@
 #' \describe{
 #'   \item{\code{X}}{The original training input locations.}
 #'   \item{\code{Xnew}}{The new input locations for prediction (same as \code{Xnew} if provided).}
+#'   \item{\code{alpha_n}, \code{beta_n}}{Posterior shape parameters for each location:
+#'     \itemize{
+#'       \item BKP: Vectors of posterior shape parameters (\code{alpha_n}, \code{beta_n}) for each input location.
+#'       \item DKP: Posterior shape parameter matrix \code{alpha_n} (rows = input locations, columns = classes).
+#'     }}
 #'   \item{\code{mean}}{Posterior mean prediction:
 #'     \itemize{
 #'       \item BKP: Posterior mean success probability at each location.
@@ -36,12 +41,12 @@
 #'     }}
 #'   \item{\code{lower}}{Lower bound of the posterior credible interval:
 #'     \itemize{
-#'       \item BKP: Lower bound (e.g., 2.5th percentile for 95\% CI).
+#'       \item BKP: Lower bound (e.g., 2.5th percentile for 95% CI).
 #'       \item DKP: Matrix of lower bounds for each class.
 #'     }}
 #'   \item{\code{upper}}{Upper bound of the posterior credible interval:
 #'     \itemize{
-#'       \item BKP: Upper bound (e.g., 97.5th percentile for 95\% CI).
+#'       \item BKP: Upper bound (e.g., 97.5th percentile for 95% CI).
 #'       \item DKP: Matrix of upper bounds for each class.
 #'     }}
 #'   \item{\code{class}}{Predicted label:
@@ -206,6 +211,8 @@ predict.BKP <- function(object, Xnew = NULL, CI_level = 0.95, threshold = 0.5, .
   prediction <- list(
     X        = X,
     Xnew     = Xnew,
+    alpha_n  = alpha_n,
+    beta_n   = beta_n,
     mean     = pred_mean,
     variance = pred_var,
     lower    = pred_lower,

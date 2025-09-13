@@ -71,7 +71,6 @@ options(prompt = 'R> ', continue = '+ ')
 ```
 
 # Introduction {#sec:intro}
-
 Estimating a continuous probability function from binary or binomial observations is a fundamental task in modern statistics and machine learning \citep{Hastie2009StatLearning, Rolland2018BKP, Murphy2022PML}. Such problems arise in various domains where the goal is to infer a latent probability surface from individual Bernoulli outcomes or aggregated binomial counts over a continuous input space. Representative applications include binary classification \citep{MacKenzie2014, Wen2025KLR}, probability calibration \citep{Sung2020binaryCalibration, Dimitriadis2023}, relative abundance modeling \citep{Martin2020}, and longitudinal analysis of patient-reported outcomes \citep{Najera2018HRQoL, Najera2019PRO}. 
 
 Classical approaches such as logistic regression and generalized additive models provide computationally efficient tools for binomial regression, but their parametric form often limits their ability to capture complex nonlinear patterns \citep{Hastie2009StatLearning}. Nonparametric models like Gaussian Process (GP) classifiers provide greater modeling flexibility and principled uncertainty quantification \citep{Rasmussen2006GPML}, yet the non-Gaussian likelihood of binary responses necessitates approximate inference, leading to substantial computational cost and implementation complexity \citep{Nickisch2008BinaryGP}. 
@@ -82,8 +81,7 @@ Compared to GP-based methods, BKP eliminates the need for sampling or variationa
 
 While GP models are supported by mature software libraries, such as \pkg{DiceKriging} \citep{Roustant2012DiceKriging}, \pkg{GPfit} \citep{MacDonald2015GPfit}, and \pkg{gplite} \citep{Piironen2022gplite} in \proglang{R}, and \pkg{GPyTorch} \citep{Gardner2018GPyTorch}, \pkg{GPflow} \citep{Matthews2017GPflow}, and \pkg{GPy} \citep{gpy2014} in \proglang{Python}. So far, there are about 100 GP-related packages on CRAN (as seen by running \code{packagefinder::findPackage("Gaussian process", display = "browser")}).  In contrast, software for kernel-based modeling of binomial and multinomial data remains scarce. The \pkg{BKP} package fills this gap by offering a natively, unified and extensible framework for nonparametric modeling of  binary/binomial, categorical/multinomial data. It provides multiple options for prior specification, kernel functions, and loss functions, enabling flexible model customization. These features make \pkg{BKP} applicable to a wide range of problems in biomedicine, ecology, social science, and industrial statistics. 
 
-The remainder of the paper is organized as follows. Section \ref{sec:model} introduces the statistical foundation of the BKP model, including prior specification strategies, kernel functions, loss-based hyperparameter tuning, and the DKP extension. Section \ref{sec:package} describes the structure and main functionalities of the \pkg{BKP} package, including model fitting, prediction, and simulation for both BKP and DKP. Section \ref{sec:example} presents illustrative examples to demonstrate the use of BKP and DKP in binary classification and compositional modeling tasks. Section \ref{sec:summary} concludes with a discussion of current limitations and potential extensions. 
-
+The remainder of the paper is organized as follows. Section~\ref{sec:model} introduces the statistical foundation of the BKP model, including prior specification strategies, kernel functions, loss-based hyperparameter tuning, and the DKP extension. Section~\ref{sec:package} describes the structure and main functionalities of the \pkg{BKP} package, including model fitting, prediction, and simulation for both BKP and DKP. Section~\ref{sec:example} presents illustrative examples to demonstrate the use of BKP and DKP in binary classification and compositional modeling tasks. Section~\ref{sec:Loaloa} demonstrates the BKP workflow using the Loa loa dataset. Section~\ref{sec:summary} concludes with a discussion of current limitations and potential extensions.
 
 # Statistical Foundation {#sec:model}
  
@@ -100,7 +98,7 @@ In line with the Bayesian paradigm, assign a Beta prior to the unknown probabili
 \[
 	\pi(\vec{x}) \sim \mathrm{Beta}(\alpha_0(\vec{x}), \beta_0(\vec{x})),
 \]
-where $\alpha_0(\vec{x}) > 0$ and $\beta_0(\vec{x}) > 0$ are spatially varying shape parameters. Details on prior specification are discussed in Section \ref{sec:prior}.
+where $\alpha_0(\vec{x}) > 0$ and $\beta_0(\vec{x}) > 0$ are spatially varying shape parameters. Details on prior specification are discussed in Section~\ref{sec:prior}.
 
 Let $k: \mathcal{X} \times \mathcal{X} \to [0,1]$ denote a user-defined kernel function measuring the similarity between input locations. 
 By the kernel-based Bayesian updating strategy \citep{Goetschalckx:2011, Rolland2018BKP}, the BKP model constructs a closed-form posterior distribution for $\pi(\vec{x})$ as
@@ -135,7 +133,7 @@ serves as a smooth estimator of the latent success probability. The correspondin
 	\sigma^2_n(\vec{x})=\mathrm{Var}[\pi(\vec{x}) \mid \mathcal{D}_n] = \frac{\widehat{\pi}_n(\vec{x})\{1 - \widehat{\pi}_n(\vec{x})\}}{\alpha_n(\vec{x}) + \beta_n(\vec{x}) + 1}
 \end{equation}
 provides a local measure of epistemic uncertainty.
-These posterior summaries can be used to visualize prediction quality across the input space, particularly highlighting regions with sparse data coverage. See Section \ref{sec:example} for illustrations.
+These posterior summaries can be used to visualize prediction quality across the input space, particularly highlighting regions with sparse data coverage. See Section~\ref{sec:example} for illustrations.
 
 For binary classification, the posterior mean can be thresholded to produce hard predictions through
 \begin{equation}\label{eq:class_cri}
@@ -154,14 +152,14 @@ We provide three strategies for prior specification as follows.
 \begin{itemize}
 	\item \textbf{Non-informative prior:}  
 	A default and widely used choice is the uniform prior, which sets $\alpha_0(\vec{x}) = \beta_0(\vec{x}) \equiv 1$ for all $\vec{x}$. %This prior is minimally informative and corresponds to a flat density over the interval $(0,1)$, reflecting complete prior ignorance. 
-It is appropriate when no prior knowledge is available.
+    It is appropriate when no prior knowledge is available.
 	
 	\item \textbf{Informative prior with fixed mean:}  
 	When prior information about the overall success probability $p_0 \in (0,1)$ is available, an informative prior can be constructed by setting
 	\[
 		\alpha_0(\vec{x}) = r_0 p_0, \qquad \beta_0(\vec{x}) = r_0 (1 - p_0),
 	\]
-	where $r_0 > 0$ is a scalar precision parameter controlling the strength of the prior. Larger value of $r_0$ represents greater prior certainty. It contains the previous non-informative prior as a special case with $r_0 = 2$ and $p_0 = 0.5$.
+	where $r_0 > 0$ is a scalar precision parameter controlling the strength of the prior. Larger value of $r_0$ represents greater prior certainty. It contains the previous non-informative prior as a special case with $r_0 = 2$ and $p_0 = 0.5$. In practice, we recommend specifying $p_0$ according to the empirical overall success proportion $y_i/m_i$.
 	
 	\item \textbf{Data-adaptive informative prior:}  
 	To accommodate spatial variation in the data, \pkg{BKP} supports a locally adaptive prior in which both the prior mean and prior strength vary across the input space. Specifically, at each location $\vec{x}$, the prior mean $p(\vec{x})$ and prior precision $r(\vec{x})$ are estimated using kernel-weighted averages through
@@ -178,9 +176,9 @@ It is appropriate when no prior knowledge is available.
 \end{itemize}
 
 We offer some practical guideline to choose the global precision parameter. 
-In classification when each input location receives a single categorical observation, we recommend choosing a relatively small value, such as $0.01 \leq r_0 \leq 0.1$, to prevent the prior domination and keep the posterior inference primarily data-driven. We illustrate this point in Example 1 of Section \ref{sec:example_bkp}. 
-For model fitting when binomial responses are observed at each input location, set $r_0$ to be about 5--10\% of the average number of trials per location for moderate regularization. When strong prior knowledge is available, choose $r_0$ to be 1--5\% of the total sample size. In the absence of strong prior information, a good starting point is $r_0 = 0.01$. Then, use cross-validation or predictive performance to make adjustment. In both situations, one can conduct a sensitivity analysis over several $r_0$ values (e.g., 0.01, 0.1, 0.5, 1, 2, 5) to evaluate the stability of predictions and decision boundaries. 
-
+In classification when each input location receives a single categorical observation, we recommend choosing a relatively small value, such as $0.01 \leq r_0 \leq 0.1$, to prevent the prior domination and keep the posterior inference primarily data-driven. We illustrate this point in Example~1 of Section~\ref{sec:example_bkp}. 
+For model fitting with binomial responses at each location, a reasonable choice is to set $r_0$ to the mean number of trials per location, reflecting the typical information content of the data. 
+In the absence of reliable prior information, a simple default is $r_0 = 0.1$, with subsequent adjustment guided by cross-validation or predictive performance over a range of candidate values (e.g., $r_0 \in \{0.001, 0.01, 0.1, 1, 5, 10\}$) to assess the robustness of predictions and decision boundaries.
 
 ## Model Selection via Kernel Hyperparameter Tuning {#sec:model-selection}
 
@@ -192,7 +190,7 @@ h(\vec{x}, \vec{x}'; \vec{\theta}) = \sqrt{\sum_{j=1}^{d} \left(\frac{x_{j} - x_
 \]
 where $\vec{\theta} = (\theta_1, \theta_2, \ldots, \theta_d)$ are positive kernel hyperparameters governing the relative importance of each input component. Based on this metric, define the kernel function as $k(\vec{x}, \vec{x}') = k(h)$, where the functional form of $k(\cdot)$ determines the kernel type \citep{Rasmussen2006GPML}.
 
-The \pkg{BKP} package implements several widely used kernel functions, namely Gaussian (squared-exponential) and Matérn families, summarized in Table \ref{tab:kernel-functions}.
+The \pkg{BKP} package implements several widely used kernel functions, namely Gaussian (squared-exponential) and Matérn families, summarized in Table~\ref{tab:kernel-functions}.
 
 \begin{table}[!t]
 	\renewcommand{\arraystretch}{1.5}
@@ -210,29 +208,30 @@ The \pkg{BKP} package implements several widely used kernel functions, namely Ga
 	\end{tabular}
 \end{table}
 
-### Loss Functions 
+### Loss Functions  
 
-Hyperparameter tuning is conducted by minimizing a user-specified loss function evaluated using the leave-one-out cross-validation (LOOCV) method \citep{Montesano2012}. For each data point $\vec{x}_i$, the model is refitted up on the remaining data $\mathcal{D}_n^{-i}$, and the posterior mean $\widehat{\pi}_n^{-i}(\vec{x}_i)$ is used as the prediction. The LOOCV procedure is known to mitigate overfitting and produce better generalization performance than marginal likelihood-based approaches \citep{Rasmussen2006GPML, Vehtari2017LOOCV}.
+Hyperparameter tuning is conducted by minimizing a user-specified loss function evaluated using the leave-one-out cross-validation (LOOCV) method \citep{Montesano2012}. For each data point $\vec{x}_i$, the model is refitted up on the remaining data $\mathcal{D}_n^{-i}$, and the posterior mean $\widehat{\pi}_n^{-i}(\vec{x}_i;\vec{\theta})$ is used as the prediction. The LOOCV procedure is known to mitigate overfitting and produce better generalization performance than marginal likelihood-based approaches \citep{Rasmussen2006GPML, Vehtari2017LOOCV}.
 
-Currently, \pkg{BKP} supports two loss functions: the Brier score (i.e., squared error loss) and the log-loss (i.e., negative log-likelihood or cross-entropy). 
+Currently, \pkg{BKP} supports two loss functions: the Brier score (i.e., squared error loss) and the log-loss (i.e., negative log-likelihood or cross-entropy).
 
 \paragraph{Brier Score}
 Let $\widetilde{\pi}_i = y_i / m_i$ denote the empirical success proportion at input location $\vec{x}_i$. 
 The LOOCV Brier score is defined as
 \begin{equation}\label{eq:Brier}
-	\mathrm{BS}(\vec{\theta}; \mathcal{D}_n) = \frac{1}{n} \sum_{i=1}^{n} \left\{ \widehat{\pi}_n^{-i}(\vec{x}_i) - \widetilde{\pi}_i \right\}^2,
+	\mathrm{BS}(\vec{\theta}; \mathcal{D}_n) = \frac{1}{n} \sum_{i=1}^{n} \left\{ \widehat{\pi}_n^{-i}(\vec{x}_i;\vec{\theta}) - \widetilde{\pi}_i \right\}^2,
 \end{equation}
 which penalizes the squared deviation between the predicted and observed success proportions.
 
 \paragraph{Log-Loss}
-The log-loss (or cross-entropy) is widely used for probabilistic classification. Based on the LOOCV predictions, it is defined as
+The log-loss is widely used for probabilistic classification. Based on the LOOCV predictions, it is defined as
 \begin{equation}\label{eq:log-loss}
-	\mathrm{LL}(\vec{\theta}; \mathcal{D}_n) = -\frac{1}{n} \sum_{i=1}^{n} \left[ y_i \log \widehat{\pi}_n^{-i}(\vec{x}_i) + (m_i - y_i) \log \left\{1 - \widehat{\pi}_n^{-i}(\vec{x}_i)\right\} \right].
+	\mathrm{LL}(\vec{\theta}; \mathcal{D}_n) = -\frac{1}{n} \sum_{i=1}^{n} \left[ \widetilde{\pi}_i \log \widehat{\pi}_n^{-i}(\vec{x}_i;\vec{\theta}) + (1 - \widetilde{\pi}_i) \log \left\{1 - \widehat{\pi}_n^{-i}(\vec{x}_i;\vec{\theta})\right\} \right].
 \end{equation}
 It corresponds to the negative log-likelihood of the binomial model evaluated at the LOOCV predictive probabilities.
 
 \begin{remark} %{Comparison of the Two Criteria.}
-Although both criteria rely on LOOCV estimates, they emphasize different aspects of predictive performance \citep{Gneiting2007ProperScoring, Flores2025ClassifierEvaluation}. The Brier score directly penalizes squared deviations from empirical proportions, making it more robust to poorly calibrated probabilities and better suited for smooth probability estimation under binomial data. 
+Although both criteria rely on LOOCV estimates, they emphasize different aspects of predictive performance \citep{Gneiting2007ProperScoring, Flores2025ClassifierEvaluation}. 
+The Brier score directly penalizes squared deviations from empirical proportions, making it more robust to poorly calibrated probabilities and better suited for smooth probability estimation under binomial data. 
 In contrast, the log-loss penalizes overconfident mispredictions more heavily and is highly sensitive to the accuracy of the predicted probabilities. In practice, the choice between the two depends on whether calibration quality or robustness is prioritized in the evaluation \citep{DRatings2023}. 
 \end{remark}
 
@@ -257,7 +256,7 @@ The initial values ${\vec{\gamma}^{(1)}, \ldots, \vec{\gamma}^{(n_0)}} \subset \
 \[
 	\widehat{\vec{\gamma}}^{(i)} = \underset{\vec{\gamma} \in \Omega}{\argmin}\; L(\vec{\gamma};\mathcal{D}_n), \quad i=1,\ldots, n_0,
 \]
-where $L(\cdot)$ is the chosen loss function from \eqref{eq:Brier} or \eqref{eq:log-loss}, and $\Omega = [-10, 10]^d$  is a broader search region than $\Omega_0$. The final estimate is chosen as the best local minimum through
+where $L(\cdot)$ is the chosen loss function from \eqref{eq:Brier} or \eqref{eq:log-loss}, and $\Omega = [-3, 3]^d$  is a broader search region than $\Omega_0$. The final estimate is chosen as the best local minimum through
 \[
 	\widehat{\vec{\gamma}} = \underset{1 \leq i \leq n_0}{\argmin}\;  L(\widehat{\vec{\gamma}}^{(i)};\mathcal{D}_n).
 \]
@@ -302,114 +301,128 @@ For classification tasks, labels are assigned by the maximum a posteriori (MAP) 
 	\widehat{y}(\vec{x}) = \underset{s \in \{1,\ldots,q\}}{\argmax}\; \widehat{\pi}_{n,s}(\vec{x}).
 \end{equation}
 
-Prior choices (e.g., non-informative, fixed informative, or locally adaptive) follow similarly from the BKP framework in Section \ref{sec:prior} by treating component-wise specification of prior class proportions.
+Prior choices (e.g., non-informative, fixed informative, or locally adaptive) follow similarly from the BKP framework in Section~\ref{sec:prior} by treating component-wise specification of prior class proportions.
 
-Kernel hyperparameters are tuned by minimizing LOOCV-based loss functions as in Section \ref{sec:model-selection}, where the multi-class Brier score and log-loss are defined as:
+Kernel hyperparameters are tuned by minimizing LOOCV-based loss functions, as described in Section~\ref{sec:model-selection}. For multi-class responses, we consider the Brier score and the log-loss, defined respectively as
 \begin{align}
-	\mathrm{BS}_{\mathrm{multi}}(\vec{\theta}) &= \frac{1}{n} \sum_{i=1}^n \sum_{s=1}^q \left\{ \widehat{\pi}_{n,s}^{-i}(\vec{x}_i) - \frac{y_{i,s}}{m_i} \right\}^2, \label{eq:multi-class-brier}\\
-	\mathrm{LL}_{\mathrm{multi}}(\vec{\theta}) &= -\frac{1}{n} \sum_{i=1}^n \sum_{s=1}^q y_{i,s} \log \widehat{\pi}_{n,s}^{-i}(\vec{x}_i). \label{eq:dkp-logloss}
+	\mathrm{BS}_{\mathrm{multi}}(\vec{\theta}) &= \frac{1}{n} \sum_{i=1}^n \sum_{s=1}^q \left( \widehat{\pi}_{n,s}^{-i}(\vec{x}_i;\vec{\theta}) - \widetilde{\pi}_{i,s}\right)^2, \\
+	\mathrm{LL}_{\mathrm{multi}}(\vec{\theta}) &= -\frac{1}{n} \sum_{i=1}^n \sum_{s=1}^q \widetilde{\pi}_{i,s} \log \widehat{\pi}_{n,s}^{-i}(\vec{x}_i;\vec{\theta}),
 \end{align}
-These multi-class loss functions reduce to (\ref{eq:Brier}) and (\ref{eq:log-loss}) when $q = 2$.
-
+where $\widetilde{\pi}_{i,s}=y_{i,s}/m_i$ denotes the empirical class proportion.
+These multi-class criteria reduce to their binary counterparts when $q=2$. %For the log-loss, the expressions coincide exactly, while for the Brier score one obtains $\mathrm{BS}{\mathrm{multi}}(\vec{\theta})\big|{q=2} = 2 \cdot \mathrm{BS}(\vec{\theta})$, due to the summation over both classes.
 
 # BKP Package {#sec:package}
 
 The \pkg{BKP} package provides the implementation of the Beta Kernel Process (BKP) and its extension to the Dirichlet Kernel Process (DKP). The package is designed with usability and extensibility in mind, offering a modular structure with separate functions for model fitting, prediction, simulation, kernel construction, prior specification, and hyperparameter tuning. Users can specify the kernel type and prior form to adapt to various application scenarios.
-The core functionality of the package is summarized in Table \ref{tab:main_functions}.
+The core functionality of the package is summarized in Table~\ref{tab:main_functions}.
 
-To install the package, one can install the stable version from CRAN using \code{install.packages("BKP")} or the development version from GitHub via \code{pak::pak("Jiangyan-Zhao/BKP")}.  
+The package can be obtained from CRAN using \code{install.packages("BKP")} or the development version from GitHub via \code{pak::pak("Jiangyan-Zhao/BKP")}.
 
 \begin{table}[!t]
 	\centering
-	\caption{Main functions provided in the \pkg{BKP} package.}
+	\caption{Main functions and S3 methods provided in the \pkg{BKP} package.}
 	\label{tab:main_functions}
 	\begin{tabular}{ll}
 		\toprule
-		Function & Description \\
+		 & Description \\
 		\midrule
-		\code{fit.BKP()} & Fit a Beta Kernel Process (BKP) model for binomial or binary data. \\
-		\code{predict.BKP()} & Make predictions using a fitted BKP model. \\
-		\code{simulate.BKP()} & Generate posterior samples from fitted BKP models. \\
-		\code{plot.BKP()} & Visualization for BKP model results. \\ 
+		\multicolumn{2}{l}{\textbf{Functions}} \\
+		\fct{fit\_BKP} & Fit a Beta Kernel Process (BKP) model for binary/binomial data. \\
+		\fct{fit\_DKP} & Fit a Dirichlet Kernel Process (DKP) model for categorical or multinomial data. \\
 		\midrule
-		\code{fit.DKP()} & Fit a Dirichlet Kernel Process (DKP) model for multinomial data. \\
-		\code{predict.DKP()} & Make predictions using a fitted DKP model. \\
-		\code{simulate.DKP()} & Generate posterior samples from fitted DKP models. \\
-		\code{plot.DKP()} & Visualization for DKP model results. \\
+		\multicolumn{2}{l}{\textbf{S3 Methods}} \\
+		\fct{predict} & Posterior prediction for BKP and DKP models. \\
+		\fct{simulate} & Posterior simulation for BKP and DKP models. \\
+		\fct{summary} & Summarize fitted BKP and DKP models. \\
+		\fct{plot} & Visualization of fitted BKP and DKP models. \\
+		\fct{print} & Print fitted models, predictions, simulations, and summaries. \\
 		\bottomrule
 	\end{tabular}
 \end{table}
 
+
 ## BKP Model 
 
-We first present the BKP model in detail. The DKP model will  be described in Section \ref{sec:DKP_pkg}, with a focus on differences from the BKP formulation.
+We first provide a detailed description of the BKP model. The DKP model, presented in Section~\ref{sec:DKP_pkg}, highlights only the aspects that differ from the BKP implementation.
 
-The function \fct{fit.BKP} fits the BKP model \eqref{eq:BKP_model} for binomial or binary response data. Its main arguments are:
-
+The function \fct{fit\_BKP} fits the BKP model \eqref{eq:BKP_model} for binomial or binary response data. Its main arguments are
 \begin{Code}
-fit.BKP(X, y, m, Xbounds = NULL, 
-	prior = "noninformative", r0 = 2, p0 = 0.5,
+fit_BKP(X, y, m, Xbounds = NULL, 
+	prior = "noninformative", r0 = 2, p0 = mean(y / m),
 	loss = "brier",  kernel = "gaussian", n_multi_start = NULL, theta = NULL)
 \end{Code}
 
-The first group of arguments specifies the core data inputs: \code{X} is an $n \times d$ input matrix, \code{y} is the vector of observed successes, and \code{m} is the corresponding vector of total trials. 
-The \code{Xbounds} argument is used to constrain or confine \code{X} to the unit hypercube $[0,1]^d$, facilitating kernel hyperparameter optimization. When \code{Xbounds = NULL} (default), the inputs are assumed to be already standardized in $[0,1]^d$. 
+The first group specifies the core data inputs: \code{X} is an $n \times d$ input matrix, \code{y} is the vector of observed successes, and \code{m} is the corresponding vector of total trials. 
+\code{Xbounds} rescales \code{X} to the unit hypercube $[0,1]^d$ for kernel hyperparameter optimization, and if \code{NULL} (default), \code{X} is assumed standardized.
 
-The second group defines the prior distribution for the latent success probability surface. The \code{prior} argument controls the prior type, with available options: \code{"noninformative"} (default), \code{"fixed"}, and \code{"adaptive"}, corresponding to the formulations in Section \ref{sec:prior}. The parameters \code{r0} and \code{p0} specify the prior strength and prior mean for the latter two options.
+The second group defines the prior for the latent success probability surface. \code{prior} selects the type (\code{"noninformative"}, \code{"fixed"}, or \code{"adaptive"}; see Section~\ref{sec:prior}), and the prior is constructed using the \fct{get\_prior} function. \code{r0} and \code{p0} specify prior precision and mean when applicable.
 
-The third group specifies the loss function and optimization settings. The \code{loss} argument chooses the criterion for kernel hyperparameter estimation: \code{"brier"} (default), based on the Brier score in \eqref{eq:Brier}, and \code{"log_loss"}, based on the log loss in \eqref{eq:log-loss}. The \code{kernel} argument selects the kernel function from \code{"gaussian"} (default), \code{"matern32"}, and \code{"matern52"} in Table \ref{tab:kernel-functions}. The \code{n_multi_start} argument determines the number of random initial points in the multi-start optimization, with the default setting (\code{NULL}) being $10d$. Alternatively, the \code{theta} argument allows users to supply a fixed positive kernel length scale, either as a scalar (applied to all dimensions) or a vector of length $d$. When \code{theta} is provided, the multi-start optimization is skipped and the specified value is used directly. The optimization, when invoked, is carried out using the \fct{multistart} function from the \pkg{optimx} package \citep{Nash2011optimx, Nash2014optim}. 
+The third group specifies the loss function and optimization settings. \code{loss} chooses the criterion for kernel hyperparameter estimation (\code{"brier"} (default) or \code{"log_loss"}), which is implemented via the \fct{loss\_fun} function, and \code{kernel} selects the kernel function (\code{"gaussian"} (default), \code{"matern32"}, or \code{"matern52"}). \code{n_multi_start} sets the number of random initial points for multi-start optimization (default $10d$). 
+Alternatively, \code{theta} can fix the kernel length scale directly, as a scalar (applied to all dimensions) or a vector of length $d$, skipping optimization.
+ Optimization is performed using \fct{multistart} from the \pkg{optimx} package \citep{Nash2011optimx, Nash2014optim}.
+Note that both \fct{get\_prior} and \fct{loss\_fun} are primarily invoked internally by \fct{fit\_BKP}, but exporting them allows advanced users to inspect the construction of priors or customize the evaluation of the loss criterion if desired.
 
 \begin{remark}
 The current version is implemented entirely in \proglang{R}. Computational efficiency can be further improved by implementing additional components in \proglang{C++} via \pkg{Rcpp} \citep{Eddelbuettel2011Rcpp}, and by enabling options that leverage parallel computing architectures, for example, to accelerate multi-start optimization routines used in hyperparameter tuning.
 \end{remark}
 
-\fct{fit.BKP} returns an object of class \class{BKP}, which contains: the estimated model hyperparameters $\vec{\theta}$ (\code{theta_opt}); the minimum achieved loss value (\code{loss_min}); the estimated posterior parameters $\alpha_{n}(\vec{x})$ and $\beta_{n}(\vec{x})$ (stored as \code{alpha_n} and \code{beta_n}); and other input arguments.
+\fct{fit\_BKP} returns an object of class \class{BKP}, containing the estimated model hyperparameters $\vec{\theta}$ (\code{theta_opt}); the minimum achieved loss value (\code{loss_min}); the prior parameters $\alpha_{0}(\vec{x})$ and $\beta_{0}(\vec{x})$ (\code{alpha_0} and \code{beta_0}); the fitted posterior parameters $\alpha_{n}(\vec{x})$ and $\beta_{n}(\vec{x})$ (\code{alpha_n} and \code{beta_n}); and other input arguments.
 
 The resulting \class{BKP} object can be directly used as the \code{object} argument in the functions \fct{predict}, \fct{simulate}, and \fct{summary}, or as the \code{x} argument in the functions \fct{plot} and \fct{print}.
 
-Assume \code{BKPmodel} is an object of class \class{BKP}. The function call:
+For a \class{BKP} object \code{BKPmodel}, the function call
 \begin{Code}
-predict(BKPmodel, Xnew, CI_level = 0.95, threshold = 0.5, ...)
+predict(BKPmodel, Xnew = NULL, CI_level = 0.95, threshold = 0.5, ...)
 \end{Code}
-returns the predictive mean of the success probability $\widehat{\pi}_n(\vec{x})$, the predictive variance $\sigma^2_n(\vec{x})$, and the lower and upper bounds of the \code{CI_level} credible interval for each $\vec{x}$ in \code{Xnew}. 
-If \code{m = 1}, the function also returns the predicted binary label (0 or 1), determined by comparing the posterior mean to the specified \code{threshold}, after the classification rule in \eqref{eq:class_cri}.
+returns, for each $\vec{x}$ in \code{Xnew} (or in the training data if \code{Xnew = NULL}), the predictive mean $\widehat{\pi}_n(\vec{x})$, the predictive variance $\sigma^2_n(\vec{x})$, the lower and upper bounds of the \code{CI_level} credible interval, and the predictive parameters $\alpha_{n}(\vec{x})$ and $\beta_{n}(\vec{x})$. 
+If \code{m = 1}, it also returns the predictive binary label (0 or 1), determined by comparing the posterior mean to the specified \code{threshold} according to the classification rule in \eqref{eq:class_cri}.
 
-The function call:
+The function call
 \begin{Code}
-simulate(BKPmodel, Xnew, n_sim = 1, threshold = NULL, ...)
+simulate(BKPmodel, nsim = 1, seed = NULL, Xnew = NULL, threshold = NULL, ...)
 \end{Code}
-generates random samples from the posterior predictive distribution of a fitted BKP model at new input locations. 
-This function draws \code{n_sim} samples from the posterior Beta distribution at each row of \code{Xnew}, representing the distribution over success probabilities learned by the BKP model. If \code{threshold} is specified and \code{m = 1}, binary class labels (0 or 1) are generated for each simulated value by comparing it to the threshold. The optional argument \code{seed} allows reproducibility of the simulations.
-These samples can be used in various decision-making contexts, such as Bayesian optimization via Thompson sampling \citep{Garnett2023BO}. 
+generates random samples from the posterior predictive distribution of a fitted BKP model at the input locations in \code{Xnew} (or at the training data if \code{Xnew = NULL}).
+Specifically, it draws \code{nsim} samples from the posterior Beta distribution at each row of \code{Xnew}, representing the distribution of success probabilities implied by the fitted model. 
+If \code{threshold} is specified and \code{m = 1}, binary class labels (0 or 1) are generated by thresholding the simulated probabilities. 
+An optional \code{seed} argument ensures reproducibility. 
+Such posterior samples are useful for downstream decision-making tasks, for example Bayesian optimization via Thompson sampling \citep{Garnett2023BO}.
 
-The \fct{plot}, \fct{summary}, and \fct{print} methods provide graphical, numerical, and textual summaries of a fitted \class{BKP} object, respectively. Plotting is supported for  $d \leq 2$.
+The function call
+\begin{Code}
+summary(BKPmodel, ...)
+\end{Code}
+produces a structured summary of a fitted \class{BKP} object. 
+It reports the number of training observations, input dimensionality, kernel type, prior specification, and the optimized kernel hyperparameters, together with the minimum achieved loss value. 
+In addition, it provides posterior summaries at the training points, including the posterior mean and variance of the success probabilities. 
+This function offers a convenient way to inspect the fitted model configuration and key inferential results.
 
-For one-dimensional inputs ($d=1$), the \fct{plot} method displays the posterior mean of the predicted success probability as a line plot. A shaded region represents the 95\% credible interval, and the observed proportions ($\widetilde{\pi}_i = y_i / m_i$) are shown as points overlaid on the plot. When used for classification, a horizontal dashed line is added to indicate the classification threshold.
+To facilitate user interaction, the core \class{BKP} object and the outputs of \fct{predict}, \fct{simulate}, and \fct{summary} are all implemented as S3 class objects. Specifically, the \class{BKP} object itself is equipped with a customized \fct{print} method for concise display, while the outputs of \fct{predict}, \fct{simulate}, and \fct{summary} are returned as dedicated classes (i.e., \class{predict\_BKP}, \class{simulate\_BKP}, \class{summary\_BKP}). Assigning these classes not only provides customized \fct{print} methods for human-readable summaries, but also supports future extensibility and backward-compatible addition of new S3 methods, such as \fct{plot} or specialized extraction functions.
 
-For two-dimensional inputs ($d = 2$), the \fct{plot} method returns a $2 \times 2$ grid of contour plots illustrating the posterior mean, posterior variance, and the 2.5\% and 97.5\% quantiles of the predictive distribution, providing a comprehensive view of the model’s predictions and associated uncertainty across the input space. When used for classification, only the posterior mean and posterior variance surfaces are displayed. When the argument \code{only_mean = TRUE} is specified, only the contour plot of the predictive mean surface is shown. This option is useful when a simplified visualization of the predictive mean is preferred.
+The \fct{plot} method provides graphical visualization of a fitted \class{BKP} object, adapting to the input dimensionality. For one-dimensional inputs ($d=1$), it displays the posterior mean of the predicted success probability as a line plot, with a shaded region representing the 95\% credible interval and the observed proportions ($\widetilde{\pi}_i = y_i / m_i$) overlaid as points; for classification tasks, an optional curve of the maximum posterior probability can be added to illustrate decision confidence. For two-dimensional inputs ($d=2$), the method generates contour plots over a 2D prediction grid, by default producing four summary surfaces: the predictive mean, the predictive variance, and the 2.5\% and 97.5\% quantiles of the posterior distribution, providing a comprehensive view of predicted probabilities and associated uncertainty; if the argument \code{only_mean = TRUE} is specified, only the contour plot of the predictive mean surface is displayed. For high-dimensional inputs ($d>2$), users must specify which dimensions to plot via the \code{dims} argument.
+
+In addition to the core methods in Table~\ref{tab:main_functions}, the \pkg{BKP} package provides auxiliary methods for inspecting fitted models, including \fct{fitted} to extract fitted values (i.e., predictive means), \fct{parameter} to retrieve model parameters ($\alpha_{n}(\vec{x})$ and $\beta_{n}(\vec{x})$), and \fct{quantile} to obtain posterior quantiles, with the quantile levels specified by the argument \code{probs}, from a fitted \class{BKP} object. These functions complement the main workflow and facilitate exploration of model outputs and posterior summaries.
 
 ## DKP Model {#sec:DKP_pkg}
 
-The function \fct{fit.DKP} fits the DKP model \eqref{eq:DKP_model}, which generalizes the BKP model to multinomial response data with $q > 2$ classes. The overall structure and interface of \fct{fit.DKP} closely follow those of \fct{fit.BKP}, including support for prior specification, loss-based kernel hyperparameter optimization, and multi-start routines. 
-The response input \code{Y} should be an $n \times q$ matrix of observed counts, where each row corresponds to an observation and each column to a category. The argument \code{m} is omitted in this setting, as the total count is implicitly defined by the row sums of \code{Y}. If \code{prior = "fixed"}, the user must provide a fixed prior mean vector $p_0$ of length $q$.
+The function \fct{fit\_DKP} implements the DKP model~\eqref{eq:DKP_model}, extending the BKP framework to multinomial response data. The response \code{Y} should be an $n \times q$ matrix of observed counts, where each row represents an observation and each column a category. The \code{m} argument is not required, as the total count is implicitly defined by the row sums of \code{Y}. When using a fixed prior (\code{prior = "fixed"}), the user must provide a global prior mean vector \code{p0} of length $q$, which defaults to the empirical class proportions \code{colMeans(Y / rowSums(Y))}. 
 
-The function returns an object of class \class{DKP}, which contains analogous elements to the \class{BKP} class, including the optimized kernel parameters, posterior parameters $\vec{\alpha}_n(\vec{x})$ (one vector per $\vec{x}$), and the input settings.
+The function returns an object of class \class{DKP}, which contains elements analogous to those in a \class{BKP} object, including optimized kernel hyperparameters, the selected kernel function, the loss specification, and prior information. Distinctively, the DKP posterior parameters are vectors $\vec{\alpha}_n(\vec{x})$ associated with each input $\vec{x}$, representing the smoothed Dirichlet parameters across categories. Other elements, such as the original and normalized input matrices, normalization bounds, and observed counts, are also included to support downstream prediction, simulation, and visualization.
 
-Prediction, simulation, and plotting methods are also extended from the BKP setting. The method \fct{predict} returns the same components as for class \class{BKP}, except it produces per-class outputs. If all row sums of \code{Y} are 1, the function returns the predicted multi-class label following the classification MAP rule in \eqref{eq:class_cri_DKP}. The \fct{simulate} method generates draws from the posterior predictive Dirichlet distribution, optionally producing sampled class labels via Thompson sampling. Plotting for $d=1$ displays one curve per class, while plotting for $d=2$ generates a panel of contour plots for the predictive mean or other quantities of each class. 
+Prediction, simulation, and visualization methods extend directly from the class \class{BKP}. The \fct{predict} method returns per-class predictive means, variances, and credible intervals; if all row sums of \code{Y} are 1, it additionally provides predicted class labels following the MAP classification rule in \eqref{eq:class_cri_DKP}. The \fct{simulate} method draws samples from the posterior predictive Dirichlet distribution and can optionally generate sampled class labels via Thompson sampling. For one-dimensional inputs ($d = 1$), \fct{plot} displays one curve per class with credible intervals, while for two-dimensional inputs ($d = 2$), it produces a panel of contour plots illustrating the predictive mean or other posterior summaries for each class.
 
 
 # Examples using BKP {#sec:example}
 
-## BKP Model {#sec:example_bkp}
+## BKP Model  {#sec:example_bkp}
 
-This subsection presents detailed illustrative examples based on the BKP model. Examples for the DKP model are provided in Section \ref{sec:example_dkp}.
+This subsection presents detailed illustrative examples based on the BKP model. Examples for the DKP model are provided in Section~\ref{sec:example_dkp}.
 
 \paragraph{Example 1} Let $x\in[-2,2]$, and suppose the true Bernoulli probability function is given by
 \begin{equation}\label{eq:bkp-1d-generate-function-1}
 	\pi_{1}(x) = \frac{1}{1+e^{-3x}},
 \end{equation}
 which is referred as the function \code{true_pi_fun} in the code below.
-We aim to fit the BKP model based on seven input locations that are uniformly distributed over $[-2,2]$, with each location associated with a binomial observation having a maximum trial count of 100. The input locations are generated using the \fct{lhs} function from the \proglang{R} package \pkg{tgp} \citep{Gramacy2010tgp2}. The following \proglang{R} code illustrates how to simulate the data and fit the BKP model using the \fct{fit.BKP} function.
+We aim to fit the BKP model based on seven input locations that are uniformly distributed over $[-2,2]$, with each location associated with a binomial observation having a maximum trial count of 100. The input locations are generated using the \fct{lhs} function from the \proglang{R} package \pkg{tgp} \citep{Gramacy2010tgp2}. The following \proglang{R} code illustrates how to simulate the data and fit the BKP model using the \fct{fit\_BKP} function.
 
 \begin{CodeChunk}
 \begin{CodeInput}    
@@ -419,7 +432,7 @@ R> X <- lhs(n = n, rect = Xbounds)
 R> true_pi <- true_pi_fun(X) 
 R> m <- sample(100, n, replace = TRUE)
 R> y <- rbinom(n, size = m, prob = true_pi) 
-R> BKP_model_1D_1 <- fit.BKP(X, y, m, Xbounds = Xbounds)
+R> BKP_model_1D_1 <- fit_BKP(X, y, m, Xbounds = Xbounds)
 \end{CodeInput}
 \end{CodeChunk}
 
@@ -429,21 +442,17 @@ The estimates of the parameters of the fitted BKP model can be displayed using t
 \begin{CodeInput} 
 R> print(BKP_model_1D_1)
 \end{CodeInput}
-\begin{CodeOutput}
---------------------------------------------------
-           Beta Kernel Process (BKP) Model        
---------------------------------------------------
+\begin{CodeOutput}  
+
+       Beta Kernel Process (BKP) Model    
+
 Number of observations (n):  7
 Input dimensionality (d):    1
 Kernel type:                 gaussian
-Loss function used:          brier
 Optimized kernel parameters: 0.1748
 Minimum achieved loss:       0.01165
-Kernel parameters were obtained by optimization.
-
-Prior specification:
-  Noninformative prior: Beta(1,1).
---------------------------------------------------
+Loss function:               brier
+Prior type:                  noninformative
 \end{CodeOutput}
 \end{CodeChunk}
 
@@ -451,9 +460,9 @@ The \code{BKP_model_1D_1} object can be used for visualization and prediction ov
 
 \begin{CodeChunk}
 \begin{CodeInput}  
-R> plot(BKP_model_1D_1) 
+R> plot(BKP_model_1D_1)
 R> Xnew = matrix(seq(-2, 2, length = 100), ncol = 1)
-R> sim <- simulate(BKP_model_1D_1, Xnew = Xnew, n_sim = 3)
+R> sim <- simulate(BKP_model_1D_1, nsim = 3, Xnew = Xnew)
 \end{CodeInput} 
 \end{CodeChunk}
 
@@ -487,24 +496,24 @@ R> sim <- simulate(BKP_model_1D_1, Xnew = Xnew, n_sim = 3)
 	\label{fig:BKP_1D}
 \end{figure}
 
-Figure \ref{fig:BKP_1D} presents two views of the model output. Panel (a) shows the posterior mean estimate of the probability function $\pi(x)$ (blue), along with a 95\% credible interval (gray band), observed proportions (red dots), and the true underlying probability function (black). Panel (b) presents three posterior sample curves generated using the \fct{simulate} method, illustrating the variability of the estimated probability surface.
+Figure~\ref{fig:BKP_1D} presents two views of the model output. Panel~(a) shows the posterior mean estimate of the probability function $\pi(x)$ (blue), along with a 95\% credible interval (gray band), observed proportions (red dots), and the true underlying probability function (black). Panel~(b) presents three posterior sample curves generated using the \fct{simulate} method, illustrating the variability of the estimated probability surface.
 
 We continue with the same probability function of this example to show the impact of the global precision parameters, $r_0$, in classification tasks. However, the sample size is changed from 7 to 20 for classification. The following \proglang{R} code generates the label of response and fit the BKP model for classification with $r_0$ being 0.01 and 2. 
 
 \begin{CodeChunk}
 \begin{CodeInput}  
 R> # Fit BKP model with r0 = 0.01
-R> BKP_model_1D_1_class_1 <- fit.BKP(
+R> BKP_model_1D_1_class_1 <- fit_BKP(
 +    X, y, m, Xbounds = Xbounds,
-+    prior = "fixed", r0 = 0.01, loss = "log_loss") 
++    prior = "fixed", r0 = 0.01, loss = "log_loss")
 R> # Fit BKP model with r0 = 2
-R> BKP_model_1D_1_class_2 <- fit.BKP(
+R> BKP_model_1D_1_class_2 <- fit_BKP(
 +    X, y, m, Xbounds = Xbounds,
-+    prior = "fixed", r0 = 2, loss = "log_loss") 
++    prior = "fixed", r0 = 2, loss = "log_loss")
 \end{CodeInput}
 \end{CodeChunk} 
  
-Figure \ref{fig:ex1_class_001} shows a sigmoidal curve with steep slope around zero (in solid line) and a narrow 95\% credible interval (in grey band) under $r_0 = 0.01$, indicating a decisive and confident classification boundary. In contrast, Figure \ref{fig:ex1_class_2} displays a sine-shape curve with a much wider credible interval, reflecting greater uncertainty and less effective separation. This demonstrates the preference of a small value of $r_0$ value for classification task. 
+Figure~\ref{fig:ex1_class_001} shows a sigmoidal curve with steep slope around zero (in solid line) and a narrow 95\% credible interval (in grey band) under $r_0 = 0.01$, indicating a decisive and confident classification boundary. In contrast, Figure~\ref{fig:ex1_class_2} displays a sine-shape curve with a much wider credible interval, reflecting greater uncertainty and less effective separation. This demonstrates the preference of a small value of $r_0$ value for classification task. 
  
 \begin{figure}[!t]
 	\centering
@@ -527,21 +536,21 @@ Figure \ref{fig:ex1_class_001} shows a sigmoidal curve with steep slope around z
 \begin{equation}\label{eq:bkp-1d-generate-function-2}
 	\pi_{2}(x) = \frac{1}{2}\left[ 1+e^{-x^{2}}\cos \left( 10\frac{1-e^{-x}}{1+e^{-x}} \right) \right],
 \end{equation}
-where $x \in [-2,2]$  \citep{Goetschalckx:2011}. This example involves rapid local oscillations and strong nonlinearity, making it substantially more difficult to fit than Example 1. Here, we increase the number of locations to 30.
+where $x \in [-2,2]$  \citep{Goetschalckx:2011}. This example involves rapid local oscillations and strong nonlinearity, making it substantially more difficult to fit than Example~1. Here, we increase the number of locations to 30.
 
 \begin{CodeChunk}
 \begin{CodeInput} 
-n <- 30
+R> n <- 30
 R> Xbounds <- matrix(c(-2,2), nrow = 1)
 R> X <- lhs(n = n, rect = Xbounds)
 R> true_pi <- true_pi_fun(X)
 R> m <- sample(100, n, replace = TRUE)
 R> y <- rbinom(n, size = m, prob = true_pi) 
-R> BKP_model_1D_2 <- fit.BKP(X, y, m, Xbounds = Xbounds)
+R> BKP_model_1D_2 <- fit_BKP(X, y, m, Xbounds = Xbounds)
 \end{CodeInput}
 \end{CodeChunk}
 
-The results are shown in panels (c) and (d) of Figure \ref{fig:BKP_1D}. Panel (c) demonstrates that the BKP model accurately recovers the highly nonlinear pattern, while panel (d) illustrates posterior variability through three representative realizations of $\pi(x)$.
+The results are shown in panels~(c) and (d) of Figure~\ref{fig:BKP_1D}. Panel~(c) demonstrates that the BKP model accurately recovers the highly nonlinear pattern, while panel~(d) illustrates posterior variability through three representative realizations of $\pi(x)$.
 
 \paragraph{Example 3} We now consider a two-dimensional test function to further illustrate the modeling capabilities of the \pkg{BKP} package. Let $\vec{x} \in [0,1]^2$, and define the latent surface using a re-scaled version of the Goldstein–Price function \citep{Picheny2013Benchmark}:
 \begin{align*}
@@ -558,7 +567,7 @@ The true Bernoulli probability surface is then defined by
 \end{equation}
 where $\Phi(\cdot)$ is the cumulative distribution function of the standard normal distribution. This formulation produces a smooth yet highly non-linear response surface, providing a challenging test scenario for probabilistic modeling.
 
-To construct the training data, we generate a LHD of size $100$ over $[0,1]^2$. Each location is associated with a binomial observation whose number of trials is randomly drawn from $\{1, \dots, 100\}$. The following \proglang{R} code demonstrates the data simulation and model fitting using the \fct{fit.BKP} function:
+To construct the training data, we generate a LHD of size $100$ over $[0,1]^2$. Each location is associated with a binomial observation whose number of trials is randomly drawn from $\{1, \dots, 100\}$. The following \proglang{R} code demonstrates the data simulation and model fitting using the \fct{fit\_BKP} function:
 
 \begin{CodeChunk}
 \begin{CodeInput}
@@ -568,24 +577,20 @@ R> X <- lhs(n = n, rect = Xbounds)
 R> true_pi <- true_pi_fun(X)
 R> m <- sample(100, n, replace = TRUE)
 R> y <- rbinom(n, size = m, prob = true_pi) 
-R> BKP_model_2D <- fit.BKP(X, y, m, Xbounds=Xbounds) 
+R> BKP_model_2D <- fit_BKP(X, y, m, Xbounds=Xbounds) 
 R> print(BKP_model_2D)
 \end{CodeInput}
 \begin{CodeOutput} 
---------------------------------------------------
-           Beta Kernel Process (BKP) Model        
---------------------------------------------------
+
+       Beta Kernel Process (BKP) Model    
+
 Number of observations (n):  100
 Input dimensionality (d):    2
 Kernel type:                 gaussian
-Loss function used:          brier
 Optimized kernel parameters: 0.1112, 0.0680
 Minimum achieved loss:       0.01041
-Kernel parameters were obtained by optimization.
-
-Prior specification:
-  Noninformative prior: Beta(1,1).
---------------------------------------------------
+Loss function:               brier
+Prior type:                  noninformative
 \end{CodeOutput}
 \end{CodeChunk} 
 
@@ -598,11 +603,11 @@ Prior specification:
 	\begin{subfigure}{\textwidth}
 		\includegraphics[width=\linewidth]{../man/figures/ex3.pdf}  
 	\end{subfigure} 
-	\caption{Comparison of the true probability surface and BKP-based posterior summaries of Example 3} 
+	\caption{Comparison of the true probability surface and BKP-based posterior summaries of Example~3} 
 	\label{fig:BKP_2D}
 \end{figure}
 
-Figure \ref{fig:BKP_2D} is obtained by the following code, which is the heatmaps with contour lines for the true probability and the estimated. 
+Figure~\ref{fig:BKP_2D} is obtained by the following code, which is the heatmaps with contour lines for the true probability and the estimated. 
 
 \begin{CodeChunk}
 \begin{CodeInput}  
@@ -618,37 +623,18 @@ R> Xnew <- lhs(n = 10, rect = Xbounds)
 R> predict(BKP_model_2D, Xnew)
 \end{CodeInput}
 \begin{CodeOutput}
-$Xnew
-            [,1]       [,2]
- [1,] 0.21839993 0.10462329
- [2,] 0.94012023 0.61081728
- [3,] 0.67819130 0.80874492
- [4,] 0.15911245 0.91202275
- [5,] 0.78384305 0.25559477
- [6,] 0.41851057 0.52146871
- [7,] 0.30241571 0.08882792
- [8,] 0.88767862 0.33088498
- [9,] 0.08770149 0.48006939
-[10,] 0.51597110 0.71151567
+Prediction results on new data (Xnew).
+Total number of prediction points: 10 
 
-$mean
- [1] 0.3581193 0.1591143 0.5132974 0.9589202 0.4911282 0.2664934
- [7] 0.3105955 0.6079035 0.7455542 0.4478995
-
-$variance
- [1] 0.0029847470 0.0041082794 0.0018284629 0.0003391657 0.0032395988
- [6] 0.0007819776 0.0022007004 0.0019417134 0.0021114379 0.0028286298
-
-$lower
- [1] 0.25492486 0.05577439 0.42943483 0.91600288 0.38011034 0.21352972
- [7] 0.22263662 0.52002256 0.65058913 0.34506661
-
-$upper
- [1] 0.4683872 0.3030328 0.5967884 0.9869524 0.6025878 0.3230099
- [7] 0.4060059 0.6924258 0.8300536 0.5530176
-
-$CI_level
-[1] 0.95
+Preview of predictions for new data (first 6 of 10 points):
+     x1     x2   mean variance 2.5% quantile 97.5% quantile
+ 0.8249 0.0605 0.7106   0.0012        0.6394         0.7770
+ 0.3784 0.5314 0.3324   0.0009        0.2754         0.3919
+ 0.0566 0.1437 0.5519   0.0032        0.4409         0.6603
+ 0.5402 0.8851 0.7994   0.0033        0.6756         0.8993
+ 0.7031 0.7113 0.3282   0.0009        0.2707         0.3883
+ 0.2709 0.6661 0.6178   0.0013        0.5460         0.6871
+ ...
 \end{CodeOutput}
 \end{CodeChunk} 
 
@@ -658,7 +644,7 @@ The LGP model was implemented using the \fct{gp\_fit} and \fct{gp\_optim} functi
 
 All experiments were conducted on a workstation equipped with an Intel(R) Xeon(R) W-2235 CPU @ 3.80GHz (12 cores) and 16 GB RAM. The computation times reported here are averages over 20 independent repetitions to mitigate the effects of variability due to random initialization and computational fluctuations.
 
-The average computation times for both models under these scenarios are presented in Figure \ref{fig:elapsed_time}. The observed computational costs align well with the theoretical complexity predictions, confirming the expected $\mathcal{O}(n^2)$ scalability for BKP and $\mathcal{O}(n^3)$ for the LGP model. Additionally, the computational cost of the multi-start optimization approach for BKP is roughly proportional to the number of restarts, which was set to $10d$. For the current setting, this corresponds to approximately 20 times the cost of the single-start method, reflecting the increased complexity incurred by multiple initializations. This trade-off between computational expense and potentially improved optimization robustness should be carefully considered when selecting an appropriate strategy.
+The average computation times for both models under these scenarios are presented in Figure~\ref{fig:elapsed_time}. The observed computational costs align well with the theoretical complexity predictions, confirming the expected $\mathcal{O}(n^2)$ scalability for BKP and $\mathcal{O}(n^3)$ for the LGP model. Additionally, the computational cost of the multi-start optimization approach for BKP is roughly proportional to the number of restarts, which was set to $10d$. For the current setting, this corresponds to approximately 20 times the cost of the single-start method, reflecting the increased complexity incurred by multiple initializations. This trade-off between computational expense and potentially improved optimization robustness should be carefully considered when selecting an appropriate strategy.
  
 
 
@@ -686,7 +672,7 @@ R> X_test <- data$x[(n_train + 1):n, ]
 R> y_test <- as.numeric(data$classes[(n_train + 1):n]) - 1  
 R> m <- rep(1, n_train)
 R> Xbounds <- rbind(c(-1.7, 1.7), c(-1.7, 1.7)) 
-R> BKP_model_Class <- fit.BKP(
+R> BKP_model_Class <- fit_BKP(
 +    X_train, y_train, m, Xbounds = Xbounds,
 +    prior = "fixed", r0 = 0.1, loss = "log_loss") 
 R> prediction <- predict(BKP_model_Class, X_test)
@@ -708,7 +694,7 @@ R> prediction <- predict(BKP_model_Class, X_test)
 	\label{fig:BKP_spiral}
 \end{figure}
 
-Figure \ref{fig:BKP_spiral} presents the predictive mean and variance surfaces of the class probabilities. The upper left panel shows that the BKP model accurately captures the intricate spiral structure, with smoothly varying predicted probabilities that delineate the nonlinear decision boundary. The upper right panel displays the associated predictive uncertainty, which is highest near the boundary regions between the spirals. Circles and crosses indicate training observations from the two respective classes. These results illustrate the capacity of BKP to flexibly model complex classification boundaries while providing coherent uncertainty quantification. 
+Figure~\ref{fig:BKP_spiral} presents the predictive mean and variance surfaces of the class probabilities. The upper left panel shows that the BKP model accurately captures the intricate spiral structure, with smoothly varying predicted probabilities that delineate the nonlinear decision boundary. The upper right panel displays the associated predictive uncertainty, which is highest near the boundary regions between the spirals. Circles and crosses indicate training observations from the two respective classes. These results illustrate the capacity of BKP to flexibly model complex classification boundaries while providing coherent uncertainty quantification. 
 
 We compare the prediction performance with the LGP model implemented by R package \pkg{gplite}. 
 \begin{CodeChunk}
@@ -720,7 +706,7 @@ R> prediction_gp <- gp_pred(gp, as.matrix(X_test), transform = TRUE)
 \end{CodeInput}
 \end{CodeChunk} 
 
-The lower panel of Figure \ref{fig:BKP_spiral} indicates that the LGP model encounters difficulty in capturing the intricate geometry of the Two Spirals dataset. Although it roughly follows the spiral structure, its predictive mean exhibits a more irregular and less sharply defined decision boundary compared to the BKP model. This pattern suggests that the LGP model may be more prone to overfitting or less capable of generalizing effectively. The corresponding predictive variance plots reinforce this interpretation when viewed separately in regions with and without training data. In regions where data are available, the LGP model exhibits elevated variance (brighter regions) across a broader portion of the input space indicating greater uncertainty in areas critical for classification. In contrast, the BKP model maintains lower variance concentrated more closely around the decision boundary, reflecting higher confident predictions. Interestingly, in regions without training data, the LGP model’s uncertainty is not necessarily the highest; instead, it sometimes shows comparatively lower variance than the BKP model. This suggests that the LGP model may over-smooth or fail to express appropriate uncertainty far from observed data, whereas BKP better captures uncertainty behavior in unobserved regions. The receiver operating characteristic (ROC) curves and the corresponding area under the curve (AUC) values in Figure \ref{fig:ex4-roc} further corroborate this conclusion: BKP achieves an AUC of 0.926, compared to 0.889 for LGP, reflecting superior discriminatory performance and a better balance between sensitivity and specificity. 
+The lower panel of Figure~\ref{fig:BKP_spiral} indicates that the LGP model encounters difficulty in capturing the intricate geometry of the Two Spirals dataset. Although it roughly follows the spiral structure, its predictive mean exhibits a more irregular and less sharply defined decision boundary compared to the BKP model. This pattern suggests that the LGP model may be more prone to overfitting or less capable of generalizing effectively. The corresponding predictive variance plots reinforce this interpretation when viewed separately in regions with and without training data. In regions where data are available, the LGP model exhibits elevated variance (brighter regions) across a broader portion of the input space indicating greater uncertainty in areas critical for classification. In contrast, the BKP model maintains lower variance concentrated more closely around the decision boundary, reflecting higher confident predictions. Interestingly, in regions without training data, the LGP model’s uncertainty is not necessarily the highest; instead, it sometimes shows comparatively lower variance than the BKP model. This suggests that the LGP model may over-smooth or fail to express appropriate uncertainty far from observed data, whereas BKP better captures uncertainty behavior in unobserved regions. The receiver operating characteristic (ROC) curves and the corresponding area under the curve (AUC) values in Figure~\ref{fig:ex4-roc} further corroborate this conclusion: BKP achieves an AUC of 0.926, compared to 0.889 for LGP, reflecting superior discriminatory performance and a better balance between sensitivity and specificity. 
 
 \begin{figure}[!t]
 	\centering 
@@ -745,7 +731,7 @@ Consider a one-dimensional three-class classification problem. The input is defi
 \end{equation*}
 where $\pi_{1}(x)$ and $\pi_{2}(x)$ are smooth functions defined in \eqref{eq:bkp-1d-generate-function-1} and \eqref{eq:bkp-1d-generate-function-2}, respectively.
 
-We generate $n = 30$ input locations using Latin hypercube sampling over the interval $[-2, 2]$. At each location, the response is a multinomial vector with probability $\vec{\pi}(x)$ and a random total count sampled from $\{1, \dots, 150\}$. The DKP model is then fitted using the \fct{fit.DKP} function and visualized with the \fct{plot} method:
+We generate $n = 30$ input locations using Latin hypercube sampling over the interval $[-2, 2]$. At each location, the response is a multinomial vector with probability $\vec{\pi}(x)$ and a random total count sampled from $\{1, \dots, 150\}$. The DKP model is then fitted using the \fct{fit\_DKP} function and visualized with the \fct{plot} method:
 
 \begin{CodeChunk}
 \begin{CodeInput}  
@@ -755,7 +741,7 @@ R> X <- lhs(n = n, rect = Xbounds)
 R> true_pi <- true_pi_fun(X)
 R> m <- sample(150, n, replace = TRUE)
 R> Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ]))) 
-R> DKP_model_1D <- fit.DKP(X, Y, Xbounds = Xbounds)
+R> DKP_model_1D <- fit_DKP(X, Y, Xbounds = Xbounds)
 R> plot(DKP_model_1D) 
 \end{CodeInput}
 \end{CodeChunk} 
@@ -767,7 +753,7 @@ R> plot(DKP_model_1D)
 	\label{fig:ex5}
 \end{figure} 
 
-Figure \ref{fig:ex5} shows that the DKP model accurately recovers the true class probability functions and provides meaningful uncertainty quantification. The predictive mean curves align with the true underlying structure, and the shaded bands reflect posterior uncertainty.
+Figure~\ref{fig:ex5} shows that the DKP model accurately recovers the true class probability functions and provides meaningful uncertainty quantification. The predictive mean curves align with the true underlying structure, and the shaded bands reflect posterior uncertainty.
 
 \paragraph{Example 6} Consider a two-dimensional three-class classification problem. Let $\vec{x} = [x_{1}, x_{2}]^\top \in [0,1]^2$, and define the true class probability function as
 \begin{align*} 
@@ -775,12 +761,12 @@ Figure \ref{fig:ex5} shows that the DKP model accurately recovers the true class
 \end{align*} 
 where  $\pi_{3}(\vec{x})$ is defined in \eqref{eq:Goldstein-Price}, and
 \[
-	\pi_{4}(\vec{x}) = \sin(\pi x_1) \cos\{\pi(x_2 - 0.5)\}.
+	\pi_{4}(\vec{x}) = \sin(\pi x_1) \sin(\pi x_2).
 \]
 
 We generate $n = 100$ input points using Latin hypercube sampling over $[0,1]^2$. 
 At each location, the response is a multinomial vector with probability $\vec{\pi}(\vec{x})$ and a total count randomly sampled from $\{1, \dots, 150\}$.
-We fit the DKP model using \fct{fit.DKP} and visualize the results with the \fct{plot} method:
+We fit the DKP model using \fct{fit\_DKP} and visualize the results with the \fct{plot} method:
 
 \begin{CodeChunk}
 \begin{CodeInput} 
@@ -790,7 +776,7 @@ R> X <- lhs(n = n, rect = Xbounds)
 R> true_pi <- true_pi_fun(X)
 R> m <- sample(150, n, replace = TRUE)
 R> Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ]))) 
-R> DKP_model_2D <- fit.DKP(X, Y, Xbounds=Xbounds) 
+R> DKP_model_2D <- fit_DKP(X, Y, Xbounds=Xbounds) 
 \end{CodeInput}
 \end{CodeChunk} 
 
@@ -833,9 +819,9 @@ R> DKP_model_2D <- fit.DKP(X, Y, Xbounds=Xbounds)
 	\label{fig:ex6-class3}
 \end{figure}
 
-Figures \ref{fig:ex6-class1}--\ref{fig:ex6-class3} display the ground truth surfaces and corresponding posterior inference for each of the three classes. In each figure, the top panel shows the true class probability surface, while the bottom row presents the posterior mean, variance, and uncertainty bounds produced by the DKP model. 
+Figures~\ref{fig:ex6-class1}--\ref{fig:ex6-class3} display the ground truth surfaces and corresponding posterior inference for each of the three classes. In each figure, the top panel shows the true class probability surface, while the bottom row presents the posterior mean, variance, and uncertainty bounds produced by the DKP model. 
 
-\paragraph{Example 7}    
+\paragraph{Example 7} 
 Consider another three-class classification task based on the well-known \emph{Iris} dataset available in \proglang{R}. This classic benchmark dataset contains measurements of three iris species---\emph{setosa}, \emph{versicolor}, and \emph{virginica}---each described by four features: sepal length, sepal width, petal length, and petal width. Due to the overlap in feature space, particularly between \emph{versicolor} and \emph{virginica}, the class boundaries are not linearly separable, making this dataset a standard testbed for evaluating multi-class classification algorithms. 
 For visualization purposes, we restrict our analysis to the first two features: sepal length and sepal width. We fit the DKP model using a fixed prior specification with \code{r0 = 0.1} and \code{p0 = rep(1/3, 3)}, assuming equal prior probability for each class.
 
@@ -849,7 +835,7 @@ R> Y <- model.matrix(~ labels - 1)  # expand factors to a set of dummy variables
 R> train_indices <- sample(1:nrow(iris), 0.7 * nrow(iris))
 R> X_train <- X[train_indices, ]
 R> Y_train <- Y[train_indices, ]
-R> DKP_model_Class <- fit.DKP(
+R> DKP_model_Class <- fit_DKP(
 +    X_train, Y_train, Xbounds = Xbounds, loss = "log_loss",
 +    prior = "fixed", r0 = 0.1, p0 = rep(1/3, 3))
 R> X_test <- X[-train_indices, ]
@@ -872,7 +858,7 @@ R> dkp_pred_probs <- predict(DKP_model_Class, X_test)$mean
 	\label{fig:ex7}
 \end{figure}
 
-Figure \ref{fig:ex7} provides a visual summary of the fitted DKP model. 
+Figure~\ref{fig:ex7} provides a visual summary of the fitted DKP model. 
 The upper left panel displays the MAP classification boundaries, which clearly separate \emph{setosa} from the other two species. In contrast, the boundary between \emph{versicolor} and \emph{virginica} is more intricate, reflecting the known overlap between these two species in sepal measurements.
 
 To further illustrate the model's prediction uncertainty, the upper right panel shows a contour map of the maximum predicted probability $\max_j \pi_j(\vec{x})$ across the input space. 
@@ -897,7 +883,7 @@ R> lgp_pred_probs <- predict(gausspr_model, newdata = iris_test,
 \end{CodeInput}
 \end{CodeChunk} 
 
-It is seen that the decision boundaries in the ``Predicted Classes'' plot (lower left panel) appear less smooth, particularly in the regions between the two clusters of `triangle' and `plus' data points. Additionally, the ``Maximum Predicted Probability'' plot (lower right panel) shows a more fragmented and less uniform confidence landscape. There are pockets of high confidence, but also areas of lower confidence (yellows and greens) scattered over the region, even within what appear to be the core regions of the classes. This indicates that DKP model is more accurate in prediction and more consistent in uncertainty quantification than the LGP model. The corresponding multiclass ROC curves with macro-average AUC (0.936 vs 0.927) are presented in Figure \ref{fig:ex7-roc}.  
+It is seen that the decision boundaries in the ``Predicted Classes'' plot (lower left panel) appear less smooth, particularly in the regions between the two clusters of `triangle' and `plus' data points. Additionally, the ``Maximum Predicted Probability'' plot (lower right panel) shows a more fragmented and less uniform confidence landscape. There are pockets of high confidence, but also areas of lower confidence (yellows and greens) scattered over the region, even within what appear to be the core regions of the classes. This indicates that DKP model is more accurate in prediction and more consistent in uncertainty quantification than the LGP model. The corresponding multiclass ROC curves with macro-average AUC (0.936 vs 0.927) are presented in Figure~\ref{fig:ex7-roc}.  
 
 \begin{figure}[!t]
 	\centering 
@@ -914,6 +900,144 @@ It is seen that the decision boundaries in the ``Predicted Classes'' plot (lower
 \end{figure}
 
 
+# Working Example: Modeling Loa loa Infection {#sec:Loaloa}
+
+This section presents the workflow of the \pkg{BKP} package based on a real data analysis, including data preprocessing, model fitting, prediction, and visualization. %As an illustrative application, we analyze the prevalence of Loa loa parasite infection in North Cameroon using the \code{Loaloa} dataset \citep{Diggle2007}.  
+
+## Data Preparation 
+
+The \code{Loaloa} dataset, available in the \pkg{mdhglm} package \citep{Lee2018mdhglm}, contains 197 observations collected in North Cameroon between 1991 and 2001.  
+For each surveyed location, the dataset records geographical coordinates (\code{longitude}, \code{latitude}), the number of infected individuals (\code{npos}), the total number of surveyed individuals (\code{ntot}), and additional covariates such as altitude and the maximum normalized difference vegetation index (NDVI). 
+ 
+In this analysis, we focus on geographical coordinates as predictors (\code{X}), the number of infected individuals as the response (\code{y}), and the total number surveyed as the trial counts (\code{m}).
+The dataset is randomly divided into a training set (70\%) and a testing set (30\%):  
+\begin{CodeChunk}
+\begin{CodeInput}   
+R> data("Loaloa")  
+R> # Extract input variables (X), response variable (y), and trial counts (m)
+R> X <- as.matrix(Loaloa[, 1:2]) 
+R> y <- Loaloa$npos
+R> m <- Loaloa$ntot 
+R> # Randomly split into training (70%) and testing (30%) sets
+R> train_idx <- sample(1:nrow(Loaloa), 0.7 * nrow(Loaloa))
+R> X_train <- X[train_idx, ]
+R> y_train <- y[train_idx]
+R> m_train <- m[train_idx]
+R> X_test <- X[-train_idx, ]
+R> y_test <- y[-train_idx]
+R> m_test <- m[-train_idx] 
+\end{CodeInput} 
+\end{CodeChunk}   
+
+To investigate the spatial heterogeneity of infection prevalence, Figure~\ref{fig:Loaloa_map} presents the observed infection proportion ($y/m$) at each survey location. 
+The symbol size is proportional to the sample size, reflecting the relative precision of the observed proportions, while the color gradient encodes the infection rate ranging from 0.0 to 0.5. 
+The map further distinguishes between the training set (70\% of locations) and the testing set (30\% of locations), which are used for model fitting and predictive validation, respectively. 
+Distinct spatial patterns emerge, with clusters of elevated infection prevalence observed between $10^{\circ}$E and $12^{\circ}$E longitude and another group located between $14^{\circ}$E and $15^{\circ}$E longitude.  
+
+
+\begin{figure}[!t]
+	\centering 
+	\includegraphics[width=\linewidth]{../man/figures/Loaloa_map.pdf}  
+	\caption{Observed infection proportions ($y/m$) across North Cameroon. Symbol size is proportional to the trial count, color indicates the observed infection rate, and shape distinguishes between training (circle, 70\% of locations) and testing (triangle, 30\% of locations) sets.}
+	\label{fig:Loaloa_map}
+\end{figure}
+
+
+## Model fitting and visualization 
+
+We fit the BKP model to the training data using the \fct{fit\_BKP} function.
+The model was trained with the Brier score as the loss function, and an adaptive prior was adopted to stabilize estimation in regions with small sample sizes.
+The global precision parameter \code{r0} is set to the mean number of trials per location, representing a moderately informative prior that provides smoothing while still allowing the data to contribute substantially to posterior inference.
+
+\begin{CodeChunk}
+\begin{CodeInput}
+R> Xbounds <- matrix(c(7.8, 15.3, 3.1, 7.0), ncol = 2, byrow = TRUE)
+R> Loaloa_bkp_model <- fit_BKP(
++    X_train, y_train, m_train, Xbounds, loss = "brier",
++    prior = "adaptive", r0 = mean(m_train))
+R> summary(Loaloa_bkp_model)
+\end{CodeInput}
+\begin{CodeOutput}
+
+       Beta Kernel Process (BKP) Model   
+
+Number of observations (n):  137
+Input dimensionality (d):    2
+Kernel type:                 gaussian
+Optimized kernel parameters: 0.0076, 0.0460
+Minimum achieved loss:       0.00780
+Loss function:               brier
+Prior type:                  adaptive
+    r0: 135.533
+
+Posterior predictive summary (training points):
+                      Mean Median     SD Min    Max
+Posterior means     0.1508 0.1220 0.1227   0 0.4619
+Posterior variances 0.0002 0.0002 0.0003   0 0.0013
+\end{CodeOutput}
+\end{CodeChunk}  
+
+\begin{CodeChunk} 
+\begin{CodeInput}  
+R> plot(Loaloa_bkp_model)
+\end{CodeInput} 
+\end{CodeChunk} 
+
+\begin{figure}[!t]
+	\centering 
+	\includegraphics[width=\linewidth]{../man/figures/Loaloa_bkp.pdf}  
+	\caption{Posterior summaries of the BKP model fitted to the Loa loa dataset, including the predictive mean, variance, and 95\% credible interval surfaces.}
+	\label{fig:Loaloa_bkp}
+\end{figure}
+
+Figure~\ref{fig:Loaloa_bkp} displays the posterior predictive mean, variance, and 95\% credible interval surfaces, providing a comprehensive view of the model's predictive uncertainty.
+The posterior mean surface highlights clear spatial variation in Loa loa infection risk, with elevated prevalence predicted in the central–eastern part of the study region. Notably, the predictive mean map from the BKP model effectively captures the major high-prevalence clusters, correctly identifying concentrated yellow and orange regions that correspond to the high-proportion areas observed in Figure~\ref{fig:Loaloa_map}. 
+The variance surface shows that predictive uncertainty is generally low in areas with dense observations, but increases substantially in peripheral regions where data are sparse.
+The 95\% credible interval surfaces further illustrate this pattern: the upper bound suggests that high infection rates cannot be ruled out in some regions, while the lower bound remains close to zero across much of the area.
+%Overall, the BKP model not only captures spatial heterogeneity in infection prevalence but also accurately reflects the spatial distribution and concentration of Loa loa infections while quantifying the associated predictive uncertainty.  
+
+For comparison, we also fit a logistic Gaussian process (LGP) model using the \fct{gp\_fit} function from the \pkg{gplite} package \citep{Piironen2022gplite}.  
+\begin{CodeChunk}
+\begin{CodeInput}   
+R> Loaloa_gp_model <- gp_init(cf = cf_sexp(), lik = lik_binomial())
+R> Loaloa_gp_model <- gp_optim(
++    Loaloa_gp_model, X_train, y_train, trials = m_train,
++    method = method_full(), approx = approx_ep(), verbose = FALSE)
+\end{CodeInput} 
+\end{CodeChunk}  
+
+\begin{figure}[!t]
+	\centering 
+	\includegraphics[width=\linewidth]{../man/figures/Loaloa_gp.pdf}  
+	\caption{Posterior summaries of the LGP model fitted to the Loa loa dataset, showing the predictive mean and variance surfaces for comparison with the BKP results.}
+	\label{fig:Loaloa_gp}
+\end{figure} 
+
+Figure~\ref{fig:Loaloa_gp} presents the predictive results of the LGP model. 
+Compared with the BKP model, several important differences emerge.  
+First, the BKP predictive mean surface is smoother and spatially more coherent, identifying continuous regions of high and low infection prevalence. In contrast, the LGP predictive mean appears more fragmented, with multiple isolated pockets of elevated infection rates. 
+Second, the predictive variance differs remarkably: the BKP variance surface is relatively uniform, indicating a consistent level of uncertainty across the study region, whereas the LGP variance surface exhibits highly localized areas of elevated uncertainty (dark purple regions), suggesting less stable predictions in those locations. 
+Overall, the BKP model provides a more robust and spatially coherent characterization of Loa loa infection prevalence compared to the LGP model.  
+
+## Predictive performance on test data  
+Finally, we evaluate predictive accuracy using predictions from the fitted BKP and LGP models, with performance measured by the Brier score.
+
+\begin{CodeChunk}
+\begin{CodeInput}    
+R> predict_on_test_bkp <- predict(Loaloa_bkp_model, Xnew = X_test) 
+R> predict_on_test_gp <- gp_pred(Loaloa_gp_model, xnew = X_test, 
+			transform = TRUE, var = TRUE) 
+R> # Calculate the empirical success rate for the test data
+R> pi_tilde_test <- y_test / m_test 
+R> # Calculate the Mean Squared Error (Brier Score)
+R> mse_bkp <- mean((predict_on_test_bkp$mean - pi_tilde_test)^2)
+R> mse_gp <- mean((predict_on_test_gp$mean - pi_tilde_test)^2)   
+\end{CodeInput}
+\end{CodeChunk} 
+
+The results indicate that the BKP model achieves a lower Brier score (0.006) compared to the LGP model (0.019), demonstrating its superior predictive accuracy.  
+This shows that the BKP predictions are closer to the observed Loa loa infection rates, and its probabilistic forecasts are therefore more reliable.  
+
 # Summary and discussion {#sec:summary}
 
 This article has presented \pkg{BKP}, a user-friendly \proglang{R} package that implements the Beta Kernel Process (BKP) -- a scalable, interpretable, and fully Bayesian nonparametric framework for modeling spatially varying binomial probabilities. 
@@ -923,5 +1047,4 @@ To our knowledge, \pkg{BKP} is the first publicly available software for impleme
 Future development directions include extending the BKP framework to support more complex data structures, such as multivariate responses, functional data, time series, and combinations of qualitative and quantitative covariates. Another promising avenue is to generalize the BKP methodology under alternative likelihoods beyond the binomial family. For example, negative binomial likelihoods are particularly suitable for over-dispersed count data, where the variance exceeds the mean, a common phenomenon in ecological surveys, RNA-seq gene expression counts, and epidemiological incidence data. Geometric likelihoods, as a special case of the negative binomial, naturally model the number of trials until the first success and are useful in reliability analysis, survival studies, and modeling waiting times in event processes. %\url{https://www.datacamp.com/tutorial/negative-binomial-distribution}
 These methodological and computational extensions would substantially broaden the applicability of BKP across applied statistics, biostatistics, and machine learning.
 
-At last, we welcome contributions from the community and invite developers to participate in the ongoing maintenance and extension of the package by submitting pull requests via GitHub at \url{https://github.com/Jiangyan-Zhao/BKP/pulls}.  
- 
+At last, we welcome contributions from the community and invite developers to participate in the ongoing maintenance and extension of the package by submitting pull requests via GitHub at \url{https://github.com/Jiangyan-Zhao/BKP/pulls}. 
