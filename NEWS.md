@@ -1,4 +1,8 @@
-# BKP 0.2.0 (2025-09-13)
+# BKP 0.2.1 (2025-09-17)
+
+* CRAN Linux fix: limit threads to avoid OMP warnings
+
+# BKP 0.2.0 (2025-09-16)
 
 * Added `fitted()`, `parameter()`, and `quantile()` methods.
 * Updated `predict()` and `simulate()` methods: both now return results for the training data by default when `Xnew` is not provided.  
