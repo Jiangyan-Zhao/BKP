@@ -69,7 +69,7 @@ and the R package:
 - **R package**  
   Zhao, J., Qing, K., and Xu, J. (2025). *BKP: Beta Kernel Process
   Modeling.*  
-  R package version 0.2.1. <https://cran.r-project.org/package=BKP>
+  R package version 0.2.2. <https://cran.r-project.org/package=BKP>
 
 You can also obtain the citation information directly within R:
 

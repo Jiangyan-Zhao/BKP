@@ -1,4 +1,4 @@
-# BKP 0.2.1 (2025-09-17)
+# BKP 0.2.2 (2025-09-17)
 
 * CRAN Linux fix: limit threads to avoid OMP warnings
 

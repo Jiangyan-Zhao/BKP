@@ -14,4 +14,9 @@ We checked 0 reverse dependencies, comparing R CMD check results across CRAN and
 ## Additional comments
 
 This is a maintenance and feature update for the BKP package.  
-All changes are backward compatible and tested on major platforms.
+All changes are backward compatible and have been tested on major platforms.
+
+We have added a fix in the vignettes to limit BLAS/OpenMP threads during vignette builds 
+to avoid "OMP: Warning #96" on CRAN Linux platforms.  
+All examples and vignettes run without errors or warnings on local checks.
+

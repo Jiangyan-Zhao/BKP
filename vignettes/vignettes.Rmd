@@ -39,8 +39,8 @@ abstract: >
  We present \pkg{BKP}, a user-friendly and extensible \proglang{R} package that implements the Beta Kernel Process (BKP) -- a fully nonparametric and computationally efficient framework for modeling spatially varying binomial probabilities. The BKP model combines localized kernel-weighted likelihoods with conjugate beta priors, resulting in closed-form posterior inference without requiring latent variable augmentation or intensive MCMC sampling. The package supports binary and aggregated binomial responses, allows flexible choices of kernel functions and prior specification, and provides loss-based kernel hyperparameter tuning procedures. In addition, BKP extends naturally to the Dirichlet Kernel Process (DKP) for modeling spatially varying categorical or multinomial data. To our knowledge, this is the first publicly available \proglang{R} package for implementing BKP-based methods. We illustrate the use of \pkg{BKP} through several synthetic and real-world datasets, highlighting its interpretability, accuracy, and scalability. The package aims to facilitate practical application and future methodological development of kernel-based beta modeling in statistics and machine learning.
 keywords:
   # at least one keyword must be supplied
-  formatted: [Beta kernel process, Dirichlet kernel process, nonparametric Bayesian modeling, binomial and multinomial data, "\\proglang{R}"]
-  plain:     [Beta kernel process, Dirichlet kernel process, nonparametric Bayesian modeling, binomial and multinomial data, R]
+  formatted: [Beta kernel process, Dirichlet kernel process, nonparametric Bayesian modeling, Beta-binomial, Dirichlet-multinomial, "\\proglang{R}"]
+  plain:     [Beta kernel process, Dirichlet kernel process, nonparametric Bayesian modeling, Beta-binomial, Dirichlet-multinomial, R]
 preamble: >
   \usepackage{amsmath}
   \usepackage{orcidlink,thumbpdf,lmodern} 
@@ -81,12 +81,6 @@ library(rnaturalearthdata)
 library(sf)
 options(prompt = "R> ", continue = "+  ", width = 70,
         useFancyQuotes = FALSE)
-
-## --- CRAN Linux fix: limit threads to avoid OMP warnings ---
-Sys.setenv(OMP_NUM_THREADS = "1")
-Sys.setenv(OPENBLAS_NUM_THREADS = "1")
-Sys.setenv(MKL_NUM_THREADS = "1")
-Sys.setenv(R_PARALLEL_NUM_THREADS = "1")
 ```
 
 # Introduction {#sec:intro}
