@@ -66,7 +66,25 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, setup, include=FALSE}
+```{r setup, include=FALSE}
+options(prompt = "R> ", continue = "+  ", width = 70,
+        useFancyQuotes = FALSE)
+
+# CRAN Linux fix: limit threads to avoid OMP warnings
+if (identical(Sys.getenv("_R_CHECK_LIMIT_CORES_"), "TRUE")) {
+  Sys.unsetenv(c("KMP_DEVICE_THREAD_LIMIT", "KMP_ALL_THREADS", "KMP_TEAMS_THREAD_LIMIT"))
+  Sys.setenv(
+    OMP_THREAD_LIMIT = "2",
+    OMP_NUM_THREADS = "1",
+    OPENBLAS_NUM_THREADS = "1",
+    MKL_NUM_THREADS = "1",
+    VECLIB_MAXIMUM_THREADS = "1",
+    RCPP_PARALLEL_NUM_THREADS = "1"
+  )
+}
+```
+
+```{r load_package, include=FALSE}
 library(BKP)
 library(tgp)
 library(gplite)
@@ -79,8 +97,6 @@ library(ggplot2)
 library(rnaturalearth)
 library(rnaturalearthdata)
 library(sf)
-options(prompt = "R> ", continue = "+  ", width = 70,
-        useFancyQuotes = FALSE)
 ```
 
 # Introduction {#sec:intro}
