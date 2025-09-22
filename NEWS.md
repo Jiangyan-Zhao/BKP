@@ -1,6 +1,6 @@
-# BKP 0.2.2 (2025-09-17)
+# BKP 0.2.3 (2025-09-22)
 
-* CRAN Linux fix: limit threads to avoid OMP warnings
+* Removed vignettes to avoid redundancy with the arXiv paper and to resolve CRAN thread limit issues during vignette building.
 
 # BKP 0.2.0 (2025-09-16)
 
