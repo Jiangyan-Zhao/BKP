@@ -159,6 +159,22 @@ fit_BKP <- function(
 
   # ---- Xbounds checks ----
   if (is.null(Xbounds)) {
+    # Check if X already seems normalized
+    xmin <- min(X)
+    xmax <- max(X)
+
+    if (xmin < 0 || xmax > 1) {
+      warning(
+        sprintf(
+          "Input X does not appear to be normalized to [0,1]. ",
+          "Current range: [%.3f, %.3f].\n",
+          "Please normalize X or specify Xbounds explicitly; ",
+          "otherwise the model may produce incorrect results.",
+          xmin, xmax
+        )
+      )
+    }
+    # Default bounds: assume X already in [0,1]^d
     Xbounds <- cbind(rep(0, d), rep(1, d))
   } else {
     if (!is.matrix(Xbounds)) stop("'Xbounds' must be a numeric matrix.")
