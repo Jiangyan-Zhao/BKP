@@ -66,17 +66,11 @@ jobs:
             message("Using cached TinyTeX")
           }
 
-      - name: Install system dependencies for R packages
-        run: |
-            sudo apt-get update
-            sudo apt-get install -y r-base-dev make build-essential libcurl4-gnutls-dev libssl-dev
-
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           extra-packages: any::rcmdcheck
           needs: check
-          packages: |
-            yaml
+          dependencies: "CRAN"
 
       - uses: r-lib/actions/check-r-package@v2
         with:
