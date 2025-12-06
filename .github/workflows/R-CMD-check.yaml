@@ -70,7 +70,6 @@ jobs:
         with:
           extra-packages: any::rcmdcheck
           needs: check
-          dependencies: "CRAN"
 
       - uses: r-lib/actions/check-r-package@v2
         with:
