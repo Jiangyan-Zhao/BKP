@@ -69,6 +69,7 @@ jobs:
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           extra-packages: any::rcmdcheck
+          ignore-suggests: true
           needs: check
 
       - uses: r-lib/actions/check-r-package@v2
