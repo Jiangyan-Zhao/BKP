@@ -9,6 +9,8 @@ status](https://www.r-pkg.org/badges/version/BKP)](https://cran.r-project.org/pa
 [![R-CMD-check](https://github.com/Jiangyan-Zhao/BKP/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/Jiangyan-Zhao/BKP/actions/workflows/R-CMD-check.yaml)
 [![Codecov test
 coverage](https://codecov.io/gh/Jiangyan-Zhao/BKP/graph/badge.svg)](https://app.codecov.io/gh/Jiangyan-Zhao/BKP)
+[![Ask
+DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Jiangyan-Zhao/BKP)
 <!-- badges: end -->
 
 We present **BKP**, a user-friendly and extensible **R** package that
