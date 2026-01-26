@@ -78,7 +78,13 @@ loss_fun <- function(
 
   # Compute kernel matrix using specified kernel and theta
   K <- kernel_matrix(Xnorm, theta = theta, kernel = kernel)
+
   diag(K) <- 0  # Leave-One-Out Cross-Validation (LOOCV)
+
+  # Row-normalized kernel weights
+  rs <- rowSums(K)
+  rs[rs < 1e-10] <- 1
+  W <- K / rs
 
   if (model == "BKP") {
     ## -------- Binary case (Beta-Binomial) --------
@@ -88,8 +94,8 @@ loss_fun <- function(
     beta0 <- prior_par$beta0
 
     # Compute posterior alpha and beta
-    alpha_n <- alpha0 + as.vector(K %*% y)
-    beta_n <- beta0 + as.vector(K %*% (m - y))
+    alpha_n <- alpha0 + as.vector(W %*% y)
+    beta_n <- beta0 + as.vector(W %*% (m - y))
 
     # Posterior mean prediction of success probability
     pi_hat <- alpha_n / (alpha_n + beta_n)
@@ -115,7 +121,7 @@ loss_fun <- function(
     alpha0 <- get_prior(prior = prior, model = model, r0 = r0, p0 = p0, Y = Y, K = K)
 
     # Compute posterior alpha
-    alpha_n <- as.matrix(alpha0) + as.matrix(K %*% Y)
+    alpha_n <- as.matrix(alpha0) + as.matrix(W %*% Y)
 
     # Posterior mean prediction of success probability
     pi_hat <- alpha_n / rowSums(alpha_n)

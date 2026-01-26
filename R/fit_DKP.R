@@ -251,11 +251,16 @@ fit_DKP <- function(
   # ---- Compute kernel matrix at optimized hyperparameters ----
   K <- kernel_matrix(Xnorm, theta = theta_opt, kernel = kernel)
 
+  # Row-normalized kernel weights
+  rs <- rowSums(K)
+  rs[rs < 1e-10] <- 1
+  W <- K / rs
+
   # ---- Compute prior parameters (alpha0 and beta0) ----
   alpha0 <- get_prior(prior = prior, model = "DKP", r0 = r0, p0 = p0, Y = Y, K = K)
 
   # ---- Compute posterior parameters ----
-  alpha_n <- alpha0 + as.matrix(K %*% Y)
+  alpha_n <- alpha0 + as.matrix(W %*% Y)
 
   # ---- Construct and return the fitted model object ----
   DKP_model <- list(

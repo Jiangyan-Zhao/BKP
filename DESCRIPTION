@@ -1,6 +1,6 @@
 Package: BKP
 Title: Beta Kernel Process Modeling
-Version: 0.2.3
+Version: 0.2.3.9000
 Authors@R: c(
     person(given = "Jiangyan", family = "Zhao", email = "zhaojy2017@126.com", role = c("cre", "aut")),
     person(given = "Kunhai", family = "Qing", email = "kunhaiq@qq.com", role = "aut"),
@@ -17,7 +17,7 @@ BugReports: https://github.com/Jiangyan-Zhao/BKP/issues
 Encoding: UTF-8
 NeedsCompilation: no
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 Depends: R (>= 3.5.0)
 Imports: dirmult, gridExtra, lattice, optimx, tgp
 Suggests: knitr, mlbench, testthat (>= 3.0.0)

@@ -120,12 +120,17 @@ predict.DKP <- function(object, Xnew = NULL, CI_level = 0.95, ...)
     # Compute kernel matrix
     K <- kernel_matrix(Xnew_norm, Xnorm, theta = theta, kernel = kernel) # [m × n]
 
+    # Row-normalized kernel weights
+    rs <- rowSums(K)
+    rs[rs < 1e-10] <- 1
+    W <- K / rs
+
     # get the prior parameters: alpha0(x) and beta0(x)
     alpha0 <- get_prior(prior = prior, model = "DKP",
                         r0 = r0, p0 = p0, Y = Y, K = K)
 
     # Posterior parameters
-    alpha_n <- alpha0 + as.matrix(K %*% Y) # [n × q]
+    alpha_n <- alpha0 + as.matrix(W %*% Y) # [n × q]
   }else{
     # Use training data
     alpha_n <- object$alpha_n

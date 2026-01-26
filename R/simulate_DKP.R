@@ -81,12 +81,17 @@ simulate.DKP <- function(object, nsim = 1, seed = NULL, Xnew = NULL, ...)
     # --- Compute kernel matrix ---
     K <- kernel_matrix(Xnew_norm, Xnorm, theta = theta, kernel = kernel)
 
+    # Row-normalized kernel weights
+    rs <- rowSums(K)
+    rs[rs < 1e-10] <- 1
+    W <- K / rs
+
     # --- Get Dirichlet prior ---
     alpha0 <- get_prior(prior = prior, model = "DKP",
                         r0 = r0, p0 = p0, Y = Y, K = K)
 
     # --- Posterior Dirichlet parameters ---
-    alpha_n <- as.matrix(alpha0) + as.matrix(K %*% Y)
+    alpha_n <- as.matrix(alpha0) + as.matrix(W %*% Y)
     alpha_n <- pmax(alpha_n, 1e-10) # Avoid numerical issues
   }else{
     # Use training data

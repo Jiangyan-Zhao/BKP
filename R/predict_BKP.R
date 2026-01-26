@@ -183,6 +183,11 @@ predict.BKP <- function(object, Xnew = NULL, CI_level = 0.95, threshold = 0.5, .
     # Compute kernel matrix
     K <- kernel_matrix(Xnew_norm, Xnorm, theta = theta, kernel = kernel) # m*n matrix
 
+    # Row-normalized kernel weights
+    rs <- rowSums(K)
+    rs[rs < 1e-10] <- 1
+    W <- K / rs
+
     # get the prior parameters: alpha0(x) and beta0(x)
     prior_par <- get_prior(prior = prior, model = "BKP",
                            r0 = r0, p0 = p0, y = y, m = m, K = K)
@@ -190,8 +195,8 @@ predict.BKP <- function(object, Xnew = NULL, CI_level = 0.95, threshold = 0.5, .
     beta0 <- prior_par$beta0
 
     # Posterior parameters
-    alpha_n <- alpha0 + as.vector(K %*% y)
-    beta_n  <- beta0 + as.vector(K %*% (m - y))
+    alpha_n <- alpha0 + as.vector(W %*% y)
+    beta_n  <- beta0 + as.vector(W %*% (m - y))
   }else{
     # Use training data
     alpha_n <- object$alpha_n

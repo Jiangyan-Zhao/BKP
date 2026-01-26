@@ -146,11 +146,13 @@ get_prior <- function(prior = c("noninformative", "fixed", "adaptive"),
       if (ncol(K) != length(y)) stop("'K' must have ncol = length(y).")
 
       # Row-normalized kernel weights
-      W <- K / pmax(rowSums(K), 1e-6)    # m * n
+      rs <- rowSums(K)
+      rs[rs < 1e-10] <- 1
+      W <- K / rs
 
       # Estimated mean and precision
       p_hat <- as.vector(W %*% (y / m))    # Estimated prior mean
-      r_hat <- r0 * pmax(rowSums(K), 1e-3) # Estimated prior precision
+      r_hat <- r0 * rs                    # Estimated prior precision
 
       alpha0 <- r_hat * p_hat
       beta0  <- r_hat * (1 - p_hat)
@@ -189,14 +191,16 @@ get_prior <- function(prior = c("noninformative", "fixed", "adaptive"),
       if (ncol(K) != nrow(Y)) stop("'K' must have ncol = nrow(Y).")
       if (any(rowSums(Y) == 0)) stop("each row of Y must have positive sum for adaptive prior.")
 
-      # Normalize kernel weights
-      W <- K / pmax(rowSums(K), 1e-6)     # m * n
+      # Row-normalized kernel weights
+      rs <- rowSums(K)
+      rs[rs < 1e-10] <- 1
+      W <- K / rs                         # m * n
 
       # Estimate local class proportions
       Pi_hat <- W %*% (Y / rowSums(Y))    # m * q
 
       # Estimate local precision
-      r_hat <- r0 * pmax(rowSums(K), 1e-3) # m * 1
+      r_hat <- r0 * rs                    # m * 1
 
       # Compute prior parameters
       alpha0 <- Pi_hat * r_hat
