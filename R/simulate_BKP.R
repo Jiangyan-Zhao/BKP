@@ -153,10 +153,10 @@ simulate.BKP <- function(object, nsim = 1, seed = NULL, Xnew = NULL, threshold =
     # --- Compute kernel matrix between Xnew and training X ---
     K <- kernel_matrix(Xnew_norm, Xnorm, theta = theta, kernel = kernel)
 
-    # Row-normalized kernel weights
-    rs <- rowSums(K)
-    rs[rs < 1e-10] <- 1
-    W <- K / rs
+    # # Row-normalized kernel weights
+    # rs <- rowSums(K)
+    # rs[rs < 1e-10] <- 1
+    # W <- K / rs
 
     # --- Get prior parameters ---
     prior_par <- get_prior(prior = prior, model = "BKP",
@@ -165,12 +165,14 @@ simulate.BKP <- function(object, nsim = 1, seed = NULL, Xnew = NULL, threshold =
     beta0 <- prior_par$beta0
 
     # --- Compute posterior Beta parameters ---
-    alpha_n <- pmax(alpha0 + as.vector(W %*% y), 1e-3)
-    beta_n  <- pmax(beta0 + as.vector(W %*% (m - y)), 1e-3)
+    # alpha_n <- alpha0 + as.vector(W %*% y)
+    # beta_n  <- beta0 + as.vector(W %*% (m - y))
+    alpha_n <- alpha0 + as.vector(K %*% y)
+    beta_n  <- beta0 + as.vector(K %*% (m - y))
   }else{
     # Use training data
-    alpha_n <- pmax(object$alpha_n, 1e-3)
-    beta_n  <- pmax(object$beta_n, 1e-3)
+    alpha_n <- object$alpha_n
+    beta_n  <- object$beta_n
   }
 
   # --- Simulate from posterior Beta distributions ---

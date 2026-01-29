@@ -183,10 +183,10 @@ predict.BKP <- function(object, Xnew = NULL, CI_level = 0.95, threshold = 0.5, .
     # Compute kernel matrix
     K <- kernel_matrix(Xnew_norm, Xnorm, theta = theta, kernel = kernel) # m*n matrix
 
-    # Row-normalized kernel weights
-    rs <- rowSums(K)
-    rs[rs < 1e-10] <- 1
-    W <- K / rs
+    # # Row-normalized kernel weights
+    # rs <- rowSums(K)
+    # rs[rs < 1e-10] <- 1
+    # W <- K / rs
 
     # get the prior parameters: alpha0(x) and beta0(x)
     prior_par <- get_prior(prior = prior, model = "BKP",
@@ -195,8 +195,13 @@ predict.BKP <- function(object, Xnew = NULL, CI_level = 0.95, threshold = 0.5, .
     beta0 <- prior_par$beta0
 
     # Posterior parameters
-    alpha_n <- alpha0 + as.vector(W %*% y)
-    beta_n  <- beta0 + as.vector(W %*% (m - y))
+    # alpha_n <- alpha0 + as.vector(W %*% y)
+    # beta_n  <- beta0 + as.vector(W %*% (m - y))
+    alpha_n <- alpha0 + as.vector(K %*% y)
+    beta_n  <- beta0 + as.vector(K %*% (m - y))
+
+    # alpha_n <- pmax(alpha_n, 1e-10)
+    # beta_n  <- pmax(beta_n,  1e-10)
   }else{
     # Use training data
     alpha_n <- object$alpha_n
@@ -205,12 +210,12 @@ predict.BKP <- function(object, Xnew = NULL, CI_level = 0.95, threshold = 0.5, .
   }
 
   # Predictive mean and variance
-  pred_mean <- alpha_n / (alpha_n + beta_n)
+  pred_mean <- alpha_n / pmax(alpha_n + beta_n, 1e-10)
   pred_var  <- pred_mean * (1 - pred_mean) / (alpha_n + beta_n + 1)
 
   # Credible intervals
-  pred_lower <- qbeta((1 - CI_level) / 2, alpha_n, beta_n)
-  pred_upper <- qbeta((1 + CI_level) / 2, alpha_n, beta_n)
+  pred_lower <- suppressWarnings(qbeta((1 - CI_level) / 2, alpha_n, beta_n))
+  pred_upper <- suppressWarnings(qbeta((1 + CI_level) / 2, alpha_n, beta_n))
 
   # Output list
   prediction <- list(

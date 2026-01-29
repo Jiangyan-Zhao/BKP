@@ -81,10 +81,10 @@ loss_fun <- function(
 
   diag(K) <- 0  # Leave-One-Out Cross-Validation (LOOCV)
 
-  # Row-normalized kernel weights
-  rs <- rowSums(K)
-  rs[rs < 1e-10] <- 1
-  W <- K / rs
+  # # Row-normalized kernel weights
+  # rs <- rowSums(K)
+  # rs[rs < 1e-10] <- 1
+  # W <- K / rs
 
   if (model == "BKP") {
     ## -------- Binary case (Beta-Binomial) --------
@@ -94,12 +94,13 @@ loss_fun <- function(
     beta0 <- prior_par$beta0
 
     # Compute posterior alpha and beta
-    alpha_n <- alpha0 + as.vector(W %*% y)
-    beta_n <- beta0 + as.vector(W %*% (m - y))
+    # alpha_n <- alpha0 + as.vector(W %*% y)
+    # beta_n <- beta0 + as.vector(W %*% (m - y))
+    alpha_n <- alpha0 + as.vector(K %*% y)
+    beta_n <- beta0 + as.vector(K %*% (m - y))
 
     # Posterior mean prediction of success probability
     pi_hat <- alpha_n / (alpha_n + beta_n)
-    pi_hat <- pmin(pmax(pi_hat, 1e-10), 1 - 1e-10)   # avoid log(0)
 
     # Empirical success rate
     pi_tilde <- y / m
@@ -112,6 +113,7 @@ loss_fun <- function(
     } else {
       # Standard log-loss (cross-entropy)
       # log_loss <- -mean(y * log(pi_hat) + (m - y) * log(1 - pi_hat))
+      pi_hat <- pmin(pmax(pi_hat, 1e-10), 1 - 1e-10)   # avoid log(0)
       log_loss <- -mean(pi_tilde * log(pi_hat) + (1 - pi_tilde) * log(1 - pi_hat))
       return(log_loss)
     }
@@ -121,11 +123,11 @@ loss_fun <- function(
     alpha0 <- get_prior(prior = prior, model = model, r0 = r0, p0 = p0, Y = Y, K = K)
 
     # Compute posterior alpha
-    alpha_n <- as.matrix(alpha0) + as.matrix(W %*% Y)
+    # alpha_n <- as.matrix(alpha0) + as.matrix(W %*% Y)
+    alpha_n <- as.matrix(alpha0) + as.matrix(K %*% Y)
 
     # Posterior mean prediction of success probability
     pi_hat <- alpha_n / rowSums(alpha_n)
-    pi_hat <- pmin(pmax(pi_hat, 1e-6), 1 - 1e-6)   # avoid log(0)
 
     # Empirical class probabilities
     pi_tilde <- Y / rowSums(Y)
@@ -136,6 +138,7 @@ loss_fun <- function(
       return(brier)
     } else {
       # log-loss (cross-entropy)
+      pi_hat <- pmin(pmax(pi_hat, 1e-10), 1 - 1e-10)   # avoid log(0)
       log_loss <- -mean(pi_tilde * log(pi_hat))
       return(log_loss)
     }

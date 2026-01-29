@@ -152,12 +152,12 @@ get_prior <- function(prior = c("noninformative", "fixed", "adaptive"),
 
       # Estimated mean and precision
       p_hat <- as.vector(W %*% (y / m))    # Estimated prior mean
-      r_hat <- r0 * rs                    # Estimated prior precision
+      r_hat <- r0 * rowSums(K)             # Estimated prior precision
 
       alpha0 <- r_hat * p_hat
       beta0  <- r_hat * (1 - p_hat)
-      alpha0 <- pmax(alpha0, 1e-2) # Avoid numerical issues
-      beta0 <- pmax(beta0, 1e-2)   # Avoid numerical issues
+      # alpha0 <- pmax(alpha0, 1e-2) # Avoid numerical issues
+      # beta0 <- pmax(beta0, 1e-2)   # Avoid numerical issues
     }
     return(list(alpha0 = alpha0, beta0 = beta0))
   } else {
@@ -200,12 +200,12 @@ get_prior <- function(prior = c("noninformative", "fixed", "adaptive"),
       Pi_hat <- W %*% (Y / rowSums(Y))    # m * q
 
       # Estimate local precision
-      r_hat <- r0 * rs                    # m * 1
+      r_hat <- r0 * pmax(rowSums(K), 1e-10) # m * 1
 
       # Compute prior parameters
       alpha0 <- Pi_hat * r_hat
     }
-    alpha0 <- pmax(alpha0, 1e-2)  # Avoid numerical issues
+    # alpha0 <- pmax(alpha0, 1e-2)  # Avoid numerical issues
     return(alpha0)
   }
 }

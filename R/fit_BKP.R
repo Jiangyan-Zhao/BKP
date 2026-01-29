@@ -254,10 +254,10 @@ fit_BKP <- function(
   # ---- Compute kernel matrix at optimized hyperparameters ----
   K <- kernel_matrix(Xnorm, theta = theta_opt, kernel = kernel)
 
-  # Row-normalized kernel weights
-  rs <- rowSums(K)
-  rs[rs < 1e-10] <- 1
-  W <- K / rs
+  # # Row-normalized kernel weights
+  # rs <- rowSums(K)
+  # rs[rs < 1e-10] <- 1
+  # W <- K / rs
 
   # ---- Compute prior parameters (alpha0 and beta0) ----
   prior_par <- get_prior(prior = prior, model = "BKP",
@@ -266,8 +266,10 @@ fit_BKP <- function(
   beta0  <- prior_par$beta0
 
   # ---- Compute posterior parameters ----
-  alpha_n <- alpha0 + as.vector(W %*% y)
-  beta_n  <- beta0 + as.vector(W %*% (m - y))
+  # alpha_n <- alpha0 + as.vector(W %*% y)
+  # beta_n  <- beta0 + as.vector(W %*% (m - y))
+  alpha_n <- alpha0 + as.vector(K %*% y)
+  beta_n  <- beta0 + as.vector(K %*% (m - y))
 
   # ---- Construct and return the fitted model ----
   BKP_model <- list(
