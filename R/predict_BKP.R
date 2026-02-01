@@ -210,7 +210,9 @@ predict.BKP <- function(object, Xnew = NULL, CI_level = 0.95, threshold = 0.5, .
   }
 
   # Predictive mean and variance
-  pred_mean <- alpha_n / pmax(alpha_n + beta_n, 1e-10)
+  eps <- 1e-10
+  pred_mean <- alpha_n / pmax(alpha_n + beta_n, eps)
+  pred_mean <- pmin(pmax(pred_mean, eps), 1 - eps)
   pred_var  <- pred_mean * (1 - pred_mean) / (alpha_n + beta_n + 1)
 
   # Credible intervals

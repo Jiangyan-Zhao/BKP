@@ -132,8 +132,6 @@ predict.DKP <- function(object, Xnew = NULL, CI_level = 0.95, ...)
     # Posterior parameters
     # alpha_n <- alpha0 + as.matrix(W %*% Y) # [n × q]
     alpha_n <- alpha0 + as.matrix(K %*% Y) # [n × q]
-
-    alpha_n <- pmax(alpha_n, 1e-10)
   }else{
     # Use training data
     alpha_n <- object$alpha_n
@@ -142,8 +140,10 @@ predict.DKP <- function(object, Xnew = NULL, CI_level = 0.95, ...)
 
   # Predictive quantities
   row_sum <- rowSums(alpha_n)
-  pred_mean <- alpha_n / row_sum
-  pred_var  <- alpha_n * (row_sum - alpha_n) / (row_sum^2 * (row_sum + 1))
+  eps <- 1e-10
+  pred_mean <- alpha_n / pmax(row_sum, eps)
+  pred_mean <- pmin(pmax(pred_mean, eps), 1 - eps)
+  pred_var  <- pred_mean * (1 - pred_mean) / (row_sum + 1)
   pred_lower <- suppressWarnings(qbeta((1 - CI_level) / 2, alpha_n, row_sum - alpha_n))
   pred_upper <- suppressWarnings(qbeta((1 + CI_level) / 2, alpha_n, row_sum - alpha_n))
   colnames(pred_lower) <- paste0("class", seq_len(ncol(alpha_n)))

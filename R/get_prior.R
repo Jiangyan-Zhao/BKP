@@ -200,7 +200,7 @@ get_prior <- function(prior = c("noninformative", "fixed", "adaptive"),
       Pi_hat <- W %*% (Y / rowSums(Y))    # m * q
 
       # Estimate local precision
-      r_hat <- r0 * pmax(rowSums(K), 1e-10) # m * 1
+      r_hat <- r0 * pmax(rowSums(K), 1e-3) # m * 1
 
       # Compute prior parameters
       alpha0 <- Pi_hat * r_hat
