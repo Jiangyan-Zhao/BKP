@@ -130,7 +130,7 @@ test_that("fit_BKP uses user-provided theta and skips optimization", {
   m_test <- rep(100, n)
   y_test <- rbinom(n, size = m_test, prob = 0.5)
 
-  model <- fit_BKP(X = X_test, y = y_test, m = m_test, theta = user_theta)
+  model <- fit_BKP(X = X_test, y = y_test, m = m_test, theta = user_theta, isotropic = FALSE)
 
   expect_equal(model$theta_opt, user_theta)
 })

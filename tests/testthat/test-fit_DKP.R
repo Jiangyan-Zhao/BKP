@@ -135,7 +135,7 @@ test_that("fit_DKP uses user-provided theta and skips optimization", {
   # Use withCallingHandlers to capture the warning and get the return value
   model_warning <- NULL
   model <- withCallingHandlers(
-    fit_DKP(X=X_test, Y=Y_test, theta = user_theta),
+    fit_DKP(X=X_test, Y=Y_test, theta = user_theta, isotropic = FALSE),
     warning = function(w) {
       model_warning <<- w
       invokeRestart("muffleWarning")
