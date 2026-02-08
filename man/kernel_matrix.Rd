@@ -9,7 +9,7 @@ kernel_matrix(
   Xprime = NULL,
   theta = 0.1,
   kernel = c("gaussian", "matern52", "matern32"),
-  anisotropic = TRUE
+  isotropic = TRUE
 )
 }
 \arguments{
@@ -21,16 +21,17 @@ kernel_matrix(
 symmetric matrix.}
 
 \item{theta}{A positive numeric value or vector specifying the kernel
-lengthscale(s). If a scalar, the same lengthscale is applied to all input
-dimensions. If a vector, it must be of length \code{d}, corresponding to
-anisotropic scaling.}
+lengthscale(s). If \code{isotropic = TRUE} (default), this must be a
+scalar shared by all input dimensions. If \code{isotropic = FALSE}, this
+can be a scalar (broadcasted) or a vector of length \code{d} for
+per-dimension scaling.}
 
 \item{kernel}{A character string specifying the kernel function. Must be one
 of \code{"gaussian"}, \code{"matern32"}, or \code{"matern52"}.}
 
-\item{anisotropic}{Logical. If \code{TRUE} (default), \code{theta} is
-interpreted as a vector of per-dimension lengthscales. If \code{FALSE},
-\code{theta} is treated as a scalar.}
+\item{isotropic}{Logical. If \code{TRUE} (default), use a single shared
+lengthscale across dimensions. If \code{FALSE}, use per-dimension
+lengthscales.}
 }
 \value{
 A numeric matrix of size \eqn{n \times m}, where each element
@@ -75,10 +76,10 @@ X <- matrix(runif(20), ncol = 2)
 K1 <- kernel_matrix(X, theta = 0.2, kernel = "gaussian")
 
 # Anisotropic lengthscales with Matérn 5/2
-K2 <- kernel_matrix(X, theta = c(0.1, 0.3), kernel = "matern52")
+K2 <- kernel_matrix(X, theta = c(0.1, 0.3), kernel = "matern52", isotropic = FALSE)
 
 # Isotropic Matérn 3/2
-K3 <- kernel_matrix(X, theta = 1, kernel = "matern32", anisotropic = FALSE)
+K3 <- kernel_matrix(X, theta = 1, kernel = "matern32")
 
 # Use Xprime different from X
 Xprime <- matrix(runif(10), ncol = 2)

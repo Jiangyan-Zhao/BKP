@@ -14,7 +14,8 @@ fit_DKP(
   kernel = c("gaussian", "matern52", "matern32"),
   loss = c("brier", "log_loss"),
   n_multi_start = NULL,
-  theta = NULL
+  theta = NULL,
+  isotropic = TRUE
 )
 }
 \arguments{
@@ -52,6 +53,10 @@ optimization. Default is \eqn{10 \times d}.}
 specifying kernel lengthscale parameters directly. If \code{NULL}
 (default), lengthscales are optimized using multi-start L-BFGS-B to
 minimize the specified loss.}
+
+\item{isotropic}{Logical. If \code{TRUE} (default), optimize/use a single
+shared lengthscale across dimensions. If \code{FALSE}, use separate
+per-dimension lengthscales.}
 }
 \value{
 A list of class \code{"DKP"} representing the fitted DKP model, with

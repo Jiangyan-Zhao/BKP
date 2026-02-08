@@ -15,7 +15,8 @@ loss_fun(
   r0 = 2,
   p0 = NULL,
   loss = c("brier", "log_loss"),
-  kernel = c("gaussian", "matern52", "matern32")
+  kernel = c("gaussian", "matern52", "matern32"),
+  isotropic = TRUE
 )
 }
 \arguments{
@@ -51,6 +52,10 @@ which must sum to 1.}
 
 \item{kernel}{Kernel function for local weighting: \code{"gaussian"}
 (default), \code{"matern52"}, or \code{"matern32"}.}
+
+\item{isotropic}{Logical. If \code{TRUE} (default), optimize/use a single
+shared lengthscale across dimensions. If \code{FALSE}, use separate
+per-dimension lengthscales.}
 }
 \value{
 A single numeric value representing the total loss (to be minimized).
@@ -69,7 +74,7 @@ n <- 10
 Xnorm <- matrix(runif(2 * n), ncol = 2)
 m <- rep(10, n)
 y <- rbinom(n, size = m, prob = runif(n))
-loss_fun(gamma = rep(0, 2), Xnorm = Xnorm, y = y, m = m, model = "BKP")
+loss_fun(gamma = 0, Xnorm = Xnorm, y = y, m = m, model = "BKP")
 
 # -------------------------- DKP ---------------------------
 set.seed(123)
@@ -77,7 +82,7 @@ n <- 10
 q <- 3
 Xnorm <- matrix(runif(2 * n), ncol = 2)
 Y <- matrix(rmultinom(n, size = 10, prob = rep(1/q, q)), nrow = n, byrow = TRUE)
-loss_fun(gamma = rep(0, 2), Xnorm = Xnorm, Y = Y, model = "DKP")
+loss_fun(gamma = 0, Xnorm = Xnorm, Y = Y, model = "DKP")
 
 }
 \references{

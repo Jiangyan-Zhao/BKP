@@ -77,7 +77,7 @@
 #' }))
 #' m <- sample(10:20, n, replace = TRUE)
 #' Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
-#' K <- kernel_matrix(X, theta = rep(0.2, 2), kernel = "gaussian")
+#' K <- kernel_matrix(X, theta = 0.2, kernel = "gaussian")
 #' prior_dkp <- get_prior(
 #'   model = "DKP", prior = "adaptive", r0 = 2, Y = Y, K = K
 #' )

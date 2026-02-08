@@ -148,3 +148,19 @@ test_that("fit_DKP uses user-provided theta and skips optimization", {
 
   expect_equal(model$theta_opt, user_theta)
 })
+
+
+test_that("fit_DKP supports isotropic lengthscale", {
+  n <- 12
+  d <- 2
+  X_test <- matrix(runif(n * d), nrow = n)
+  Y_test <- t(sapply(1:n, function(i) rmultinom(1, size = 50, prob = c(0.2, 0.3, 0.5))))
+
+  model <- fit_DKP(X = X_test, Y = Y_test, theta = 0.2, isotropic = TRUE)
+  expect_equal(model$theta_opt, 0.2)
+
+  expect_error(
+    fit_DKP(X = X_test, Y = Y_test, theta = c(0.2, 0.3), isotropic = TRUE),
+    "When isotropic=TRUE, 'theta' must be a scalar."
+  )
+})

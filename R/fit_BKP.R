@@ -32,6 +32,9 @@
 #'   specifying kernel lengthscale parameters directly. If \code{NULL}
 #'   (default), lengthscales are optimized using multi-start L-BFGS-B to
 #'   minimize the specified loss.
+#' @param isotropic Logical. If \code{TRUE} (default), optimize/use a single
+#'   shared lengthscale across dimensions. If \code{FALSE}, use separate
+#'   per-dimension lengthscales.
 #'
 #' @return A list of class \code{"BKP"} containing the fitted BKP model,
 #'   including:
@@ -123,7 +126,8 @@ fit_BKP <- function(
     prior = c("noninformative", "fixed", "adaptive"), r0 = 2, p0 = mean(y/m),
     kernel = c("gaussian", "matern52", "matern32"),
     loss = c("brier", "log_loss"),
-    n_multi_start = NULL, theta = NULL
+    n_multi_start = NULL, theta = NULL,
+    isotropic = TRUE
 ){
   # ---- Argument checking ----
   if (missing(X) || missing(y) || missing(m)) {
@@ -204,12 +208,22 @@ fit_BKP <- function(
   }
   if (!is.null(theta)) {
     if (!is.numeric(theta)) stop("'theta' must be numeric.")
-    if (length(theta) == 1) {
-      theta <- rep(theta, d)
-    } else if (length(theta) != d) {
-      stop(paste0("'theta' must be either a scalar or a vector of length ", d, "."))
+    if (!is.logical(isotropic) || length(isotropic) != 1) {
+      stop("'isotropic' must be a single logical value.")
     }
+    if (isotropic) {
+      if (length(theta) != 1) {
+        stop("When isotropic=TRUE, 'theta' must be a scalar.")
+      }
+    } else if (!(length(theta) == 1 || length(theta) == d)) {
+      stop(paste0("When isotropic=FALSE, 'theta' must be either a scalar or a vector of length ", d, "."))
+    }
+    if (!isotropic && length(theta) == 1) theta <- rep(theta, d)
     if (any(theta <= 0)) stop("'theta' must be strictly positive.")
+  } else {
+    if (!is.logical(isotropic) || length(isotropic) != 1) {
+      stop("'isotropic' must be a single logical value.")
+    }
   }
 
   # ---- Normalize input X to [0,1]^d ----
@@ -219,10 +233,11 @@ fit_BKP <- function(
   if (is.null(theta)) {
     # ---- Determine initial search space for log10(theta) ----
     # We work in log10(theta) space for numerical stability
+    n_theta <- if (isotropic) 1 else d
     gamma_bounds <- matrix(c((log10(d) - log10(500))/2,   # lower bound
                              (log10(d) + 2)/2),           # upper bound
-                           ncol = 2, nrow = d, byrow = TRUE)
-    if (is.null(n_multi_start)) n_multi_start <- 10 * d
+                           ncol = 2, nrow = n_theta, byrow = TRUE)
+    if (is.null(n_multi_start)) n_multi_start <- 10 * n_theta
     init_gamma <- lhs(n_multi_start, gamma_bounds)
 
     # ---- Run multi-start L-BFGS-B optimization to find best kernel parameters ----
@@ -230,17 +245,17 @@ fit_BKP <- function(
       parmat = init_gamma,
       fn     = loss_fun,
       method = "L-BFGS-B",
-      lower  = rep(-3, d), # relaxed lower bound
-      upper  = rep(3, d),  # relaxed upper bound
+      lower  = rep(-3, n_theta), # relaxed lower bound
+      upper  = rep(3, n_theta),  # relaxed upper bound
       prior = prior, r0 = r0, p0 = p0,
       Xnorm = Xnorm, y = y, m=m,
-      model = "BKP", loss = loss, kernel = kernel,
+      model = "BKP", loss = loss, kernel = kernel, isotropic = isotropic,
       control= list(trace=0))
 
     # ---- Extract optimal kernel parameters and loss ----
     # opt_res <- opt_res[opt_res$convergence == 0, , drop=FALSE]
     best_index <- which.min(opt_res$value)
-    gamma_opt  <- as.numeric(opt_res[best_index, 1:d])
+    gamma_opt  <- as.numeric(opt_res[best_index, 1:n_theta])
     theta_opt  <- 10^gamma_opt
     loss_min   <- opt_res$value[best_index]
   }else{
@@ -248,11 +263,12 @@ fit_BKP <- function(
     theta_opt <- theta
     loss_min <- loss_fun(gamma = log10(theta_opt), Xnorm = Xnorm, y = y, m=m,
                          prior = prior, r0 = r0, p0 = p0,
-                         model = "BKP", loss = loss, kernel = kernel)
+                         model = "BKP", loss = loss, kernel = kernel,
+                         isotropic = isotropic)
   }
 
   # ---- Compute kernel matrix at optimized hyperparameters ----
-  K <- kernel_matrix(Xnorm, theta = theta_opt, kernel = kernel)
+  K <- kernel_matrix(Xnorm, theta = theta_opt, kernel = kernel, isotropic = isotropic)
 
   # # Row-normalized kernel weights
   # rs <- rowSums(K)

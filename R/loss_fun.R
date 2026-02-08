@@ -28,7 +28,7 @@
 #' Xnorm <- matrix(runif(2 * n), ncol = 2)
 #' m <- rep(10, n)
 #' y <- rbinom(n, size = m, prob = runif(n))
-#' loss_fun(gamma = rep(0, 2), Xnorm = Xnorm, y = y, m = m, model = "BKP")
+#' loss_fun(gamma = 0, Xnorm = Xnorm, y = y, m = m, model = "BKP")
 #'
 #' # -------------------------- DKP ---------------------------
 #' set.seed(123)
@@ -36,7 +36,7 @@
 #' q <- 3
 #' Xnorm <- matrix(runif(2 * n), ncol = 2)
 #' Y <- matrix(rmultinom(n, size = 10, prob = rep(1/q, q)), nrow = n, byrow = TRUE)
-#' loss_fun(gamma = rep(0, 2), Xnorm = Xnorm, Y = Y, model = "DKP")
+#' loss_fun(gamma = 0, Xnorm = Xnorm, Y = Y, model = "DKP")
 #'
 #' @export
 
@@ -46,7 +46,8 @@ loss_fun <- function(
     model = c("BKP", "DKP"),
     prior = c("noninformative", "fixed", "adaptive"), r0 = 2, p0 = NULL,
     loss = c("brier", "log_loss"),
-    kernel = c("gaussian", "matern52", "matern32"))
+    kernel = c("gaussian", "matern52", "matern32"),
+    isotropic = TRUE)
 {
   # ---- Argument checking ----
   if (!is.numeric(gamma)) stop("'gamma' must be a numeric vector.")
@@ -72,12 +73,13 @@ loss_fun <- function(
 
   if (!is.numeric(r0) || length(r0) != 1 || r0 <= 0) stop("'r0' must be a positive scalar.")
   if (!is.null(p0) && (!is.numeric(p0) || any(p0 < 0))) stop("'p0' must be numeric and nonnegative.")
+  if (!is.logical(isotropic) || length(isotropic) != 1) stop("'isotropic' must be a single logical value.")
 
   # Convert gamma to kernel hyperparameters (theta = 10^gamma)
   theta <- 10^gamma
 
   # Compute kernel matrix using specified kernel and theta
-  K <- kernel_matrix(Xnorm, theta = theta, kernel = kernel)
+  K <- kernel_matrix(Xnorm, theta = theta, kernel = kernel, isotropic = isotropic)
 
   diag(K) <- 0  # Leave-One-Out Cross-Validation (LOOCV)
 

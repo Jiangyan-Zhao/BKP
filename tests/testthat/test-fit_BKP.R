@@ -104,7 +104,7 @@ test_that("fit_BKP returns a BKP object with correct structure and content", {
 })
 
 test_that("fit_BKP uses user-provided theta and skips optimization", {
-  user_theta <- c(0.1, 0.5)
+  user_theta <- 0.1
   n <- 10
   d <- 2
   X_test <- matrix(runif(n * d), nrow = n)
@@ -114,4 +114,21 @@ test_that("fit_BKP uses user-provided theta and skips optimization", {
   model <- fit_BKP(X=X_test, y=y_test, m=m_test, theta = user_theta)
 
   expect_equal(model$theta_opt, user_theta)
+})
+
+
+test_that("fit_BKP supports isotropic lengthscale", {
+  n <- 10
+  d <- 2
+  X_test <- matrix(runif(n * d), nrow = n)
+  y_test <- rbinom(n, size = 100, prob = 0.5)
+  m_test <- rep(100, n)
+
+  model <- fit_BKP(X = X_test, y = y_test, m = m_test, theta = 0.2, isotropic = TRUE)
+  expect_equal(model$theta_opt, 0.2)
+
+  expect_error(
+    fit_BKP(X = X_test, y = y_test, m = m_test, theta = c(0.2, 0.3), isotropic = TRUE),
+    "When isotropic=TRUE, 'theta' must be a scalar."
+  )
 })
