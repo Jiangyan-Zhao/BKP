@@ -113,9 +113,20 @@ loss_fun <- function(
     } else {
       # Standard log-loss (cross-entropy)
       # log_loss <- -mean(y * log(pi_hat) + (m - y) * log(1 - pi_hat))
+
       pi_hat <- pmin(pmax(pi_hat, 1e-10), 1 - 1e-10)   # avoid log(0)
       log_loss <- -mean(pi_tilde * log(pi_hat) + (1 - pi_tilde) * log(1 - pi_hat))
       return(log_loss)
+
+      # # Beta-Binomial LOO log predictive score (integrating out pi)
+      # alpha_n <- pmax(alpha_n, 1e-10)
+      # beta_n <- pmax(beta_n, 1e-10)
+      #
+      # # log p(y_i | D_-i, theta) under Beta-Binomial
+      # # Note: lchoose(m,y) is constant in theta; keeping it is fine.
+      # lpd <- lchoose(m, y) + lbeta(alpha_n + y, beta_n + m - y) - lbeta(alpha_n, beta_n)
+      #
+      # return(-mean(lpd))
     }
   } else {
     ## -------- Multiclass case (Dirichlet-Multinomial) --------
