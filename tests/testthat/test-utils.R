@@ -76,3 +76,9 @@ test_that("my_2D_plot_fun_class generates plot without error", {
     )
   })
 })
+
+test_that("posterior_summary returns expected summary matrix", {
+  ps <- posterior_summary(mean_vals = c(0.1, 0.2, 0.3), var_vals = c(0.01, 0.02, 0.03))
+  expect_true(is.matrix(ps))
+  expect_equal(rownames(ps), c("Posterior means", "Posterior variances"))
+})

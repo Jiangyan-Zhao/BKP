@@ -66,6 +66,7 @@ including:
 \describe{
 \item{\code{theta_opt}}{Optimized kernel hyperparameters (lengthscales).}
 \item{\code{kernel}}{Kernel function used, as a string.}
+\item{\code{isotropic}}{Logical flag indicating whether a shared lengthscale (\code{TRUE}) or per-dimension lengthscales (\code{FALSE}) was used.}
 \item{\code{loss}}{Loss function used for hyperparameter tuning.}
 \item{\code{loss_min}}{Minimum loss achieved during optimization, or
 \code{NA} if \code{theta} was user-specified.}

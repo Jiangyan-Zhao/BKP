@@ -101,3 +101,18 @@ test_that("get_prior works correctly for DKP model", {
   expected_alpha0 <- r0 * t(K) %*% (Y / sum_y)
   expect_equal(unname(adaptive_prior), unname(expected_alpha0), tolerance = 1e-6)
 })
+
+test_that("get_prior additional validation and edge branches", {
+  expect_error(get_prior(model = "BKP", y = c(1, NA), m = c(1, 1)), "'y' must be a numeric vector with no NA values.")
+  expect_error(get_prior(model = "BKP", y = c(1, 0), m = c(1, NA)), "'m' must be a numeric vector with no NA values.")
+  expect_error(get_prior(model = "DKP", Y = matrix(c(1, NA), ncol = 1)), "'Y' must be a numeric matrix with no NA values.")
+  expect_error(get_prior(model = "DKP", K = matrix(c(1, NA), ncol = 1)), "'K' must be a numeric matrix with no NA values.")
+
+  alpha0 <- get_prior(prior = "fixed", model = "DKP", r0 = 2, p0 = c(0.2, 0.8), K = matrix(1, nrow = 3, ncol = 2))
+  expect_true(is.matrix(alpha0))
+  expect_equal(dim(alpha0), c(3, 2))
+
+  p <- get_prior(prior = "noninformative", model = "BKP")
+  expect_equal(p$alpha0, 1)
+  expect_equal(p$beta0, 1)
+})

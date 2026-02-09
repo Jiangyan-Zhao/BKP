@@ -60,3 +60,7 @@ test_that("parameter returns correct parameters for BKP models", {
   expect_equal(params_adaptive$alpha_n, model_adaptive$alpha_n, tolerance = 1e-6)
   expect_equal(params_adaptive$beta_n, model_adaptive$beta_n, tolerance = 1e-6)
 })
+
+test_that("parameter generic errors for unsupported class", {
+  expect_error(parameter(structure(list(), class = "unknown")), "no applicable method")
+})
