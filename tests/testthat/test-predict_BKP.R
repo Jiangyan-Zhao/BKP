@@ -74,3 +74,30 @@ test_that("predict.BKP generates predictions without errors for various priors",
   expect_equal(length(pred_new_adaptive$mean), nrow(Xnew))
   expect_true(all(pred_new_adaptive$lower <= pred_new_adaptive$upper))
 })
+
+test_that("test-predict_BKP validation and classification branches", {
+  set.seed(2026)
+  X <- matrix(runif(20), ncol = 2)
+  y <- rbinom(nrow(X), 1, 0.5)
+  m <- rep(1, nrow(X))
+  model <- fit_BKP(X, y, m, prior = "noninformative")
+
+  pred_train <- predict(model)
+  expect_true(!is.null(pred_train$class))
+  expect_true(all(pred_train$class %in% c(0, 1)))
+
+  pred_new_vec <- predict(model, Xnew = c(0.2, 0.8), threshold = 0.3)
+  expect_equal(length(pred_new_vec$mean), 1)
+  expect_true(!is.null(pred_new_vec$threshold))
+
+  expect_error(predict(model, Xnew = matrix(letters[1:4], ncol = 2)), "'Xnew' must be numeric.")
+  expect_error(predict(model, Xnew = matrix(runif(3), ncol = 3)), "The number of columns in 'Xnew' must match the original input dimension.")
+  expect_error(predict(model, CI_level = 1), "'CI_level' must be a single numeric value strictly between 0 and 1.")
+  expect_error(predict(model, threshold = 0), "'threshold' must be a single numeric value strictly between 0 and 1.")
+
+  m2 <- rep(2, nrow(X))
+  y2 <- rbinom(nrow(X), m2, 0.5)
+  model_count <- fit_BKP(X, y2, m2, prior = "fixed", r0 = 4, p0 = 0.5)
+  pred_count <- predict(model_count)
+  expect_true(is.null(pred_count$class))
+})

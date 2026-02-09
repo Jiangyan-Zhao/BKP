@@ -86,3 +86,31 @@ test_that("predict.DKP generates predictions without errors for various priors",
   expect_equal(nrow(pred_new_adaptive$mean), nrow(Xnew))
   expect_equal(ncol(pred_new_adaptive$mean), ncol(Y))
 })
+
+test_that("test-predict_DKP validation and class output branches", {
+  set.seed(2026)
+  X <- matrix(runif(24), ncol = 2)
+  Y <- matrix(0, nrow(X), 3)
+  cls <- sample(1:3, nrow(X), replace = TRUE)
+  Y[cbind(seq_len(nrow(X)), cls)] <- 1
+
+  model <- fit_DKP(X, Y, prior = "fixed", r0 = 3, p0 = c(0.2, 0.3, 0.5))
+
+  pred_train <- predict(model)
+  expect_true(!is.null(pred_train$class))
+  expect_true(all(pred_train$class %in% 1:3))
+
+  pred_new_vec <- predict(model, Xnew = c(0.4, 0.6), CI_level = 0.9)
+  expect_equal(nrow(pred_new_vec$mean), 1)
+  expect_equal(ncol(pred_new_vec$mean), 3)
+
+  expect_error(predict(model, Xnew = matrix(letters[1:4], ncol = 2)), "'Xnew' must be numeric.")
+  expect_error(predict(model, Xnew = matrix(runif(3), ncol = 3)), "The number of columns in 'Xnew' must match the original input dimension.")
+  expect_error(predict(model, CI_level = 0), "'CI_level' must be a single numeric value strictly between 0 and 1.")
+
+  Y_count <- matrix(sample(0:2, nrow(X) * 3, replace = TRUE), ncol = 3)
+  Y_count[rowSums(Y_count) == 0, 1] <- 1
+  model_count <- fit_DKP(X, Y_count, prior = "adaptive")
+  pred_count <- predict(model_count)
+  expect_true(is.null(pred_count$class))
+})

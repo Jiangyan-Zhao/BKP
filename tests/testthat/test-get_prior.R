@@ -116,3 +116,36 @@ test_that("get_prior additional validation and edge branches", {
   expect_equal(p$alpha0, 1)
   expect_equal(p$beta0, 1)
 })
+
+test_that("test-get_prior uncovered validation branches", {
+  expect_error(get_prior(model = "BKP", r0 = 0), "'r0' must be a positive scalar.")
+  expect_error(get_prior(model = "BKP", p0 = -0.1), "'p0' must be numeric and nonnegative.")
+
+  expect_error(
+    get_prior(prior = "adaptive", model = "BKP", y = c(1, 0), m = c(1, 1), K = matrix(1, nrow = 2, ncol = 3)),
+    "'K' must have ncol = length\\(y\\)."
+  )
+
+  expect_error(
+    get_prior(prior = "adaptive", model = "BKP", y = c(1, 0), m = c(1, 1, 1), K = matrix(1, nrow = 2, ncol = 2)),
+    "'y' and 'm' must have the same length."
+  )
+
+  expect_error(
+    get_prior(prior = "fixed", model = "DKP", p0 = c(0.3, 0.3), Y = matrix(1, ncol = 3)),
+    "length\\(p0\\) must match number of classes."
+  )
+
+  expect_error(
+    get_prior(prior = "adaptive", model = "DKP", Y = matrix(c(1, 0, 0, 1), ncol = 2), K = matrix(1, nrow = 2, ncol = 3)),
+    "'K' must have ncol = nrow\\(Y\\)."
+  )
+
+  expect_error(
+    get_prior(prior = "adaptive", model = "DKP", Y = matrix(c(0, 0, 1, 0), ncol = 2), K = diag(2)),
+    "each row of Y must have positive sum for adaptive prior."
+  )
+
+  alpha0_noninfo <- get_prior(prior = "noninformative", model = "DKP", p0 = c(0.4, 0.6))
+  expect_equal(dim(alpha0_noninfo), c(1, 2))
+})

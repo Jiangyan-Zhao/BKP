@@ -100,3 +100,23 @@ test_that("loss_fun additional validation and DKP anisotropic branch", {
   l_dkp <- loss_fun(gamma = c(-1, -1), Xnorm = Xnorm, Y = Y, model = "DKP", kernel = "matern52", isotropic = FALSE)
   expect_true(is.numeric(l_dkp) && length(l_dkp) == 1)
 })
+
+test_that("test-loss_fun uncovered DKP/BKP validation branches", {
+  set.seed(11)
+  Xnorm <- matrix(runif(12), ncol = 3)
+  y <- rbinom(nrow(Xnorm), 1, 0.5)
+  m <- rep(1, nrow(Xnorm))
+  Y <- cbind(y, 1 - y)
+
+  expect_error(loss_fun(gamma = 0, Xnorm = Xnorm, m = m, model = "BKP"), "'y' and 'm' must be provided for BKP model.")
+  expect_error(loss_fun(gamma = 0, Xnorm = Xnorm, y = letters[1:nrow(Xnorm)], m = m, model = "BKP"), "'y' and 'm' must be numeric vectors.")
+  expect_error(loss_fun(gamma = 0, Xnorm = Xnorm, y = y, m = c(m, m), model = "BKP"), "'y' and 'm' must have the same length as number of rows in 'Xnorm'.")
+  expect_error(loss_fun(gamma = 0, Xnorm = Xnorm, y = y + 2, m = m, model = "BKP"), "'y' must be in \\[0,m\\] and 'm' > 0.")
+
+  expect_error(loss_fun(gamma = 0, Xnorm = Xnorm, model = "DKP"), "'Y' must be provided for DKP model.")
+  expect_error(loss_fun(gamma = 0, Xnorm = Xnorm, Y = matrix(-1, nrow(Xnorm), 2), model = "DKP"), "'Y' must be a numeric matrix with no NA and nonnegative entries.")
+  expect_error(loss_fun(gamma = 0, Xnorm = Xnorm, Y = Y[-1, , drop = FALSE], model = "DKP"), "Number of rows in 'Y' must match number of rows in 'Xnorm'.")
+
+  l_dkp_log <- loss_fun(gamma = c(-1, -1, -1), Xnorm = Xnorm, Y = Y, model = "DKP", loss = "log_loss", kernel = "matern32", isotropic = FALSE)
+  expect_true(is.numeric(l_dkp_log) && length(l_dkp_log) == 1)
+})
