@@ -1,3 +1,7 @@
+# BKP 0.2.4
+
+* Added a package-wide `isotropic` argument (default: `TRUE`) for isotropic kernels (shared length-scale across dimensions).
+
 # BKP 0.2.3 (2025-09-22)
 
 * Removed vignettes to avoid redundancy with the arXiv paper and to resolve CRAN thread limit issues during vignette building.

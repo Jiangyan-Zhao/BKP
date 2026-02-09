@@ -278,7 +278,7 @@ fit_DKP <- function(
 
   # ---- Construct and return the fitted model object ----
   DKP_model <- list(
-    theta_opt = theta_opt, kernel = kernel,
+    theta_opt = theta_opt, kernel = kernel, isotropic = isotropic,
     loss = loss, loss_min = loss_min,
     X = X, Xnorm = Xnorm, Xbounds = Xbounds, Y = Y,
     prior = prior, r0 = r0, p0 = p0,

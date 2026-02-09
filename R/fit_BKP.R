@@ -289,7 +289,7 @@ fit_BKP <- function(
 
   # ---- Construct and return the fitted model ----
   BKP_model <- list(
-    theta_opt = theta_opt, kernel = kernel,
+    theta_opt = theta_opt, kernel = kernel, isotropic = isotropic,
     loss = loss, loss_min = loss_min,
     X = X, Xnorm = Xnorm, Xbounds = Xbounds, y = y, m = m,
     prior = prior, r0 = r0, p0 = p0, alpha0 = alpha0, beta0 = beta0,

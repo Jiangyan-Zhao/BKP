@@ -111,7 +111,7 @@ test_that("fit_BKP returns a BKP object with correct structure and content", {
   # Check class and structure
   expect_s3_class(model, "BKP")
   expect_true(is.list(model))
-  expect_equal(names(model), c("theta_opt", "kernel", "loss", "loss_min", "X", "Xnorm", "Xbounds", "y", "m", "prior", "r0", "p0", "alpha0", "beta0", "alpha_n", "beta_n"))
+  expect_equal(names(model), c("theta_opt", "kernel", "isotropic", "loss", "loss_min", "X", "Xnorm", "Xbounds", "y", "m", "prior", "r0", "p0", "alpha0", "beta0", "alpha_n", "beta_n"))
 
   # Check content
   expect_equal(model$loss, "brier")

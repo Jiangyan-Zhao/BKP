@@ -141,6 +141,7 @@ simulate.BKP <- function(object, nsim = 1, seed = NULL, Xnew = NULL, threshold =
     m       <- object$m
     theta   <- object$theta_opt
     kernel  <- object$kernel
+    isotropic <- object$isotropic
     prior   <- object$prior
     r0      <- object$r0
     p0      <- object$p0
@@ -151,7 +152,7 @@ simulate.BKP <- function(object, nsim = 1, seed = NULL, Xnew = NULL, threshold =
     Xnew_norm <- sweep(Xnew_norm, 2, Xbounds[, 2] - Xbounds[, 1], "/")
 
     # --- Compute kernel matrix between Xnew and training X ---
-    K <- kernel_matrix(Xnew_norm, Xnorm, theta = theta, kernel = kernel)
+    K <- kernel_matrix(Xnew_norm, Xnorm, theta = theta, kernel = kernel, isotropic = isotropic)
 
     # # Row-normalized kernel weights
     # rs <- rowSums(K)

@@ -116,7 +116,7 @@ test_that("fit_DKP returns a DKP object with correct structure and content", {
 
   # Check class and structure
   expect_true(is.list(model))
-  expect_equal(names(model), c("theta_opt", "kernel", "loss", "loss_min", "X", "Xnorm", "Xbounds", "Y", "prior", "r0", "p0", "alpha0", "alpha_n"))
+  expect_equal(names(model), c("theta_opt", "kernel", "isotropic", "loss", "loss_min", "X", "Xnorm", "Xbounds", "Y", "prior", "r0", "p0", "alpha0", "alpha_n"))
 
   # Check content
   expect_equal(model$loss, "brier")

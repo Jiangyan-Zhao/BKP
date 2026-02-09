@@ -108,6 +108,7 @@ predict.DKP <- function(object, Xnew = NULL, CI_level = 0.95, ...)
     Y       <- object$Y
     theta   <- object$theta_opt
     kernel  <- object$kernel
+    isotropic <- object$isotropic
     prior   <- object$prior
     r0      <- object$r0
     p0      <- object$p0
@@ -118,7 +119,7 @@ predict.DKP <- function(object, Xnew = NULL, CI_level = 0.95, ...)
     Xnew_norm <- sweep(Xnew_norm, 2, Xbounds[, 2] - Xbounds[, 1], "/")
 
     # Compute kernel matrix
-    K <- kernel_matrix(Xnew_norm, Xnorm, theta = theta, kernel = kernel) # [m × n]
+    K <- kernel_matrix(Xnew_norm, Xnorm, theta = theta, kernel = kernel, isotropic = isotropic) # [m × n]
 
     # # Row-normalized kernel weights
     # rs <- rowSums(K)
