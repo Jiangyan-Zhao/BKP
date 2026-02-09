@@ -162,10 +162,12 @@ fit_DKP <- function(
     if (xmin < 0 || xmax > 1) {
       warning(
         sprintf(
-          "Input X does not appear to be normalized to [0,1]. ",
-          "Current range: [%.3f, %.3f].\n",
-          "Please normalize X or specify Xbounds explicitly; ",
-          "otherwise the model may produce incorrect results.",
+          paste0(
+            "Input X does not appear to be normalized to [0,1]. ",
+            "Current range: [%.3f, %.3f].\n",
+            "Please normalize X or specify Xbounds explicitly; ",
+            "otherwise the model may produce incorrect results."
+          ),
           xmin, xmax
         )
       )
@@ -188,11 +190,11 @@ fit_DKP <- function(
     stop("'r0' must be a positive scalar.")
   }
 
-  if (!is.numeric(p0) || any(p0 < 0) || !all.equal(sum(p0), 1)) {
+  if (!is.numeric(p0) || any(p0 < 0) || abs(sum(p0) - 1) > 1e-10) {
     stop("'p0' must be numeric, nonnegative, and sum to 1.")
   }
 
-  if (prior == "fixed" && is.null(p0) && length(p0) != q) {
+  if (prior == "fixed" && (is.null(p0) || length(p0) != q)) {
     stop("For DKP with prior = 'fixed', you must provide 'p0' with length equal to number of classes.")
   }
 

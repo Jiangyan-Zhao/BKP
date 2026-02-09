@@ -171,10 +171,12 @@ fit_BKP <- function(
     if (xmin < 0 || xmax > 1) {
       warning(
         sprintf(
-          "Input X does not appear to be normalized to [0,1]. ",
-          "Current range: [%.3f, %.3f].\n",
-          "Please normalize X or specify Xbounds explicitly; ",
-          "otherwise the model may produce incorrect results.",
+          paste0(
+            "Input X does not appear to be normalized to [0,1]. ",
+            "Current range: [%.3f, %.3f].\n",
+            "Please normalize X or specify Xbounds explicitly; ",
+            "otherwise the model may produce incorrect results."
+          ),
           xmin, xmax
         )
       )
@@ -197,7 +199,7 @@ fit_BKP <- function(
     stop("'r0' must be a positive scalar.")
   }
 
-  if (!is.numeric(p0) || length(p0) != 1 || p0 <= 0) {
+  if (!is.numeric(p0) || length(p0) != 1 || p0 <= 0 || p0 >= 1) {
     stop("'p0' must be a positive scalar.")
   }
 
