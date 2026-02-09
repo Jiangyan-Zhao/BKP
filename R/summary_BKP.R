@@ -112,6 +112,7 @@ summary.BKP <- function(object, ...) {
     n_obs       = n_obs,
     input_dim   = d,
     kernel      = object$kernel,
+    isotropic   = object$isotropic,
     theta_opt   = object$theta_opt,
     loss        = object$loss,
     loss_min    = object$loss_min,
