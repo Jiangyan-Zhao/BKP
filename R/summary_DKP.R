@@ -85,6 +85,7 @@ summary.DKP <- function(object, ...) {
     input_dim = d,
     n_class   = q,
     kernel    = object$kernel,
+    isotropic   = object$isotropic,
     theta_opt = object$theta_opt,
     loss      = object$loss,
     loss_min  = object$loss_min,

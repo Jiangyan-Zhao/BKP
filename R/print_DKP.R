@@ -77,7 +77,8 @@ print.DKP <- function(x, ...) {
   cat(sprintf("Number of observations (n):  %d\n", nrow(x$X)))
   cat(sprintf("Input dimensionality (d):    %d\n", ncol(x$X)))
   cat(sprintf("Number of classes (q):       %d\n", ncol(x$Y)))
-  cat(sprintf("Kernel type:                 %s\n", x$kernel))
+  kernel_variant <- if (x$isotropic) "isotropic" else "anisotropic"
+  cat(sprintf("Kernel type:                 (%s) %s\n", kernel_variant, x$kernel))
   cat(sprintf("Optimized kernel parameters: %s\n",
               paste(sprintf("%.4f", x$theta_opt), collapse = ", ")))
   cat(sprintf("Minimum achieved loss:       %.5f\n", x$loss_min))
@@ -105,7 +106,8 @@ print.summary_DKP <- function(x, ...) {
   cat(sprintf("Number of observations (n):  %d\n", x$n_obs))
   cat(sprintf("Input dimensionality (d):    %d\n", x$input_dim))
   cat(sprintf("Number of classes (q):       %d\n", x$n_class))
-  cat(sprintf("Kernel type:                 %s\n", x$kernel))
+  kernel_variant <- if (x$isotropic) "isotropic" else "anisotropic"
+  cat(sprintf("Kernel type:                 (%s) %s\n", kernel_variant, x$kernel))
   cat(sprintf("Optimized kernel parameters: %s\n",
               paste(sprintf("%.4f", x$theta_opt), collapse = ", ")))
   cat(sprintf("Minimum achieved loss:       %.5f\n", x$loss_min))
