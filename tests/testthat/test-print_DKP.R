@@ -48,3 +48,25 @@ test_that("print.DKP methods run without errors", {
   # Test print.simulate_DKP
   expect_no_error(print(simulate_model))
 })
+
+test_that("print.DKP handles new-data, multi-class and high-dimensional branches", {
+  set.seed(100)
+
+  X <- matrix(runif(45), ncol = 3)
+  Y <- matrix(0, nrow(X), 4)
+  cls <- sample(1:4, nrow(X), replace = TRUE)
+  Y[cbind(seq_len(nrow(X)), cls)] <- 1
+  model <- fit_DKP(
+    X, Y,
+    prior = "fixed",
+    r0 = 6,
+    p0 = rep(0.25, 4),
+    theta = c(0.35, 0.4, 0.45),
+    isotropic = FALSE
+  )
+
+  expect_no_error(print(model))
+  expect_no_error(print(summary(model)))
+  expect_no_error(print(predict(model, Xnew = X[1:5, , drop = FALSE])))
+  expect_no_error(print(simulate(model, Xnew = X[1:5, , drop = FALSE], nsim = 5)))
+})

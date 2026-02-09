@@ -132,3 +132,32 @@ test_that("fit_BKP supports isotropic lengthscale", {
     "When isotropic=TRUE, 'theta' must be a scalar."
   )
 })
+
+test_that("fit_BKP validates extended argument branches", {
+  set.seed(42)
+  X <- matrix(runif(18, min = -0.2, max = 1.2), ncol = 3)
+  y <- rbinom(nrow(X), size = 5, prob = 0.5)
+  m <- rep(5, nrow(X))
+
+  expect_warning(
+    expect_s3_class(fit_BKP(X, y, m), "BKP"),
+    "Input X does not appear to be normalized to \\[0,1\\]"
+  )
+
+  expect_error(
+    fit_BKP(X, y, m, Xbounds = matrix(c(0, 0, 1, 0.5, 0.4, 0.4), ncol = 2, byrow = TRUE)),
+    "Each row of 'Xbounds' must satisfy lower < upper"
+  )
+
+  X <- matrix(runif(18, min = 0, max = 1), ncol = 3)
+  y <- rbinom(nrow(X), size = 5, prob = 0.5)
+  m <- rep(5, nrow(X))
+  expect_error(fit_BKP(X, y, m, r0 = 0), "'r0' must be a positive scalar")
+  expect_error(fit_BKP(X, y, m, p0 = 1), "'p0' must be a positive scalar")
+  expect_error(fit_BKP(X, y, m, n_multi_start = 0), "'n_multi_start' must be a positive integer")
+  expect_error(fit_BKP(X, y, m, theta = "bad"), "'theta' must be numeric")
+  expect_error(fit_BKP(X, y, m, theta = c(0.2, 0.3), isotropic = TRUE), "When isotropic=TRUE")
+  expect_error(fit_BKP(X, y, m, theta = c(0.2, 0.3), isotropic = FALSE), "length 3")
+  expect_error(fit_BKP(X, y, m, theta = -0.2), "'theta' must be strictly positive")
+  expect_error(fit_BKP(X, y, m, isotropic = c(TRUE, FALSE)), "'isotropic' must be a single logical value")
+})

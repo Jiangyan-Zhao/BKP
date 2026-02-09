@@ -135,7 +135,9 @@ plot.DKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL, ...){
     # --- First panel: all mean curves together ---
     if(is_classification){
       cols <- rainbow(q)
-      plot(NA, xlim = Xbounds, ylim = c(-0.1, 1.1),
+      plot(NA,
+           xlim = Xbounds[dims, ],
+           ylim = c(-0.1, 1.1),
            xlab = ifelse(d > 1, paste0("x", dims), "x"),
            ylab = "Probability",
            main = "Estimated Mean Curves (All Classes)")
@@ -167,7 +169,7 @@ plot.DKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL, ...){
            xlab = ifelse(d > 1, paste0("x", dims), "x"),
            ylab = "Probability",
            main = paste0("Estimated Probability (Class ", j, ")"),
-           xlim = Xbounds,
+           xlim = Xbounds[dims, ],
            ylim = ylim)
 
       # Shaded CI

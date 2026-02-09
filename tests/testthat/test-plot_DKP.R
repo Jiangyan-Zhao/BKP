@@ -96,3 +96,22 @@ test_that("plot.DKP generates plots without errors for 1D and 2D inputs", {
   # Test with only_mean = TRUE
   expect_no_error(plot(model_2d, only_mean = TRUE, dims=c(1,3), n_grid = 10))
 })
+
+test_that("plot.DKP validates input arguments and classification branches", {
+  set.seed(99)
+
+  X <- matrix(runif(60), ncol = 2)
+  cl <- sample(1:3, nrow(X), replace = TRUE)
+  Y <- matrix(0, nrow(X), 3)
+  Y[cbind(seq_len(nrow(X)), cl)] <- 1
+  model <- fit_DKP(X, Y, prior = "noninformative", theta = 0.25)
+
+  expect_no_error(plot(model, dims = 1, n_grid = 8))
+  expect_no_error(plot(model, dims = c(1, 2), n_grid = 8))
+  expect_error(plot(model, only_mean = c(TRUE, FALSE)), "`only_mean` must be a single logical value")
+  expect_error(plot(model, n_grid = 0), "'n_grid' must be a positive integer")
+  expect_error(plot(model, dims = c(1.1, 2)), "`dims` must be an integer vector")
+  expect_error(plot(model, dims = integer(0)), "`dims` must have length 1 or 2")
+  expect_error(plot(model, dims = c(1, 1)), "`dims` cannot contain duplicate indices")
+  expect_error(plot(model, dims = 3), "must be within the range")
+})

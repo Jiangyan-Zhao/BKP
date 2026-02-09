@@ -195,7 +195,7 @@ plot.BKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL, ...){
          xlab = ifelse(d > 1, paste0("x", dims), "x"),
          ylab = "Probability",
          main = "Estimated Probability",
-         xlim = Xbounds,
+         xlim = Xbounds[dims, ],
          ylim = c(min(prediction$lower) * 0.9,
                   min(1, max(prediction$upper) * 1.1)))
 

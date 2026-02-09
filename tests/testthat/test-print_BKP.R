@@ -46,3 +46,17 @@ test_that("print.BKP methods run without errors", {
   # Test print.simulate_BKP
   expect_no_error(print(simulate_model))
 })
+
+test_that("print.BKP handles new-data and high-dimensional branches", {
+  set.seed(100)
+
+  X <- matrix(runif(36), ncol = 3)
+  m <- rep(1, nrow(X))
+  y <- rbinom(nrow(X), size = 1, prob = 0.5)
+  model <- fit_BKP(X, y, m, prior = "fixed", r0 = 5, p0 = 0.5, theta = c(0.3, 0.4, 0.5), isotropic = FALSE)
+
+  expect_no_error(print(model))
+  expect_no_error(print(summary(model)))
+  expect_no_error(print(predict(model, Xnew = X[1:5, , drop = FALSE], threshold = 0.4)))
+  expect_no_error(print(simulate(model, Xnew = X[1:5, , drop = FALSE], nsim = 5, threshold = 0.4)))
+})
