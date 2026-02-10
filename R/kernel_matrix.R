@@ -123,28 +123,31 @@ kernel_matrix <- function(X, Xprime = NULL, theta = 0.1,
   # Compute pairwise distances
   if (symmetric) {
     # Efficient computation when X == Xprime using symmetry
-    dist <- as.matrix(dist(X_scaled))
-    dist[dist < 0] <- 0  # numerical stability
-    dist_sq <- dist^2
+    g <- rowSums(X_scaled^2)
+    G <- tcrossprod(X_scaled)
+    dist_sq <- outer(g, g, "+") - 2 * G
 
   } else {
     # General case: X and Xprime are different
-    X_sq <- rowSums(X_scaled^2)
-    Xp_sq <- rowSums(Xp_scaled^2)
     # Use identity: ||x - x'||^2 = ||x||^2 + ||x'||^2 - 2*x^T*x'
-    dist_sq <- outer(X_sq, Xp_sq, "+") - 2 * tcrossprod(X_scaled, Xp_scaled)
-    dist_sq[dist_sq < 0] <- 0  # numerical stability
-    dist <- sqrt(dist_sq)
+    g  <- rowSums(X_scaled^2)
+    gp <- rowSums(Xp_scaled^2)
+    G  <- tcrossprod(X_scaled, Xp_scaled)
+    dist_sq <- outer(g, gp, "+") - 2 * G
   }
+
+  dist_sq[dist_sq < 0] <- 0  # numerical stability
 
   # Evaluate kernel function
   if (kernel == "gaussian") {
     K <- exp(-dist_sq)
   } else if (kernel == "matern52") {
     sqrt5 <- sqrt(5)
+    dist <- sqrt(dist_sq)
     K <- (1 + sqrt5 * dist + (5/3) * dist_sq) * exp(-sqrt5 * dist)
   } else if (kernel == "matern32") {
     sqrt3 <- sqrt(3)
+    dist <- sqrt(dist_sq)
     K <- (1 + sqrt3 * dist) * exp(-sqrt3 * dist)
   }
 

@@ -96,10 +96,10 @@ loss_fun <- function(
     beta0 <- prior_par$beta0
 
     # Compute posterior alpha and beta
-    # alpha_n <- alpha0 + as.vector(W %*% y)
-    # beta_n <- beta0 + as.vector(W %*% (m - y))
-    alpha_n <- alpha0 + as.vector(K %*% y)
-    beta_n <- beta0 + as.vector(K %*% (m - y))
+    # alpha_n <- alpha0 + drop(W %*% y)
+    # beta_n <- beta0 + drop(W %*% (m - y))
+    alpha_n <- alpha0 + drop(K %*% y)
+    beta_n <- beta0 + drop(K %*% (m - y))
 
     # Posterior mean prediction of success probability
     pi_hat <- alpha_n / (alpha_n + beta_n)
