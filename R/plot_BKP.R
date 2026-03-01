@@ -20,6 +20,9 @@
 #' @param dims Integer vector indicating which input dimensions to plot. Must
 #'   have length 1 (for 1D) or 2 (for 2D). If \code{NULL} (default), all
 #'   dimensions are used when their number is <= 2.
+#' @param engine Character string specifying plotting backend for 2D plots.
+#'   Either \code{"base"} (default, lattice-based output) or
+#'   \code{"ggplot"}.
 #' @param ... Additional arguments passed to internal plotting routines
 #'   (currently unused).
 #'
@@ -133,7 +136,7 @@
 #' @export
 #' @method plot BKP
 
-plot.BKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL, ...){
+plot.BKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL, engine = "base", ...){
   # ---------------- Argument Checking ----------------
   if (!is.logical(only_mean) || length(only_mean) != 1) {
     stop("`only_mean` must be a single logical value (TRUE or FALSE).")
@@ -143,6 +146,10 @@ plot.BKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL, ...){
     stop("'n_grid' must be a positive integer.")
   }
   n_grid <- as.integer(n_grid)
+
+  if (!is.character(engine) || length(engine) != 1 || !engine %in% c("base", "ggplot")) {
+    stop("`engine` must be one of c('base', 'ggplot').")
+  }
 
   # Extract necessary components from the BKP model object.
   X <- x$X # Covariate matrix.
@@ -251,28 +258,51 @@ plot.BKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL, ...){
     if (only_mean) {
       # Only plot the predicted mean graphs
       if(is_classification){
-        p1 <- my_2D_plot_fun("Mean", "Predicted Class Probability (Predictive Mean)", df, X = X_sub, y = y)
+        p1 <- if (engine == "ggplot") {
+          my_2D_plot_fun_ggplot("Mean", "Predicted Class Probability (Predictive Mean)", df, X = X_sub, y = y, dims = dims)
+        } else {
+          my_2D_plot_fun("Mean", "Predicted Class Probability (Predictive Mean)", df, X = X_sub, y = y, dims = dims)
+        }
       }else{
-        p1 <- my_2D_plot_fun("Mean", "Predictive Mean", df)
+        p1 <- if (engine == "ggplot") {
+          my_2D_plot_fun_ggplot("Mean", "Predictive Mean", df, dims = dims)
+        } else {
+          my_2D_plot_fun("Mean", "Predictive Mean", df, dims = dims)
+        }
       }
       print(p1)
     } else {
       # Create 2 or 4 plots
       if(is_classification){
-        p1 <- my_2D_plot_fun("Mean", "Predictive Mean", df, X = X_sub, y = y, dims= dims)
-        p3 <- my_2D_plot_fun("Variance", "Predictive Variance", df, X = X_sub, y = y, dims= dims)
+        if (engine == "ggplot") {
+          p1 <- my_2D_plot_fun_ggplot("Mean", "Predictive Mean", df, X = X_sub, y = y, dims = dims)
+          p3 <- my_2D_plot_fun_ggplot("Variance", "Predictive Variance", df, X = X_sub, y = y, dims = dims)
+        } else {
+          p1 <- my_2D_plot_fun("Mean", "Predictive Mean", df, X = X_sub, y = y, dims= dims)
+          p3 <- my_2D_plot_fun("Variance", "Predictive Variance", df, X = X_sub, y = y, dims= dims)
+        }
       }else{
-        p1 <- my_2D_plot_fun("Mean", "Predictive Mean", df, dims= dims)
-        p3 <- my_2D_plot_fun("Variance", "Predictive Variance", df, dims= dims)
+        if (engine == "ggplot") {
+          p1 <- my_2D_plot_fun_ggplot("Mean", "Predictive Mean", df, dims = dims)
+          p3 <- my_2D_plot_fun_ggplot("Variance", "Predictive Variance", df, dims = dims)
+        } else {
+          p1 <- my_2D_plot_fun("Mean", "Predictive Mean", df, dims= dims)
+          p3 <- my_2D_plot_fun("Variance", "Predictive Variance", df, dims= dims)
+        }
       }
       if(is_classification){
         # Arrange into 1×2 layout
-        grid.arrange(p1, p3, ncol = 2)
+        gridExtra::grid.arrange(p1, p3, ncol = 2)
       }else{
-        p2 <- my_2D_plot_fun("Upper", paste0(prediction$CI_level * 100, "% CI Upper"), df, dims= dims)
-        p4 <- my_2D_plot_fun("Lower", paste0(prediction$CI_level * 100, "% CI Lower"), df, dims= dims)
+        if (engine == "ggplot") {
+          p2 <- my_2D_plot_fun_ggplot("Upper", paste0(prediction$CI_level * 100, "% CI Upper"), df, dims = dims)
+          p4 <- my_2D_plot_fun_ggplot("Lower", paste0(prediction$CI_level * 100, "% CI Lower"), df, dims = dims)
+        } else {
+          p2 <- my_2D_plot_fun("Upper", paste0(prediction$CI_level * 100, "% CI Upper"), df, dims= dims)
+          p4 <- my_2D_plot_fun("Lower", paste0(prediction$CI_level * 100, "% CI Lower"), df, dims= dims)
+        }
         # Arrange into 2×2 layout
-        grid.arrange(p1, p2, p3, p4, ncol = 2)
+        gridExtra::grid.arrange(p1, p2, p3, p4, ncol = 2)
       }
     }
   }
