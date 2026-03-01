@@ -176,14 +176,30 @@ plot.DKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL,
       y_max <- if (is_classification) 1 else min(1, max(plot_df$upper, na.rm = TRUE) * 1.1)
       y_min <- if (is_classification) 0 else min(plot_df$lower, na.rm = TRUE) * 0.9
 
+      ci_label <- paste0(prediction$CI_level * 100, "% CI")
+
       p <- ggplot(plot_df, aes(x = .data$x)) +
         geom_ribbon(data = pred_df,
-                    aes(ymin = .data$lower, ymax = .data$upper),
-                    fill = "grey70", alpha = 0.3) +
-        geom_line(data = pred_df, aes(y = .data$mean), color = "blue", linewidth = 1) +
-        geom_point(data = obs_df, aes(y = .data$obs), color = "red", size = 1.5, alpha = 0.85) +
+                    aes(ymin = .data$lower, ymax = .data$upper, fill = ci_label),
+                    alpha = 0.3,
+                    show.legend = TRUE) +
+        geom_line(data = pred_df,
+                  aes(y = .data$mean, color = "Estimated Probability"),
+                  linewidth = 1,
+                  show.legend = TRUE) +
+        geom_point(data = obs_df,
+                   aes(y = .data$obs, color = "Observed"),
+                   size = 1.5,
+                   alpha = 0.85,
+                   show.legend = TRUE) +
         facet_wrap(~class, ncol = 2, scales = "fixed") +
         coord_cartesian(ylim = c(y_min, y_max)) +
+        scale_color_manual(
+          values = c("Estimated Probability" = "blue", "Observed" = "red"),
+          name = NULL
+        ) +
+        scale_fill_manual(values = setNames("grey70", ci_label), name = NULL) +
+        guides(color = guide_legend(order = 1), fill = guide_legend(order = 2)) +
         labs(
           title = "Estimated Probability by Class",
           x = if (is.null(dims)) "x" else paste0("x", dims[1]),

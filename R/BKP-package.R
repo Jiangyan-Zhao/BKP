@@ -65,7 +65,7 @@
 #' @importFrom grDevices hcl.colors rainbow
 #' @importFrom grid gpar textGrob
 #' @importFrom gridExtra grid.arrange
-#' @importFrom ggplot2 aes coord_cartesian geom_ribbon geom_contour geom_line geom_point geom_raster ggplot facet_wrap scale_color_manual scale_fill_manual scale_fill_viridis_c scale_fill_brewer scale_shape_manual scale_shape_discrete labs theme_minimal
+#' @importFrom ggplot2 aes coord_cartesian geom_ribbon geom_contour geom_line geom_point geom_raster ggplot guide_legend guides facet_wrap scale_color_manual scale_fill_manual scale_fill_viridis_c scale_fill_brewer scale_shape_manual scale_shape_discrete labs theme_minimal
 #' @importFrom lattice levelplot panel.contourplot panel.levelplot panel.points
 #' @importFrom optimx multistart
 #' @importFrom rlang .data
