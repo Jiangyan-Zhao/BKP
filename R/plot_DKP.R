@@ -149,6 +149,20 @@ plot.DKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL,
       obs_vals <- unlist(obs_list)
       x_obs <- rep(as.numeric(X_sub), times = q)
 
+      pred_df <- data.frame(
+        x = x_vals,
+        mean = mean_vals,
+        lower = lower_vals,
+        upper = upper_vals,
+        class = class_labels
+      )
+
+      obs_df <- data.frame(
+        x = x_obs,
+        obs = obs_vals,
+        class = factor(rep(seq_len(q), each = nrow(X_sub)), levels = seq_len(q))
+      )
+
       plot_df <- data.frame(
         x = c(x_vals, x_obs),
         mean = c(mean_vals, rep(NA_real_, length(obs_vals))),
@@ -163,10 +177,11 @@ plot.DKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL,
       y_min <- if (is_classification) 0 else min(plot_df$lower, na.rm = TRUE) * 0.9
 
       p <- ggplot(plot_df, aes(x = .data$x)) +
-        geom_ribbon(aes(ymin = .data$lower, ymax = .data$upper),
+        geom_ribbon(data = pred_df,
+                    aes(ymin = .data$lower, ymax = .data$upper),
                     fill = "grey70", alpha = 0.3) +
-        geom_line(aes(y = .data$mean), color = "blue", linewidth = 1) +
-        geom_point(aes(y = .data$obs), color = "red", size = 1.5, alpha = 0.85) +
+        geom_line(data = pred_df, aes(y = .data$mean), color = "blue", linewidth = 1) +
+        geom_point(data = obs_df, aes(y = .data$obs), color = "red", size = 1.5, alpha = 0.85) +
         facet_wrap(~class, ncol = 2, scales = "fixed") +
         coord_cartesian(ylim = c(y_min, y_max)) +
         labs(
