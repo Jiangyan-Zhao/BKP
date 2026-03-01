@@ -59,6 +59,68 @@ my_2D_plot_fun_class <- function(var, title, data, X, Y, classification = TRUE, 
   )
 }
 
+my_2D_plot_fun_ggplot <- function(var, title, data, X = NULL, y = NULL, dims = NULL, ...) {
+  p <- ggplot2::ggplot(data, ggplot2::aes(x = x1, y = x2)) +
+    ggplot2::geom_raster(ggplot2::aes_string(fill = var)) +
+    ggplot2::geom_contour(ggplot2::aes_string(z = var), color = "black", linewidth = 0.2) +
+    ggplot2::scale_fill_viridis_c(option = "plasma") +
+    ggplot2::labs(
+      title = title,
+      x = ifelse(is.null(dims), "x1", paste0("x", dims[1])),
+      y = ifelse(is.null(dims), "x2", paste0("x", dims[2])),
+      fill = var
+    ) +
+    ggplot2::theme_minimal()
+
+  if (!is.null(X) && !is.null(y)) {
+    obs_df <- data.frame(
+      x1 = X[, 1],
+      x2 = X[, 2],
+      cls = factor(ifelse(y == 1, "1", "0"))
+    )
+    p <- p +
+      ggplot2::geom_point(data = obs_df,
+                          ggplot2::aes(x = x1, y = x2, shape = cls),
+                          color = "red", size = 2, inherit.aes = FALSE) +
+      ggplot2::scale_shape_manual(values = c("0" = 4, "1" = 16), guide = "none")
+  }
+
+  p
+}
+
+my_2D_plot_fun_class_ggplot <- function(var, title, data, X, Y, classification = TRUE, dims = NULL, ...) {
+  class_Y <- max.col(Y)
+  p <- ggplot2::ggplot(data, ggplot2::aes(x = x1, y = x2))
+
+  if (classification) {
+    p <- p +
+      ggplot2::geom_raster(ggplot2::aes(fill = class), alpha = 0.8) +
+      ggplot2::scale_fill_brewer(palette = "Set2", name = "Class")
+  } else {
+    p <- p +
+      ggplot2::geom_raster(ggplot2::aes_string(fill = var)) +
+      ggplot2::geom_contour(ggplot2::aes_string(z = var), color = "black", linewidth = 0.2) +
+      ggplot2::scale_fill_viridis_c(option = "plasma", direction = -1, name = var)
+  }
+
+  obs_df <- data.frame(x1 = X[, 1], x2 = X[, 2], class = factor(class_Y))
+  p <- p +
+    ggplot2::geom_point(
+      data = obs_df,
+      ggplot2::aes(x = x1, y = x2, shape = class),
+      color = "black", fill = "white", size = 2, stroke = 1,
+      inherit.aes = FALSE
+    ) +
+    ggplot2::labs(
+      title = title,
+      x = ifelse(is.null(dims), "x1", paste0("x", dims[1])),
+      y = ifelse(is.null(dims), "x2", paste0("x", dims[2]))
+    ) +
+    ggplot2::theme_minimal()
+
+  p
+}
+
 posterior_summary <- function(mean_vals, var_vals) {
   summary_mat <- rbind(
     "Posterior means" = c(
