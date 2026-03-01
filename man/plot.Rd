@@ -6,9 +6,9 @@
 \alias{plot.DKP}
 \title{Plot Fitted BKP or DKP Models}
 \usage{
-\method{plot}{BKP}(x, only_mean = FALSE, n_grid = 80, dims = NULL, ...)
+\method{plot}{BKP}(x, only_mean = FALSE, n_grid = 80, dims = NULL, engine = "base", ...)
 
-\method{plot}{DKP}(x, only_mean = FALSE, n_grid = 80, dims = NULL, ...)
+\method{plot}{DKP}(x, only_mean = FALSE, n_grid = 80, dims = NULL, engine = "base", ...)
 }
 \arguments{
 \item{x}{An object of class \code{"BKP"} or \code{"DKP"}, typically returned
@@ -26,6 +26,10 @@ is \code{80}.}
 \item{dims}{Integer vector indicating which input dimensions to plot. Must
 have length 1 (for 1D) or 2 (for 2D). If \code{NULL} (default), all
 dimensions are used when their number is <= 2.}
+
+\item{engine}{Character string specifying plotting backend for 2D plots.
+Either \code{"base"} (default, lattice-based output) or
+\code{"ggplot"}.}
 
 \item{...}{Additional arguments passed to internal plotting routines
 (currently unused).}

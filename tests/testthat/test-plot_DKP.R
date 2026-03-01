@@ -115,3 +115,18 @@ test_that("plot.DKP validates input arguments and classification branches", {
   expect_error(plot(model, dims = c(1, 1)), "`dims` cannot contain duplicate indices")
   expect_error(plot(model, dims = 3), "must be within the range")
 })
+
+
+test_that("plot.DKP supports ggplot engine for 2D and validates engine", {
+  set.seed(2026)
+  skip_if_not_installed("ggplot2")
+
+  X <- matrix(runif(80), ncol = 2)
+  cl <- sample(1:3, nrow(X), replace = TRUE)
+  Y <- matrix(0, nrow(X), 3)
+  Y[cbind(seq_len(nrow(X)), cl)] <- 1
+  model <- fit_DKP(X, Y, prior = "noninformative", theta = 0.25)
+
+  expect_no_error(plot(model, n_grid = 8, engine = "ggplot"))
+  expect_error(plot(model, engine = "bad_engine"), "`engine` must be one of c('base', 'ggplot').", fixed = TRUE)
+})
