@@ -195,41 +195,96 @@ plot.BKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL,
     # Determine whether it is a classification problem
     is_classification <- !is.null(prediction$class)
 
-    # Initialize the plot with the estimated probability curve.
-    plot(Xnew, prediction$mean,
-         type = "l", col = "blue", lwd = 2,
-         xlab = ifelse(d > 1, paste0("x", dims), "x"),
-         ylab = "Probability",
-         main = "Estimated Probability",
-         xlim = Xbounds[dims, ],
-         ylim = c(min(prediction$lower) * 0.9,
-                  min(1, max(prediction$upper) * 1.1)))
+    if (engine == "ggplot") {
+      plot_df <- data.frame(
+        x = as.numeric(Xnew),
+        mean = prediction$mean,
+        lower = prediction$lower,
+        upper = prediction$upper
+      )
+      obs_df <- data.frame(
+        x = as.numeric(X_sub),
+        obs_y = y / m
+      )
 
-    # Add a shaded credible interval band using polygon.
-    polygon(c(Xnew, rev(Xnew)),
-            c(prediction$lower, rev(prediction$upper)),
-            col = "lightgrey", border = NA)
-    lines(Xnew, prediction$mean, col = "blue", lwd = 2)
+      p <- ggplot(plot_df, aes(x = .data$x)) +
+        geom_ribbon(
+          aes(
+            ymin = .data$lower,
+            ymax = .data$upper,
+            fill = paste0(prediction$CI_level * 100, "% Credible Interval")
+          ),
+          alpha = 0.3,
+          show.legend = TRUE
+        ) +
+        geom_line(aes(y = .data$mean, color = "Estimated Probability"),
+                  linewidth = 1) +
+        geom_point(
+          data = obs_df,
+          aes(x = .data$x, y = .data$obs_y, color = "Observed Proportions"),
+          size = 1.8, alpha = 0.85,
+          inherit.aes = FALSE
+        ) +
+        scale_color_manual(
+          values = c("Estimated Probability" = "blue", "Observed Proportions" = "red"),
+          name = NULL
+        ) +
+        scale_fill_manual(
+          values = c(stats::setNames("grey70", paste0(prediction$CI_level * 100, "% Credible Interval"))),
+          name = NULL
+        ) +
+        labs(
+          title = "Estimated Probability",
+          x = ifelse(d > 1, paste0("x", dims), "x"),
+          y = "Probability"
+        ) +
+        theme_minimal()
 
-    # Overlay observed proportions (y/m) as points.
-    points(X_sub, y / m, pch = 20, col = "red")
+      if (is_classification) {
+        p <- p +
+          geom_hline(yintercept = prediction$threshold, linetype = "dashed") +
+          annotate("text",
+                   x = max(plot_df$x), y = prediction$threshold + 0.02,
+                   label = "threshold", hjust = 1, vjust = 0.5)
+      }
+      print(p)
+    } else {
+      # Initialize the plot with the estimated probability curve.
+      plot(Xnew, prediction$mean,
+           type = "l", col = "blue", lwd = 2,
+           xlab = ifelse(d > 1, paste0("x", dims), "x"),
+           ylab = "Probability",
+           main = "Estimated Probability",
+           xlim = Xbounds[dims, ],
+           ylim = c(min(prediction$lower) * 0.9,
+                    min(1, max(prediction$upper) * 1.1)))
 
-    if(is_classification){
-      abline(h = prediction$threshold, lty = 2, lwd = 1.2)
-      text(x = Xbounds[dims, 2],
-           y = prediction$threshold + 0.02,
-           labels = "threshold",
-           adj = c(1, 0.5),
-           cex = 0.9,
-           col = "black")
-    }else{
-      # Add a legend to explain plot elements.
-      legend("topleft",
-             legend = c("Estimated Probability",
-                        paste0(prediction$CI_level * 100, "% Credible Interval"),
-                        "Observed Proportions"),
-             col = c("blue", "lightgrey", "red"), bty = "n",
-             lwd = c(2, 8, NA), pch = c(NA, NA, 20), lty = c(1, 1, NA))
+      # Add a shaded credible interval band using polygon.
+      polygon(c(Xnew, rev(Xnew)),
+              c(prediction$lower, rev(prediction$upper)),
+              col = "lightgrey", border = NA)
+      lines(Xnew, prediction$mean, col = "blue", lwd = 2)
+
+      # Overlay observed proportions (y/m) as points.
+      points(X_sub, y / m, pch = 20, col = "red")
+
+      if(is_classification){
+        abline(h = prediction$threshold, lty = 2, lwd = 1.2)
+        text(x = Xbounds[dims, 2],
+             y = prediction$threshold + 0.02,
+             labels = "threshold",
+             adj = c(1, 0.5),
+             cex = 0.9,
+             col = "black")
+      }else{
+        # Add a legend to explain plot elements.
+        legend("topleft",
+               legend = c("Estimated Probability",
+                          paste0(prediction$CI_level * 100, "% Credible Interval"),
+                          "Observed Proportions"),
+               col = c("blue", "lightgrey", "red"), bty = "n",
+               lwd = c(2, 8, NA), pch = c(NA, NA, 20), lty = c(1, 1, NA))
+      }
     }
 
   } else {

@@ -117,9 +117,16 @@ test_that("plot.DKP validates input arguments and classification branches", {
 })
 
 
-test_that("plot.DKP supports ggplot engine for 2D and validates engine", {
+test_that("plot.DKP supports ggplot engine for 1D/2D and validates engine", {
   set.seed(2026)
   skip_if_not_installed("ggplot2")
+
+  X1 <- matrix(runif(60), ncol = 1)
+  cl1 <- sample(1:3, nrow(X1), replace = TRUE)
+  Y1 <- matrix(0, nrow(X1), 3)
+  Y1[cbind(seq_len(nrow(X1)), cl1)] <- 1
+  model1 <- fit_DKP(X1, Y1, prior = "noninformative", theta = 0.25)
+  expect_no_error(plot(model1, n_grid = 8, engine = "ggplot"))
 
   X <- matrix(runif(80), ncol = 2)
   cl <- sample(1:3, nrow(X), replace = TRUE)

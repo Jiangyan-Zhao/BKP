@@ -1,6 +1,7 @@
 # BKP 0.2.4
 
-* Added a package-wide `isotropic` argument (default: `TRUE`) for isotropic kernels (shared length-scale across dimensions).
+* Added **ggplot2** support for plotting: `plot.BKP(..., engine = "ggplot")` now produces ggplot2-based visualizations.
+* Added a package-wide `isotropic` argument (default: `TRUE`) to use isotropic kernels (a shared length-scale across dimensions); set `isotropic = FALSE` for anisotropic kernels with dimension-specific length-scales.
 
 # BKP 0.2.3 (2025-09-22)
 

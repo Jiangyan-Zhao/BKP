@@ -83,9 +83,15 @@ test_that("plot.BKP validates input arguments and classification branches", {
 })
 
 
-test_that("plot.BKP supports ggplot engine for 2D and validates engine", {
+test_that("plot.BKP supports ggplot engine for 1D/2D and validates engine", {
   set.seed(2026)
   skip_if_not_installed("ggplot2")
+
+  X1 <- matrix(runif(40), ncol = 1)
+  m1 <- rep(10, nrow(X1))
+  y1 <- rbinom(nrow(X1), size = m1, prob = 0.5)
+  model1 <- fit_BKP(X1, y1, m1, prior = "noninformative", theta = 0.3)
+  expect_no_error(plot(model1, n_grid = 8, engine = "ggplot"))
 
   X <- matrix(runif(60), ncol = 2)
   m <- rep(10, nrow(X))

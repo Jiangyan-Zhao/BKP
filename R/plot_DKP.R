@@ -132,72 +132,118 @@ plot.DKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL,
     # Determine whether it is a classification problem
     is_classification <- !is.null(prediction$class)
 
-    old_par <- par(mfrow = c(2, 2))
-    # on.exit(par(old_par))  # Restore par on exit
+    if (engine == "ggplot") {
+      class_labels <- factor(rep(seq_len(q), each = nrow(Xnew)), levels = seq_len(q))
+      mean_vals <- as.vector(prediction$mean)
+      lower_vals <- as.vector(prediction$lower)
+      upper_vals <- as.vector(prediction$upper)
+      x_vals <- rep(as.numeric(Xnew), times = q)
 
-    # --- First panel: all mean curves together ---
-    if(is_classification){
-      cols <- rainbow(q)
-      plot(NA,
-           xlim = Xbounds[dims, ],
-           ylim = c(-0.1, 1.1),
-           xlab = ifelse(d > 1, paste0("x", dims), "x"),
-           ylab = "Probability",
-           main = "Estimated Mean Curves (All Classes)")
+      obs_list <- lapply(seq_len(q), function(j) {
+        if (is_classification) {
+          as.integer(apply(Y, 1, which.max) == j)
+        } else {
+          Y[, j] / rowSums(Y)
+        }
+      })
+      obs_vals <- unlist(obs_list)
+      x_obs <- rep(as.numeric(X_sub), times = q)
+
+      plot_df <- data.frame(
+        x = c(x_vals, x_obs),
+        mean = c(mean_vals, rep(NA_real_, length(obs_vals))),
+        lower = c(lower_vals, rep(NA_real_, length(obs_vals))),
+        upper = c(upper_vals, rep(NA_real_, length(obs_vals))),
+        class = factor(c(as.character(class_labels), rep(seq_len(q), each = nrow(X_sub))),
+                       levels = seq_len(q)),
+        obs = c(rep(NA_real_, length(mean_vals)), obs_vals)
+      )
+
+      y_max <- if (is_classification) 1 else min(1, max(plot_df$upper, na.rm = TRUE) * 1.1)
+      y_min <- if (is_classification) 0 else min(plot_df$lower, na.rm = TRUE) * 0.9
+
+      p <- ggplot(plot_df, aes(x = .data$x)) +
+        geom_ribbon(aes(ymin = .data$lower, ymax = .data$upper),
+                    fill = "grey70", alpha = 0.3) +
+        geom_line(aes(y = .data$mean), color = "blue", linewidth = 1) +
+        geom_point(aes(y = .data$obs), color = "red", size = 1.5, alpha = 0.85) +
+        facet_wrap(~class, ncol = 2, scales = "fixed") +
+        coord_cartesian(ylim = c(y_min, y_max)) +
+        labs(
+          title = "Estimated Probability by Class",
+          x = if (is.null(dims)) "x" else paste0("x", dims[1]),
+          y = "Probability"
+        ) +
+        theme_minimal()
+      print(p)
+    } else {
+      old_par <- par(mfrow = c(2, 2))
+      # on.exit(par(old_par))  # Restore par on exit
+
+      # --- First panel: all mean curves together ---
+      if(is_classification){
+        cols <- rainbow(q)
+        plot(NA,
+             xlim = Xbounds[dims, ],
+             ylim = c(-0.1, 1.1),
+             xlab = ifelse(d > 1, paste0("x", dims), "x"),
+             ylab = "Probability",
+             main = "Estimated Mean Curves (All Classes)")
+        for (j in 1:q) {
+          lines(Xnew, prediction$mean[, j], col = cols[j], lwd = 2)
+        }
+        for (i in 1:nrow(X)) {
+          class_idx <- which.max(Y[i, ])
+          points(X_sub[i], -0.05, col = cols[class_idx], pch = 20)
+        }
+        legend("top", legend = paste("Class", 1:q), col = cols, lty = 1, lwd = 2,
+               horiz = TRUE, bty = "n")
+      }
+
+      # --- Remaining panels: each class with CI + obs ---
       for (j in 1:q) {
-        lines(Xnew, prediction$mean[, j], col = cols[j], lwd = 2)
-      }
-      for (i in 1:nrow(X)) {
-        class_idx <- which.max(Y[i, ])
-        points(X_sub[i], -0.05, col = cols[class_idx], pch = 20)
-      }
-      legend("top", legend = paste("Class", 1:q), col = cols, lty = 1, lwd = 2,
-             horiz = TRUE, bty = "n")
-    }
+        mean_j  <- prediction$mean[, j]
+        lower_j <- prediction$lower[, j]
+        upper_j <- prediction$upper[, j]
 
-    # --- Remaining panels: each class with CI + obs ---
-    for (j in 1:q) {
-      mean_j  <- prediction$mean[, j]
-      lower_j <- prediction$lower[, j]
-      upper_j <- prediction$upper[, j]
+        # Start plot for class j
+        if (is_classification) {
+          ylim = c(0, 1)
+        }else{
+          ylim = c(min(lower_j) * 0.9, min(1, max(upper_j) * 1.1))
+        }
+        plot(Xnew, mean_j,
+             type = "l", col = "blue", lwd = 2,
+             xlab = ifelse(d > 1, paste0("x", dims), "x"),
+             ylab = "Probability",
+             main = paste0("Estimated Probability (Class ", j, ")"),
+             xlim = Xbounds[dims, ],
+             ylim = ylim)
 
-      # Start plot for class j
-      if (is_classification) {
-        ylim = c(0, 1)
-      }else{
-        ylim = c(min(lower_j) * 0.9, min(1, max(upper_j) * 1.1))
-      }
-      plot(Xnew, mean_j,
-           type = "l", col = "blue", lwd = 2,
-           xlab = ifelse(d > 1, paste0("x", dims), "x"),
-           ylab = "Probability",
-           main = paste0("Estimated Probability (Class ", j, ")"),
-           xlim = Xbounds[dims, ],
-           ylim = ylim)
+        # Shaded CI
+        polygon(c(Xnew, rev(Xnew)),
+                c(lower_j, rev(upper_j)),
+                col = "lightgrey", border = NA)
+        lines(Xnew, mean_j, col = "blue", lwd = 2)
 
-      # Shaded CI
-      polygon(c(Xnew, rev(Xnew)),
-              c(lower_j, rev(upper_j)),
-              col = "lightgrey", border = NA)
-      lines(Xnew, mean_j, col = "blue", lwd = 2)
+        # If class label is known, show binary observed indicator (1 if this class, 0 otherwise)
+        if (is_classification) {
+          obs_j <- as.integer(apply(Y, 1, which.max) == j)
+          points(X_sub, obs_j, pch = 20, col = "red")
+        } else {
+          # Proportions from multinomial
+          points(X_sub, Y[, j] / rowSums(Y), pch = 20, col = "red")
 
-      # If class label is known, show binary observed indicator (1 if this class, 0 otherwise)
-      if (is_classification) {
-        obs_j <- as.integer(apply(Y, 1, which.max) == j)
-        points(X_sub, obs_j, pch = 20, col = "red")
-      } else {
-        # Proportions from multinomial
-        points(X_sub, Y[, j] / rowSums(Y), pch = 20, col = "red")
-
-        # Legend
-        if(j == 1) {
-          legend("topleft",
-                 legend = c("Estimated Probability",
-                            paste0(prediction$CI_level * 100, "% CI"),
-                            "Observed"),
-                 col = c("blue", "lightgrey", "red"),
-                 lwd = c(2, 8, NA), pch = c(NA, NA, 20), lty = c(1, 1, NA),
-                 bty = "n")
+          # Legend
+          if(j == 1) {
+            legend("topleft",
+                   legend = c("Estimated Probability",
+                              paste0(prediction$CI_level * 100, "% CI"),
+                              "Observed"),
+                   col = c("blue", "lightgrey", "red"),
+                   lwd = c(2, 8, NA), pch = c(NA, NA, 20), lty = c(1, 1, NA),
+                   bty = "n")
+          }
         }
       }
     }
