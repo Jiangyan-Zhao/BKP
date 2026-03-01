@@ -70,7 +70,7 @@
 #' @export
 #' @method plot DKP
 
-plot.DKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL, engine = "base", ...){
+plot.DKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL, engine = c("base", "ggplot"), ...){
   # ---------------- Argument Checking ----------------
   if (!is.logical(only_mean) || length(only_mean) != 1) {
     stop("`only_mean` must be a single logical value (TRUE or FALSE).")
@@ -81,9 +81,7 @@ plot.DKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL, engine = "b
   }
   n_grid <- as.integer(n_grid)
 
-  if (!is.character(engine) || length(engine) != 1 || !engine %in% c("base", "ggplot")) {
-    stop("`engine` must be one of c('base', 'ggplot').")
-  }
+  engine <- match.arg(engine)
 
   # Extract necessary components from the DKP model object.
   X <- x$X # Covariate matrix.
