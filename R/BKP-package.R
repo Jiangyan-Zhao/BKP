@@ -65,8 +65,10 @@
 #' @importFrom grDevices hcl.colors rainbow
 #' @importFrom grid gpar textGrob
 #' @importFrom gridExtra grid.arrange
+#' @importFrom ggplot2 aes geom_contour geom_point geom_raster ggplot scale_fill_viridis_c scale_fill_brewer scale_shape_manual scale_shape_discrete labs theme_minimal
 #' @importFrom lattice levelplot panel.contourplot panel.levelplot panel.points
 #' @importFrom optimx multistart
+#' @importFrom rlang .data
 #' @importFrom stats as.formula median qbeta quantile rbeta rgamma sd simulate
 #' @importFrom tgp lhs
 #' @importFrom utils head

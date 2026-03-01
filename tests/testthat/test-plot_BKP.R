@@ -93,5 +93,7 @@ test_that("plot.BKP supports ggplot engine for 2D and validates engine", {
   model <- fit_BKP(X, y, m, prior = "noninformative", theta = 0.3)
 
   expect_no_error(plot(model, n_grid = 8, engine = "ggplot"))
-  expect_error(plot(model, engine = "bad_engine"), "`engine` must be one of c('base', 'ggplot').", fixed = TRUE)
+  expect_error(plot(model, engine = "bad_engine"),
+               regexp = "one of.*base.*ggplot",
+               ignore.case = TRUE)
 })

@@ -70,7 +70,8 @@
 #' @export
 #' @method plot DKP
 
-plot.DKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL, engine = c("base", "ggplot"), ...){
+plot.DKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL,
+                     engine = c("base", "ggplot"), ...){
   # ---------------- Argument Checking ----------------
   if (!is.logical(only_mean) || length(only_mean) != 1) {
     stop("`only_mean` must be a single logical value (TRUE or FALSE).")

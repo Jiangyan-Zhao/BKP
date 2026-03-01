@@ -60,17 +60,23 @@ my_2D_plot_fun_class <- function(var, title, data, X, Y, classification = TRUE, 
 }
 
 my_2D_plot_fun_ggplot <- function(var, title, data, X = NULL, y = NULL, dims = NULL, ...) {
-  p <- ggplot2::ggplot(data, ggplot2::aes(x = x1, y = x2)) +
-    ggplot2::geom_raster(ggplot2::aes_string(fill = var)) +
-    ggplot2::geom_contour(ggplot2::aes_string(z = var), color = "black", linewidth = 0.2) +
-    ggplot2::scale_fill_viridis_c(option = "plasma") +
-    ggplot2::labs(
+  if (!is.character(var) || length(var) != 1) {
+    stop("`var` must be a single character string (a column name).")
+  }
+  if (!var %in% names(data)) {
+    stop(sprintf("Column `%s` not found in `data`.", var))
+  }
+
+  p <- ggplot(data, aes(x = .data$x1, y = .data$x2)) +
+    geom_raster(aes(fill = .data[[var]])) +
+    geom_contour(aes(z = .data[[var]]), color = "black", linewidth = 0.2) +
+    scale_fill_viridis_c(option = "plasma") +
+    labs(
       title = title,
-      x = ifelse(is.null(dims), "x1", paste0("x", dims[1])),
-      y = ifelse(is.null(dims), "x2", paste0("x", dims[2])),
+      x = if (is.null(dims)) "x1" else paste0("x", dims[1]),
+      y = if (is.null(dims)) "x2" else paste0("x", dims[2]),
       fill = var
-    ) +
-    ggplot2::theme_minimal()
+    ) + theme_minimal()
 
   if (!is.null(X) && !is.null(y)) {
     obs_df <- data.frame(
@@ -78,45 +84,54 @@ my_2D_plot_fun_ggplot <- function(var, title, data, X = NULL, y = NULL, dims = N
       x2 = X[, 2],
       cls = factor(ifelse(y == 1, "1", "0"))
     )
-    p <- p +
-      ggplot2::geom_point(data = obs_df,
-                          ggplot2::aes(x = x1, y = x2, shape = cls),
-                          color = "red", size = 2, inherit.aes = FALSE) +
-      ggplot2::scale_shape_manual(values = c("0" = 4, "1" = 16), guide = "none")
+    p <- p + geom_point(
+        data = obs_df,
+        aes(x = .data$x1, y = .data$x2, shape = .data$cls),
+        color = "red", size = 2, inherit.aes = FALSE
+      ) + scale_shape_manual(values = c("0" = 4, "1" = 16), guide = "none")
   }
 
   p
 }
 
-my_2D_plot_fun_class_ggplot <- function(var, title, data, X, Y, classification = TRUE, dims = NULL, ...) {
-  class_Y <- max.col(Y)
-  p <- ggplot2::ggplot(data, ggplot2::aes(x = x1, y = x2))
-
-  if (classification) {
-    p <- p +
-      ggplot2::geom_raster(ggplot2::aes(fill = class), alpha = 0.8) +
-      ggplot2::scale_fill_brewer(palette = "Set2", name = "Class")
-  } else {
-    p <- p +
-      ggplot2::geom_raster(ggplot2::aes_string(fill = var)) +
-      ggplot2::geom_contour(ggplot2::aes_string(z = var), color = "black", linewidth = 0.2) +
-      ggplot2::scale_fill_viridis_c(option = "plasma", direction = -1, name = var)
+my_2D_plot_fun_class_ggplot <- function(var, title, data, X, Y,
+                                        classification = TRUE, dims = NULL, ...) {
+  if (!is.character(var) || length(var) != 1) {
+    stop("`var` must be a single character string (a column name).")
+  }
+  if (!classification && !var %in% names(data)) {
+    stop(sprintf("Column `%s` not found in `data`.", var))
   }
 
-  obs_df <- data.frame(x1 = X[, 1], x2 = X[, 2], class = factor(class_Y))
-  p <- p +
-    ggplot2::geom_point(
+  class_Y <- max.col(Y)
+
+  p <- ggplot(data, aes(x = .data$x1, y = .data$x2))
+
+  if (classification) {
+    p <- p + geom_raster(aes(fill = .data$class), alpha = 0.8) +
+      scale_fill_brewer(palette = "Set2", name = "Class")
+  } else {
+    p <- p + geom_raster(aes(fill = .data[[var]])) +
+      geom_contour(aes(z = .data[[var]]), color = "black", linewidth = 0.2) +
+      scale_fill_viridis_c(option = "plasma", direction = -1, name = var)
+  }
+
+  obs_df <- data.frame(
+    x1 = X[, 1],
+    x2 = X[, 2],
+    class = factor(class_Y)
+  )
+
+  p <- p + geom_point(
       data = obs_df,
-      ggplot2::aes(x = x1, y = x2, shape = class),
+      aes(x = .data$x1, y = .data$x2, shape = .data$class),
       color = "black", fill = "white", size = 2, stroke = 1,
       inherit.aes = FALSE
-    ) +
-    ggplot2::labs(
+    ) + labs(
       title = title,
-      x = ifelse(is.null(dims), "x1", paste0("x", dims[1])),
-      y = ifelse(is.null(dims), "x2", paste0("x", dims[2]))
-    ) +
-    ggplot2::theme_minimal()
+      x = if (is.null(dims)) "x1" else paste0("x", dims[1]),
+      y = if (is.null(dims)) "x2" else paste0("x", dims[2])
+    ) + theme_minimal()
 
   p
 }

@@ -6,9 +6,23 @@
 \alias{plot.DKP}
 \title{Plot Fitted BKP or DKP Models}
 \usage{
-\method{plot}{BKP}(x, only_mean = FALSE, n_grid = 80, dims = NULL, engine = "base", ...)
+\method{plot}{BKP}(
+  x,
+  only_mean = FALSE,
+  n_grid = 80,
+  dims = NULL,
+  engine = c("base", "ggplot"),
+  ...
+)
 
-\method{plot}{DKP}(x, only_mean = FALSE, n_grid = 80, dims = NULL, engine = "base", ...)
+\method{plot}{DKP}(
+  x,
+  only_mean = FALSE,
+  n_grid = 80,
+  dims = NULL,
+  engine = c("base", "ggplot"),
+  ...
+)
 }
 \arguments{
 \item{x}{An object of class \code{"BKP"} or \code{"DKP"}, typically returned
