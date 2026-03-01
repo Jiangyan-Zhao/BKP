@@ -9,4 +9,8 @@
 library(testthat)
 library(BKP)
 
+if (!interactive()) {
+  pdf(NULL) # Avoid generating Rplots.pdf
+}
+
 test_check("BKP")

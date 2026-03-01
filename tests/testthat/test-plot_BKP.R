@@ -13,8 +13,9 @@ test_that("plot.BKP generates plots without errors", {
   d <- 1
   n <- 50
   X <- matrix(runif(n * d), n, d)
-  y <- rbinom(n, size = 10, prob = 0.5)
-  m <- rep(10, n)
+  prob <- (sin(4 * pi * X) + 1) / 2
+  m <- sample(100, n, replace = TRUE)
+  y <- rbinom(n, size = m, prob = prob)
 
   # Fit a 1D BKP model
   model_1d <- fit_BKP(X, y, m, prior = "noninformative")
