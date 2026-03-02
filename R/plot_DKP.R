@@ -133,80 +133,107 @@ plot.DKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL,
     is_classification <- !is.null(prediction$class)
 
     if (engine == "ggplot") {
-      class_labels <- factor(rep(seq_len(q), each = nrow(Xnew)), levels = seq_len(q))
-      mean_vals <- as.vector(prediction$mean)
-      lower_vals <- as.vector(prediction$lower)
-      upper_vals <- as.vector(prediction$upper)
-      x_vals <- rep(as.numeric(Xnew), times = q)
+      plot_list <- list()
 
-      obs_list <- lapply(seq_len(q), function(j) {
+      lbl_line <- "Estimated Probability"
+      lbl_ci   <- paste0(prediction$CI_level * 100, "% CI")
+      lbl_pts  <- "Observed"
+
+      if (is_classification) {
+        all_pred_df <- data.frame(
+          x = rep(as.numeric(Xnew), q),
+          prob = as.vector(prediction$mean),
+          Class = factor(rep(1:q, each = nrow(Xnew)))
+        )
+        obs_class <- apply(Y, 1, which.max)
+        all_obs_df <- data.frame(
+          x = as.numeric(X_sub),
+          y = rep(-0.05, nrow(X_sub)),
+          Class = factor(obs_class, levels = 1:q)
+        )
+
+        p_all <- ggplot() +
+          geom_line(data = all_pred_df, aes(x = .data$x, y = .data$prob, color = .data$Class), linewidth = 1) +
+          geom_point(data = all_obs_df, aes(x = .data$x, y = .data$y, color = .data$Class), size = 2) +
+          scale_color_discrete(name = NULL, labels = paste("Class", 1:q)) +
+          labs(
+            title = "Estimated Mean Curves (All Classes)",
+            x = ifelse(d > 1, paste0("x", dims), "x"),
+            y = "Probability"
+          ) +
+          coord_cartesian(ylim = c(-0.1, 1.1)) +
+          theme_bw() +
+          theme(
+            panel.grid = element_blank(),
+            panel.border = element_rect(colour = "black", fill = NA, linewidth = 1),
+            plot.title = element_text(hjust = 0.5, face = "bold", size = 13),
+            legend.position = "top",
+            legend.direction = "horizontal",
+            legend.background = element_blank(),
+            legend.key = element_blank()
+          )
+        plot_list[[1]] <- p_all
+      }
+
+      for (j in 1:q) {
+        mean_j  <- prediction$mean[, j]
+        lower_j <- prediction$lower[, j]
+        upper_j <- prediction$upper[, j]
+
+        pred_df_j <- data.frame(x = as.numeric(Xnew), mean = mean_j, lower = lower_j, upper = upper_j)
+
         if (is_classification) {
-          as.integer(apply(Y, 1, which.max) == j)
+          obs_j <- as.integer(apply(Y, 1, which.max) == j)
+          ylim_j <- c(0, 1)
         } else {
-          Y[, j] / rowSums(Y)
+          obs_j <- Y[, j] / rowSums(Y)
+          ylim_j <- c(min(lower_j) * 0.9, min(1, max(upper_j) * 1.1))
         }
-      })
-      obs_vals <- unlist(obs_list)
-      x_obs <- rep(as.numeric(X_sub), times = q)
+        obs_df_j <- data.frame(x = as.numeric(X_sub), obs = obs_j)
 
-      pred_df <- data.frame(
-        x = x_vals,
-        mean = mean_vals,
-        lower = lower_vals,
-        upper = upper_vals,
-        class = class_labels
-      )
+        p <- ggplot() +
+          geom_ribbon(data = pred_df_j, aes(x = .data$x, ymin = .data$lower, ymax = .data$upper), fill = "grey70", alpha = 0.4) +
+          geom_line(data = pred_df_j, aes(x = .data$x, y = .data$mean, color = lbl_ci), alpha = 0) +
+          geom_line(data = pred_df_j, aes(x = .data$x, y = .data$mean, color = lbl_line), linewidth = 1) +
+          geom_point(data = obs_df_j, aes(x = .data$x, y = .data$obs, color = lbl_pts), size = 2) +
+          scale_color_manual(name = NULL, values = stats::setNames(c("blue", "grey70", "red"), c(lbl_line, lbl_ci, lbl_pts)), breaks = c(lbl_line, lbl_ci, lbl_pts)) +
+          guides(color = guide_legend(override.aes = list(shape = c(NA, NA, 16), linetype = c(1, 1, 0), linewidth = c(1, 5, 0), alpha = c(1, 0.5, 1)))) +
+          labs(
+            title = paste0("Estimated Probability (Class ", j, ")"),
+            x = ifelse(d > 1, paste0("x", dims), "x"),
+            y = "Probability"
+          ) +
+          coord_cartesian(ylim = ylim_j) +
+          theme_bw() +
+          theme(
+            panel.grid = element_blank(),
+            panel.border = element_rect(colour = "black", fill = NA, linewidth = 1),
+            plot.title = element_text(hjust = 0.5, face = "bold", size = 13),
+            axis.title = element_text(size = 12),
+            axis.text  = element_text(size = 10, color = "black")
+          )
 
-      obs_df <- data.frame(
-        x = x_obs,
-        obs = obs_vals,
-        class = factor(rep(seq_len(q), each = nrow(X_sub)), levels = seq_len(q))
-      )
+        if (j == 1) {
+          p <- p + theme(
+            legend.position = c(0.02, 0.98),
+            legend.justification = c(0, 1),
+            legend.background = element_blank(),
+            legend.key = element_blank(),
+            legend.text = element_text(size = 11),
+            legend.key.width = unit(2, "line")
+          )
+        } else {
+          p <- p + theme(legend.position = "none")
+        }
 
-      plot_df <- data.frame(
-        x = c(x_vals, x_obs),
-        mean = c(mean_vals, rep(NA_real_, length(obs_vals))),
-        lower = c(lower_vals, rep(NA_real_, length(obs_vals))),
-        upper = c(upper_vals, rep(NA_real_, length(obs_vals))),
-        class = factor(c(as.character(class_labels), rep(seq_len(q), each = nrow(X_sub))),
-                       levels = seq_len(q)),
-        obs = c(rep(NA_real_, length(mean_vals)), obs_vals)
-      )
+        if (is_classification) {
+          plot_list[[j + 1]] <- p
+        } else {
+          plot_list[[j]] <- p
+        }
+      }
 
-      y_max <- if (is_classification) 1 else min(1, max(plot_df$upper, na.rm = TRUE) * 1.1)
-      y_min <- if (is_classification) 0 else min(plot_df$lower, na.rm = TRUE) * 0.9
-
-      ci_label <- paste0(prediction$CI_level * 100, "% CI")
-
-      p <- ggplot(plot_df, aes(x = .data$x)) +
-        geom_ribbon(data = pred_df,
-                    aes(ymin = .data$lower, ymax = .data$upper, fill = ci_label),
-                    alpha = 0.3,
-                    show.legend = TRUE) +
-        geom_line(data = pred_df,
-                  aes(y = .data$mean, color = "Estimated Probability"),
-                  linewidth = 1,
-                  show.legend = TRUE) +
-        geom_point(data = obs_df,
-                   aes(y = .data$obs, color = "Observed"),
-                   size = 1.5,
-                   alpha = 0.85,
-                   show.legend = TRUE) +
-        facet_wrap(~class, ncol = 2, scales = "fixed") +
-        coord_cartesian(ylim = c(y_min, y_max)) +
-        scale_color_manual(
-          values = c("Estimated Probability" = "blue", "Observed" = "red"),
-          name = NULL
-        ) +
-        scale_fill_manual(values = setNames("grey70", ci_label), name = NULL) +
-        guides(color = guide_legend(order = 1), fill = guide_legend(order = 2)) +
-        labs(
-          title = "Estimated Probability by Class",
-          x = if (is.null(dims)) "x" else paste0("x", dims[1]),
-          y = "Probability"
-        ) +
-        theme_minimal()
-      print(p)
+      do.call(grid.arrange, c(plot_list, ncol = 2))
     } else {
       old_par <- par(mfrow = c(2, 2))
       # on.exit(par(old_par))  # Restore par on exit
@@ -305,7 +332,7 @@ plot.DKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL,
         p1 <- my_2D_plot_fun_class("class", "Predicted Classes", df, X_sub, Y, dims= dims)
         p2 <- my_2D_plot_fun_class("max_prob", "Maximum Predicted Probability", df, X_sub, Y, classification = FALSE, dims= dims)
       }
-      gridExtra::grid.arrange(p1, p2, ncol = 2)
+      grid.arrange(p1, p2, ncol = 2)
     }else{
       for (j in 1:q) {
         df <- data.frame(x1 = grid$x1, x2 = grid$x2,
@@ -336,7 +363,7 @@ plot.DKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL,
             p4 <- my_2D_plot_fun("Lower", paste0(prediction$CI_level * 100, "% CI Lower"), df, dims= dims)
           }
           # Arrange into 2×2 layout
-          gridExtra::grid.arrange(p1, p2, p3, p4, ncol = 2,
+          grid.arrange(p1, p2, p3, p4, ncol = 2,
                        top = textGrob(paste0("Estimated Probability (Class ", j, ")"),
                                       gp = gpar(fontface = "bold", fontsize = 16)))
         }

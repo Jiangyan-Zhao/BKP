@@ -206,39 +206,62 @@ plot.BKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL,
         x = as.numeric(X_sub),
         obs_y = y / m
       )
+      lbl_line <- "Estimated Probability"
+      lbl_ci   <- paste0(prediction$CI_level * 100, "% Credible Interval")
+      lbl_pts  <- "Observed Proportions"
 
       p <- ggplot(plot_df, aes(x = .data$x)) +
         geom_ribbon(
-          aes(
-            ymin = .data$lower,
-            ymax = .data$upper,
-            fill = paste0(prediction$CI_level * 100, "% Credible Interval")
-          ),
-          alpha = 0.3,
-          show.legend = TRUE
+          aes(ymin = .data$lower, ymax = .data$upper),
+          fill = "grey70", alpha = 0.4
         ) +
-        geom_line(aes(y = .data$mean, color = "Estimated Probability"),
-                  linewidth = 1) +
+        geom_line(
+          aes(y = .data$mean, color = lbl_ci),
+          alpha = 0
+        ) +
+        geom_line(
+          aes(y = .data$mean, color = lbl_line),
+          linewidth = 1
+        ) +
         geom_point(
           data = obs_df,
-          aes(x = .data$x, y = .data$obs_y, color = "Observed Proportions"),
-          size = 1.8, alpha = 0.85,
-          inherit.aes = FALSE
+          aes(x = .data$x, y = .data$obs_y, color = lbl_pts),
+          size = 2
         ) +
         scale_color_manual(
-          values = c("Estimated Probability" = "blue", "Observed Proportions" = "red"),
-          name = NULL
+          name = NULL,
+          values = stats::setNames(c("blue", "grey70", "red"), c(lbl_line, lbl_ci, lbl_pts)),
+          breaks = c(lbl_line, lbl_ci, lbl_pts)
         ) +
-        scale_fill_manual(
-          values = c(stats::setNames("grey70", paste0(prediction$CI_level * 100, "% Credible Interval"))),
-          name = NULL
+        guides(
+          color = guide_legend(
+            override.aes = list(
+              shape     = c(NA, NA, 16),
+              linetype  = c(1, 1, 0),
+              linewidth = c(1, 5, 0),
+              alpha     = c(1, 0.5, 1)
+            )
+          )
         ) +
         labs(
           title = "Estimated Probability",
           x = ifelse(d > 1, paste0("x", dims), "x"),
           y = "Probability"
         ) +
-        theme_minimal()
+        theme_bw() +
+        theme(
+          panel.grid = element_blank(),
+          panel.border = element_rect(colour = "black", fill=NA, linewidth=1),
+          plot.title = element_text(hjust = 0.5, face = "bold", size = 15),
+          axis.title = element_text(size = 13),
+          axis.text  = element_text(size = 11, color = "black"),
+          legend.position = c(0.02, 0.98),
+          legend.justification = c(0, 1),
+          legend.background = element_blank(),
+          legend.key = element_blank(),
+          legend.text = element_text(size = 12),
+          legend.key.width = unit(2, "line")
+        )
 
       if (is_classification) {
         p <- p +
