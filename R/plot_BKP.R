@@ -210,31 +210,31 @@ plot.BKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL,
       lbl_ci   <- paste0(prediction$CI_level * 100, "% Credible Interval")
       lbl_pts  <- "Observed Proportions"
 
-      p <- ggplot2::ggplot(plot_df, ggplot2::aes(x = .data$x)) +
-        ggplot2::geom_ribbon(
-          ggplot2::aes(ymin = .data$lower, ymax = .data$upper),
+      p <- ggplot(plot_df, aes(x = .data$x)) +
+        geom_ribbon(
+          aes(ymin = .data$lower, ymax = .data$upper),
           fill = "grey70", alpha = 0.4
         ) +
-        ggplot2::geom_line(
-          ggplot2::aes(y = .data$mean, color = lbl_ci),
+        geom_line(
+          aes(y = .data$mean, color = lbl_ci),
           alpha = 0
         ) +
-        ggplot2::geom_line(
-          ggplot2::aes(y = .data$mean, color = lbl_line),
+        geom_line(
+          aes(y = .data$mean, color = lbl_line),
           linewidth = 1
         ) +
-        ggplot2::geom_point(
+        geom_point(
           data = obs_df,
-          ggplot2::aes(x = .data$x, y = .data$obs_y, color = lbl_pts),
+          aes(x = .data$x, y = .data$obs_y, color = lbl_pts),
           size = 2
         ) +
-        ggplot2::scale_color_manual(
+        scale_color_manual(
           name = NULL,
           values = stats::setNames(c("blue", "grey70", "red"), c(lbl_line, lbl_ci, lbl_pts)),
           breaks = c(lbl_line, lbl_ci, lbl_pts)
         ) +
-        ggplot2::guides(
-          color = ggplot2::guide_legend(
+        guides(
+          color = guide_legend(
             override.aes = list(
               shape     = c(NA, NA, 16),
               linetype  = c(1, 1, 0),
@@ -243,24 +243,24 @@ plot.BKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL,
             )
           )
         ) +
-        ggplot2::labs(
+        labs(
           title = "Estimated Probability",
           x = ifelse(d > 1, paste0("x", dims), "x"),
           y = "Probability"
         ) +
-        ggplot2::theme_bw() +
-        ggplot2::theme(
-          panel.grid = ggplot2::element_blank(),
-          panel.border = ggplot2::element_rect(colour = "black", fill=NA, linewidth=1),
-          plot.title = ggplot2::element_text(hjust = 0.5, face = "bold", size = 15),
-          axis.title = ggplot2::element_text(size = 13),
-          axis.text  = ggplot2::element_text(size = 11, color = "black"),
+        theme_bw() +
+        theme(
+          panel.grid = element_blank(),
+          panel.border = element_rect(colour = "black", fill=NA, linewidth=1),
+          plot.title = element_text(hjust = 0.5, face = "bold", size = 15),
+          axis.title = element_text(size = 13),
+          axis.text  = element_text(size = 11, color = "black"),
           legend.position = c(0.02, 0.98),
           legend.justification = c(0, 1),
-          legend.background = ggplot2::element_blank(),
-          legend.key = ggplot2::element_blank(),
-          legend.text = ggplot2::element_text(size = 12),
-          legend.key.width = ggplot2::unit(2, "line")
+          legend.background = element_blank(),
+          legend.key = element_blank(),
+          legend.text = element_text(size = 12),
+          legend.key.width = unit(2, "line")
         )
 
       if (is_classification) {
