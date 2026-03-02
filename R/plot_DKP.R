@@ -133,80 +133,121 @@ plot.DKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL,
     is_classification <- !is.null(prediction$class)
 
     if (engine == "ggplot") {
-      class_labels <- factor(rep(seq_len(q), each = nrow(Xnew)), levels = seq_len(q))
-      mean_vals <- as.vector(prediction$mean)
-      lower_vals <- as.vector(prediction$lower)
-      upper_vals <- as.vector(prediction$upper)
-      x_vals <- rep(as.numeric(Xnew), times = q)
+      # 使用列表存储每张独立的 ggplot 图片
+      plot_list <- list()
 
-      obs_list <- lapply(seq_len(q), function(j) {
+      # 严格对齐 Base R 的标签文本 (不再带 Proportions)
+      lbl_line <- "Estimated Probability"
+      lbl_ci   <- paste0(prediction$CI_level * 100, "% CI")
+      lbl_pts  <- "Observed"
+
+      # --- 如果是分类任务，Base R 会先画一个所有类的均值汇总图 ---
+      if (is_classification) {
+        all_pred_df <- data.frame(
+          x = rep(as.numeric(Xnew), q),
+          prob = as.vector(prediction$mean),
+          Class = factor(rep(1:q, each = nrow(Xnew)))
+        )
+        obs_class <- apply(Y, 1, which.max)
+        all_obs_df <- data.frame(
+          x = as.numeric(X_sub),
+          y = rep(-0.05, nrow(X_sub)),
+          Class = factor(obs_class, levels = 1:q)
+        )
+
+        p_all <- ggplot2::ggplot() +
+          ggplot2::geom_line(data = all_pred_df, ggplot2::aes(x = .data$x, y = .data$prob, color = .data$Class), linewidth = 1) +
+          ggplot2::geom_point(data = all_obs_df, ggplot2::aes(x = .data$x, y = .data$y, color = .data$Class), size = 2) +
+          ggplot2::scale_color_discrete(name = NULL, labels = paste("Class", 1:q)) +
+          ggplot2::labs(
+            title = "Estimated Mean Curves (All Classes)",
+            x = ifelse(d > 1, paste0("x", dims), "x"),
+            y = "Probability"
+          ) +
+          ggplot2::coord_cartesian(ylim = c(-0.1, 1.1)) +
+          ggplot2::theme_bw() +
+          ggplot2::theme(
+            panel.grid = ggplot2::element_blank(),
+            panel.border = ggplot2::element_rect(colour = "black", fill = NA, linewidth = 1),
+            plot.title = ggplot2::element_text(hjust = 0.5, face = "bold", size = 13),
+            legend.position = "top",
+            legend.direction = "horizontal",
+            legend.background = ggplot2::element_blank(),
+            legend.key = ggplot2::element_blank()
+          )
+        plot_list[[1]] <- p_all
+      }
+
+      # --- 循环绘制每个类别的独立图 (完美复刻 Base R 逻辑) ---
+      for (j in 1:q) {
+        mean_j  <- prediction$mean[, j]
+        lower_j <- prediction$lower[, j]
+        upper_j <- prediction$upper[, j]
+
+        pred_df_j <- data.frame(x = as.numeric(Xnew), mean = mean_j, lower = lower_j, upper = upper_j)
+
         if (is_classification) {
-          as.integer(apply(Y, 1, which.max) == j)
+          obs_j <- as.integer(apply(Y, 1, which.max) == j)
+          ylim_j <- c(0, 1)
         } else {
-          Y[, j] / rowSums(Y)
+          obs_j <- Y[, j] / rowSums(Y)
+          ylim_j <- c(min(lower_j) * 0.9, min(1, max(upper_j) * 1.1))
         }
-      })
-      obs_vals <- unlist(obs_list)
-      x_obs <- rep(as.numeric(X_sub), times = q)
+        obs_df_j <- data.frame(x = as.numeric(X_sub), obs = obs_j)
 
-      pred_df <- data.frame(
-        x = x_vals,
-        mean = mean_vals,
-        lower = lower_vals,
-        upper = upper_vals,
-        class = class_labels
-      )
+        p <- ggplot2::ggplot() +
+          # 阴影层
+          ggplot2::geom_ribbon(data = pred_df_j, ggplot2::aes(x = .data$x, ymin = .data$lower, ymax = .data$upper), fill = "grey70", alpha = 0.4) +
+          # 透明的占位线，用于生成图例色块
+          ggplot2::geom_line(data = pred_df_j, ggplot2::aes(x = .data$x, y = .data$mean, color = lbl_ci), alpha = 0) +
+          # 均值线
+          ggplot2::geom_line(data = pred_df_j, ggplot2::aes(x = .data$x, y = .data$mean, color = lbl_line), linewidth = 1) +
+          # 观测点
+          ggplot2::geom_point(data = obs_df_j, ggplot2::aes(x = .data$x, y = .data$obs, color = lbl_pts), size = 2) +
+          # 颜色映射与强制顺序
+          ggplot2::scale_color_manual(name = NULL, values = stats::setNames(c("blue", "grey70", "red"), c(lbl_line, lbl_ci, lbl_pts)), breaks = c(lbl_line, lbl_ci, lbl_pts)) +
+          # 精细化图例图标 (去背景、模仿 Base R 色条)
+          ggplot2::guides(color = ggplot2::guide_legend(override.aes = list(shape = c(NA, NA, 16), linetype = c(1, 1, 0), linewidth = c(1, 5, 0), alpha = c(1, 0.5, 1)))) +
+          ggplot2::labs(
+            title = paste0("Estimated Probability (Class ", j, ")"),
+            x = ifelse(d > 1, paste0("x", dims), "x"),
+            y = "Probability"
+          ) +
+          # 每张图独立的 y 轴范围
+          ggplot2::coord_cartesian(ylim = ylim_j) +
+          ggplot2::theme_bw() +
+          ggplot2::theme(
+            panel.grid = ggplot2::element_blank(),
+            panel.border = ggplot2::element_rect(colour = "black", fill = NA, linewidth = 1),
+            plot.title = ggplot2::element_text(hjust = 0.5, face = "bold", size = 13),
+            axis.title = ggplot2::element_text(size = 12),
+            axis.text  = ggplot2::element_text(size = 10, color = "black")
+          )
 
-      obs_df <- data.frame(
-        x = x_obs,
-        obs = obs_vals,
-        class = factor(rep(seq_len(q), each = nrow(X_sub)), levels = seq_len(q))
-      )
+        # 核心逻辑：只有第一张图 (Class 1) 显示左上角图例，其他的全部隐藏
+        if (j == 1) {
+          p <- p + ggplot2::theme(
+            legend.position = c(0.02, 0.98),
+            legend.justification = c(0, 1),
+            legend.background = ggplot2::element_blank(),
+            legend.key = ggplot2::element_blank(),
+            legend.text = ggplot2::element_text(size = 11),
+            legend.key.width = ggplot2::unit(2, "line")
+          )
+        } else {
+          p <- p + ggplot2::theme(legend.position = "none")
+        }
 
-      plot_df <- data.frame(
-        x = c(x_vals, x_obs),
-        mean = c(mean_vals, rep(NA_real_, length(obs_vals))),
-        lower = c(lower_vals, rep(NA_real_, length(obs_vals))),
-        upper = c(upper_vals, rep(NA_real_, length(obs_vals))),
-        class = factor(c(as.character(class_labels), rep(seq_len(q), each = nrow(X_sub))),
-                       levels = seq_len(q)),
-        obs = c(rep(NA_real_, length(mean_vals)), obs_vals)
-      )
+        # 将生成的图塞进列表
+        if (is_classification) {
+          plot_list[[j + 1]] <- p
+        } else {
+          plot_list[[j]] <- p
+        }
+      }
 
-      y_max <- if (is_classification) 1 else min(1, max(plot_df$upper, na.rm = TRUE) * 1.1)
-      y_min <- if (is_classification) 0 else min(plot_df$lower, na.rm = TRUE) * 0.9
-
-      ci_label <- paste0(prediction$CI_level * 100, "% CI")
-
-      p <- ggplot(plot_df, aes(x = .data$x)) +
-        geom_ribbon(data = pred_df,
-                    aes(ymin = .data$lower, ymax = .data$upper, fill = ci_label),
-                    alpha = 0.3,
-                    show.legend = TRUE) +
-        geom_line(data = pred_df,
-                  aes(y = .data$mean, color = "Estimated Probability"),
-                  linewidth = 1,
-                  show.legend = TRUE) +
-        geom_point(data = obs_df,
-                   aes(y = .data$obs, color = "Observed"),
-                   size = 1.5,
-                   alpha = 0.85,
-                   show.legend = TRUE) +
-        facet_wrap(~class, ncol = 2, scales = "fixed") +
-        coord_cartesian(ylim = c(y_min, y_max)) +
-        scale_color_manual(
-          values = c("Estimated Probability" = "blue", "Observed" = "red"),
-          name = NULL
-        ) +
-        scale_fill_manual(values = setNames("grey70", ci_label), name = NULL) +
-        guides(color = guide_legend(order = 1), fill = guide_legend(order = 2)) +
-        labs(
-          title = "Estimated Probability by Class",
-          x = if (is.null(dims)) "x" else paste0("x", dims[1]),
-          y = "Probability"
-        ) +
-        theme_minimal()
-      print(p)
+      # 像 par(mfrow = c(2, 2)) 一样，将列表里的独立图片排列为两列
+      do.call(gridExtra::grid.arrange, c(plot_list, ncol = 2))
     } else {
       old_par <- par(mfrow = c(2, 2))
       # on.exit(par(old_par))  # Restore par on exit

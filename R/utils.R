@@ -94,48 +94,74 @@ my_2D_plot_fun_ggplot <- function(var, title, data, X = NULL, y = NULL, dims = N
   p
 }
 
-my_2D_plot_fun_class_ggplot <- function(var, title, data, X, Y,
-                                        classification = TRUE, dims = NULL, ...) {
+my_2D_plot_fun_ggplot <- function(var, title, data, X = NULL, y = NULL, dims = NULL, ...) {
+  # Validate inputs to ensure 'var' is a valid column string
   if (!is.character(var) || length(var) != 1) {
     stop("`var` must be a single character string (a column name).")
   }
-  if (!classification && !var %in% names(data)) {
+  if (!var %in% names(data)) {
     stop(sprintf("Column `%s` not found in `data`.", var))
   }
 
-  class_Y <- max.col(Y)
+  # Constrain probability metrics (Mean, Upper, Lower) to a strict [0, 1] range.
+  # Variance is left unconstrained (NULL) to preserve color gradients for small values.
+  fill_limits <- if (var %in% c("Mean", "Upper", "Lower")) c(0, 1) else NULL
 
-  p <- ggplot(data, aes(x = .data$x1, y = .data$x2))
-
-  if (classification) {
-    p <- p + geom_raster(aes(fill = .data$class), alpha = 0.8) +
-      scale_fill_brewer(palette = "Set2", name = "Class")
-  } else {
-    p <- p + geom_raster(aes(fill = .data[[var]])) +
-      geom_contour(aes(z = .data[[var]]), color = "black", linewidth = 0.2) +
-      scale_fill_viridis_c(option = "plasma", direction = -1, name = var)
-  }
-
-  obs_df <- data.frame(
-    x1 = X[, 1],
-    x2 = X[, 2],
-    class = factor(class_Y)
-  )
-
-  p <- p + geom_point(
-      data = obs_df,
-      aes(x = .data$x1, y = .data$x2, shape = .data$class),
-      color = "black", fill = "white", size = 2, stroke = 1,
-      inherit.aes = FALSE
-    ) + labs(
+  p <- ggplot2::ggplot(data, ggplot2::aes(x = .data$x1, y = .data$x2)) +
+    ggplot2::geom_raster(ggplot2::aes(fill = .data[[var]])) +
+    ggplot2::geom_contour(ggplot2::aes(z = .data[[var]]), color = "black", linewidth = 0.2) +
+    # Remove padding between the plot area and the panel border to mimic base R tightly fitted box
+    ggplot2::scale_x_continuous(expand = c(0, 0)) +
+    ggplot2::scale_y_continuous(expand = c(0, 0)) +
+    ggplot2::scale_fill_viridis_c(
+      option = "plasma",
+      name = NULL, # Remove the legend title to match base R layout
+      limits = fill_limits,
+      # Configure colorbar to strictly match base R styling
+      guide = ggplot2::guide_colorbar(
+        frame.colour = "black",
+        frame.linewidth = 0.5, # Sync legend frame thickness with panel border
+        ticks.colour = "black",
+        # Calculate precise colorbar height:
+        # '1 npc' maps to the total plot height. We subtract roughly 5 lines of text
+        # (title + axis labels + axis titles + margins) to make the bar exactly match the panel height.
+        barheight = ggplot2::unit(0.2, "npc"),
+        barwidth = ggplot2::unit(1.2, "lines")
+      )
+    ) +
+    ggplot2::labs(
       title = title,
       x = if (is.null(dims)) "x1" else paste0("x", dims[1]),
       y = if (is.null(dims)) "x2" else paste0("x", dims[2])
-    ) + theme_minimal()
+    ) +
+    ggplot2::theme_bw() +
+    ggplot2::theme(
+      plot.title = ggplot2::element_text(hjust = 0.5, face = "bold", size = 14),
+      panel.grid = ggplot2::element_blank(),
+      # Match the plot border thickness directly with the legend frame
+      panel.border = ggplot2::element_rect(colour = "black", fill = NA, linewidth = 0.5),
+      axis.title = ggplot2::element_text(size = 12),
+      axis.text = ggplot2::element_text(color = "black"),
+      # Center the legend vertically to align perfectly with the panel
+      legend.justification = "center"
+    )
+
+  # Overlay observation points conditionally
+  if (!is.null(X) && !is.null(y)) {
+    obs_df <- data.frame(
+      x1 = X[, 1],
+      x2 = X[, 2],
+      cls = factor(ifelse(y == 1, "1", "0"))
+    )
+    p <- p + ggplot2::geom_point(
+      data = obs_df,
+      ggplot2::aes(x = .data$x1, y = .data$x2, shape = .data$cls),
+      color = "red", size = 2, inherit.aes = FALSE
+    ) + ggplot2::scale_shape_manual(values = c("0" = 4, "1" = 16), guide = "none")
+  }
 
   p
 }
-
 posterior_summary <- function(mean_vals, var_vals) {
   summary_mat <- rbind(
     "Posterior means" = c(
