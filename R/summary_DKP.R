@@ -80,6 +80,10 @@ summary.DKP <- function(object, ...) {
   post_mean <- alpha_n / row_sum
   post_var <- (alpha_n * (row_sum - alpha_n)) / (row_sum^2 * (row_sum + 1))
 
+  class_names <- paste0("class", seq_len(ncol(alpha_n)))
+  colnames(post_mean) <- class_names
+  colnames(post_var) <- class_names
+
   res <- list(
     n_obs     = n_obs,
     input_dim = d,

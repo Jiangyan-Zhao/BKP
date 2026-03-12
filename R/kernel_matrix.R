@@ -78,78 +78,52 @@ kernel_matrix <- function(X, Xprime = NULL, theta = 0.1,
                           kernel = c("gaussian", "matern52", "matern32"),
                           isotropic = TRUE) {
   # ---- Argument checking ----
-  if (!is.numeric(X) && !is.matrix(X)) stop("'X' must be numeric or a numeric matrix.")
+  if (!is.numeric(X)) stop("'X' must be numeric or a numeric matrix.")
   if (anyNA(X)) stop("'X' contains NA values.")
 
   if (!is.null(Xprime)) {
-    if (!is.numeric(Xprime) && !is.matrix(Xprime)) stop("'Xprime' must be numeric or a numeric matrix.")
+    if (!is.numeric(Xprime)) stop("'Xprime' must be numeric or a numeric matrix.")
     if (anyNA(Xprime)) stop("'Xprime' contains NA values.")
   }
 
-  if (!is.numeric(theta) || any(theta <= 0)) stop("'theta' must be numeric and strictly positive.")
-  if (!is.logical(isotropic) || length(isotropic) != 1) stop("'isotropic' must be a single logical value.")
+  if (!is.numeric(theta) || length(theta) < 1 || anyNA(theta) || any(theta <= 0)) {
+    stop("'theta' must be numeric and strictly positive.")
+  }
+  if (!is.logical(isotropic) || length(isotropic) != 1) {
+    stop("'isotropic' must be a single logical value.")
+  }
 
   kernel <- match.arg(kernel)
 
-  # Convert vectors to matrices
+  # Convert vector -> matrix (n x 1)
   if (is.vector(X)) X <- matrix(X, ncol = 1)
-  if (is.null(Xprime)) {
-    Xprime <- X
-    symmetric <- TRUE
-  } else {
-    if (is.vector(Xprime)) Xprime <- matrix(Xprime, ncol = 1)
-    symmetric <- identical(X, Xprime)
-  }
+  if (!is.null(Xprime) && is.vector(Xprime)) Xprime <- matrix(Xprime, ncol = 1)
 
-  # Check that input dimensions match
-  if (ncol(X) != ncol(Xprime)) {
+  # Dimension checks
+  if (!is.null(Xprime) && ncol(X) != ncol(Xprime)) {
     stop("'X' and 'Xprime' must have the same number of columns (input dimensions).")
   }
 
-  # Expand or validate theta
   d <- ncol(X)
+
+  # theta checks aligned with doc
   if (isotropic) {
-    if (length(theta) != 1) stop("For isotropic=TRUE, 'theta' must be a scalar.")
-    X_scaled <- X / theta
-    Xp_scaled <- Xprime / theta
+    if (length(theta) != 1) {
+      stop("For isotropic=TRUE, 'theta' must be a scalar.")
+    }
   } else {
-    if (length(theta) == 1) theta <- rep(theta, d)
-    if (length(theta) != d) stop("For isotropic=FALSE, 'theta' must be scalar or of length equal to ncol(X).")
-    # Rescale inputs by theta
-    X_scaled <- sweep(X, 2, theta, "/")
-    Xp_scaled <- sweep(Xprime, 2, theta, "/")
+    if (length(theta) == 1) {
+      theta <- rep(theta, d)
+    } else if (length(theta) != d) {
+      stop("For isotropic=FALSE, 'theta' must be scalar or of length equal to ncol(X).")
+    }
   }
 
-  # Compute pairwise distances
-  if (symmetric) {
-    # Efficient computation when X == Xprime using symmetry
-    g <- rowSums(X_scaled^2)
-    G <- tcrossprod(X_scaled)
-    dist_sq <- outer(g, g, "+") - 2 * G
-
-  } else {
-    # General case: X and Xprime are different
-    # Use identity: ||x - x'||^2 = ||x||^2 + ||x'||^2 - 2*x^T*x'
-    g  <- rowSums(X_scaled^2)
-    gp <- rowSums(Xp_scaled^2)
-    G  <- tcrossprod(X_scaled, Xp_scaled)
-    dist_sq <- outer(g, gp, "+") - 2 * G
-  }
-
-  dist_sq[dist_sq < 0] <- 0  # numerical stability
-
-  # Evaluate kernel function
-  if (kernel == "gaussian") {
-    K <- exp(-dist_sq)
-  } else if (kernel == "matern52") {
-    sqrt5 <- sqrt(5)
-    dist <- sqrt(dist_sq)
-    K <- (1 + sqrt5 * dist + (5/3) * dist_sq) * exp(-sqrt5 * dist)
-  } else if (kernel == "matern32") {
-    sqrt3 <- sqrt(3)
-    dist <- sqrt(dist_sq)
-    K <- (1 + sqrt3 * dist) * exp(-sqrt3 * dist)
-  }
-
-  return(K)
+  kernel_matrix_rcpp(
+    X = X,
+    Xprime = Xprime,
+    theta = as.numeric(theta),
+    kernel = kernel,
+    isotropic = isTRUE(isotropic)
+  )
 }

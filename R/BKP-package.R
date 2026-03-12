@@ -1,5 +1,8 @@
+#' @keywords internal
+#' @useDynLib BKP, .registration = TRUE
+#' @importFrom Rcpp evalCpp
 "_PACKAGE"
-
+ 
 #' @name BKP-package
 #'
 #' @title Beta Kernel Process Modeling
@@ -77,4 +80,5 @@
 #' @importFrom stats as.formula median qbeta quantile rbeta rgamma sd simulate
 #' @importFrom tgp lhs
 #' @importFrom utils head
+#' @useDynLib BKP, .registration = TRUE
 NULL

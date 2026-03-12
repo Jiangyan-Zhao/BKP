@@ -105,8 +105,8 @@ summary.BKP <- function(object, ...) {
   d     <- ncol(object$X)
 
   # Posterior summaries at training points
-  post_mean <- object$alpha_n / (object$alpha_n + object$beta_n)
-  post_var  <- post_mean * (1 - post_mean) / (object$alpha_n + object$beta_n + 1)
+  post_mean <- as.vector(object$alpha_n / (object$alpha_n + object$beta_n))
+  post_var  <- as.vector(post_mean * (1 - post_mean) / (object$alpha_n + object$beta_n + 1))
 
   res <- list(
     n_obs       = n_obs,

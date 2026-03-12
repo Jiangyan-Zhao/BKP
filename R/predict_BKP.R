@@ -163,7 +163,6 @@ predict.BKP <- function(object, Xnew = NULL, CI_level = 0.95, threshold = 0.5, .
     stop("'threshold' must be a single numeric value strictly between 0 and 1.")
   }
 
-
   if(!is.null(Xnew)){
     # Extract components
     Xnorm   <- object$Xnorm
@@ -182,59 +181,56 @@ predict.BKP <- function(object, Xnew = NULL, CI_level = 0.95, threshold = 0.5, .
     Xnew_norm <- sweep(Xnew_norm, 2, Xbounds[, 2] - Xbounds[, 1], "/")
 
     # Compute kernel matrix
-    K <- kernel_matrix(Xnew_norm, Xnorm, theta = theta, kernel = kernel, isotropic = isotropic) # m*n matrix
+    K <- kernel_matrix(Xnew_norm, Xnorm, theta = theta, kernel = kernel, isotropic = isotropic)
 
-    # # Row-normalized kernel weights
-    # rs <- rowSums(K)
-    # rs[rs < 1e-10] <- 1
-    # W <- K / rs
-
-    # get the prior parameters: alpha0(x) and beta0(x)
+    # Get prior parameters
     prior_par <- get_prior(prior = prior, model = "BKP",
                            r0 = r0, p0 = p0, y = y, m = m, K = K)
     alpha0 <- prior_par$alpha0
     beta0 <- prior_par$beta0
 
-    # Posterior parameters
-    # alpha_n <- alpha0 + as.vector(W %*% y)
-    # beta_n  <- beta0 + as.vector(W %*% (m - y))
-    alpha_n <- alpha0 + as.vector(K %*% y)
-    beta_n  <- beta0 + as.vector(K %*% (m - y))
-
-    # alpha_n <- pmax(alpha_n, 1e-10)
-    # beta_n  <- pmax(beta_n,  1e-10)
+    # Call C++ function for posterior computation
+    result <- predict_bkp_rcpp(K, as.numeric(alpha0), as.numeric(beta0), 
+                               as.numeric(y), as.numeric(m))
+    alpha_n   <- result$alpha_n
+    beta_n    <- result$beta_n
+    pred_mean <- result$mean
+    pred_var  <- result$variance
+    
   }else{
     # Use training data
     alpha_n <- object$alpha_n
     beta_n  <- object$beta_n
+    pred_mean <- alpha_n / pmax(alpha_n + beta_n, 1e-10)
+    pred_mean <- pmin(pmax(pred_mean, 1e-10), 1 - 1e-10)
+    pred_var  <- pred_mean * (1 - pred_mean) / (alpha_n + beta_n + 1)
     m <- object$m
   }
 
-  # Predictive mean and variance
-  eps <- 1e-10
-  pred_mean <- alpha_n / pmax(alpha_n + beta_n, eps)
-  pred_mean <- pmin(pmax(pred_mean, eps), 1 - eps)
-  pred_var  <- pred_mean * (1 - pred_mean) / (alpha_n + beta_n + 1)
-
-  # Credible intervals
+  # Credible intervals (computed in R using qbeta)
   pred_lower <- suppressWarnings(qbeta((1 - CI_level) / 2, alpha_n, beta_n))
   pred_upper <- suppressWarnings(qbeta((1 + CI_level) / 2, alpha_n, beta_n))
 
-  # Output list
+  mean_mat <- matrix(as.numeric(pred_mean), ncol = 1)
+  var_mat <- matrix(as.numeric(pred_var), ncol = 1)
+  lower_mat <- matrix(as.numeric(pred_lower), ncol = 1)
+  upper_mat <- matrix(as.numeric(pred_upper), ncol = 1)
+
   prediction <- list(
-    X        = X,
-    Xnew     = Xnew,
-    alpha_n  = alpha_n,
-    beta_n   = beta_n,
-    mean     = pred_mean,
-    variance = pred_var,
-    lower    = pred_lower,
-    upper    = pred_upper,
-    CI_level  = CI_level)
+    X = X,
+    Xnew = Xnew,
+    alpha_n = as.numeric(alpha_n),
+    beta_n = as.numeric(beta_n),
+    mean = mean_mat,
+    variance = var_mat,
+    lower = lower_mat,
+    upper = upper_mat,
+    CI_level = CI_level
+  )
 
   # Posterior classification label (only for classification data)
   if (all(m == 1)) {
-    prediction$class <- ifelse(pred_mean > threshold, 1, 0)
+    prediction$class <- ifelse(as.numeric(mean_mat) > threshold, 1, 0)
     prediction$threshold <- threshold
   }
 
