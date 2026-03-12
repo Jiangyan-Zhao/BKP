@@ -70,7 +70,7 @@ if (requireNamespace("FNN", quietly = TRUE)) {
     (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
   }
 
-  n <- 30
+  n <- 100
   Xbounds <- matrix(c(-2, 2), nrow = 1)
   X <- tgp::lhs(n = n, rect = Xbounds)
   true_pi <- true_pi_fun(X)
@@ -104,7 +104,7 @@ if (requireNamespace("FNN", quietly = TRUE)) {
     pnorm(f)
   }
 
-  n <- 40
+  n <- 50
   Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
   X <- tgp::lhs(n = n, rect = Xbounds)
   true_pi <- true_pi_fun(X)

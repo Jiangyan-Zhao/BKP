@@ -58,7 +58,7 @@
 #'     (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
 #'   }
 #'
-#'   n <- 1000000
+#'   n <- 100
 #'   Xbounds <- matrix(c(-2, 2), nrow = 1)
 #'   X <- tgp::lhs(n = n, rect = Xbounds)
 #'   true_pi <- true_pi_fun(X)
@@ -66,11 +66,11 @@
 #'   y <- rbinom(n, size = m, prob = true_pi)
 #'
 #'   # Fit TwinBKP model (global stage only)
-#'   model1 <- fit_TwinBKP(X, y, m, Xbounds = Xbounds, g = 100) 
+#'   model1 <- fit_TwinBKP(X, y, m, Xbounds = Xbounds, g = 10) 
 #'
 #'   # Prediction on new data
 #'   Xnew <- matrix(seq(-2, 2, length.out = 10), ncol = 1)
-#'   predict(model1, Xnew = Xnew, l = 100)
+#'   predict(model1, Xnew = Xnew, l = 10)
 #'
 #'
 #'   #-------------------------- 2D Example ---------------------------
@@ -92,7 +92,7 @@
 #'     pnorm(f)
 #'   }
 #'
-#'   n <- 40
+#'   n <- 50
 #'   Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
 #'   X <- tgp::lhs(n = n, rect = Xbounds)
 #'   true_pi <- true_pi_fun(X)
@@ -108,6 +108,7 @@
 #'   Xnew <- expand.grid(x1 = x1, x2 = x2)
 #'   predict(model2, Xnew = Xnew, l = 12)
 #' }
+#' @importFrom stats optimise
 #' @export
 predict.TwinBKP <- function(
     object,
