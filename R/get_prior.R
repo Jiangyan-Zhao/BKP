@@ -127,39 +127,35 @@ get_prior <- function(prior = c("noninformative", "fixed", "adaptive"),
   if (model == "BKP") {
     # ============ Binary case ============
     if (prior == "noninformative") {
-      # Assign uniform prior for each prediction location
       nrowK <- if (!is.null(K)) nrow(K) else 1
-      alpha0 <- rep(1, nrowK)
-      beta0  <- rep(1, nrowK)
+      res <- get_prior_bkp_noninformative_rcpp(nrowK)
+      res$alpha0 <- as.vector(res$alpha0)
+      res$beta0 <- as.vector(res$beta0)
+      return(res)
+      
     } else if (prior == "fixed") {
       if (!is.numeric(p0) || length(p0) != 1 || p0 <= 0 || p0 >= 1) {
         stop("For fixed prior in BKP, 'p0' must be in (0,1).")
       }
       nrowK <- if (!is.null(K)) nrow(K) else 1
-      alpha0 <- rep(r0 * p0, nrowK)
-      beta0  <- rep(r0 * (1 - p0), nrowK)
+      res <- get_prior_bkp_fixed_rcpp(nrowK, r0, p0)
+      res$alpha0 <- as.vector(res$alpha0)
+      res$beta0 <- as.vector(res$beta0)
+      return(res)
+      
     } else if (prior == "adaptive") {
       if (is.null(y) || is.null(m) || is.null(K)) {
         stop("For adaptive prior in BKP, 'y', 'm', and 'K' must be provided.")
       }
       if (length(y) != length(m)) stop("'y' and 'm' must have the same length.")
       if (ncol(K) != length(y)) stop("'K' must have ncol = length(y).")
-
-      # Row-normalized kernel weights
-      rs <- rowSums(K)
-      rs[rs < 1e-10] <- 1
-      W <- K / rs
-
-      # Estimated mean and precision
-      p_hat <- as.vector(W %*% (y / m))    # Estimated prior mean
-      r_hat <- r0 * rowSums(K)             # Estimated prior precision
-
-      alpha0 <- r_hat * p_hat
-      beta0  <- r_hat * (1 - p_hat)
-      # alpha0 <- pmax(alpha0, 1e-2) # Avoid numerical issues
-      # beta0 <- pmax(beta0, 1e-2)   # Avoid numerical issues
+      
+      res <- get_prior_bkp_adaptive_rcpp(K, as.numeric(y), as.numeric(m), r0)
+      res$alpha0 <- as.vector(res$alpha0)
+      res$beta0 <- as.vector(res$beta0)
+      return(res)
     }
-    return(list(alpha0 = alpha0, beta0 = beta0))
+    
   } else {
     # ============ Multiclass case ============
     if (!is.null(Y)) {
@@ -172,40 +168,24 @@ get_prior <- function(prior = c("noninformative", "fixed", "adaptive"),
     }
 
     if (prior == "noninformative") {
-      # Return a constant prior for all prediction points (say, m points)
       m <- if (!is.null(K)) nrow(K) else 1
-      alpha0 <- matrix(1, nrow = m, ncol = q)
+      return(get_prior_dkp_noninformative_rcpp(m, q))
+      
     } else if (prior == "fixed") {
-      # Validate inputs
       if (is.null(p0)) stop("'p0' must be provided for fixed prior in DKP.")
       if (length(p0) != q) stop("length(p0) must match number of classes.")
       if (!isTRUE(all.equal(sum(p0), 1, tolerance = 1e-8))) {
         stop("'p0' must sum to 1.")
       }
-
       m <- if (!is.null(K)) nrow(K) else 1
-      alpha0 <- matrix(rep(r0 * p0, each = m), nrow = m, byrow = TRUE)
+      return(get_prior_dkp_fixed_rcpp(m, r0, as.numeric(p0)))
+      
     } else if (prior == "adaptive") {
-      # Validate inputs
       if (is.null(Y) || is.null(K)) stop("'Y' and 'K' must be provided for adaptive prior in DKP.")
       if (ncol(K) != nrow(Y)) stop("'K' must have ncol = nrow(Y).")
       if (any(rowSums(Y) == 0)) stop("each row of Y must have positive sum for adaptive prior.")
-
-      # Row-normalized kernel weights
-      rs <- rowSums(K)
-      rs[rs < 1e-10] <- 1
-      W <- K / rs                         # m * n
-
-      # Estimate local class proportions
-      Pi_hat <- W %*% (Y / rowSums(Y))    # m * q
-
-      # Estimate local precision
-      r_hat <- pmax(r0 * rowSums(K), 1e-3) # m * 1
-
-      # Compute prior parameters
-      alpha0 <- Pi_hat * r_hat
+      
+      return(get_prior_dkp_adaptive_rcpp(K, as.matrix(Y), r0))
     }
-    # alpha0 <- pmax(alpha0, 1e-2)  # Avoid numerical issues
-    return(alpha0)
   }
 }

@@ -83,77 +83,29 @@ loss_fun <- function(
 
   diag(K) <- 0  # Leave-One-Out Cross-Validation (LOOCV)
 
-  # # Row-normalized kernel weights
-  # rs <- rowSums(K)
-  # rs[rs < 1e-10] <- 1
-  # W <- K / rs
-
   if (model == "BKP") {
-    ## -------- Binary case (Beta-Binomial) --------
-    # get the prior parameters: alpha0(x) and beta0(x)
+    # Get prior parameters
     prior_par <- get_prior(prior = prior, model = model, r0 = r0, p0 = p0, y = y, m = m, K = K)
     alpha0 <- prior_par$alpha0
     beta0 <- prior_par$beta0
 
-    # Compute posterior alpha and beta
-    # alpha_n <- alpha0 + drop(W %*% y)
-    # beta_n <- beta0 + drop(W %*% (m - y))
-    alpha_n <- alpha0 + drop(K %*% y)
-    beta_n <- beta0 + drop(K %*% (m - y))
-
-    # Posterior mean prediction of success probability
-    pi_hat <- alpha_n / (alpha_n + beta_n)
-
-    # Empirical success rate
-    pi_tilde <- y / m
-
-    # ---------------- Loss computation ----------------
+    # Call C++ function
     if (loss == "brier") {
-      # Standard Brier score (mean squared error)
-      brier <- mean((pi_hat - pi_tilde)^2)
-      return(brier)
+      result <- loss_fun_brier_bkp_rcpp(K, as.numeric(y), as.numeric(m), as.numeric(alpha0), as.numeric(beta0))
     } else {
-      # Standard log-loss (cross-entropy)
-      # log_loss <- -mean(y * log(pi_hat) + (m - y) * log(1 - pi_hat))
-
-      pi_hat <- pmin(pmax(pi_hat, 1e-10), 1 - 1e-10)   # avoid log(0)
-      log_loss <- -mean(pi_tilde * log(pi_hat) + (1 - pi_tilde) * log(1 - pi_hat))
-      return(log_loss)
-
-      # # Beta-Binomial LOO log predictive score (integrating out pi)
-      # alpha_n <- pmax(alpha_n, 1e-10)
-      # beta_n <- pmax(beta_n, 1e-10)
-      #
-      # # log p(y_i | D_-i, theta) under Beta-Binomial
-      # # Note: lchoose(m,y) is constant in theta; keeping it is fine.
-      # lpd <- lchoose(m, y) + lbeta(alpha_n + y, beta_n + m - y) - lbeta(alpha_n, beta_n)
-      #
-      # return(-mean(lpd))
+      result <- loss_fun_logloss_bkp_rcpp(K, as.numeric(y), as.numeric(m), as.numeric(alpha0), as.numeric(beta0))
     }
   } else {
-    ## -------- Multiclass case (Dirichlet-Multinomial) --------
-    # get the prior parameters: alpha0(x)
+    # Get prior parameters for DKP
     alpha0 <- get_prior(prior = prior, model = model, r0 = r0, p0 = p0, Y = Y, K = K)
 
-    # Compute posterior alpha
-    # alpha_n <- as.matrix(alpha0) + as.matrix(W %*% Y)
-    alpha_n <- as.matrix(alpha0) + as.matrix(K %*% Y)
-
-    # Posterior mean prediction of success probability
-    pi_hat <- alpha_n / rowSums(alpha_n)
-
-    # Empirical class probabilities
-    pi_tilde <- Y / rowSums(Y)
-
+    # Call C++ function
     if (loss == "brier") {
-      # Brier score (Mean Squared Error)
-      brier <- mean((pi_hat - pi_tilde)^2)
-      return(brier)
+      result <- loss_fun_brier_dkp_rcpp(K, as.matrix(Y), as.matrix(alpha0))
     } else {
-      # log-loss (cross-entropy)
-      pi_hat <- pmin(pmax(pi_hat, 1e-10), 1 - 1e-10)   # avoid log(0)
-      log_loss <- -mean(pi_tilde * log(pi_hat))
-      return(log_loss)
+      result <- loss_fun_logloss_dkp_rcpp(K, as.matrix(Y), as.matrix(alpha0))
     }
   }
+
+  result
 }

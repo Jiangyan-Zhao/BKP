@@ -276,8 +276,13 @@ fit_DKP <- function(
   alpha0 <- get_prior(prior = prior, model = "DKP", r0 = r0, p0 = p0, Y = Y, K = K)
 
   # ---- Compute posterior parameters ----
-  # alpha_n <- alpha0 + as.matrix(W %*% Y)
-  alpha_n <- alpha0 + as.matrix(K %*% Y)
+  post <- dkp_posterior_update_rcpp(
+    K = K,
+    Y = as.matrix(Y),
+    alpha0 = as.matrix(alpha0)
+  )
+
+  alpha_n <- post$alpha_n
 
   # ---- Construct and return the fitted model object ----
   DKP_model <- list(

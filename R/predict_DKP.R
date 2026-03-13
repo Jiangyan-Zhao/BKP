@@ -119,36 +119,40 @@ predict.DKP <- function(object, Xnew = NULL, CI_level = 0.95, ...)
     Xnew_norm <- sweep(Xnew_norm, 2, Xbounds[, 2] - Xbounds[, 1], "/")
 
     # Compute kernel matrix
-    K <- kernel_matrix(Xnew_norm, Xnorm, theta = theta, kernel = kernel, isotropic = isotropic) # [m × n]
+    K <- kernel_matrix(Xnew_norm, Xnorm, theta = theta, kernel = kernel, isotropic = isotropic)
 
-    # # Row-normalized kernel weights
-    # rs <- rowSums(K)
-    # rs[rs < 1e-10] <- 1
-    # W <- K / rs
-
-    # get the prior parameters: alpha0(x) and beta0(x)
+    # Get prior parameters
     alpha0 <- get_prior(prior = prior, model = "DKP",
                         r0 = r0, p0 = p0, Y = Y, K = K)
 
-    # Posterior parameters
-    # alpha_n <- alpha0 + as.matrix(W %*% Y) # [n × q]
-    alpha_n <- alpha0 + as.matrix(K %*% Y) # [n × q]
+    # Call C++ function for posterior computation
+    result <- predict_dkp_rcpp(K, as.matrix(alpha0), as.matrix(Y))
+    alpha_n <- result$alpha_n
+    row_sum <- result$row_sum
+    pred_mean <- result$mean
+    pred_var  <- result$variance
   }else{
     # Use training data
     alpha_n <- object$alpha_n
     Y       <- object$Y
+    row_sum <- rowSums(alpha_n)
+    
+    eps <- 1e-10
+    pred_mean <- alpha_n / pmax(row_sum, eps)
+    pred_mean <- pmin(pmax(pred_mean, eps), 1 - eps)
+    pred_var  <- pred_mean * (1 - pred_mean) / (row_sum + 1)
   }
 
-  # Predictive quantities
-  row_sum <- rowSums(alpha_n)
-  eps <- 1e-10
-  pred_mean <- alpha_n / pmax(row_sum, eps)
-  pred_mean <- pmin(pmax(pred_mean, eps), 1 - eps)
-  pred_var  <- pred_mean * (1 - pred_mean) / (row_sum + 1)
-  pred_lower <- suppressWarnings(qbeta((1 - CI_level) / 2, alpha_n, row_sum - alpha_n))
-  pred_upper <- suppressWarnings(qbeta((1 + CI_level) / 2, alpha_n, row_sum - alpha_n))
-  colnames(pred_lower) <- paste0("class", seq_len(ncol(alpha_n)))
-  colnames(pred_upper) <- colnames(pred_lower)
+  # Credible intervals (computed in R using qbeta)
+    # Credible intervals (computed in R using qbeta)
+  beta_n <- matrix(row_sum, nrow = nrow(alpha_n), ncol = ncol(alpha_n)) - alpha_n
+  pred_lower <- suppressWarnings(qbeta((1 - CI_level) / 2, alpha_n, beta_n))
+  pred_upper <- suppressWarnings(qbeta((1 + CI_level) / 2, alpha_n, beta_n))
+  class_names <- paste0("class", seq_len(ncol(alpha_n)))
+  colnames(pred_mean) <- class_names
+  colnames(pred_var) <- class_names
+  colnames(pred_lower) <- class_names
+  colnames(pred_upper) <- class_names
 
   # Return structured output
   prediction <- list(
@@ -159,7 +163,7 @@ predict.DKP <- function(object, Xnew = NULL, CI_level = 0.95, ...)
     variance = pred_var,
     lower    = pred_lower,
     upper    = pred_upper,
-    CI_level  = CI_level
+    CI_level = CI_level
   )
 
   # Posterior classification label (only for classification data)
