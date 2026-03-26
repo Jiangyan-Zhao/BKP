@@ -84,6 +84,9 @@ jobs:
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           extra-packages: any::rcmdcheck
+          # Bump dependency cache to recover from intermittently corrupted archives
+          # in the Windows devel package cache (e.g. fs binary download failures).
+          cache-version: 2
 
       - uses: r-lib/actions/check-r-package@v2
         with:
