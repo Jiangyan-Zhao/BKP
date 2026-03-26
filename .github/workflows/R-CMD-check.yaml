@@ -45,8 +45,8 @@ jobs:
           http-user-agent: ${{ matrix.config.http-user-agent }}
           use-public-rspm: true
 
-      - name: Upgrade pak (R devel compatibility)
-        if: matrix.config.r == 'devel'
+      - name: Upgrade pak (R devel compatibility on macOS only)
+        if: matrix.config.r == 'devel' && startsWith(matrix.config.os, 'macos')
         shell: Rscript {0}
         run: |
           options(repos = c(CRAN = "https://cloud.r-project.org"))
