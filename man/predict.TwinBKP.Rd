@@ -4,17 +4,27 @@
 \alias{predict.TwinBKP}
 \title{Predict from a Fitted TwinBKP Model}
 \usage{
-\method{predict}{TwinBKP}(object, Xnew, l = 50L, v = NULL, CI_level = 0.95, threshold = 0.5, ...)
+\method{predict}{TwinBKP}(
+  object,
+  Xnew,
+  l_nums = NULL,
+  v_nums = NULL,
+  CI_level = 0.95,
+  threshold = 0.5,
+  ...
+)
 }
 \arguments{
 \item{object}{A \code{"TwinBKP"} object returned by \code{fit_TwinBKP()}.}
 
 \item{Xnew}{Prediction input matrix (unnormalized), with dimension \code{n_new x d}.}
 
-\item{l}{Positive integer. Number of local neighbors per prediction point.
-Default is \code{50}.}
+\item{l_nums}{Positive integer. Number of local neighbors per prediction point.
+If \code{NULL} (default), it is set to \code{max(25, 3 * d)}, where \code{d}
+is the input dimensionality.}
 
-\item{v}{Positive integer. Validation set size. Default is \code{2 * object$g}.}
+\item{v_nums}{Positive integer. Validation set size. If \code{NULL} (default),
+it is set to \code{2 * object$g_nums}.}
 
 \item{CI_level}{Numeric confidence level. Default is \code{0.95}.}
 
@@ -26,9 +36,11 @@ Default is \code{50}.}
 \value{
 A list of class \code{"predict_TwinBKP"} containing:
 \describe{
-\item{\code{mean}}{Posterior predictive mean vector (length \code{n_new}).}
-\item{\code{variance}}{Posterior predictive variance vector.}
-\item{\code{lower, upper}}{Lower/upper confidence interval vectors.}
+\item{\code{X}}{Original training input matrix.}
+\item{\code{mean}}{Posterior predictive mean matrix of size \code{n_new x 1}.}
+\item{\code{variance}}{Posterior predictive variance matrix of size \code{n_new x 1}.}
+\item{\code{lower, upper}}{Lower/upper confidence interval matrices of size \code{n_new x 1}.}
+\item{\code{alpha_n, beta_n}}{Posterior Beta shape parameters at prediction points.}
 \item{\code{lambda}}{Mixing weight \eqn{\lambda} for each prediction point
 (length \code{n_new}).}
 \item{\code{theta_l}}{Local kernel hyperparameter for each prediction point
@@ -42,12 +54,12 @@ prediction point.}
 \description{
 Prediction method for TwinBKP. For each prediction point, the function runs:
 \enumerate{
-\item \strong{Local point selection}: use a kd-tree to find \code{l} nearest neighbors
+\item \strong{Local point selection}: use a kd-tree to find \code{l_nums} nearest neighbors
 from the training set as local points.
 \item \strong{Wendland kernel hyperparameter}: compute the coverage radius
 \eqn{\hat{\theta}_l} using Equation (14) as the single local-kernel
 hyperparameter.
-\item \strong{Validation set}: randomly sample \code{v = 2g} points from non-global points.
+\item \strong{Validation set}: randomly sample \code{v_nums = 2 * g_nums} points from non-global points.
 \item \strong{Mixing weight \eqn{\lambda}}: minimize the loss of the mixed kernel
 \eqn{\lambda K_g + (1-\lambda) K_l} on the validation set to obtain the
 optimal \eqn{\lambda}.
@@ -77,11 +89,11 @@ and return posterior mean/variance/confidence interval.
   y <- rbinom(n, size = m, prob = true_pi)
 
   # Fit TwinBKP model (global stage only)
-  model1 <- fit_TwinBKP(X, y, m, Xbounds = Xbounds, g = 10) 
+  model1 <- fit_TwinBKP(X, y, m, Xbounds = Xbounds, g_nums = 10) 
 
   # Prediction on new data
   Xnew <- matrix(seq(-2, 2, length.out = 10), ncol = 1)
-  predict(model1, Xnew = Xnew, l = 10)
+  predict(model1, Xnew = Xnew, l_nums = 10)
 
 
   #-------------------------- 2D Example ---------------------------
@@ -111,13 +123,13 @@ and return posterior mean/variance/confidence interval.
   y <- rbinom(n, size = m, prob = true_pi)
 
   # Fit TwinBKP model
-  model2 <- fit_TwinBKP(X, y, m, Xbounds = Xbounds, g = 12) 
+  model2 <- fit_TwinBKP(X, y, m, Xbounds = Xbounds, g_nums = 12) 
 
   # Prediction on new data
   x1 <- seq(Xbounds[1, 1], Xbounds[1, 2], length.out = 8)
   x2 <- seq(Xbounds[2, 1], Xbounds[2, 2], length.out = 8)
   Xnew <- expand.grid(x1 = x1, x2 = x2)
-  predict(model2, Xnew = Xnew, l = 12)
+  predict(model2, Xnew = Xnew, l_nums = 12)
 
 }
 \seealso{

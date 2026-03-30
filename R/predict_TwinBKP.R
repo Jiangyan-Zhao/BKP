@@ -5,12 +5,12 @@
 #' @description
 #' Prediction method for TwinBKP. For each prediction point, the function runs:
 #'
-#' 1. **Local point selection**: use a kd-tree to find \code{l} nearest neighbors
+#' 1. **Local point selection**: use a kd-tree to find \code{l_nums} nearest neighbors
 #'    from the training set as local points.
 #' 2. **Wendland kernel hyperparameter**: compute the coverage radius
 #'    \eqn{\hat{\theta}_l} using Equation (14) as the single local-kernel
 #'    hyperparameter.
-#' 3. **Validation set**: randomly sample \code{v = 2g} points from non-global points.
+#' 3. **Validation set**: randomly sample \code{v_nums = 2 * g_nums} points from non-global points.
 #' 4. **Mixing weight \eqn{\lambda}**: minimize the loss of the mixed kernel
 #'    \eqn{\lambda K_g + (1-\lambda) K_l} on the validation set to obtain the
 #'    optimal \eqn{\lambda}.
@@ -19,9 +19,11 @@
 #'
 #' @param object A \code{"TwinBKP"} object returned by \code{fit_TwinBKP()}.
 #' @param Xnew Prediction input matrix (unnormalized), with dimension \code{n_new x d}.
-#' @param l Positive integer. Number of local neighbors per prediction point.
-#'   Default is \code{50}.
-#' @param v Positive integer. Validation set size. Default is \code{2 * object$g}.
+#' @param l_nums Positive integer. Number of local neighbors per prediction point.
+#'   If \code{NULL} (default), it is set to \code{max(25, 3 * d)}, where \code{d}
+#'   is the input dimensionality.
+#' @param v_nums Positive integer. Validation set size. If \code{NULL} (default),
+#'   it is set to \code{2 * object$g_nums}.
 #' @param CI_level Numeric confidence level. Default is \code{0.95}.
 #' @param threshold Classification threshold (only used for classification with
 #'   \code{m = 1}). Default is \code{0.5}.
@@ -29,9 +31,11 @@
 #'
 #' @return A list of class \code{"predict_TwinBKP"} containing:
 #' \describe{
-#'   \item{\code{mean}}{Posterior predictive mean vector (length \code{n_new}).}
-#'   \item{\code{variance}}{Posterior predictive variance vector.}
-#'   \item{\code{lower, upper}}{Lower/upper confidence interval vectors.}
+#'   \item{\code{X}}{Original training input matrix.}
+#'   \item{\code{mean}}{Posterior predictive mean matrix of size \code{n_new x 1}.}
+#'   \item{\code{variance}}{Posterior predictive variance matrix of size \code{n_new x 1}.}
+#'   \item{\code{lower, upper}}{Lower/upper confidence interval matrices of size \code{n_new x 1}.}
+#'   \item{\code{alpha_n, beta_n}}{Posterior Beta shape parameters at prediction points.}
 #'   \item{\code{lambda}}{Mixing weight \eqn{\lambda} for each prediction point
 #'   (length \code{n_new}).}
 #'   \item{\code{theta_l}}{Local kernel hyperparameter for each prediction point
@@ -65,11 +69,11 @@
 #'   y <- rbinom(n, size = m, prob = true_pi)
 #'
 #'   # Fit TwinBKP model (global stage only)
-#'   model1 <- fit_TwinBKP(X, y, m, Xbounds = Xbounds, g = 10) 
+#'   model1 <- fit_TwinBKP(X, y, m, Xbounds = Xbounds, g_nums = 10) 
 #'
 #'   # Prediction on new data
 #'   Xnew <- matrix(seq(-2, 2, length.out = 10), ncol = 1)
-#'   predict(model1, Xnew = Xnew, l = 10)
+#'   predict(model1, Xnew = Xnew, l_nums = 10)
 #'
 #'
 #'   #-------------------------- 2D Example ---------------------------
@@ -99,21 +103,21 @@
 #'   y <- rbinom(n, size = m, prob = true_pi)
 #'
 #'   # Fit TwinBKP model
-#'   model2 <- fit_TwinBKP(X, y, m, Xbounds = Xbounds, g = 12) 
+#'   model2 <- fit_TwinBKP(X, y, m, Xbounds = Xbounds, g_nums = 12) 
 #'
 #'   # Prediction on new data
 #'   x1 <- seq(Xbounds[1, 1], Xbounds[1, 2], length.out = 8)
 #'   x2 <- seq(Xbounds[2, 1], Xbounds[2, 2], length.out = 8)
 #'   Xnew <- expand.grid(x1 = x1, x2 = x2)
-#'   predict(model2, Xnew = Xnew, l = 12)
+#'   predict(model2, Xnew = Xnew, l_nums = 12)
 #' 
 #' @importFrom stats optimise
 #' @export
 predict.TwinBKP <- function(
     object,
     Xnew,
-    l         = 50L,
-    v         = NULL,
+    l_nums    = NULL,
+    v_nums    = NULL,
     CI_level  = 0.95,
     threshold = 0.5,
     ...
@@ -135,7 +139,7 @@ predict.TwinBKP <- function(
   r0           <- object$r0
   p0           <- object$p0
   loss_type    <- object$loss
-  g            <- object$g
+  g_nums       <- object$g_nums
 
   n <- nrow(Xnorm)
   d <- ncol(Xnorm)
@@ -154,20 +158,28 @@ predict.TwinBKP <- function(
     stop("'threshold' must be strictly between 0 and 1.")
   }
 
-  # 归一化 Xnew 到 [0,1]^d
   Xnew_norm <- sweep(Xnew, 2, Xbounds[, 1], "-")
   Xnew_norm <- sweep(Xnew_norm, 2, Xbounds[, 2] - Xbounds[, 1], "/")
 
   n_new <- nrow(Xnew_norm)
 
 
-  if (!is.numeric(l) || length(l) != 1 || l <= 0) stop("'l' must be a positive integer.")
-  l <- as.integer(l)
-  l_eff <- min(l, n)
+  if (is.null(l_nums)) l_nums <- max(25L, 3L * d)
+  if (!is.numeric(l_nums) || length(l_nums) != 1 || l_nums <= 0) {
+    stop("'l_nums' must be a positive integer.")
+  }
+  l_nums <- as.integer(l_nums)
+  l_eff <- min(l_nums, n)
 
-  if (is.null(v)) v <- 2L * g  # 默认 v = 2g
-  if (!is.numeric(v) || length(v) != 1 || v <= 0) stop("'v' must be a positive integer.")
-  v <- as.integer(v)
+  if (is.null(g_nums) && !is.null(object$g)) g_nums <- object$g
+  if (is.null(g_nums)) {
+    stop("Cannot determine 'g_nums' from model object. Please refit with updated 'fit_TwinBKP()' or provide 'v_nums' explicitly.")
+  }
+  if (is.null(v_nums)) v_nums <- 2L * as.integer(g_nums)
+  if (!is.numeric(v_nums) || length(v_nums) != 1 || v_nums <= 0) {
+    stop("'v_nums' must be a positive integer.")
+  }
+  v_nums <- as.integer(v_nums)
 
   knn_result <- get_knnx_nanoflann_rcpp(
     data = Xnorm,
@@ -188,11 +200,11 @@ predict.TwinBKP <- function(
 
   non_global_idx <- setdiff(seq_len(n), global_idx)
 
-  v_eff <- min(v, length(non_global_idx))
-  if (v_eff < v) {
+  v_eff <- min(v_nums, length(non_global_idx))
+  if (v_eff < v_nums) {
     warning(sprintf(
       "Only %d non-global points available; validation set size reduced from %d to %d.",
-      length(non_global_idx), v, v_eff
+      length(non_global_idx), v_nums, v_eff
     ))
   }
 
@@ -237,6 +249,8 @@ predict.TwinBKP <- function(
   pred_var      <- numeric(n_new)
   pred_lower    <- numeric(n_new)
   pred_upper    <- numeric(n_new)
+  pred_alpha_n  <- numeric(n_new)
+  pred_beta_n   <- numeric(n_new)
   pred_lambda   <- numeric(n_new)
   pred_theta_l  <- rep(theta_l, n_new)
   local_idx_out <- vector("list", n_new)
@@ -291,32 +305,33 @@ predict.TwinBKP <- function(
       X2    = Xnorm_loc,
       theta = theta_l
     )  # (1 x l)
-    prior_g <- get_prior(
+    prior_g_star <- get_prior(
       prior = prior, model = "BKP",
       r0 = r0, p0 = p0,
       y = y_global, m = m_global,
-      K = kernel_matrix(Xnorm_global, theta = theta_global,
-                        kernel = kernel, isotropic = isotropic)
+      K = K_g_star
     )
 
-    K_ll <- .wendland_kernel(Xnorm_loc, Xnorm_loc, theta_l)
-    prior_l <- get_prior(
+    prior_l_star <- get_prior(
       prior = prior, model = "BKP",
       r0 = r0, p0 = p0,
       y = y_loc, m = m_loc,
-      K = K_ll
+      K = K_l_star
     )
 
     # alpha_n = alpha0 + lambda * K_g * y_g + (1-lambda) * K_l * y_l
-    alpha_n_i <- lambda_i * (as.numeric(prior_g$alpha0) +
+    alpha_n_i <- lambda_i * (as.numeric(prior_g_star$alpha0) +
                                as.numeric(K_g_star %*% as.numeric(y_global))) +
-      (1 - lambda_i) * (as.numeric(prior_l$alpha0) +
+      (1 - lambda_i) * (as.numeric(prior_l_star$alpha0) +
                           as.numeric(K_l_star %*% as.numeric(y_loc)))
 
-    beta_n_i  <- lambda_i * (as.numeric(prior_g$beta0) +
+    beta_n_i  <- lambda_i * (as.numeric(prior_g_star$beta0) +
                                as.numeric(K_g_star %*% as.numeric(m_global - y_global))) +
-      (1 - lambda_i) * (as.numeric(prior_l$beta0) +
+      (1 - lambda_i) * (as.numeric(prior_l_star$beta0) +
                           as.numeric(K_l_star %*% as.numeric(m_loc - y_loc)))
+
+    pred_alpha_n[i] <- alpha_n_i
+    pred_beta_n[i]  <- beta_n_i
 
     eps <- 1e-10
     ab_sum <- max(alpha_n_i + beta_n_i, eps)
@@ -329,24 +344,33 @@ predict.TwinBKP <- function(
     pred_upper[i] <- suppressWarnings(qbeta((1 + CI_level) / 2, alpha_n_i, beta_n_i))
   }
 
+  mean_mat  <- matrix(as.numeric(pred_mean), ncol = 1)
+  var_mat   <- matrix(as.numeric(pred_var), ncol = 1)
+  lower_mat <- matrix(as.numeric(pred_lower), ncol = 1)
+  upper_mat <- matrix(as.numeric(pred_upper), ncol = 1)
+
   result <- list(
+    X         = object$X,
     Xnew      = Xnew,          
     Xnew_norm = Xnew_norm,   
-    mean      = pred_mean,   
-    variance  = pred_var,    
-    lower     = pred_lower,  
-    upper     = pred_upper,  
+    alpha_n   = as.numeric(pred_alpha_n),
+    beta_n    = as.numeric(pred_beta_n),
+    mean      = mean_mat,
+    variance  = var_mat,
+    lower     = lower_mat,
+    upper     = upper_mat,
     lambda    = pred_lambda, 
     theta_l   = pred_theta_l,
     theta_global = theta_global,
     local_idx = local_idx_out, 
     CI_level  = CI_level,
-    l         = l_eff,
-    v         = v_eff
+    l_nums    = l_eff,
+    v_nums    = v_eff,
+    g_nums    = as.integer(g_nums)
   )
 
   if (all(m_train == 1)) {
-    result$class     <- ifelse(pred_mean > threshold, 1, 0)
+    result$class     <- ifelse(as.numeric(mean_mat) > threshold, 1, 0)
     result$threshold <- threshold
   }
 

@@ -11,13 +11,16 @@
 #' The final posterior update still uses all \code{n} observations.
 #'
 #' @inheritParams fit_BKP
-#' @param g Positive integer. Number of global support points selected by
-#'   the Twining algorithm for hyperparameter tuning.
+#' @param g_nums Positive integer. Number of global support points selected by
+#'   the Twining algorithm for hyperparameter tuning. If \code{NULL} (default),
+#'   it is set adaptively as
+#'   \eqn{\min\{50d, \max(10d, \sqrt{n})\}},
+#'   where \eqn{d} is input dimensionality and \eqn{n} is sample size.
 #'
 #' @return A list of class \code{"TwinBKP"} with the same structure as
 #'   \code{"BKP"}, plus:
 #' \describe{
-#'   \item{\code{g}}{Number of support points used for tuning.}
+#'   \item{\code{g_nums}}{Number of support points used for tuning.}
 #'   \item{\code{tune_idx}}{Row indices of the selected support points.}
 #' }
 #'
@@ -34,7 +37,7 @@
 #' true_pi <- true_pi_fun(X)
 #' m <- sample(100, n, replace = TRUE)
 #' y <- rbinom(n, size = m, prob = true_pi)
-#' model <- fit_TwinBKP(X, y, m, Xbounds = Xbounds, g = 20)
+#' model <- fit_TwinBKP(X, y, m, Xbounds = Xbounds, g_nums = 20)
 #' print(model)
 #'
 #' @export
@@ -45,7 +48,7 @@ fit_TwinBKP <- function(
     loss = c("brier", "log_loss"),
     n_multi_start = NULL, theta = NULL,
     isotropic = TRUE,
-    g = 20
+    g_nums = NULL
 ) { 
 
   if (missing(X) || missing(y) || missing(m)) {
@@ -77,9 +80,15 @@ fit_TwinBKP <- function(
   kernel <- match.arg(kernel)
   loss   <- match.arg(loss)
 
-  if (!is.numeric(g) || length(g) != 1 || g <= 0) stop("'g' must be a positive integer.")
-  g     <- as.integer(g)
-  g_eff <- min(g, n)
+  if (is.null(g_nums)) {
+    g_default <- min(50 * d, max(10 * d, sqrt(n)))
+    g_nums <- as.integer(round(g_default))
+  }
+  if (!is.numeric(g_nums) || length(g_nums) != 1 || g_nums <= 0) {
+    stop("'g_nums' must be a positive integer.")
+  }
+  g_nums <- as.integer(g_nums)
+  g_eff <- min(g_nums, n)
 
   if (is.null(Xbounds)) {
     xmin <- min(X); xmax <- max(X)
@@ -213,7 +222,7 @@ fit_TwinBKP <- function(
     r0        = r0,
     p0        = p0,
     loss      = loss,
-    g         = g_eff,
+    g_nums    = g_eff,
 
     theta_opt = theta_global,
     loss_min = loss_global,
