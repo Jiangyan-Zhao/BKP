@@ -13,7 +13,10 @@
 summary.TwinBKP <- function(object, ...) {
   n_obs <- nrow(object$X)
   d <- ncol(object$X)
-  gp <- .twinbkp_global_posterior(object)
+  if (is.null(object$mean_global) || is.null(object$var_global)) {
+    stop("'mean_global'/'var_global' missing in object. Please refit using latest fit_TwinBKP().")
+  }
+  gp <- list(mean = object$mean_global, variance = object$var_global)
 
   res <- list(
     n_obs = n_obs,

@@ -15,8 +15,8 @@
 #' @export
 #' @method fitted TwinBKP
 fitted.TwinBKP <- function(object, ...) {
-  gp <- .twinbkp_global_posterior(object)
-  out <- gp$mean
+  out <- object$mean_global
+  if (is.null(out)) stop("'mean_global' is missing in object. Please refit using latest fit_TwinBKP().")
   names(out) <- paste0("idx_", object$global_idx)
   out
 }

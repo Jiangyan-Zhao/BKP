@@ -117,3 +117,69 @@ print.predict_TwinDKP <- function(x, ...) {
 
   invisible(x)
 }
+
+
+#' @rdname print
+#' @keywords DKP
+#' @export
+#' @method print simulate_TwinDKP
+print.simulate_TwinDKP <- function(x, ...) {
+  n <- dim(x$samples)[1]
+  q <- dim(x$samples)[2]
+  nsim <- dim(x$samples)[3]
+
+  if (is.null(x$Xnew)) {
+    cat("Simulation results on training data (X).\n")
+    X_disp <- x$X
+  } else {
+    cat("Simulation results on new data (Xnew).\n")
+    X_disp <- x$Xnew
+  }
+  cat("Total points:", n, "\n")
+  cat("Classes:", q, "\n")
+  cat("Number of posterior draws (nsim):", nsim, "\n")
+
+  k <- min(6, n)
+  d <- ncol(X_disp)
+  X_preview <- head(X_disp, k)
+  if (d == 1) {
+    X_preview <- data.frame(x = round(as.numeric(X_preview), 4))
+  } else if (d == 2) {
+    X_preview <- as.data.frame(round(X_preview, 4))
+    names(X_preview) <- c("x1", "x2")
+  } else {
+    X_preview_vals <- round(X_preview[, c(1, d)], 4)
+    X_preview <- as.data.frame(X_preview_vals)
+    names(X_preview) <- c("x1", paste0("x", d))
+    X_preview$... <- rep("...", nrow(X_preview))
+    X_preview <- X_preview[, c("x1", "...", paste0("x", d))]
+  }
+
+  show_sim <- min(3, nsim)
+  for (s in seq_len(show_sim)) {
+    cat("\nSimulation", s, "(show first class probs):\n")
+    prob_mat <- x$samples[seq_len(k), , s, drop = FALSE][, , 1]
+    if (q <= 3) {
+      prob_df <- as.data.frame(round(prob_mat, 4))
+    } else {
+      prob_df <- data.frame(
+        Class1 = round(prob_mat[, 1], 4),
+        Class2 = round(prob_mat[, 2], 4),
+        `...` = "...",
+        LastClass = round(prob_mat[, q], 4)
+      )
+    }
+    print(cbind(X_preview, prob_df), row.names = FALSE)
+    if (n > k) cat(" ...\n")
+  }
+  if (nsim > show_sim) {
+    cat("\nNote: only first", show_sim, "simulations are displayed out of", nsim, ".\n")
+  }
+
+  if (!is.null(x$class)) {
+    cat("\nPredicted class preview:\n")
+    print(head(x$class, k))
+  }
+
+  invisible(x)
+}

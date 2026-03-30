@@ -71,6 +71,13 @@ A list of class \code{"TwinDKP"} with the same structure as
 \describe{
 \item{\code{g_nums}}{Number of support points used for tuning.}
 \item{\code{tune_idx}}{Row indices of the selected support points.}
+\item{\code{alpha0_global}}{Global-stage prior Dirichlet parameters on
+support points.}
+\item{\code{alpha_n_global}}{Global-stage posterior Dirichlet parameters
+on support points.}
+\item{\code{mean_global, var_global}}{Global-stage posterior mean/variance
+on support points; used directly by \code{fitted.TwinDKP()} and
+\code{summary.TwinDKP()} without recomputation.}
 }
 }
 \description{

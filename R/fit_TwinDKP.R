@@ -20,6 +20,13 @@
 #' \describe{
 #'   \item{\code{g_nums}}{Number of support points used for tuning.}
 #'   \item{\code{tune_idx}}{Row indices of the selected support points.}
+#'   \item{\code{alpha0_global}}{Global-stage prior Dirichlet parameters on
+#'   support points.}
+#'   \item{\code{alpha_n_global}}{Global-stage posterior Dirichlet parameters
+#'   on support points.}
+#'   \item{\code{mean_global, var_global}}{Global-stage posterior mean/variance
+#'   on support points; used directly by \code{fitted.TwinDKP()} and
+#'   \code{summary.TwinDKP()} without recomputation.}
 #' }
 #'
 #' @seealso \code{\link{fit_DKP}}, \code{\link{predict.DKP}}
@@ -160,6 +167,30 @@ fit_TwinDKP <- function(
     )
   }
 
+  # Cache global-stage posterior so fitted/summary do not need to recompute.
+  K_global <- kernel_matrix(
+    X = Xnorm_global,
+    theta = theta_global,
+    kernel = kernel,
+    isotropic = isotropic
+  )
+  alpha0_global <- as.matrix(get_prior(
+    prior = prior, model = "DKP",
+    r0 = r0, p0 = p0,
+    Y = Y_global,
+    K = K_global
+  ))
+  alpha_n_global <- as.matrix(alpha0_global) + as.matrix(K_global %*% Y_global)
+  row_sum_global <- rowSums(alpha_n_global)
+  mean_global <- alpha_n_global / pmax(row_sum_global, 1e-10)
+  var_global <- mean_global * (1 - mean_global) / (row_sum_global + 1)
+
+  class_names <- paste0("class", seq_len(ncol(alpha_n_global)))
+  colnames(alpha0_global) <- class_names
+  colnames(alpha_n_global) <- class_names
+  colnames(mean_global) <- class_names
+  colnames(var_global) <- class_names
+
   TwinDKP_model <- list(
     theta_global = theta_global,
     loss_global  = loss_global,
@@ -168,6 +199,10 @@ fit_TwinDKP <- function(
     X_global     = X_global,
     Xnorm_global = Xnorm_global,
     Y_global     = Y_global,
+    alpha0_global = alpha0_global,
+    alpha_n_global = alpha_n_global,
+    mean_global = mean_global,
+    var_global  = var_global,
 
     X = X,
     Xnorm = Xnorm,

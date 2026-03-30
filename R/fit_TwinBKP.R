@@ -22,6 +22,13 @@
 #' \describe{
 #'   \item{\code{g_nums}}{Number of support points used for tuning.}
 #'   \item{\code{tune_idx}}{Row indices of the selected support points.}
+#'   \item{\code{alpha0_global, beta0_global}}{Global-stage prior parameters
+#'   on support points.}
+#'   \item{\code{alpha_n_global, beta_n_global}}{Global-stage posterior
+#'   parameters on support points.}
+#'   \item{\code{mean_global, var_global}}{Global-stage posterior mean/variance
+#'   on support points; used directly by \code{fitted.TwinBKP()} and
+#'   \code{summary.TwinBKP()} without recomputation.}
 #' }
 #'
 #' @seealso \code{\link{fit_BKP}}
@@ -198,6 +205,34 @@ fit_TwinBKP <- function(
     )
   }
 
+  # Cache global-stage posterior so fitted/summary do not need to recompute.
+  K_global <- kernel_matrix(
+    X = Xnorm_global,
+    theta = theta_global,
+    kernel = kernel,
+    isotropic = isotropic
+  )
+  prior_global <- get_prior(
+    prior = prior, model = "BKP",
+    r0 = r0, p0 = p0,
+    y = y_global, m = m_global,
+    K = K_global
+  )
+  post_global <- bkp_posterior_update_rcpp(
+    K = K_global,
+    y = as.numeric(y_global),
+    m = as.numeric(m_global),
+    alpha0 = as.numeric(prior_global$alpha0),
+    beta0 = as.numeric(prior_global$beta0)
+  )
+
+  alpha0_global <- as.numeric(prior_global$alpha0)
+  beta0_global  <- as.numeric(prior_global$beta0)
+  alpha_n_global <- as.numeric(post_global$alpha_n)
+  beta_n_global  <- as.numeric(post_global$beta_n)
+  mean_global <- alpha_n_global / pmax(alpha_n_global + beta_n_global, 1e-10)
+  var_global  <- mean_global * (1 - mean_global) / (alpha_n_global + beta_n_global + 1)
+
 
   TwinBKP_model <- list(
 
@@ -209,6 +244,12 @@ fit_TwinBKP <- function(
     Xnorm_global = Xnorm_global,
     y_global     = y_global,
     m_global     = m_global,
+    alpha0_global = alpha0_global,
+    beta0_global  = beta0_global,
+    alpha_n_global = alpha_n_global,
+    beta_n_global  = beta_n_global,
+    mean_global = mean_global,
+    var_global  = var_global,
 
     X      = X,
     Xnorm  = Xnorm,

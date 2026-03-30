@@ -9,8 +9,8 @@
 #' @export
 #' @method fitted TwinDKP
 fitted.TwinDKP <- function(object, ...) {
-  gp <- .twindkp_global_posterior(object)
-  out <- gp$mean
+  out <- object$mean_global
+  if (is.null(out)) stop("'mean_global' is missing in object. Please refit using latest fit_TwinDKP().")
   rownames(out) <- paste0("idx_", object$global_idx)
   out
 }

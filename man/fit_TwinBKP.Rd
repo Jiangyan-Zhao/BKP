@@ -73,6 +73,13 @@ A list of class \code{"TwinBKP"} with the same structure as
 \describe{
 \item{\code{g_nums}}{Number of support points used for tuning.}
 \item{\code{tune_idx}}{Row indices of the selected support points.}
+\item{\code{alpha0_global, beta0_global}}{Global-stage prior parameters
+on support points.}
+\item{\code{alpha_n_global, beta_n_global}}{Global-stage posterior
+parameters on support points.}
+\item{\code{mean_global, var_global}}{Global-stage posterior mean/variance
+on support points; used directly by \code{fitted.TwinBKP()} and
+\code{summary.TwinBKP()} without recomputation.}
 }
 }
 \description{
