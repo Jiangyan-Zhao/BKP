@@ -56,7 +56,7 @@ fit_TwinBKP <- function(
     n_multi_start = NULL, theta = NULL,
     isotropic = TRUE,
     g_nums = NULL
-) { 
+) {
 
   if (missing(X) || missing(y) || missing(m)) {
     stop("Arguments 'X', 'y', and 'm' must be provided.")
@@ -64,8 +64,8 @@ fit_TwinBKP <- function(
   if (!is.matrix(X) && !is.data.frame(X)) stop("'X' must be a numeric matrix or data frame.")
   if (!is.numeric(as.matrix(X))) stop("'X' must contain numeric values only.")
   if (!is.numeric(y)) stop("'y' must be numeric.")
-  if (!is.numeric(m)) stop("'m' must be numeric.") 
-  
+  if (!is.numeric(m)) stop("'m' must be numeric.")
+
   X <- as.matrix(X)
   y <- matrix(y, ncol = 1)
   m <- matrix(m, ncol = 1)
@@ -169,7 +169,7 @@ fit_TwinBKP <- function(
       as.integer(max(1L, n_multi_start))
     }
 
-    max_iter_cpp <- 100L 
+    max_iter_cpp <- 100L
     g_lower <- (log10(d) - log10(500)) / 2
     g_upper <- (log10(d) + 2) / 2
     opt_cpp <- optimize_bkp_theta_rcpp(
@@ -237,7 +237,7 @@ fit_TwinBKP <- function(
   TwinBKP_model <- list(
 
     theta_global = theta_global,
-    loss_global  = loss_global, 
+    loss_global  = loss_global,
 
     global_idx   = global_idx,
     X_global     = X_global,
