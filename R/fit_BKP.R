@@ -23,7 +23,7 @@
 #' @param p0 Global prior mean (used when \code{prior = "fixed"}). Default is
 #'   \code{mean(y/m)}.
 #' @param kernel Kernel function for local weighting: \code{"gaussian"}
-#'   (default), \code{"matern52"}, or \code{"matern32"}.
+#'   (default), \code{"matern52"}, \code{"matern32"}, or \code{"wendland"}.
 #' @param loss Loss function for kernel hyperparameter tuning: \code{"brier"}
 #'   (default) or \code{"log_loss"}.
 #' @param n_multi_start Number of local-refinement starts selected from coarse
@@ -124,7 +124,7 @@
 fit_BKP <- function(
     X, y, m, Xbounds = NULL,
     prior = c("noninformative", "fixed", "adaptive"), r0 = 2, p0 = mean(y/m),
-    kernel = c("gaussian", "matern52", "matern32"),
+    kernel = c("gaussian", "matern52", "matern32", "wendland"),
     loss = c("brier", "log_loss"),
     n_multi_start = NULL, theta = NULL,
     isotropic = TRUE

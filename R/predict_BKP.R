@@ -139,7 +139,8 @@
 #' @export
 #' @method predict BKP
 
-predict.BKP <- function(object, Xnew = NULL, CI_level = 0.95, threshold = 0.5, ...)
+predict.BKP <- function(object, Xnew = NULL, CI_level = 0.95, threshold = 0.5,
+                        return_type = c("probability", "count"), n_trials = NULL, ...)
 {
   #---- Argument checks ----
   X       <- object$X
@@ -161,6 +162,16 @@ predict.BKP <- function(object, Xnew = NULL, CI_level = 0.95, threshold = 0.5, .
   }
   if (!is.numeric(threshold) || length(threshold) != 1 || threshold <= 0 || threshold >= 1) {
     stop("'threshold' must be a single numeric value strictly between 0 and 1.")
+  }
+  return_type <- match.arg(return_type)
+  if (return_type == "count") {
+    if (is.null(n_trials)) {
+      stop("When return_type = 'count', 'n_trials' must be provided.")
+    }
+    if (!is.numeric(n_trials) || length(n_trials) != 1 || n_trials <= 0 || n_trials != as.integer(n_trials)) {
+      stop("'n_trials' must be a positive integer when return_type = 'count'.")
+    }
+    n_trials <- as.integer(n_trials)
   }
 
   if(!is.null(Xnew)){
@@ -207,9 +218,22 @@ predict.BKP <- function(object, Xnew = NULL, CI_level = 0.95, threshold = 0.5, .
     m <- object$m
   }
 
-  # Credible intervals (computed in R using qbeta)
-  pred_lower <- suppressWarnings(qbeta((1 - CI_level) / 2, alpha_n, beta_n))
-  pred_upper <- suppressWarnings(qbeta((1 + CI_level) / 2, alpha_n, beta_n))
+  if (return_type == "probability") {
+    # Credible intervals on success probability p
+    pred_lower <- suppressWarnings(qbeta((1 - CI_level) / 2, alpha_n, beta_n))
+    pred_upper <- suppressWarnings(qbeta((1 + CI_level) / 2, alpha_n, beta_n))
+  } else {
+    # Credible intervals on success count y via Beta-Binomial(n_trials, alpha_n, beta_n)
+    pred_mean <- n_trials * alpha_n / pmax(alpha_n + beta_n, 1e-10)
+    pred_var <- n_trials * alpha_n * beta_n * (alpha_n + beta_n + n_trials) /
+      (pmax((alpha_n + beta_n)^2, 1e-10) * pmax(alpha_n + beta_n + 1, 1e-10))
+    pred_lower <- vapply(seq_along(alpha_n), function(i) {
+      betabinom_quantile((1 - CI_level) / 2, n_trials, alpha_n[i], beta_n[i])
+    }, numeric(1))
+    pred_upper <- vapply(seq_along(alpha_n), function(i) {
+      betabinom_quantile((1 + CI_level) / 2, n_trials, alpha_n[i], beta_n[i])
+    }, numeric(1))
+  }
 
   mean_mat <- matrix(as.numeric(pred_mean), ncol = 1)
   var_mat <- matrix(as.numeric(pred_var), ncol = 1)
@@ -225,11 +249,16 @@ predict.BKP <- function(object, Xnew = NULL, CI_level = 0.95, threshold = 0.5, .
     variance = var_mat,
     lower = lower_mat,
     upper = upper_mat,
-    CI_level = CI_level
+    CI_level = CI_level,
+    return_type = return_type
   )
 
+  if (return_type == "count") {
+    prediction$n_trials <- n_trials
+  }
+
   # Posterior classification label (only for classification data)
-  if (all(m == 1)) {
+  if (return_type == "probability" && all(m == 1)) {
     prediction$class <- ifelse(as.numeric(mean_mat) > threshold, 1, 0)
     prediction$threshold <- threshold
   }

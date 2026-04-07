@@ -106,7 +106,7 @@
 fit_DKP <- function(
     X, Y, Xbounds = NULL,
     prior = c("noninformative", "fixed", "adaptive"), r0 = 2, p0 = colMeans(Y / rowSums(Y)),
-    kernel = c("gaussian", "matern52", "matern32"),
+    kernel = c("gaussian", "matern52", "matern32", "wendland"),
     loss = c("brier", "log_loss"),
     n_multi_start = NULL, theta = NULL,
     isotropic = TRUE
@@ -229,32 +229,37 @@ fit_DKP <- function(
   Xnorm <- sweep(Xnorm, 2, Xbounds[,2] - Xbounds[,1], "/")
 
   if (is.null(theta)) {
-    # ---- Determine initial search space for log10(theta) ----
-    # We work in log10(theta) space for numerical stability
-    n_theta <- if (isotropic) 1 else d
-    gamma_bounds <- matrix(c((log10(d)-log10(500))/2,       # lower bound
-                             (log10(d)+2)/2),               # upper bound
-                           ncol = 2, nrow = n_theta, byrow = TRUE)
-    if (is.null(n_multi_start)) n_multi_start <- 10 * n_theta
-    init_gamma <- lhs(n_multi_start, gamma_bounds)
+    n_grid_cpp <- as.integer(max(10L, 10L * d))
 
-    # ---- Run multi-start L-BFGS-B optimization to find best kernel parameters ----
-    opt_res <- multistart(
-      parmat = init_gamma,
-      fn     = loss_fun,
-      method = "L-BFGS-B",
-      lower  = rep(-3, n_theta), # relaxed lower bound
-      upper  = rep(3, n_theta),  # relaxed upper bound
-      prior = prior, r0 = r0, p0 = p0,
-      Xnorm = Xnorm, Y = Y,
-      model = "DKP", loss = loss, kernel = kernel, isotropic = isotropic,
-      control= list(trace=0))
+    n_starts_cpp <- if (is.null(n_multi_start)) {
+      1L
+    } else {
+      as.integer(max(1L, n_multi_start))
+    }
 
-    # ---- Extract optimal kernel parameters and loss ----
-    best_index <- which.min(opt_res$value)
-    gamma_opt  <- as.numeric(opt_res[best_index, 1:n_theta])
-    theta_opt  <- 10^gamma_opt
-    loss_min   <- opt_res$value[best_index]
+    max_iter_cpp <- 100L
+    g_lower <- (log10(d) - log10(500)) / 2
+    g_upper <- (log10(d) + 2) / 2
+
+    opt_cpp <- optimize_dkp_theta_rcpp(
+      Xnorm = Xnorm,
+      Y = Y,
+      prior = prior,
+      r0 = r0,
+      p0 = as.numeric(p0),
+      loss = loss,
+      kernel = kernel,
+      isotropic = isotropic,
+      n_grid = n_grid_cpp,
+      n_starts = n_starts_cpp,
+      max_iter = max_iter_cpp,
+      g_lower = g_lower,
+      g_upper = g_upper
+    )
+
+    gamma_opt  <- as.numeric(opt_cpp$gamma_opt)
+    theta_opt  <- as.numeric(opt_cpp$theta_opt)
+    loss_min   <- as.numeric(opt_cpp$loss_min)
   }else{
     # ---- Use user-provided theta ----
     theta_opt <- theta

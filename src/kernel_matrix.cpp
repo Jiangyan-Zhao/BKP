@@ -55,8 +55,8 @@ arma::mat kernel_matrix_rcpp(
     }
   }
 
-  if (!(kernel == "gaussian" || kernel == "matern52" || kernel == "matern32")) {
-    stop("'kernel' must be one of: 'gaussian', 'matern52', 'matern32'.");
+  if (!(kernel == "gaussian" || kernel == "matern52" || kernel == "matern32" || kernel == "wendland")) {
+    stop("'kernel' must be one of: 'gaussian', 'matern52', 'matern32', 'wendland'.");
   }
 
   arma::mat Xm = as_matrix_1d_or_2d(X, "X");
@@ -125,10 +125,18 @@ arma::mat kernel_matrix_rcpp(
     const double sqrt5 = std::sqrt(5.0);
     arma::mat dist = arma::sqrt(dist_sq);
     K = (1.0 + sqrt5 * dist + (5.0 / 3.0) * dist_sq) % arma::exp(-sqrt5 * dist);
-  } else { // matern32
+  } else if (kernel == "matern32") {
     const double sqrt3 = std::sqrt(3.0);
     arma::mat dist = arma::sqrt(dist_sq);
     K = (1.0 + sqrt3 * dist) % arma::exp(-sqrt3 * dist);
+  } else { // wendland
+    // L(x_a, x_b) = (q * r + 1) * max(0, 1-r)^q,
+    // where r = ||(x_a - x_b)/theta||_2 and q = floor(d/2) + 3.
+    const double q_w = std::floor(static_cast<double>(d) / 2.0) + 3.0;
+    arma::mat dist = arma::sqrt(dist_sq);
+    arma::mat one_minus = 1.0 - dist;
+    one_minus.transform([](double v) { return (v > 0.0) ? v : 0.0; });
+    K = (q_w * dist + 1.0) % arma::pow(one_minus, q_w);
   }
 
   return K;

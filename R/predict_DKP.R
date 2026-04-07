@@ -80,7 +80,8 @@
 #' @export
 #' @method predict DKP
 
-predict.DKP <- function(object, Xnew = NULL, CI_level = 0.95, ...)
+predict.DKP <- function(object, Xnew = NULL, CI_level = 0.95,
+                        return_type = c("probability", "count"), n_trials = NULL, ...)
 {
   #---- Argument checks ----
   X       <- object$X
@@ -100,6 +101,16 @@ predict.DKP <- function(object, Xnew = NULL, CI_level = 0.95, ...)
 
   if (!is.numeric(CI_level) || length(CI_level) != 1 || CI_level <= 0 || CI_level >= 1) {
     stop("'CI_level' must be a single numeric value strictly between 0 and 1.")
+  }
+  return_type <- match.arg(return_type)
+  if (return_type == "count") {
+    if (is.null(n_trials)) {
+      stop("When return_type = 'count', 'n_trials' must be provided.")
+    }
+    if (!is.numeric(n_trials) || length(n_trials) != 1 || n_trials <= 0 || n_trials != as.integer(n_trials)) {
+      stop("'n_trials' must be a positive integer when return_type = 'count'.")
+    }
+    n_trials <- as.integer(n_trials)
   }
 
   if(!is.null(Xnew)){
@@ -143,11 +154,27 @@ predict.DKP <- function(object, Xnew = NULL, CI_level = 0.95, ...)
     pred_var  <- pred_mean * (1 - pred_mean) / (row_sum + 1)
   }
 
-  # Credible intervals (computed in R using qbeta)
-    # Credible intervals (computed in R using qbeta)
   beta_n <- matrix(row_sum, nrow = nrow(alpha_n), ncol = ncol(alpha_n)) - alpha_n
-  pred_lower <- suppressWarnings(qbeta((1 - CI_level) / 2, alpha_n, beta_n))
-  pred_upper <- suppressWarnings(qbeta((1 + CI_level) / 2, alpha_n, beta_n))
+  if (return_type == "probability") {
+    # Credible intervals on class probability p_j
+    pred_lower <- suppressWarnings(qbeta((1 - CI_level) / 2, alpha_n, beta_n))
+    pred_upper <- suppressWarnings(qbeta((1 + CI_level) / 2, alpha_n, beta_n))
+  } else {
+    # Count prediction via marginal Beta-Binomial(n_trials, alpha_j, row_sum-alpha_j)
+    pred_mean <- n_trials * alpha_n / pmax(row_sum, 1e-10)
+    pred_var <- n_trials * alpha_n * beta_n * (matrix(row_sum, nrow(alpha_n), ncol(alpha_n)) + n_trials) /
+      (pmax(matrix(row_sum^2, nrow(alpha_n), ncol(alpha_n)), 1e-10) *
+         pmax(matrix(row_sum + 1, nrow(alpha_n), ncol(alpha_n)), 1e-10))
+
+    pred_lower <- matrix(0, nrow = nrow(alpha_n), ncol = ncol(alpha_n))
+    pred_upper <- matrix(0, nrow = nrow(alpha_n), ncol = ncol(alpha_n))
+    for (i in seq_len(nrow(alpha_n))) {
+      for (j in seq_len(ncol(alpha_n))) {
+        pred_lower[i, j] <- betabinom_quantile((1 - CI_level) / 2, n_trials, alpha_n[i, j], beta_n[i, j])
+        pred_upper[i, j] <- betabinom_quantile((1 + CI_level) / 2, n_trials, alpha_n[i, j], beta_n[i, j])
+      }
+    }
+  }
   class_names <- paste0("class", seq_len(ncol(alpha_n)))
   colnames(pred_mean) <- class_names
   colnames(pred_var) <- class_names
@@ -163,11 +190,16 @@ predict.DKP <- function(object, Xnew = NULL, CI_level = 0.95, ...)
     variance = pred_var,
     lower    = pred_lower,
     upper    = pred_upper,
-    CI_level = CI_level
+    CI_level = CI_level,
+    return_type = return_type
   )
 
+  if (return_type == "count") {
+    prediction$n_trials <- n_trials
+  }
+
   # Posterior classification label (only for classification data)
-  if (all(rowSums(Y) == 1)) {
+  if (return_type == "probability" && all(rowSums(Y) == 1)) {
     prediction$class <- max.col(pred_mean)
   }
 

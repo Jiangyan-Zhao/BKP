@@ -61,6 +61,18 @@ optimize_bkp_theta_rcpp <- function(Xnorm, y, m, prior, r0, p0, loss, kernel, is
     .Call(`_BKP_optimize_bkp_theta_rcpp`, Xnorm, y, m, prior, r0, p0, loss, kernel, isotropic, n_grid, n_starts, max_iter, g_lower, g_upper)
 }
 
+optimize_dkp_theta_rcpp <- function(Xnorm, Y, prior, r0, p0, loss, kernel, isotropic, n_grid, n_starts, max_iter, g_lower, g_upper) {
+    .Call(`_BKP_optimize_dkp_theta_rcpp`, Xnorm, Y, prior, r0, p0, loss, kernel, isotropic, n_grid, n_starts, max_iter, g_lower, g_upper)
+}
+
+optimize_lambda_bkp_rcpp <- function(K_g, K_l, y, m, alpha0, beta0, loss, max_iter = 80L, tol = 1e-8) {
+    .Call(`_BKP_optimize_lambda_bkp_rcpp`, K_g, K_l, y, m, alpha0, beta0, loss, max_iter, tol)
+}
+
+optimize_lambda_dkp_rcpp <- function(K_g, K_l, Y, alpha0, loss, max_iter = 80L, tol = 1e-8) {
+    .Call(`_BKP_optimize_lambda_dkp_rcpp`, K_g, K_l, Y, alpha0, loss, max_iter, tol)
+}
+
 predict_bkp_rcpp <- function(K, alpha0, beta0, y, m) {
     .Call(`_BKP_predict_bkp_rcpp`, K, alpha0, beta0, y, m)
 }
@@ -71,5 +83,9 @@ predict_dkp_rcpp <- function(K, alpha0, Y) {
 
 get_twin_indices_rcpp <- function(data, g, v = NULL, runs = 10L, seed = 123L) {
     .Call(`_BKP_get_twin_indices_rcpp`, data, g, v, runs, seed)
+}
+
+wendland_kernel_rcpp <- function(X1, X2, theta, q_wend) {
+    .Call(`_BKP_wendland_kernel_rcpp`, X1, X2, theta, q_wend)
 }
 

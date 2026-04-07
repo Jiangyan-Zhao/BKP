@@ -46,7 +46,7 @@ loss_fun <- function(
     model = c("BKP", "DKP"),
     prior = c("noninformative", "fixed", "adaptive"), r0 = 2, p0 = NULL,
     loss = c("brier", "log_loss"),
-    kernel = c("gaussian", "matern52", "matern32"),
+    kernel = c("gaussian", "matern52", "matern32", "wendland"),
     isotropic = TRUE)
 {
   # ---- Argument checking ----

@@ -269,3 +269,19 @@ posterior_summary <- function(mean_vals, var_vals) {
   )
   return(round(summary_mat, 4))
 }
+
+
+# Beta-binomial helpers (internal)
+#' @noRd
+betabinom_pmf <- function(k, size, alpha, beta) {
+  exp(lchoose(size, k) + lbeta(k + alpha, size - k + beta) - lbeta(alpha, beta))
+}
+
+#' @noRd
+betabinom_quantile <- function(prob, size, alpha, beta) {
+  if (!is.finite(prob) || prob <= 0) return(0)
+  if (prob >= 1) return(size)
+  k <- 0:size
+  cdf <- cumsum(betabinom_pmf(k, size, alpha, beta))
+  which(cdf >= prob)[1] - 1L
+}

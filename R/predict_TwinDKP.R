@@ -43,7 +43,7 @@
 #' }
 #'
 #' @seealso \code{\link{fit_TwinDKP}}, \code{\link{predict.DKP}}
-#' @importFrom stats optimise qbeta
+#' @importFrom stats qbeta
 #' @export
 predict.TwinDKP <- function(
     object,
@@ -51,6 +51,8 @@ predict.TwinDKP <- function(
     l_nums = NULL,
     v_nums = NULL,
     CI_level = 0.95,
+    return_type = c("probability", "count"),
+    n_trials = NULL,
     ...
 ) {
   Xnorm        <- object$Xnorm
@@ -81,6 +83,16 @@ predict.TwinDKP <- function(
 
   if (!is.numeric(CI_level) || length(CI_level) != 1 || CI_level <= 0 || CI_level >= 1) {
     stop("'CI_level' must be strictly between 0 and 1.")
+  }
+  return_type <- match.arg(return_type)
+  if (return_type == "count") {
+    if (is.null(n_trials)) {
+      stop("When return_type = 'count', 'n_trials' must be provided.")
+    }
+    if (!is.numeric(n_trials) || length(n_trials) != 1 || n_trials <= 0 || n_trials != as.integer(n_trials)) {
+      stop("'n_trials' must be a positive integer when return_type = 'count'.")
+    }
+    n_trials <- as.integer(n_trials)
   }
 
   Xnew_norm <- sweep(Xnew, 2, Xbounds[, 1], "-")
@@ -135,33 +147,12 @@ predict.TwinDKP <- function(
     isotropic = isotropic
   )
 
-  .wendland_kernel <- function(X1, X2, theta) {
-    n1 <- nrow(X1); n2 <- nrow(X2)
-    K <- matrix(0, n1, n2)
-    for (i in seq_len(n1)) {
-      r <- sqrt(rowSums((X2 - matrix(X1[i, ], nrow = n2, ncol = ncol(X1), byrow = TRUE))^2))
-      u <- r / theta
-      K[i, ] <- (q_wend * u + 1) * pmax(0, 1 - u)^q_wend
-    }
-    K
-  }
-
-  K_l_val <- .wendland_kernel(Xnorm_val, Xnorm_val, theta_l)
+  K_l_val <- wendland_kernel_rcpp(Xnorm_val, Xnorm_val, theta_l, q_wend)
   alpha0_val <- get_prior(
     prior = prior, model = "DKP",
     r0 = r0, p0 = p0,
     Y = Y_val, K = K_g_val
   )
-
-  .mixed_loss <- function(lambda, K_g, K_l, Y_v, alpha0_v) {
-    lambda <- pmin(pmax(lambda, 0), 1)
-    K_mix <- lambda * K_g + (1 - lambda) * K_l
-    if (loss_type == "brier") {
-      loss_fun_brier_dkp_rcpp(K_mix, as.matrix(Y_v), as.matrix(alpha0_v))
-    } else {
-      loss_fun_logloss_dkp_rcpp(K_mix, as.matrix(Y_v), as.matrix(alpha0_v))
-    }
-  }
 
   pred_alpha_n <- matrix(0, n_new, q)
   pred_mean <- matrix(0, n_new, q)
@@ -178,16 +169,14 @@ predict.TwinDKP <- function(
     Y_loc <- Y_train[loc_idx, , drop = FALSE]
     local_idx_out[[i]] <- loc_idx
 
-    opt_lambda <- optimise(
-      f = .mixed_loss,
-      interval = c(0, 1),
+    opt_lambda <- optimize_lambda_dkp_rcpp(
       K_g = K_g_val,
       K_l = K_l_val,
-      Y_v = Y_val,
-      alpha0_v = alpha0_val,
-      maximum = FALSE
+      Y = as.matrix(Y_val),
+      alpha0 = as.matrix(alpha0_val),
+      loss = loss_type
     )
-    lambda_i <- opt_lambda$minimum
+    lambda_i <- as.numeric(opt_lambda$lambda_opt)
     pred_lambda[i] <- lambda_i
 
     K_g_star <- kernel_matrix(
@@ -197,10 +186,11 @@ predict.TwinDKP <- function(
       kernel = kernel,
       isotropic = isotropic
     )
-    K_l_star <- .wendland_kernel(
+    K_l_star <- wendland_kernel_rcpp(
       X1 = matrix(Xnew_norm[i, ], nrow = 1),
       X2 = Xnorm_loc,
-      theta = theta_l
+      theta = theta_l,
+      q_wend = q_wend
     )
 
     alpha0_g_star <- get_prior(
@@ -225,11 +215,24 @@ predict.TwinDKP <- function(
     var_i <- mean_i * (1 - mean_i) / (row_sum_i + 1)
     beta_i <- pmax(row_sum_i - alpha_n_i, 1e-10)
 
+    if (return_type == "count") {
+      mean_i <- n_trials * alpha_n_i / pmax(row_sum_i, 1e-10)
+      var_i <- n_trials * alpha_n_i * beta_i * (row_sum_i + n_trials) /
+        (pmax(row_sum_i^2, 1e-10) * pmax(row_sum_i + 1, 1e-10))
+    }
+
     pred_alpha_n[i, ] <- alpha_n_i
     pred_mean[i, ] <- mean_i
     pred_var[i, ] <- var_i
-    pred_lower[i, ] <- suppressWarnings(qbeta((1 - CI_level) / 2, alpha_n_i, beta_i))
-    pred_upper[i, ] <- suppressWarnings(qbeta((1 + CI_level) / 2, alpha_n_i, beta_i))
+    if (return_type == "probability") {
+      pred_lower[i, ] <- suppressWarnings(qbeta((1 - CI_level) / 2, alpha_n_i, beta_i))
+      pred_upper[i, ] <- suppressWarnings(qbeta((1 + CI_level) / 2, alpha_n_i, beta_i))
+    } else {
+      for (j in seq_len(q)) {
+        pred_lower[i, j] <- betabinom_quantile((1 - CI_level) / 2, n_trials, alpha_n_i[j], beta_i[j])
+        pred_upper[i, j] <- betabinom_quantile((1 + CI_level) / 2, n_trials, alpha_n_i[j], beta_i[j])
+      }
+    }
   }
 
   class_names <- paste0("class", seq_len(q))
@@ -253,12 +256,17 @@ predict.TwinDKP <- function(
     theta_global = theta_global,
     local_idx = local_idx_out,
     CI_level = CI_level,
+    return_type = return_type,
     l_nums = l_eff,
     v_nums = v_eff,
     g_nums = as.integer(g_nums)
   )
 
-  if (all(rowSums(Y_train) == 1)) {
+  if (return_type == "count") {
+    result$n_trials <- n_trials
+  }
+
+  if (return_type == "probability" && all(rowSums(Y_train) == 1)) {
     result$class <- max.col(pred_mean)
   }
 

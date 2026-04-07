@@ -51,7 +51,7 @@
 fit_TwinBKP <- function(
     X, y, m, Xbounds = NULL,
     prior = c("noninformative", "fixed", "adaptive"), r0 = 2, p0 = mean(y / m),
-    kernel = c("gaussian", "matern52", "matern32"),
+    kernel = c("gaussian", "matern52", "matern32", "wendland"),
     loss = c("brier", "log_loss"),
     n_multi_start = NULL, theta = NULL,
     isotropic = TRUE,

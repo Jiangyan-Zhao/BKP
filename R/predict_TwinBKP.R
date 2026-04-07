@@ -111,7 +111,6 @@
 #'   Xnew <- expand.grid(x1 = x1, x2 = x2)
 #'   predict(model2, Xnew = Xnew, l_nums = 12)
 #' 
-#' @importFrom stats optimise
 #' @export
 predict.TwinBKP <- function(
     object,
@@ -120,6 +119,8 @@ predict.TwinBKP <- function(
     v_nums    = NULL,
     CI_level  = 0.95,
     threshold = 0.5,
+    return_type = c("probability", "count"),
+    n_trials = NULL,
     ...
 ) {
 
@@ -156,6 +157,16 @@ predict.TwinBKP <- function(
   }
   if (!is.numeric(threshold) || threshold <= 0 || threshold >= 1) {
     stop("'threshold' must be strictly between 0 and 1.")
+  }
+  return_type <- match.arg(return_type)
+  if (return_type == "count") {
+    if (is.null(n_trials)) {
+      stop("When return_type = 'count', 'n_trials' must be provided.")
+    }
+    if (!is.numeric(n_trials) || length(n_trials) != 1 || n_trials <= 0 || n_trials != as.integer(n_trials)) {
+      stop("'n_trials' must be a positive integer when return_type = 'count'.")
+    }
+    n_trials <- as.integer(n_trials)
   }
 
   Xnew_norm <- sweep(Xnew, 2, Xbounds[, 1], "-")
@@ -221,30 +232,6 @@ predict.TwinBKP <- function(
     isotropic = isotropic
   )
 
-  .wendland_kernel <- function(X1, X2, theta) {
-    n1 <- nrow(X1); n2 <- nrow(X2)
-    K  <- matrix(0, n1, n2)
-    for (i in seq_len(n1)) {
-      r <- sqrt(rowSums((X2 - matrix(X1[i, ], nrow = n2, ncol = ncol(X1), byrow = TRUE))^2))
-      u <- r / theta
-      K[i, ] <- (q_wend * u + 1) * pmax(0, 1 - u)^q_wend
-    }
-    K
-  }
-
-  .mixed_loss <- function(lambda, K_g, K_l, y_v, m_v, alpha0_v, beta0_v) {
-    lambda  <- pmin(pmax(lambda, 0), 1)
-    K_mix <- lambda * K_g_val + (1 - lambda) * K_l_val
-
-    if (loss_type == "brier") {
-      loss_fun_brier_bkp_rcpp(K_mix, as.numeric(y_v), as.numeric(m_v),
-                               as.numeric(alpha0_v), as.numeric(beta0_v))
-    } else {
-      loss_fun_logloss_bkp_rcpp(K_mix, as.numeric(y_v), as.numeric(m_v),
-                                 as.numeric(alpha0_v), as.numeric(beta0_v))
-    }
-  }
-
   pred_mean     <- numeric(n_new)
   pred_var      <- numeric(n_new)
   pred_lower    <- numeric(n_new)
@@ -263,10 +250,11 @@ predict.TwinBKP <- function(
     m_loc     <- m_train[loc_idx, , drop = FALSE]
     local_idx_out[[i]] <- loc_idx
 
-    K_l_val <- .wendland_kernel(
+    K_l_val <- wendland_kernel_rcpp(
       X1 = Xnorm_val,
       X2 = Xnorm_val,
-      theta = theta_l
+      theta = theta_l,
+      q_wend = q_wend
     )
 
     prior_val <- get_prior(
@@ -278,18 +266,16 @@ predict.TwinBKP <- function(
     alpha0_val <- prior_val$alpha0
     beta0_val  <- prior_val$beta0
 
-    opt_lambda <- optimise(
-      f        = .mixed_loss,
-      interval = c(0, 1),
-      K_g      = K_g_val,
-      K_l      = K_l_val,
-      y_v      = y_val,
-      m_v      = m_val,
-      alpha0_v = alpha0_val,
-      beta0_v  = beta0_val,
-      maximum  = FALSE
+    opt_lambda <- optimize_lambda_bkp_rcpp(
+      K_g = K_g_val,
+      K_l = K_l_val,
+      y = as.numeric(y_val),
+      m = as.numeric(m_val),
+      alpha0 = as.numeric(alpha0_val),
+      beta0 = as.numeric(beta0_val),
+      loss = loss_type
     )
-    lambda_i <- opt_lambda$minimum
+    lambda_i <- as.numeric(opt_lambda$lambda_opt)
     pred_lambda[i] <- lambda_i
 
     K_g_star <- kernel_matrix(
@@ -300,10 +286,11 @@ predict.TwinBKP <- function(
       isotropic = isotropic
     )  # (1 x g)
 
-    K_l_star <- .wendland_kernel(
+    K_l_star <- wendland_kernel_rcpp(
       X1    = matrix(Xnew_norm[i, ], nrow = 1),
       X2    = Xnorm_loc,
-      theta = theta_l
+      theta = theta_l,
+      q_wend = q_wend
     )  # (1 x l)
     prior_g_star <- get_prior(
       prior = prior, model = "BKP",
@@ -336,12 +323,20 @@ predict.TwinBKP <- function(
     eps <- 1e-10
     ab_sum <- max(alpha_n_i + beta_n_i, eps)
 
-    pred_mean[i] <- alpha_n_i / ab_sum
-    pred_mean[i] <- min(max(pred_mean[i], eps), 1 - eps)
-    pred_var[i]  <- pred_mean[i] * (1 - pred_mean[i]) / (ab_sum + 1)
+    if (return_type == "probability") {
+      pred_mean[i] <- alpha_n_i / ab_sum
+      pred_mean[i] <- min(max(pred_mean[i], eps), 1 - eps)
+      pred_var[i]  <- pred_mean[i] * (1 - pred_mean[i]) / (ab_sum + 1)
 
-    pred_lower[i] <- suppressWarnings(qbeta((1 - CI_level) / 2, alpha_n_i, beta_n_i))
-    pred_upper[i] <- suppressWarnings(qbeta((1 + CI_level) / 2, alpha_n_i, beta_n_i))
+      pred_lower[i] <- suppressWarnings(qbeta((1 - CI_level) / 2, alpha_n_i, beta_n_i))
+      pred_upper[i] <- suppressWarnings(qbeta((1 + CI_level) / 2, alpha_n_i, beta_n_i))
+    } else {
+      pred_mean[i] <- n_trials * alpha_n_i / ab_sum
+      pred_var[i] <- n_trials * alpha_n_i * beta_n_i * (ab_sum + n_trials) /
+        (pmax(ab_sum^2, eps) * pmax(ab_sum + 1, eps))
+      pred_lower[i] <- betabinom_quantile((1 - CI_level) / 2, n_trials, alpha_n_i, beta_n_i)
+      pred_upper[i] <- betabinom_quantile((1 + CI_level) / 2, n_trials, alpha_n_i, beta_n_i)
+    }
   }
 
   mean_mat  <- matrix(as.numeric(pred_mean), ncol = 1)
@@ -364,12 +359,17 @@ predict.TwinBKP <- function(
     theta_global = theta_global,
     local_idx = local_idx_out, 
     CI_level  = CI_level,
+    return_type = return_type,
     l_nums    = l_eff,
     v_nums    = v_eff,
     g_nums    = as.integer(g_nums)
   )
 
-  if (all(m_train == 1)) {
+  if (return_type == "count") {
+    result$n_trials <- n_trials
+  }
+
+  if (return_type == "probability" && all(m_train == 1)) {
     result$class     <- ifelse(as.numeric(mean_mat) > threshold, 1, 0)
     result$threshold <- threshold
   }
