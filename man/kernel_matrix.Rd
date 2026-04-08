@@ -8,7 +8,7 @@ kernel_matrix(
   X,
   Xprime = NULL,
   theta = 0.1,
-  kernel = c("gaussian", "matern52", "matern32"),
+  kernel = c("gaussian", "matern52", "matern32", "wendland"),
   isotropic = TRUE
 )
 }
@@ -27,7 +27,8 @@ can be a scalar (broadcasted) or a vector of length \code{d} for
 per-dimension scaling.}
 
 \item{kernel}{A character string specifying the kernel function. Must be one
-of \code{"gaussian"}, \code{"matern32"}, or \code{"matern52"}.}
+of \code{"gaussian"}, \code{"matern32"}, \code{"matern52"}, or
+\code{"wendland"}.}
 
 \item{isotropic}{Logical. If \code{TRUE} (default), use a single shared
 lengthscale across dimensions. If \code{FALSE}, use per-dimension
@@ -41,8 +42,8 @@ A numeric matrix of size \eqn{n \times m}, where each element
 \description{
 Computes the kernel matrix between two sets of input locations
 using a specified kernel function. Supports both isotropic and anisotropic
-lengthscales. Available kernels include the Gaussian, Matérn 5/2, and
-Matérn 3/2.
+lengthscales. Available kernels include the Gaussian, Matérn 5/2,
+Matérn 3/2, and Wendland compactly supported kernel.
 }
 \details{
 Let \eqn{\mathbf{x}} and \eqn{\mathbf{x}'} denote two input points.
@@ -64,6 +65,11 @@ The available kernels are defined as:
 \item \strong{Matérn 3/2:}
 \deqn{
        k(\mathbf{x}, \mathbf{x}') = \left(1 + \sqrt{3} r \right) \exp(-\sqrt{3} r)
+     }
+\item \strong{Wendland:}
+\deqn{
+       k(\mathbf{x}, \mathbf{x}') = (q r + 1)\max(0,1-r)^q,
+       \quad q = \lfloor d/2 \rfloor + 3
      }
 }
 

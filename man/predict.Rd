@@ -6,27 +6,46 @@
 \alias{predict.DKP}
 \title{Posterior Prediction for BKP or DKP Models}
 \usage{
-\method{predict}{BKP}(object, Xnew = NULL, CI_level = 0.95, threshold = 0.5, ...)
+\method{predict}{BKP}(
+  object,
+  Xnew = NULL,
+  CI_level = 0.95,
+  threshold = 0.5,
+  return_type = c("probability", "count"),
+  n_trials = NULL,
+  ...
+)
 
-\method{predict}{DKP}(object, Xnew = NULL, CI_level = 0.95, ...)
+\method{predict}{DKP}(
+  object,
+  Xnew = NULL,
+  CI_level = 0.95,
+  return_type = c("probability", "count"),
+  n_trials = NULL,
+  ...
+)
 }
 \arguments{
-\item{object}{An object of class \code{"BKP"} or \code{"DKP"}, typically
-returned by \code{\link{fit_BKP}} or \code{\link{fit_DKP}}.}
+\item{object}{A fitted \code{"DKP"} object, typically returned by
+\code{\link{fit_DKP}}.}
 
-\item{Xnew}{A numeric vector or matrix of new input locations at which to
-generate predictions. If \code{NULL}, predictions are returned for the
-training data.}
+\item{Xnew}{A numeric vector or matrix of new input locations. If
+\code{NULL}, predictions are returned for the training data.}
 
-\item{CI_level}{Numeric between 0 and 1 specifying the credible level for
-posterior intervals (default \code{0.95} for 95\% credible interval).}
+\item{CI_level}{Numeric value in \code{(0, 1)} specifying the credible
+interval level (default \code{0.95}).}
 
 \item{threshold}{Numeric between 0 and 1 specifying the classification
 threshold for binary predictions based on posterior mean (used only for
 BKP; default is \code{0.5}).}
 
-\item{...}{Additional arguments passed to generic \code{predict} methods
-(currently not used; included for S3 method consistency).}
+\item{return_type}{Character string specifying prediction scale:
+\code{"probability"} (default) or \code{"count"}.}
+
+\item{n_trials}{Positive integer total trial count used only when
+\code{return_type = "count"}. Must be provided in count mode.}
+
+\item{...}{Additional arguments for S3 method consistency (currently unused).}
 }
 \value{
 A list containing posterior predictive summaries:
@@ -65,12 +84,33 @@ A list containing posterior predictive summaries:
 }}
 \item{\code{CI_level}}{The specified credible interval level.}
 }
+
+A list of class \code{"predict_DKP"} including posterior
+Dirichlet parameters and predictive summaries:
+\describe{
+\item{\code{alpha_n}}{Posterior Dirichlet parameters
+(\code{n_new x q}, where \code{q} is number of classes).}
+\item{\code{mean}}{Posterior mean class probabilities (or expected counts
+when \code{return_type = "count"}).}
+\item{\code{variance}}{Posterior predictive variances for each class.}
+\item{\code{lower}, \code{upper}}{Marginal credible interval bounds for
+each class.}
+\item{\code{class}}{Predicted class index based on maximum posterior mean,
+returned only when \code{return_type = "probability"} and
+\code{rowSums(Y) == 1}.}
+}
 }
 \description{
 Generates posterior predictive summaries from a fitted Beta
 Kernel Process (BKP) or Dirichlet Kernel Process (DKP) model at new input
 locations. Supports prediction of posterior mean, variance, credible
 intervals, and classification labels (where applicable).
+
+S3 prediction method for fitted
+\code{\link[=fit_DKP]{DKP}} models. This method supports posterior
+prediction on either probability scale (class probabilities) or count scale
+(marginal Beta-Binomial counts for each class), and returns posterior means,
+variances, and credible intervals.
 }
 \examples{
 # ============================================================== #

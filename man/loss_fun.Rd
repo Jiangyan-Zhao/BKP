@@ -15,7 +15,7 @@ loss_fun(
   r0 = 2,
   p0 = NULL,
   loss = c("brier", "log_loss"),
-  kernel = c("gaussian", "matern52", "matern32"),
+  kernel = c("gaussian", "matern52", "matern32", "wendland"),
   isotropic = TRUE
 )
 }
@@ -51,7 +51,7 @@ which must sum to 1.}
 (default) or \code{"log_loss"}.}
 
 \item{kernel}{Kernel function for local weighting: \code{"gaussian"}
-(default), \code{"matern52"}, or \code{"matern32"}.}
+(default), \code{"matern52"}, \code{"matern32"}, or \code{"wendland"}.}
 
 \item{isotropic}{Logical. If \code{TRUE} (default), optimize/use a single
 shared lengthscale across dimensions. If \code{FALSE}, use separate

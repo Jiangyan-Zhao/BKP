@@ -17,6 +17,12 @@
 #' @param threshold Numeric between 0 and 1 specifying the classification
 #'   threshold for binary predictions based on posterior mean (used only for
 #'   BKP; default is \code{0.5}).
+#' @param return_type Character string specifying prediction scale:
+#'   \code{"probability"} (default, original behavior) or \code{"count"}
+#'   (Beta-Binomial success-count prediction).
+#' @param n_trials Positive integer total trial count used only when
+#'   \code{return_type = "count"}. If \code{NULL}, an error is thrown in
+#'   count mode.
 #' @param ... Additional arguments passed to generic \code{predict} methods
 #'   (currently not used; included for S3 method consistency).
 #'

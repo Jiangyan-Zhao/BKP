@@ -27,6 +27,12 @@
 #' @param CI_level Numeric confidence level. Default is \code{0.95}.
 #' @param threshold Classification threshold (only used for classification with
 #'   \code{m = 1}). Default is \code{0.5}.
+#' @param return_type Character string specifying prediction scale:
+#'   \code{"probability"} (default) or \code{"count"}
+#'   (Beta-Binomial success-count prediction).
+#' @param n_trials Positive integer total trial count used only when
+#'   \code{return_type = "count"}. If \code{NULL}, an error is thrown in
+#'   count mode.
 #' @param ... Unused.
 #'
 #' @return A list of class \code{"predict_TwinBKP"} containing:

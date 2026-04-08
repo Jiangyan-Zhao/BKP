@@ -11,6 +11,8 @@
   v_nums = NULL,
   CI_level = 0.95,
   threshold = 0.5,
+  return_type = c("probability", "count"),
+  n_trials = NULL,
   ...
 )
 }
@@ -30,6 +32,14 @@ it is set to \code{2 * object$g_nums}.}
 
 \item{threshold}{Classification threshold (only used for classification with
 \code{m = 1}). Default is \code{0.5}.}
+
+\item{return_type}{Character string specifying prediction scale:
+\code{"probability"} (default) or \code{"count"}
+(Beta-Binomial success-count prediction).}
+
+\item{n_trials}{Positive integer total trial count used only when
+\code{return_type = "count"}. If \code{NULL}, an error is thrown in
+count mode.}
 
 \item{...}{Unused.}
 }

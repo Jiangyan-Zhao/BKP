@@ -10,6 +10,8 @@
   l_nums = NULL,
   v_nums = NULL,
   CI_level = 0.95,
+  return_type = c("probability", "count"),
+  n_trials = NULL,
   ...
 )
 }
@@ -27,6 +29,14 @@ point. If \code{NULL} (default), set to \code{max(25, 3 * d)}.}
 
 \item{CI_level}{Numeric confidence level in \code{(0,1)}. Default is
 \code{0.95}.}
+
+\item{return_type}{Character string specifying prediction scale:
+\code{"probability"} (default) or \code{"count"}
+(Beta-Binomial marginal success-count prediction per class).}
+
+\item{n_trials}{Positive integer total trial count used only when
+\code{return_type = "count"}. If \code{NULL}, an error is thrown in
+count mode.}
 
 \item{...}{Unused.}
 }

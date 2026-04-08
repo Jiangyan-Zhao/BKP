@@ -12,7 +12,7 @@ fit_TwinBKP(
   prior = c("noninformative", "fixed", "adaptive"),
   r0 = 2,
   p0 = mean(y/m),
-  kernel = c("gaussian", "matern52", "matern32"),
+  kernel = c("gaussian", "matern52", "matern32", "wendland"),
   loss = c("brier", "log_loss"),
   n_multi_start = NULL,
   theta = NULL,
@@ -44,7 +44,7 @@ default bounds \eqn{[0,1]^d} are applied.}
 \code{mean(y/m)}.}
 
 \item{kernel}{Kernel function for local weighting: \code{"gaussian"}
-(default), \code{"matern52"}, or \code{"matern32"}.}
+(default), \code{"matern52"}, \code{"matern32"}, or \code{"wendland"}.}
 
 \item{loss}{Loss function for kernel hyperparameter tuning: \code{"brier"}
 (default) or \code{"log_loss"}.}

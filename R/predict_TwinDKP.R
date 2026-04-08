@@ -21,6 +21,12 @@
 #'   (default), set to \code{2 * object$g_nums}.
 #' @param CI_level Numeric confidence level in \code{(0,1)}. Default is
 #'   \code{0.95}.
+#' @param return_type Character string specifying prediction scale:
+#'   \code{"probability"} (default) or \code{"count"}
+#'   (Beta-Binomial marginal success-count prediction per class).
+#' @param n_trials Positive integer total trial count used only when
+#'   \code{return_type = "count"}. If \code{NULL}, an error is thrown in
+#'   count mode.
 #' @param ... Unused.
 #'
 #' @return A list of class \code{"predict_TwinDKP"} containing:

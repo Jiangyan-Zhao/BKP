@@ -1,5 +1,40 @@
 #' @rdname predict
 #'
+#' @description
+#' 
+#' S3 prediction method for fitted 
+#' \code{\link[=fit_DKP]{DKP}} models. This method supports posterior
+#' prediction on either probability scale (class probabilities) or count scale
+#' (marginal Beta-Binomial counts for each class), and returns posterior means,
+#' variances, and credible intervals.
+#'
+#' @param object A fitted \code{"DKP"} object, typically returned by
+#'   \code{\link{fit_DKP}}.
+#' @param Xnew A numeric vector or matrix of new input locations. If
+#'   \code{NULL}, predictions are returned for the training data.
+#' @param CI_level Numeric value in \code{(0, 1)} specifying the credible
+#'   interval level (default \code{0.95}).
+#' @param return_type Character string specifying prediction scale:
+#'   \code{"probability"} (default) or \code{"count"}.
+#' @param n_trials Positive integer total trial count used only when
+#'   \code{return_type = "count"}. Must be provided in count mode.
+#' @param ... Additional arguments for S3 method consistency (currently unused).
+#'
+#' @return A list of class \code{"predict_DKP"} including posterior
+#' Dirichlet parameters and predictive summaries:
+#' \describe{
+#'   \item{\code{alpha_n}}{Posterior Dirichlet parameters
+#'   (\code{n_new x q}, where \code{q} is number of classes).}
+#'   \item{\code{mean}}{Posterior mean class probabilities (or expected counts
+#'   when \code{return_type = "count"}).}
+#'   \item{\code{variance}}{Posterior predictive variances for each class.}
+#'   \item{\code{lower}, \code{upper}}{Marginal credible interval bounds for
+#'   each class.}
+#'   \item{\code{class}}{Predicted class index based on maximum posterior mean,
+#'   returned only when \code{return_type = "probability"} and
+#'   \code{rowSums(Y) == 1}.}
+#' }
+#'
 #' @keywords DKP
 #'
 #' @examples
