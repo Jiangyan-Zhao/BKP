@@ -14,3 +14,5 @@
 ^doc$
 ^Meta$
 ^LICENSE\.md$
+^\.positai$
+^\.claude$

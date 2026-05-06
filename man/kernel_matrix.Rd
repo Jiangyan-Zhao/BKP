@@ -17,7 +17,7 @@ kernel_matrix(
 \times d}.}
 
 \item{Xprime}{An optional numeric matrix of input locations with shape \eqn{m
-  \times d}. If \code{NULL} (default), it is set to \code{X}, resulting in a
+\times d}. If \code{NULL} (default), it is set to \code{X}, resulting in a
 symmetric matrix.}
 
 \item{theta}{A positive numeric value or vector specifying the kernel
