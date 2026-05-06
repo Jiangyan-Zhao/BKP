@@ -27,14 +27,14 @@ test_that("kernel_matrix additional validation and branch paths", {
   expect_error(kernel_matrix(X = c("a", "b")), "'X' must be numeric or a numeric matrix.")
   X_na <- X
   X_na[1, 1] <- NA
-  expect_error(kernel_matrix(X_na), "'X' contains NA values.")
+  expect_error(kernel_matrix(X_na), "'X' must contain only finite numeric values.")
 
   expect_error(kernel_matrix(X, Xprime = c("a", "b")), "'Xprime' must be numeric or a numeric matrix.")
   Xp_na <- Xp
   Xp_na[1, 1] <- NA
-  expect_error(kernel_matrix(X, Xp_na), "'Xprime' contains NA values.")
+  expect_error(kernel_matrix(X, Xp_na), "'Xprime' must contain only finite numeric values.")
 
-  expect_error(kernel_matrix(X, theta = 0), "'theta' must be numeric and strictly positive.")
+  expect_error(kernel_matrix(X, theta = 0), "'theta' must contain only finite numeric and strictly positive values.")
   expect_error(kernel_matrix(X, isotropic = c(TRUE, FALSE)), "'isotropic' must be a single logical value.")
 
   K_ns <- kernel_matrix(X, Xp, theta = c(0.2, 0.4), kernel = "matern32", isotropic = FALSE)
@@ -42,4 +42,25 @@ test_that("kernel_matrix additional validation and branch paths", {
 
   K_vec <- kernel_matrix(1:5, theta = 0.5)
   expect_equal(dim(K_vec), c(5, 5))
+})
+
+
+test_that("kernel_matrix returns correct Gaussian values in 1D", {
+  X <- matrix(c(0, 1), ncol = 1)
+  K <- kernel_matrix(X, theta = 2, kernel = "gaussian")
+  expect_equal(K[1, 1], 1)
+  expect_equal(K[2, 2], 1)
+  expect_equal(K[1, 2], exp(-(1 / 2)^2))
+  expect_equal(K[2, 1], K[1, 2])
+})
+
+test_that("kernel_matrix rejects non-finite inputs", {
+  expect_error(kernel_matrix(matrix(c(0, Inf), ncol = 1)))
+  expect_error(kernel_matrix(matrix(c(0, 1), ncol = 1), theta = Inf))
+})
+
+test_that("anisotropic scaling is applied dimension-wise", {
+  X <- rbind(c(0, 0), c(1, 2))
+  K <- kernel_matrix(X, theta = c(1, 2), kernel = "gaussian", isotropic = FALSE)
+  expect_equal(K[1, 2], exp(-((1 / 1)^2 + (2 / 2)^2)))
 })

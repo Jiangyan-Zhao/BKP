@@ -85,15 +85,15 @@ kernel_matrix <- function(X, Xprime = NULL, theta = 0.1,
                           isotropic = TRUE) {
   # ---- Argument checking ----
   if (!is.numeric(X)) stop("'X' must be numeric or a numeric matrix.")
-  if (anyNA(X)) stop("'X' contains NA values.")
+  if (any(!is.finite(X))) stop("'X' must contain only finite numeric values.")
 
   if (!is.null(Xprime)) {
     if (!is.numeric(Xprime)) stop("'Xprime' must be numeric or a numeric matrix.")
-    if (anyNA(Xprime)) stop("'Xprime' contains NA values.")
+    if (any(!is.finite(Xprime))) stop("'Xprime' must contain only finite numeric values.")
   }
 
-  if (!is.numeric(theta) || length(theta) < 1 || anyNA(theta) || any(theta <= 0)) {
-    stop("'theta' must be numeric and strictly positive.")
+  if (!is.numeric(theta) || length(theta) < 1 || any(!is.finite(theta)) || any(theta <= 0)) {
+    stop("'theta' must contain only finite numeric and strictly positive values.")
   }
   if (!is.logical(isotropic) || length(isotropic) != 1) {
     stop("'isotropic' must be a single logical value.")
