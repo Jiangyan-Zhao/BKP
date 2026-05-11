@@ -1,19 +1,27 @@
-
-#' Internal Twin index selector
+#' Create a 2D lattice contour plot for BKP posterior summaries
+#'
+#' Internal helper used by \code{plot.BKP()} and related plotting methods to
+#' create lattice-based contour plots for two-dimensional posterior summaries,
+#' such as the predictive mean, variance, and credible interval bounds. Optional
+#' binary observations can be overlaid on the surface.
+#'
+#' @param var Character string giving the name of the column in \code{data} to
+#'   plot.
+#' @param title Character string used as the plot title.
+#' @param data Data frame containing columns \code{x1}, \code{x2}, and the
+#'   summary variable named by \code{var}.
+#' @param X Optional numeric matrix of observed two-dimensional input locations
+#'   to overlay.
+#' @param y Optional binary response vector corresponding to \code{X}. Points
+#'   with \code{y == 1} and \code{y != 1} are drawn with different symbols.
+#' @param dims Optional integer vector of length two indicating the original
+#'   input dimensions being visualized. Used only for axis labels.
+#' @param ... Additional arguments reserved for future use.
+#'
+#' @return A \code{trellis} object produced by \code{lattice::levelplot()}.
+#'
+#' @keywords internal
 #' @noRd
-get_twin_indices <- function(Xnorm, g, v = 2L * g, runs = 10L, seed = 123L) {
-  get_twin_indices_rcpp(
-    data = as.matrix(Xnorm),
-    g = as.integer(g),
-    v = as.integer(v),
-    runs = as.integer(runs),
-    seed = as.integer(seed)
-  )
-}
-
-# Helper to build each plot
-#' @noRd
-
 my_2D_plot_fun <- function(var, title, data, X = NULL, y = NULL, dims = NULL, ...) {
   levelplot(
     as.formula(paste(var, "~ x1 * x2")),
@@ -37,6 +45,33 @@ my_2D_plot_fun <- function(var, title, data, X = NULL, y = NULL, dims = NULL, ..
 }
 
 
+#' Create a 2D lattice plot for DKP class predictions or probabilities
+#'
+#' Internal helper used by \code{plot.DKP()} to create lattice-based two-
+#' dimensional plots for predicted classes or maximum posterior class
+#' probabilities. Observed class labels are overlaid using symbols determined by
+#' the observed multinomial counts.
+#'
+#' @param var Character string giving the name of the column in \code{data} to
+#'   plot.
+#' @param title Character string used as the plot title.
+#' @param data Data frame containing columns \code{x1}, \code{x2}, and the
+#'   variable named by \code{var}.
+#' @param X Numeric matrix of observed two-dimensional input locations to
+#'   overlay.
+#' @param Y Numeric matrix of multinomial counts or one-hot class indicators.
+#'   The observed class is determined by \code{max.col(Y)}.
+#' @param classification Logical. If \code{TRUE}, the plotted surface is treated
+#'   as categorical class output; otherwise it is treated as a continuous
+#'   probability or uncertainty surface.
+#' @param dims Optional integer vector of length two indicating the original
+#'   input dimensions being visualized. Used only for axis labels.
+#' @param ... Additional arguments reserved for future use.
+#'
+#' @return A \code{trellis} object produced by \code{lattice::levelplot()}.
+#'
+#' @keywords internal
+#' @noRd
 my_2D_plot_fun_class <- function(var, title, data, X, Y, classification = TRUE, dims = NULL, ...) {
   class_Y <- max.col(Y)
 
@@ -71,41 +106,31 @@ my_2D_plot_fun_class <- function(var, title, data, X, Y, classification = TRUE, 
   )
 }
 
-my_2D_plot_fun_ggplot <- function(var, title, data, X = NULL, y = NULL, dims = NULL, ...) {
-  if (!is.character(var) || length(var) != 1) {
-    stop("`var` must be a single character string (a column name).")
-  }
-  if (!var %in% names(data)) {
-    stop(sprintf("Column `%s` not found in `data`.", var))
-  }
 
-  p <- ggplot(data, aes(x = .data$x1, y = .data$x2)) +
-    geom_raster(aes(fill = .data[[var]])) +
-    geom_contour(aes(z = .data[[var]]), color = "black", linewidth = 0.2) +
-    scale_fill_viridis_c(option = "plasma") +
-    labs(
-      title = title,
-      x = if (is.null(dims)) "x1" else paste0("x", dims[1]),
-      y = if (is.null(dims)) "x2" else paste0("x", dims[2]),
-      fill = var
-    ) + theme_minimal()
-
-  if (!is.null(X) && !is.null(y)) {
-    obs_df <- data.frame(
-      x1 = X[, 1],
-      x2 = X[, 2],
-      cls = factor(ifelse(y == 1, "1", "0"))
-    )
-    p <- p + geom_point(
-        data = obs_df,
-        aes(x = .data$x1, y = .data$x2, shape = .data$cls),
-        color = "red", size = 2, inherit.aes = FALSE
-      ) + scale_shape_manual(values = c("0" = 4, "1" = 16), guide = "none")
-  }
-
-  p
-}
-
+#' Create a styled 2D ggplot surface for BKP posterior summaries
+#'
+#' Internal helper used by \code{plot.BKP()} to create a styled
+#' \pkg{ggplot2}-based raster and contour plot for two-dimensional posterior
+#' summaries.
+#'
+#' @param var Character string giving the name of the column in \code{data} to
+#'   plot. Probability summaries named \code{"Mean"}, \code{"Upper"}, or
+#'   \code{"Lower"} are displayed on a fixed \eqn{[0, 1]} colour scale.
+#' @param title Character string used as the plot title.
+#' @param data Data frame containing columns \code{x1}, \code{x2}, and the
+#'   summary variable named by \code{var}.
+#' @param X Optional numeric matrix of observed two-dimensional input locations
+#'   to overlay.
+#' @param y Optional binary response vector corresponding to \code{X}. Points
+#'   with \code{y == 1} and \code{y != 1} are drawn with different symbols.
+#' @param dims Optional integer vector of length two indicating the original
+#'   input dimensions being visualized. Used only for axis labels.
+#' @param ... Additional arguments reserved for future use.
+#'
+#' @return A \code{ggplot} object.
+#'
+#' @keywords internal
+#' @noRd
 my_2D_plot_fun_ggplot <- function(var, title, data, X = NULL, y = NULL, dims = NULL, ...) {
   # Validate inputs to ensure 'var' is a valid column string
   if (!is.character(var) || length(var) != 1) {
@@ -175,6 +200,35 @@ my_2D_plot_fun_ggplot <- function(var, title, data, X = NULL, y = NULL, dims = N
   p
 }
 
+#' Create a 2D ggplot surface for DKP class predictions or probabilities
+#'
+#' Internal helper used by \code{plot.DKP()} to create \pkg{ggplot2}-based
+#' two-dimensional plots for predicted classes or maximum posterior class
+#' probabilities. Observed class labels are overlaid using symbols determined by
+#' the observed multinomial counts.
+#'
+#' @param var Character string giving the name of the column in \code{data} to
+#'   plot. When \code{classification = TRUE}, the predicted class surface stored
+#'   in \code{data$class} is used.
+#' @param title Character string used as the plot title.
+#' @param data Data frame containing columns \code{x1}, \code{x2}, and either a
+#'   categorical \code{class} column or a continuous summary variable named by
+#'   \code{var}.
+#' @param X Numeric matrix of observed two-dimensional input locations to
+#'   overlay.
+#' @param Y Numeric matrix of multinomial counts or one-hot class indicators.
+#'   The observed class is determined by \code{max.col(Y)}.
+#' @param classification Logical. If \code{TRUE}, the plotted surface is treated
+#'   as categorical class output; otherwise it is treated as a continuous
+#'   probability or uncertainty surface.
+#' @param dims Optional integer vector of length two indicating the original
+#'   input dimensions being visualized. Used only for axis labels.
+#' @param ... Additional arguments reserved for future use.
+#'
+#' @return A \code{ggplot} object.
+#'
+#' @keywords internal
+#' @noRd
 my_2D_plot_fun_class_ggplot <- function(var, title, data, X, Y,
                                         classification = TRUE, dims = NULL, ...) {
   # Validate that var is a single character string
@@ -250,6 +304,20 @@ my_2D_plot_fun_class_ggplot <- function(var, title, data, X, Y,
   p
 }
 
+#' Summarize posterior means and variances
+#'
+#' Internal helper used by summary methods to compute compact descriptive
+#' statistics for posterior mean and variance vectors.
+#'
+#' @param mean_vals Numeric vector of posterior mean values.
+#' @param var_vals Numeric vector of posterior variance values.
+#'
+#' @return A numeric matrix with rows for posterior means and posterior
+#'   variances, and columns giving the mean, median, standard deviation, minimum,
+#'   and maximum. Values are rounded to four decimal places.
+#'
+#' @keywords internal
+#' @noRd
 posterior_summary <- function(mean_vals, var_vals) {
   summary_mat <- rbind(
     "Posterior means" = c(
@@ -270,13 +338,71 @@ posterior_summary <- function(mean_vals, var_vals) {
   return(round(summary_mat, 4))
 }
 
+#' Select global twin indices for TwinBKP/TwinDKP approximations
+#'
+#' Internal wrapper around the C++ implementation used to select a subset of
+#' representative global indices from normalized input locations. The selected
+#' indices are used by TwinBKP/TwinDKP-style approximations to construct a
+#' reduced global design.
+#'
+#' @param Xnorm Numeric matrix of normalized input locations, typically scaled to
+#'   the unit hypercube.
+#' @param g Positive integer specifying the number of global twin indices to
+#'   select.
+#' @param v Positive integer specifying the validation or candidate subset size
+#'   used by the underlying twin-selection routine. Default is \code{2L * g}.
+#' @param runs Positive integer specifying the number of random runs used by the
+#'   underlying C++ routine. Default is \code{10L}.
+#' @param seed Integer random seed passed to the C++ routine for reproducibility.
+#'
+#' @return An integer vector of selected row indices.
+#'
+#' @keywords internal
+#' @noRd
+get_twin_indices <- function(Xnorm, g, v = 2L * g, runs = 10L, seed = 123L) {
+  get_twin_indices_rcpp(
+    data = as.matrix(Xnorm),
+    g = as.integer(g),
+    v = as.integer(v),
+    runs = as.integer(runs),
+    seed = as.integer(seed)
+  )
+}
 
-# Beta-binomial helpers (internal)
+
+#' Evaluate the beta-binomial probability mass function
+#'
+#' Internal helper for computing beta-binomial probabilities used by predictive
+#' count summaries and quantile calculations.
+#'
+#' @param k Integer or numeric vector of success counts.
+#' @param size Non-negative integer giving the number of trials.
+#' @param alpha Positive numeric beta shape parameter for successes.
+#' @param beta Positive numeric beta shape parameter for failures.
+#'
+#' @return Numeric vector of beta-binomial probabilities evaluated at \code{k}.
+#'
+#' @keywords internal
 #' @noRd
 betabinom_pmf <- function(k, size, alpha, beta) {
   exp(lchoose(size, k) + lbeta(k + alpha, size - k + beta) - lbeta(alpha, beta))
 }
 
+#' Compute a beta-binomial quantile
+#'
+#' Internal helper that computes the smallest count whose beta-binomial
+#' cumulative distribution function is at least the requested probability.
+#'
+#' @param prob Numeric scalar probability in \eqn{[0, 1]}.
+#' @param size Non-negative integer giving the number of trials.
+#' @param alpha Positive numeric beta shape parameter for successes.
+#' @param beta Positive numeric beta shape parameter for failures.
+#'
+#' @return Integer beta-binomial quantile. Returns \code{0} for non-finite or
+#'   non-positive probabilities and \code{size} for probabilities greater than or
+#'   equal to one.
+#'
+#' @keywords internal
 #' @noRd
 betabinom_quantile <- function(prob, size, alpha, beta) {
   if (!is.finite(prob) || prob <= 0) return(0)

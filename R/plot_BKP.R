@@ -20,9 +20,11 @@
 #' @param dims Integer vector indicating which input dimensions to plot. Must
 #'   have length 1 (for 1D) or 2 (for 2D). If \code{NULL} (default), all
 #'   dimensions are used when their number is <= 2.
-#' @param engine Character string specifying plotting backend for 2D plots.
-#'   Either \code{"base"} (default, lattice-based output) or
-#'   \code{"ggplot"}.
+#' @param engine Character string specifying the plotting backend.
+#'   Either \code{"base"} or \code{"ggplot"}. The default \code{"base"}
+#'   uses the package's original base/lattice plotting implementation,
+#'   whereas \code{"ggplot"} uses \pkg{ggplot2}-based graphics when
+#'   available. This argument applies to both 1D and 2D plots.
 #' @param ... Additional arguments passed to internal plotting routines
 #'   (currently unused).
 #'
