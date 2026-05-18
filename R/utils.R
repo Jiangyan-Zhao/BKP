@@ -21,7 +21,7 @@
 #' @return A \code{trellis} object produced by \code{lattice::levelplot()}.
 #'
 #' @keywords internal
-#' @noRd
+
 my_2D_plot_fun <- function(var, title, data, X = NULL, y = NULL, dims = NULL, ...) {
   levelplot(
     as.formula(paste(var, "~ x1 * x2")),
@@ -71,7 +71,7 @@ my_2D_plot_fun <- function(var, title, data, X = NULL, y = NULL, dims = NULL, ..
 #' @return A \code{trellis} object produced by \code{lattice::levelplot()}.
 #'
 #' @keywords internal
-#' @noRd
+
 my_2D_plot_fun_class <- function(var, title, data, X, Y, classification = TRUE, dims = NULL, ...) {
   class_Y <- max.col(Y)
 
@@ -130,7 +130,7 @@ my_2D_plot_fun_class <- function(var, title, data, X, Y, classification = TRUE, 
 #' @return A \code{ggplot} object.
 #'
 #' @keywords internal
-#' @noRd
+
 my_2D_plot_fun_ggplot <- function(var, title, data, X = NULL, y = NULL, dims = NULL, ...) {
   # Validate inputs to ensure 'var' is a valid column string
   if (!is.character(var) || length(var) != 1) {
@@ -228,7 +228,7 @@ my_2D_plot_fun_ggplot <- function(var, title, data, X = NULL, y = NULL, dims = N
 #' @return A \code{ggplot} object.
 #'
 #' @keywords internal
-#' @noRd
+
 my_2D_plot_fun_class_ggplot <- function(var, title, data, X, Y,
                                         classification = TRUE, dims = NULL, ...) {
   # Validate that var is a single character string
@@ -317,7 +317,7 @@ my_2D_plot_fun_class_ggplot <- function(var, title, data, X, Y,
 #'   and maximum. Values are rounded to four decimal places.
 #'
 #' @keywords internal
-#' @noRd
+
 posterior_summary <- function(mean_vals, var_vals) {
   summary_mat <- rbind(
     "Posterior means" = c(
@@ -358,7 +358,7 @@ posterior_summary <- function(mean_vals, var_vals) {
 #' @return An integer vector of selected row indices.
 #'
 #' @keywords internal
-#' @noRd
+
 get_twin_indices <- function(Xnorm, g, v = 2L * g, runs = 10L, seed = 123L) {
   get_twin_indices_rcpp(
     data = as.matrix(Xnorm),
@@ -383,7 +383,7 @@ get_twin_indices <- function(Xnorm, g, v = 2L * g, runs = 10L, seed = 123L) {
 #' @return Numeric vector of beta-binomial probabilities evaluated at \code{k}.
 #'
 #' @keywords internal
-#' @noRd
+
 betabinom_pmf <- function(k, size, alpha, beta) {
   exp(lchoose(size, k) + lbeta(k + alpha, size - k + beta) - lbeta(alpha, beta))
 }
@@ -403,7 +403,7 @@ betabinom_pmf <- function(k, size, alpha, beta) {
 #'   equal to one.
 #'
 #' @keywords internal
-#' @noRd
+
 betabinom_quantile <- function(prob, size, alpha, beta) {
   if (!is.finite(prob) || prob <= 0) return(0)
   if (prob >= 1) return(size)
