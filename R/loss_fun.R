@@ -69,6 +69,7 @@ loss_fun <- function(
     if (is.null(Y)) stop("'Y' must be provided for DKP model.")
     if (!is.matrix(Y) || anyNA(Y) || any(Y < 0)) stop("'Y' must be a numeric matrix with no NA and nonnegative entries.")
     if (nrow(Y) != nrow(Xnorm)) stop("Number of rows in 'Y' must match number of rows in 'Xnorm'.")
+    if (any(rowSums(Y) <= 0)) stop("Each row of 'Y' must have positive total count.")
   }
 
   if (!is.numeric(r0) || length(r0) != 1 || r0 <= 0) stop("'r0' must be a positive scalar.")
