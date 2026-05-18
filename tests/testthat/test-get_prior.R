@@ -90,7 +90,7 @@ test_that("get_prior works correctly for DKP model", {
   r0 <- 10
   p0 <- colMeans(Y / rowSums(Y))
   fixed_prior <- get_prior(prior = "fixed", model = "DKP", K = K, r0 = r0, p0 = p0)
-  expected_alpha0 <- matrix(rep(r0 * p0, each = n), nrow = n, byrow = TRUE)
+  expected_alpha0 <- matrix(rep(r0 * p0, each = n), nrow = n)
   expect_equal(fixed_prior, expected_alpha0)
 
   # Adaptive prior

@@ -11,34 +11,6 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// bkp_posterior_update_rcpp
-List bkp_posterior_update_rcpp(const arma::mat& K, const arma::vec& y, const arma::vec& m, const arma::vec& alpha0, const arma::vec& beta0);
-RcppExport SEXP _BKP_bkp_posterior_update_rcpp(SEXP KSEXP, SEXP ySEXP, SEXP mSEXP, SEXP alpha0SEXP, SEXP beta0SEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type K(KSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type y(ySEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type m(mSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type alpha0(alpha0SEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type beta0(beta0SEXP);
-    rcpp_result_gen = Rcpp::wrap(bkp_posterior_update_rcpp(K, y, m, alpha0, beta0));
-    return rcpp_result_gen;
-END_RCPP
-}
-// dkp_posterior_update_rcpp
-List dkp_posterior_update_rcpp(const arma::mat& K, const arma::mat& Y, const arma::mat& alpha0);
-RcppExport SEXP _BKP_dkp_posterior_update_rcpp(SEXP KSEXP, SEXP YSEXP, SEXP alpha0SEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type K(KSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type Y(YSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type alpha0(alpha0SEXP);
-    rcpp_result_gen = Rcpp::wrap(dkp_posterior_update_rcpp(K, Y, alpha0));
-    return rcpp_result_gen;
-END_RCPP
-}
 // get_prior_bkp_noninformative_rcpp
 List get_prior_bkp_noninformative_rcpp(int n);
 RcppExport SEXP _BKP_get_prior_bkp_noninformative_rcpp(SEXP nSEXP) {
@@ -282,6 +254,34 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// bkp_posterior_update_rcpp
+List bkp_posterior_update_rcpp(const arma::mat& K, const arma::vec& y, const arma::vec& m, const arma::vec& alpha0, const arma::vec& beta0);
+RcppExport SEXP _BKP_bkp_posterior_update_rcpp(SEXP KSEXP, SEXP ySEXP, SEXP mSEXP, SEXP alpha0SEXP, SEXP beta0SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type K(KSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type m(mSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type alpha0(alpha0SEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type beta0(beta0SEXP);
+    rcpp_result_gen = Rcpp::wrap(bkp_posterior_update_rcpp(K, y, m, alpha0, beta0));
+    return rcpp_result_gen;
+END_RCPP
+}
+// dkp_posterior_update_rcpp
+List dkp_posterior_update_rcpp(const arma::mat& K, const arma::mat& Y, const arma::mat& alpha0);
+RcppExport SEXP _BKP_dkp_posterior_update_rcpp(SEXP KSEXP, SEXP YSEXP, SEXP alpha0SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type K(KSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type alpha0(alpha0SEXP);
+    rcpp_result_gen = Rcpp::wrap(dkp_posterior_update_rcpp(K, Y, alpha0));
+    return rcpp_result_gen;
+END_RCPP
+}
 // predict_bkp_rcpp
 List predict_bkp_rcpp(const arma::mat& K, const arma::vec& alpha0, const arma::vec& beta0, const arma::vec& y, const arma::vec& m);
 RcppExport SEXP _BKP_predict_bkp_rcpp(SEXP KSEXP, SEXP alpha0SEXP, SEXP beta0SEXP, SEXP ySEXP, SEXP mSEXP) {
@@ -341,8 +341,6 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_BKP_bkp_posterior_update_rcpp", (DL_FUNC) &_BKP_bkp_posterior_update_rcpp, 5},
-    {"_BKP_dkp_posterior_update_rcpp", (DL_FUNC) &_BKP_dkp_posterior_update_rcpp, 3},
     {"_BKP_get_prior_bkp_noninformative_rcpp", (DL_FUNC) &_BKP_get_prior_bkp_noninformative_rcpp, 1},
     {"_BKP_get_prior_bkp_fixed_rcpp", (DL_FUNC) &_BKP_get_prior_bkp_fixed_rcpp, 3},
     {"_BKP_get_prior_bkp_adaptive_rcpp", (DL_FUNC) &_BKP_get_prior_bkp_adaptive_rcpp, 4},
@@ -359,6 +357,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_BKP_optimize_dkp_theta_rcpp", (DL_FUNC) &_BKP_optimize_dkp_theta_rcpp, 13},
     {"_BKP_optimize_lambda_bkp_rcpp", (DL_FUNC) &_BKP_optimize_lambda_bkp_rcpp, 9},
     {"_BKP_optimize_lambda_dkp_rcpp", (DL_FUNC) &_BKP_optimize_lambda_dkp_rcpp, 7},
+    {"_BKP_bkp_posterior_update_rcpp", (DL_FUNC) &_BKP_bkp_posterior_update_rcpp, 5},
+    {"_BKP_dkp_posterior_update_rcpp", (DL_FUNC) &_BKP_dkp_posterior_update_rcpp, 3},
     {"_BKP_predict_bkp_rcpp", (DL_FUNC) &_BKP_predict_bkp_rcpp, 5},
     {"_BKP_predict_dkp_rcpp", (DL_FUNC) &_BKP_predict_dkp_rcpp, 3},
     {"_BKP_get_twin_indices_rcpp", (DL_FUNC) &_BKP_get_twin_indices_rcpp, 5},
