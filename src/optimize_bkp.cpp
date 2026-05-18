@@ -10,7 +10,14 @@
 using namespace Rcpp;
 
 // ---- declarations from other cpp files ----
-arma::mat kernel_matrix_rcpp(SEXP X, SEXP Xprime, NumericVector theta, std::string kernel, bool isotropic);
+arma::mat kernel_matrix_arma(
+    const arma::mat& Xm,
+    const arma::mat& Xpm,
+    const arma::vec& theta,
+    const std::string& kernel,
+    const bool isotropic,
+    const bool symmetric
+);
 
 List get_prior_bkp_noninformative_rcpp(int n);
 List get_prior_bkp_fixed_rcpp(int n, double r0, double p0);
@@ -52,8 +59,7 @@ static double eval_bkp_loss_from_gamma(
 ) {
   arma::vec theta = arma::exp(std::log(10.0) * gamma);
 
-  NumericVector theta_nv(theta.begin(), theta.end());
-  arma::mat K = kernel_matrix_rcpp(wrap(Xnorm), R_NilValue, theta_nv, kernel, isotropic);
+  arma::mat K = kernel_matrix_arma(Xnorm, Xnorm, theta, kernel, isotropic, true);
   K.diag().zeros();
 
   List prior_par;
@@ -99,8 +105,7 @@ static double eval_dkp_loss_from_gamma(
 ) {
   arma::vec theta = arma::exp(std::log(10.0) * gamma);
 
-  NumericVector theta_nv(theta.begin(), theta.end());
-  arma::mat K = kernel_matrix_rcpp(wrap(Xnorm), R_NilValue, theta_nv, kernel, isotropic);
+  arma::mat K = kernel_matrix_arma(Xnorm, Xnorm, theta, kernel, isotropic, true);
   K.diag().zeros();
 
   arma::mat alpha0;
