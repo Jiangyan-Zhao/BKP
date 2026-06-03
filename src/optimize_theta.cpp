@@ -1,3 +1,11 @@
+// -----------------------------------------------------------------------------
+// This file implements kernel hyperparameter optimization for BKP and DKP.
+//
+// This file contains the shared optimization workflow for both Beta Kernel
+// Process and Dirichlet Kernel Process models. The BKP and DKP routines are
+// kept together because they use the same gamma-scale parameterization,
+// candidate generation, and nloptr-based refinement strategy.
+// -----------------------------------------------------------------------------
 #include <RcppArmadillo.h>
 #include <nloptrAPI.h>
 #include <limits>
@@ -9,7 +17,7 @@
 
 using namespace Rcpp;
 
-// ---- declarations from other cpp files ----
+// ---- BEGIN: declarations from other cpp files ----
 arma::mat kernel_matrix_arma(
     const arma::mat& Xm,
     const arma::mat& Xpm,
@@ -44,6 +52,7 @@ double loss_fun_brier_dkp_rcpp(
 double loss_fun_logloss_dkp_rcpp(
   const arma::mat& K, const arma::mat& Y, const arma::mat& alpha0
 );
+// ---- END: declarations from other cpp files ----
 
 static double eval_bkp_loss_from_gamma(
     const arma::vec& gamma,
