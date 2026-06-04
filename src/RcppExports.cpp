@@ -11,79 +11,21 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// get_prior_bkp_noninformative_rcpp
-List get_prior_bkp_noninformative_rcpp(int n);
-RcppExport SEXP _BKP_get_prior_bkp_noninformative_rcpp(SEXP nSEXP) {
+// get_prior_rcpp
+List get_prior_rcpp(std::string model, std::string prior, double r0, Nullable<NumericVector> p0, Nullable<NumericVector> y, Nullable<NumericVector> m, Nullable<NumericMatrix> Y, Nullable<NumericMatrix> K);
+RcppExport SEXP _BKP_get_prior_rcpp(SEXP modelSEXP, SEXP priorSEXP, SEXP r0SEXP, SEXP p0SEXP, SEXP ySEXP, SEXP mSEXP, SEXP YSEXP, SEXP KSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< int >::type n(nSEXP);
-    rcpp_result_gen = Rcpp::wrap(get_prior_bkp_noninformative_rcpp(n));
-    return rcpp_result_gen;
-END_RCPP
-}
-// get_prior_bkp_fixed_rcpp
-List get_prior_bkp_fixed_rcpp(int n, double r0, double p0);
-RcppExport SEXP _BKP_get_prior_bkp_fixed_rcpp(SEXP nSEXP, SEXP r0SEXP, SEXP p0SEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< int >::type n(nSEXP);
+    Rcpp::traits::input_parameter< std::string >::type model(modelSEXP);
+    Rcpp::traits::input_parameter< std::string >::type prior(priorSEXP);
     Rcpp::traits::input_parameter< double >::type r0(r0SEXP);
-    Rcpp::traits::input_parameter< double >::type p0(p0SEXP);
-    rcpp_result_gen = Rcpp::wrap(get_prior_bkp_fixed_rcpp(n, r0, p0));
-    return rcpp_result_gen;
-END_RCPP
-}
-// get_prior_bkp_adaptive_rcpp
-List get_prior_bkp_adaptive_rcpp(const arma::mat& K, const arma::vec& y, const arma::vec& m, double r0);
-RcppExport SEXP _BKP_get_prior_bkp_adaptive_rcpp(SEXP KSEXP, SEXP ySEXP, SEXP mSEXP, SEXP r0SEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type K(KSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type y(ySEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type m(mSEXP);
-    Rcpp::traits::input_parameter< double >::type r0(r0SEXP);
-    rcpp_result_gen = Rcpp::wrap(get_prior_bkp_adaptive_rcpp(K, y, m, r0));
-    return rcpp_result_gen;
-END_RCPP
-}
-// get_prior_dkp_noninformative_rcpp
-arma::mat get_prior_dkp_noninformative_rcpp(int n, int q);
-RcppExport SEXP _BKP_get_prior_dkp_noninformative_rcpp(SEXP nSEXP, SEXP qSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< int >::type n(nSEXP);
-    Rcpp::traits::input_parameter< int >::type q(qSEXP);
-    rcpp_result_gen = Rcpp::wrap(get_prior_dkp_noninformative_rcpp(n, q));
-    return rcpp_result_gen;
-END_RCPP
-}
-// get_prior_dkp_fixed_rcpp
-arma::mat get_prior_dkp_fixed_rcpp(int n, double r0, const arma::vec& p0);
-RcppExport SEXP _BKP_get_prior_dkp_fixed_rcpp(SEXP nSEXP, SEXP r0SEXP, SEXP p0SEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< int >::type n(nSEXP);
-    Rcpp::traits::input_parameter< double >::type r0(r0SEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type p0(p0SEXP);
-    rcpp_result_gen = Rcpp::wrap(get_prior_dkp_fixed_rcpp(n, r0, p0));
-    return rcpp_result_gen;
-END_RCPP
-}
-// get_prior_dkp_adaptive_rcpp
-arma::mat get_prior_dkp_adaptive_rcpp(const arma::mat& K, const arma::mat& Y, double r0);
-RcppExport SEXP _BKP_get_prior_dkp_adaptive_rcpp(SEXP KSEXP, SEXP YSEXP, SEXP r0SEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type K(KSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type Y(YSEXP);
-    Rcpp::traits::input_parameter< double >::type r0(r0SEXP);
-    rcpp_result_gen = Rcpp::wrap(get_prior_dkp_adaptive_rcpp(K, Y, r0));
+    Rcpp::traits::input_parameter< Nullable<NumericVector> >::type p0(p0SEXP);
+    Rcpp::traits::input_parameter< Nullable<NumericVector> >::type y(ySEXP);
+    Rcpp::traits::input_parameter< Nullable<NumericVector> >::type m(mSEXP);
+    Rcpp::traits::input_parameter< Nullable<NumericMatrix> >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< Nullable<NumericMatrix> >::type K(KSEXP);
+    rcpp_result_gen = Rcpp::wrap(get_prior_rcpp(model, prior, r0, p0, y, m, Y, K));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -171,6 +113,42 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// optimize_lambda_bkp_rcpp
+Rcpp::List optimize_lambda_bkp_rcpp(const arma::mat& K_g, const arma::mat& K_l, const arma::vec& y, const arma::vec& m, const arma::vec& alpha0, const arma::vec& beta0, const std::string& loss, const int max_iter, const double tol);
+RcppExport SEXP _BKP_optimize_lambda_bkp_rcpp(SEXP K_gSEXP, SEXP K_lSEXP, SEXP ySEXP, SEXP mSEXP, SEXP alpha0SEXP, SEXP beta0SEXP, SEXP lossSEXP, SEXP max_iterSEXP, SEXP tolSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type K_g(K_gSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type K_l(K_lSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type m(mSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type alpha0(alpha0SEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type beta0(beta0SEXP);
+    Rcpp::traits::input_parameter< const std::string& >::type loss(lossSEXP);
+    Rcpp::traits::input_parameter< const int >::type max_iter(max_iterSEXP);
+    Rcpp::traits::input_parameter< const double >::type tol(tolSEXP);
+    rcpp_result_gen = Rcpp::wrap(optimize_lambda_bkp_rcpp(K_g, K_l, y, m, alpha0, beta0, loss, max_iter, tol));
+    return rcpp_result_gen;
+END_RCPP
+}
+// optimize_lambda_dkp_rcpp
+Rcpp::List optimize_lambda_dkp_rcpp(const arma::mat& K_g, const arma::mat& K_l, const arma::mat& Y, const arma::mat& alpha0, const std::string& loss, const int max_iter, const double tol);
+RcppExport SEXP _BKP_optimize_lambda_dkp_rcpp(SEXP K_gSEXP, SEXP K_lSEXP, SEXP YSEXP, SEXP alpha0SEXP, SEXP lossSEXP, SEXP max_iterSEXP, SEXP tolSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type K_g(K_gSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type K_l(K_lSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type alpha0(alpha0SEXP);
+    Rcpp::traits::input_parameter< const std::string& >::type loss(lossSEXP);
+    Rcpp::traits::input_parameter< const int >::type max_iter(max_iterSEXP);
+    Rcpp::traits::input_parameter< const double >::type tol(tolSEXP);
+    rcpp_result_gen = Rcpp::wrap(optimize_lambda_dkp_rcpp(K_g, K_l, Y, alpha0, loss, max_iter, tol));
+    return rcpp_result_gen;
+END_RCPP
+}
 // optimize_bkp_theta_rcpp
 Rcpp::List optimize_bkp_theta_rcpp(const arma::mat& Xnorm, const arma::vec& y, const arma::vec& m, const std::string& prior, const double r0, const double p0, const std::string& loss, const std::string& kernel, const bool isotropic, const int n_grid, const int n_starts, const int max_iter, const double g_lower, const double g_upper);
 RcppExport SEXP _BKP_optimize_bkp_theta_rcpp(SEXP XnormSEXP, SEXP ySEXP, SEXP mSEXP, SEXP priorSEXP, SEXP r0SEXP, SEXP p0SEXP, SEXP lossSEXP, SEXP kernelSEXP, SEXP isotropicSEXP, SEXP n_gridSEXP, SEXP n_startsSEXP, SEXP max_iterSEXP, SEXP g_lowerSEXP, SEXP g_upperSEXP) {
@@ -215,42 +193,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const double >::type g_lower(g_lowerSEXP);
     Rcpp::traits::input_parameter< const double >::type g_upper(g_upperSEXP);
     rcpp_result_gen = Rcpp::wrap(optimize_dkp_theta_rcpp(Xnorm, Y, prior, r0, p0, loss, kernel, isotropic, n_grid, n_starts, max_iter, g_lower, g_upper));
-    return rcpp_result_gen;
-END_RCPP
-}
-// optimize_lambda_bkp_rcpp
-Rcpp::List optimize_lambda_bkp_rcpp(const arma::mat& K_g, const arma::mat& K_l, const arma::vec& y, const arma::vec& m, const arma::vec& alpha0, const arma::vec& beta0, const std::string& loss, const int max_iter, const double tol);
-RcppExport SEXP _BKP_optimize_lambda_bkp_rcpp(SEXP K_gSEXP, SEXP K_lSEXP, SEXP ySEXP, SEXP mSEXP, SEXP alpha0SEXP, SEXP beta0SEXP, SEXP lossSEXP, SEXP max_iterSEXP, SEXP tolSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type K_g(K_gSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type K_l(K_lSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type y(ySEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type m(mSEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type alpha0(alpha0SEXP);
-    Rcpp::traits::input_parameter< const arma::vec& >::type beta0(beta0SEXP);
-    Rcpp::traits::input_parameter< const std::string& >::type loss(lossSEXP);
-    Rcpp::traits::input_parameter< const int >::type max_iter(max_iterSEXP);
-    Rcpp::traits::input_parameter< const double >::type tol(tolSEXP);
-    rcpp_result_gen = Rcpp::wrap(optimize_lambda_bkp_rcpp(K_g, K_l, y, m, alpha0, beta0, loss, max_iter, tol));
-    return rcpp_result_gen;
-END_RCPP
-}
-// optimize_lambda_dkp_rcpp
-Rcpp::List optimize_lambda_dkp_rcpp(const arma::mat& K_g, const arma::mat& K_l, const arma::mat& Y, const arma::mat& alpha0, const std::string& loss, const int max_iter, const double tol);
-RcppExport SEXP _BKP_optimize_lambda_dkp_rcpp(SEXP K_gSEXP, SEXP K_lSEXP, SEXP YSEXP, SEXP alpha0SEXP, SEXP lossSEXP, SEXP max_iterSEXP, SEXP tolSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type K_g(K_gSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type K_l(K_lSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type Y(YSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type alpha0(alpha0SEXP);
-    Rcpp::traits::input_parameter< const std::string& >::type loss(lossSEXP);
-    Rcpp::traits::input_parameter< const int >::type max_iter(max_iterSEXP);
-    Rcpp::traits::input_parameter< const double >::type tol(tolSEXP);
-    rcpp_result_gen = Rcpp::wrap(optimize_lambda_dkp_rcpp(K_g, K_l, Y, alpha0, loss, max_iter, tol));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -341,22 +283,17 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_BKP_get_prior_bkp_noninformative_rcpp", (DL_FUNC) &_BKP_get_prior_bkp_noninformative_rcpp, 1},
-    {"_BKP_get_prior_bkp_fixed_rcpp", (DL_FUNC) &_BKP_get_prior_bkp_fixed_rcpp, 3},
-    {"_BKP_get_prior_bkp_adaptive_rcpp", (DL_FUNC) &_BKP_get_prior_bkp_adaptive_rcpp, 4},
-    {"_BKP_get_prior_dkp_noninformative_rcpp", (DL_FUNC) &_BKP_get_prior_dkp_noninformative_rcpp, 2},
-    {"_BKP_get_prior_dkp_fixed_rcpp", (DL_FUNC) &_BKP_get_prior_dkp_fixed_rcpp, 3},
-    {"_BKP_get_prior_dkp_adaptive_rcpp", (DL_FUNC) &_BKP_get_prior_dkp_adaptive_rcpp, 3},
+    {"_BKP_get_prior_rcpp", (DL_FUNC) &_BKP_get_prior_rcpp, 8},
     {"_BKP_get_knnx_nanoflann_rcpp", (DL_FUNC) &_BKP_get_knnx_nanoflann_rcpp, 3},
     {"_BKP_kernel_matrix_rcpp", (DL_FUNC) &_BKP_kernel_matrix_rcpp, 5},
     {"_BKP_loss_fun_brier_bkp_rcpp", (DL_FUNC) &_BKP_loss_fun_brier_bkp_rcpp, 5},
     {"_BKP_loss_fun_logloss_bkp_rcpp", (DL_FUNC) &_BKP_loss_fun_logloss_bkp_rcpp, 5},
     {"_BKP_loss_fun_brier_dkp_rcpp", (DL_FUNC) &_BKP_loss_fun_brier_dkp_rcpp, 3},
     {"_BKP_loss_fun_logloss_dkp_rcpp", (DL_FUNC) &_BKP_loss_fun_logloss_dkp_rcpp, 3},
-    {"_BKP_optimize_bkp_theta_rcpp", (DL_FUNC) &_BKP_optimize_bkp_theta_rcpp, 14},
-    {"_BKP_optimize_dkp_theta_rcpp", (DL_FUNC) &_BKP_optimize_dkp_theta_rcpp, 13},
     {"_BKP_optimize_lambda_bkp_rcpp", (DL_FUNC) &_BKP_optimize_lambda_bkp_rcpp, 9},
     {"_BKP_optimize_lambda_dkp_rcpp", (DL_FUNC) &_BKP_optimize_lambda_dkp_rcpp, 7},
+    {"_BKP_optimize_bkp_theta_rcpp", (DL_FUNC) &_BKP_optimize_bkp_theta_rcpp, 14},
+    {"_BKP_optimize_dkp_theta_rcpp", (DL_FUNC) &_BKP_optimize_dkp_theta_rcpp, 13},
     {"_BKP_bkp_posterior_update_rcpp", (DL_FUNC) &_BKP_bkp_posterior_update_rcpp, 5},
     {"_BKP_dkp_posterior_update_rcpp", (DL_FUNC) &_BKP_dkp_posterior_update_rcpp, 3},
     {"_BKP_predict_bkp_rcpp", (DL_FUNC) &_BKP_predict_bkp_rcpp, 5},

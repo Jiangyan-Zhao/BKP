@@ -97,95 +97,137 @@ get_prior <- function(prior = c("noninformative", "fixed", "adaptive"),
   model <- match.arg(model)
   prior <- match.arg(prior)
 
-  if (!is.numeric(r0) || length(r0) != 1 || r0 <= 0) {
-    stop("'r0' must be a positive scalar.")
+  ## ---- Common argument checks ----
+  if (!is.numeric(r0) || length(r0) != 1 || is.na(r0) || !is.finite(r0) || r0 <= 0) {
+    stop("'r0' must be a positive finite scalar.")
   }
 
   if (!is.null(p0)) {
-    if (!is.numeric(p0) || any(p0 < 0)) {
-      stop("'p0' must be numeric and nonnegative.")
+    if (!is.numeric(p0) || anyNA(p0) || any(!is.finite(p0)) || any(p0 < 0)) {
+      stop("'p0' must be a numeric vector with nonnegative finite values.")
+    }
+  }
+
+  if (!is.null(K)) {
+    if (!is.matrix(K) || !is.numeric(K) || anyNA(K) || any(!is.finite(K))) {
+      stop("'K' must be a numeric matrix with finite values and no NA values.")
     }
   }
 
   if (model == "BKP") {
-    if (!is.null(y) && (!is.numeric(y) || anyNA(y))) {
-      stop("'y' must be a numeric vector with no NA values.")
-    }
-    if (!is.null(m) && (!is.numeric(m) || anyNA(m))) {
-      stop("'m' must be a numeric vector with no NA values.")
-    }
-  }else{
-    if (!is.null(Y) && (!is.matrix(Y) || anyNA(Y))) {
-      stop("'Y' must be a numeric matrix with no NA values.")
-    }
-  }
-
-  if (!is.null(K) && (!is.matrix(K) || anyNA(K))) {
-    stop("'K' must be a numeric matrix with no NA values.")
-  }
-
-  if (model == "BKP") {
-    # ============ Binary case ============
-    if (prior == "noninformative") {
-      nrowK <- if (!is.null(K)) nrow(K) else 1
-      res <- get_prior_bkp_noninformative_rcpp(nrowK)
-      res$alpha0 <- as.vector(res$alpha0)
-      res$beta0 <- as.vector(res$beta0)
-      return(res)
-      
-    } else if (prior == "fixed") {
-      if (!is.numeric(p0) || length(p0) != 1 || p0 <= 0 || p0 >= 1) {
-        stop("For fixed prior in BKP, 'p0' must be in (0,1).")
+    ## ---------------------- BKP checks ----------------------------------------
+    if (!is.null(y)) {
+      if (!is.numeric(y) || anyNA(y) || any(!is.finite(y))) {
+        stop("'y' must be a numeric vector with finite values and no NA values.")
       }
-      nrowK <- if (!is.null(K)) nrow(K) else 1
-      res <- get_prior_bkp_fixed_rcpp(nrowK, r0, p0)
-      res$alpha0 <- as.vector(res$alpha0)
-      res$beta0 <- as.vector(res$beta0)
-      return(res)
-      
-    } else if (prior == "adaptive") {
+      if (any(y < 0)) {
+        stop("'y' must contain nonnegative counts.")
+      }
+    }
+    if (!is.null(m)) {
+      if (!is.numeric(m) || anyNA(m) || any(!is.finite(m))) {
+        stop("'m' must be a numeric vector with finite values and no NA values.")
+      }
+      if (any(m <= 0)) {
+        stop("'m' must contain positive trial counts.")
+      }
+    }
+    if (!is.null(y) && !is.null(m)) {
+      if (length(y) != length(m)) {
+        stop("'y' and 'm' must have the same length.")
+      }
+      if (any(y > m)) {
+        stop("'y' cannot exceed 'm'.")
+      }
+    }
+
+    if (prior == "fixed") {
+      if (is.null(p0) || !is.numeric(p0) || length(p0) != 1 ||
+          is.na(p0) || !is.finite(p0) || p0 <= 0 || p0 >= 1) {
+        stop("For fixed prior in BKP, 'p0' must be a scalar in (0, 1).",)
+      }
+    }
+
+    if (prior == "adaptive") {
       if (is.null(y) || is.null(m) || is.null(K)) {
         stop("For adaptive prior in BKP, 'y', 'm', and 'K' must be provided.")
       }
-      if (length(y) != length(m)) stop("'y' and 'm' must have the same length.")
-      if (ncol(K) != length(y)) stop("'K' must have ncol = length(y).")
-      
-      res <- get_prior_bkp_adaptive_rcpp(K, as.numeric(y), as.numeric(m), r0)
-      res$alpha0 <- as.vector(res$alpha0)
-      res$beta0 <- as.vector(res$beta0)
-      return(res)
+      if (ncol(K) != length(y)) {
+        stop("'K' must have ncol = length(y).")
+      }
     }
-    
-  } else {
-    # ============ Multiclass case ============
+
+    ## ----------------------- Call C++ computational core ----------------
+    res <- get_prior_rcpp(
+      model = model,
+      prior = prior,
+      r0 = r0,
+      p0 = p0,
+      y = y,
+      m = m,
+      Y = NULL,
+      K = K
+    )
+
+    res$alpha0 <- as.vector(res$alpha0)
+    res$beta0  <- as.vector(res$beta0)
+
+    return(res)
+  }else{
+    ## ---------------------- DKP checks ----------------------------------------
     if (!is.null(Y)) {
-      Y <- as.matrix(Y)
+      if (!is.matrix(Y) || !is.numeric(Y) || anyNA(Y) || any(!is.finite(Y))) {
+        stop("'Y' must be a numeric matrix with finite values and no NA values.")
+      }
+      if (nrow(Y) < 1 || ncol(Y) < 1) {
+        stop("'Y' must have at least one row and one column.")
+      }
+      if (any(Y < 0)) {
+        stop("'Y' must contain nonnegative counts.")
+      }
       q <- ncol(Y)
     } else if (!is.null(p0)) {
       q <- length(p0)
     } else {
-      stop("Either 'Y' or 'p0' must be provided to determine class dimension q.")
+      stop("Either 'Y' or 'p0' must be provided to determine the number of classes.")
     }
 
-    if (prior == "noninformative") {
-      m <- if (!is.null(K)) nrow(K) else 1
-      return(get_prior_dkp_noninformative_rcpp(m, q))
-      
-    } else if (prior == "fixed") {
-      if (is.null(p0)) stop("'p0' must be provided for fixed prior in DKP.")
-      if (length(p0) != q) stop("length(p0) must match number of classes.")
+    if (prior == "fixed") {
+      if (is.null(p0)) {
+        stop("'p0' must be provided for fixed prior in DKP.")
+      }
+      if (length(p0) != q) {
+        stop("length(p0) must match the number of classes.")
+      }
       if (!isTRUE(all.equal(sum(p0), 1, tolerance = 1e-8))) {
         stop("'p0' must sum to 1.")
       }
-      m <- if (!is.null(K)) nrow(K) else 1
-      return(get_prior_dkp_fixed_rcpp(m, r0, as.numeric(p0)))
-      
-    } else if (prior == "adaptive") {
-      if (is.null(Y) || is.null(K)) stop("'Y' and 'K' must be provided for adaptive prior in DKP.")
-      if (ncol(K) != nrow(Y)) stop("'K' must have ncol = nrow(Y).")
-      if (any(rowSums(Y) == 0)) stop("each row of Y must have positive sum for adaptive prior.")
-      
-      return(get_prior_dkp_adaptive_rcpp(K, as.matrix(Y), r0))
     }
+
+    if (prior == "adaptive") {
+      if (is.null(Y) || is.null(K)) {
+        stop("'Y' and 'K' must be provided for adaptive prior in DKP.")
+      }
+      if (ncol(K) != nrow(Y)) {
+        stop("'K' must have ncol = nrow(Y).")
+      }
+      if (any(rowSums(Y) <= 0)) {
+        stop("Each row of 'Y' must have a positive sum for adaptive prior.")
+      }
+    }
+
+    ## ----------------------- Call C++ computational core ----------------
+    res <- get_prior_rcpp(
+      model = model,
+      prior = prior,
+      r0 = r0,
+      p0 = p0,
+      y = NULL,
+      m = NULL,
+      Y = Y,
+      K = K
+    )
+
+    return(res$alpha0)
   }
 }
