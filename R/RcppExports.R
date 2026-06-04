@@ -13,20 +13,8 @@ kernel_matrix_rcpp <- function(X, Xprime = NULL, theta = as.numeric( c(0.1)), ke
     .Call(`_BKP_kernel_matrix_rcpp`, X, Xprime, theta, kernel, isotropic)
 }
 
-loss_fun_brier_bkp_rcpp <- function(K, y, m, alpha0, beta0) {
-    .Call(`_BKP_loss_fun_brier_bkp_rcpp`, K, y, m, alpha0, beta0)
-}
-
-loss_fun_logloss_bkp_rcpp <- function(K, y, m, alpha0, beta0) {
-    .Call(`_BKP_loss_fun_logloss_bkp_rcpp`, K, y, m, alpha0, beta0)
-}
-
-loss_fun_brier_dkp_rcpp <- function(K, Y, alpha0) {
-    .Call(`_BKP_loss_fun_brier_dkp_rcpp`, K, Y, alpha0)
-}
-
-loss_fun_logloss_dkp_rcpp <- function(K, Y, alpha0) {
-    .Call(`_BKP_loss_fun_logloss_dkp_rcpp`, K, Y, alpha0)
+loss_fun_rcpp <- function(model, loss, K, y = NULL, m = NULL, Y = NULL, alpha0 = NULL, beta0 = NULL, alpha0_mat = NULL) {
+    .Call(`_BKP_loss_fun_rcpp`, model, loss, K, y, m, Y, alpha0, beta0, alpha0_mat)
 }
 
 optimize_lambda_bkp_rcpp <- function(K_g, K_l, y, m, alpha0, beta0, loss, max_iter = 80L, tol = 1e-8) {

@@ -38,22 +38,16 @@ List get_prior_rcpp(
     Nullable<NumericMatrix> K
 );
 
-double loss_fun_brier_bkp_rcpp(
-  const arma::mat& K, const arma::vec& y, const arma::vec& m,
-  const arma::vec& alpha0, const arma::vec& beta0
-);
-
-double loss_fun_logloss_bkp_rcpp(
-  const arma::mat& K, const arma::vec& y, const arma::vec& m,
-  const arma::vec& alpha0, const arma::vec& beta0
-);
-
-double loss_fun_brier_dkp_rcpp(
-  const arma::mat& K, const arma::mat& Y, const arma::mat& alpha0
-);
-
-double loss_fun_logloss_dkp_rcpp(
-  const arma::mat& K, const arma::mat& Y, const arma::mat& alpha0
+double loss_fun_rcpp(
+    std::string model,
+    std::string loss,
+    const arma::mat& K,
+    Nullable<NumericVector> y = R_NilValue,
+    Nullable<NumericVector> m = R_NilValue,
+    Nullable<NumericMatrix> Y = R_NilValue,
+    Nullable<NumericVector> alpha0 = R_NilValue,
+    Nullable<NumericVector> beta0 = R_NilValue,
+    Nullable<NumericMatrix> alpha0_mat = R_NilValue
 );
 // --------- END: declarations from other cpp files --------------------------
 
@@ -86,15 +80,9 @@ static double eval_bkp_loss_from_gamma(
   arma::vec alpha0 = as<arma::vec>(prior_par["alpha0"]);
   arma::vec beta0  = as<arma::vec>(prior_par["beta0"]);
 
-  double val = std::numeric_limits<double>::infinity();
-
-  if (loss == "brier") {
-    val = loss_fun_brier_bkp_rcpp(K, y, m, alpha0, beta0);
-  } else if (loss == "log_loss") {
-    val = loss_fun_logloss_bkp_rcpp(K, y, m, alpha0, beta0);
-  } else {
-    stop("Unsupported loss: " + loss);
-  }
+  double val = loss_fun_rcpp(
+    "BKP", loss, K, wrap(y), wrap(m), R_NilValue, wrap(alpha0), wrap(beta0)
+  );
 
   // guard: NaN or Inf -> return large finite value so sort_index won't crash
   if (!std::isfinite(val)) return std::numeric_limits<double>::max();
@@ -128,15 +116,10 @@ static double eval_dkp_loss_from_gamma(
 
   arma::mat alpha0 = as<arma::mat>(prior_par["alpha0"]);
 
-  double val = std::numeric_limits<double>::infinity();
-
-  if (loss == "brier") {
-    val = loss_fun_brier_dkp_rcpp(K, Y, alpha0);
-  } else if (loss == "log_loss") {
-    val = loss_fun_logloss_dkp_rcpp(K, Y, alpha0);
-  } else {
-    stop("Unsupported loss: " + loss);
-  }
+  double val = loss_fun_rcpp(
+    "DKP", loss, K, R_NilValue, R_NilValue, wrap(Y),
+    R_NilValue, R_NilValue, wrap(alpha0)
+  );
 
   if (!std::isfinite(val)) return std::numeric_limits<double>::max();
 

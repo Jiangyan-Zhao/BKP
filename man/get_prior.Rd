@@ -53,11 +53,8 @@ distribution, length \code{n}.}
 \item{\code{beta0}}{Vector of prior beta parameters for the Beta
 distribution, length \code{n}.}
 }
-\item If \code{model = "DKP"}: a list containing
-\describe{
-\item{\code{alpha0}}{Matrix of prior Dirichlet parameters at each input
-location (\code{n × q}).}
-}
+\item If \code{model = "DKP"}: a matrix \code{alpha0} of prior Dirichlet
+parameters at each input location (\code{n × q}).
 }
 }
 \description{

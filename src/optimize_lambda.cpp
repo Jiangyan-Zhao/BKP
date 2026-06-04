@@ -5,22 +5,16 @@
 
 using namespace Rcpp;
 
-double loss_fun_brier_bkp_rcpp(
-  const arma::mat& K, const arma::vec& y, const arma::vec& m,
-  const arma::vec& alpha0, const arma::vec& beta0
-);
-
-double loss_fun_logloss_bkp_rcpp(
-  const arma::mat& K, const arma::vec& y, const arma::vec& m,
-  const arma::vec& alpha0, const arma::vec& beta0
-);
-
-double loss_fun_brier_dkp_rcpp(
-  const arma::mat& K, const arma::mat& Y, const arma::mat& alpha0
-);
-
-double loss_fun_logloss_dkp_rcpp(
-  const arma::mat& K, const arma::mat& Y, const arma::mat& alpha0
+double loss_fun_rcpp(
+    std::string model,
+    std::string loss,
+    const arma::mat& K,
+    Nullable<NumericVector> y = R_NilValue,
+    Nullable<NumericVector> m = R_NilValue,
+    Nullable<NumericMatrix> Y = R_NilValue,
+    Nullable<NumericVector> alpha0 = R_NilValue,
+    Nullable<NumericVector> beta0 = R_NilValue,
+    Nullable<NumericMatrix> alpha0_mat = R_NilValue
 );
 
 static inline double eval_bkp_lambda_loss(
@@ -36,13 +30,9 @@ static inline double eval_bkp_lambda_loss(
   const double lam = std::max(0.0, std::min(1.0, lambda));
   const arma::mat K_mix = lam * K_g + (1.0 - lam) * K_l;
 
-  if (loss == "brier") {
-    return loss_fun_brier_bkp_rcpp(K_mix, y, m, alpha0, beta0);
-  }
-  if (loss == "log_loss") {
-    return loss_fun_logloss_bkp_rcpp(K_mix, y, m, alpha0, beta0);
-  }
-  stop("Unsupported loss in optimize_lambda_bkp_rcpp: " + loss);
+  return loss_fun_rcpp(
+    "BKP", loss, K_mix, wrap(y), wrap(m), R_NilValue, wrap(alpha0), wrap(beta0)
+  );
 }
 
 static inline double eval_dkp_lambda_loss(
@@ -56,13 +46,10 @@ static inline double eval_dkp_lambda_loss(
   const double lam = std::max(0.0, std::min(1.0, lambda));
   const arma::mat K_mix = lam * K_g + (1.0 - lam) * K_l;
 
-  if (loss == "brier") {
-    return loss_fun_brier_dkp_rcpp(K_mix, Y, alpha0);
-  }
-  if (loss == "log_loss") {
-    return loss_fun_logloss_dkp_rcpp(K_mix, Y, alpha0);
-  }
-  stop("Unsupported loss in optimize_lambda_dkp_rcpp: " + loss);
+  return loss_fun_rcpp(
+    "DKP", loss, K_mix, R_NilValue, R_NilValue, wrap(Y),
+    R_NilValue, R_NilValue, wrap(alpha0)
+  );
 }
 
 // [[Rcpp::export]]
