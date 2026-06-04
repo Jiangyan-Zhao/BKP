@@ -27,9 +27,16 @@ arma::mat kernel_matrix_arma(
     const bool symmetric
 );
 
-List get_prior_bkp_noninformative_rcpp(int n);
-List get_prior_bkp_fixed_rcpp(int n, double r0, double p0);
-List get_prior_bkp_adaptive_rcpp(const arma::mat& K, const arma::vec& y, const arma::vec& m, double r0);
+List get_prior_rcpp(
+    std::string model,
+    std::string prior,
+    double r0,
+    Nullable<NumericVector> p0,
+    Nullable<NumericVector> y,
+    Nullable<NumericVector> m,
+    Nullable<NumericMatrix> Y,
+    Nullable<NumericMatrix> K
+);
 
 double loss_fun_brier_bkp_rcpp(
   const arma::mat& K, const arma::vec& y, const arma::vec& m,
@@ -41,10 +48,6 @@ double loss_fun_logloss_bkp_rcpp(
   const arma::vec& alpha0, const arma::vec& beta0
 );
 
-arma::mat get_prior_dkp_noninformative_rcpp(int n, int q);
-arma::mat get_prior_dkp_fixed_rcpp(int n, double r0, const arma::vec& p0);
-arma::mat get_prior_dkp_adaptive_rcpp(const arma::mat& K, const arma::mat& Y, double r0);
-
 double loss_fun_brier_dkp_rcpp(
   const arma::mat& K, const arma::mat& Y, const arma::mat& alpha0
 );
@@ -52,7 +55,7 @@ double loss_fun_brier_dkp_rcpp(
 double loss_fun_logloss_dkp_rcpp(
   const arma::mat& K, const arma::mat& Y, const arma::mat& alpha0
 );
-// ---- END: declarations from other cpp files ----
+// --------- END: declarations from other cpp files --------------------------
 
 static double eval_bkp_loss_from_gamma(
     const arma::vec& gamma,
@@ -71,16 +74,14 @@ static double eval_bkp_loss_from_gamma(
   arma::mat K = kernel_matrix_arma(Xnorm, Xnorm, theta, kernel, isotropic, true);
   K.diag().zeros();
 
-  List prior_par;
-  if (prior == "noninformative") {
-    prior_par = get_prior_bkp_noninformative_rcpp(Xnorm.n_rows);
-  } else if (prior == "fixed") {
-    prior_par = get_prior_bkp_fixed_rcpp(Xnorm.n_rows, r0, p0);
-  } else if (prior == "adaptive") {
-    prior_par = get_prior_bkp_adaptive_rcpp(K, y, m, r0);
-  } else {
-    stop("Unsupported prior: " + prior);
-  }
+  NumericVector p0_vec = NumericVector::create(p0);
+  NumericVector y_vec = wrap(y);
+  NumericVector m_vec = wrap(m);
+  NumericMatrix K_mat = wrap(K);
+
+  List prior_par = get_prior_rcpp(
+    "BKP", prior, r0, p0_vec, y_vec, m_vec, R_NilValue, K_mat
+  );
 
   arma::vec alpha0 = as<arma::vec>(prior_par["alpha0"]);
   arma::vec beta0  = as<arma::vec>(prior_par["beta0"]);
@@ -117,16 +118,15 @@ static double eval_dkp_loss_from_gamma(
   arma::mat K = kernel_matrix_arma(Xnorm, Xnorm, theta, kernel, isotropic, true);
   K.diag().zeros();
 
-  arma::mat alpha0;
-  if (prior == "noninformative") {
-    alpha0 = get_prior_dkp_noninformative_rcpp(Xnorm.n_rows, Y.n_cols);
-  } else if (prior == "fixed") {
-    alpha0 = get_prior_dkp_fixed_rcpp(Xnorm.n_rows, r0, p0);
-  } else if (prior == "adaptive") {
-    alpha0 = get_prior_dkp_adaptive_rcpp(K, Y, r0);
-  } else {
-    stop("Unsupported prior: " + prior);
-  }
+  NumericVector p0_vec = wrap(p0);
+  NumericMatrix Y_mat = wrap(Y);
+  NumericMatrix K_mat = wrap(K);
+
+  List prior_par = get_prior_rcpp(
+    "DKP", prior, r0, p0_vec, R_NilValue, R_NilValue, Y_mat, K_mat
+  );
+
+  arma::mat alpha0 = as<arma::mat>(prior_par["alpha0"]);
 
   double val = std::numeric_limits<double>::infinity();
 

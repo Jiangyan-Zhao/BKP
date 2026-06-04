@@ -1,3 +1,5 @@
+// Input validation is handled in R/get_prior.R.
+// This C++ function assumes valid inputs and only performs computation.
 // [[Rcpp::depends(RcppArmadillo)]]
 #include <RcppArmadillo.h>
 using namespace Rcpp;

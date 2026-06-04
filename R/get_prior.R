@@ -29,11 +29,8 @@
 #'     \item{\code{beta0}}{Vector of prior beta parameters for the Beta
 #'       distribution, length \code{n}.}
 #'   }
-#' - If \code{model = "DKP"}: a list containing
-#'   \describe{
-#'     \item{\code{alpha0}}{Matrix of prior Dirichlet parameters at each input
-#'       location (\code{n × q}).}
-#'   }
+#' - If \code{model = "DKP"}: a matrix \code{alpha0} of prior Dirichlet
+#'   parameters at each input location (\code{n × q}).
 #'
 #' @details
 #' - \code{prior = "noninformative"}: flat prior; all parameters set to 1.
@@ -144,7 +141,7 @@ get_prior <- function(prior = c("noninformative", "fixed", "adaptive"),
     if (prior == "fixed") {
       if (is.null(p0) || !is.numeric(p0) || length(p0) != 1 ||
           is.na(p0) || !is.finite(p0) || p0 <= 0 || p0 >= 1) {
-        stop("For fixed prior in BKP, 'p0' must be a scalar in (0, 1).",)
+        stop("For fixed prior in BKP, 'p0' must be a scalar in (0, 1).")
       }
     }
 

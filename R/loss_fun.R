@@ -87,26 +87,34 @@ loss_fun <- function(
   if (model == "BKP") {
     # Get prior parameters
     prior_par <- get_prior(prior = prior, model = model, r0 = r0, p0 = p0, y = y, m = m, K = K)
-    alpha0 <- prior_par$alpha0
-    beta0 <- prior_par$beta0
 
-    # Call C++ function
-    if (loss == "brier") {
-      result <- loss_fun_brier_bkp_rcpp(K, as.numeric(y), as.numeric(m), as.numeric(alpha0), as.numeric(beta0))
-    } else {
-      result <- loss_fun_logloss_bkp_rcpp(K, as.numeric(y), as.numeric(m), as.numeric(alpha0), as.numeric(beta0))
-    }
+    result <- loss_fun_rcpp(
+      model = model,
+      loss = loss,
+      K = K,
+      y = as.numeric(y),
+      m = as.numeric(m),
+      Y = NULL,
+      alpha0 = as.numeric(prior_par$alpha0),
+      beta0 = as.numeric(prior_par$beta0),
+      alpha0_mat = NULL
+    )
   } else {
     # Get prior parameters for DKP
     alpha0 <- get_prior(prior = prior, model = model, r0 = r0, p0 = p0, Y = Y, K = K)
 
-    # Call C++ function
-    if (loss == "brier") {
-      result <- loss_fun_brier_dkp_rcpp(K, as.matrix(Y), as.matrix(alpha0))
-    } else {
-      result <- loss_fun_logloss_dkp_rcpp(K, as.matrix(Y), as.matrix(alpha0))
-    }
+    result <- loss_fun_rcpp(
+      model = model,
+      loss = loss,
+      K = K,
+      y = NULL,
+      m = NULL,
+      Y = as.matrix(Y),
+      alpha0 = NULL,
+      beta0 = NULL,
+      alpha0_mat = as.matrix(alpha0)
+    )
   }
 
-  result
+  return(result)
 }

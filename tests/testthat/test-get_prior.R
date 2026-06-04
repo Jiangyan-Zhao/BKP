@@ -11,11 +11,11 @@ test_that("get_prior handles input validation correctly", {
 
   # Test for BKP fixed prior with missing p0
   expect_error(get_prior(prior = "fixed", model = "BKP", r0 = 10, y = NULL),
-               "For fixed prior in BKP, 'p0' must be in \\(0,1\\).")
+               "For fixed prior in BKP, 'p0' must be a scalar in \\(0, 1\\)\\.")
 
   # Test for BKP fixed prior with invalid p0
   expect_error(get_prior(prior = "fixed", model = "BKP", r0 = 10, p0 = 2),
-               "For fixed prior in BKP, 'p0' must be in \\(0,1\\).")
+               "For fixed prior in BKP, 'p0' must be a scalar in \\(0, 1\\)\\.")
 
   # Test for BKP adaptive prior with missing y/m
   expect_error(get_prior(prior = "adaptive", model = "BKP", K = matrix(1), r0 = 10, y = NULL),
@@ -23,7 +23,7 @@ test_that("get_prior handles input validation correctly", {
 
   # Test for DKP fixed prior with missing p0
   expect_error(get_prior(prior = "fixed", model = "DKP", r0 = 10),
-               "Either 'Y' or 'p0' must be provided to determine class dimension q.")
+               "Either 'Y' or 'p0' must be provided to determine the number of classes.")
 
   # Test for DKP fixed prior with p0 not summing to 1
   expect_error(get_prior(prior = "fixed", model = "DKP", r0 = 10, p0 = c(0.5, 0.6)),
@@ -103,10 +103,14 @@ test_that("get_prior works correctly for DKP model", {
 })
 
 test_that("get_prior additional validation and edge branches", {
-  expect_error(get_prior(model = "BKP", y = c(1, NA), m = c(1, 1)), "'y' must be a numeric vector with no NA values.")
-  expect_error(get_prior(model = "BKP", y = c(1, 0), m = c(1, NA)), "'m' must be a numeric vector with no NA values.")
-  expect_error(get_prior(model = "DKP", Y = matrix(c(1, NA), ncol = 1)), "'Y' must be a numeric matrix with no NA values.")
-  expect_error(get_prior(model = "DKP", K = matrix(c(1, NA), ncol = 1)), "'K' must be a numeric matrix with no NA values.")
+  expect_error(get_prior(model = "BKP", y = c(1, NA), m = c(1, 1)),
+               "'y' must be a numeric vector with finite values and no NA values.")
+  expect_error(get_prior(model = "BKP", y = c(1, 0), m = c(1, NA)),
+               "'m' must be a numeric vector with finite values and no NA values.")
+  expect_error(get_prior(model = "DKP", Y = matrix(c(1, NA), ncol = 1)),
+               "'Y' must be a numeric matrix with finite values and no NA values.")
+  expect_error(get_prior(model = "DKP", K = matrix(c(1, NA), ncol = 1)),
+               "'K' must be a numeric matrix with finite values and no NA values.")
 
   alpha0 <- get_prior(prior = "fixed", model = "DKP", r0 = 2, p0 = c(0.2, 0.8), K = matrix(1, nrow = 3, ncol = 2))
   expect_true(is.matrix(alpha0))
@@ -118,8 +122,9 @@ test_that("get_prior additional validation and edge branches", {
 })
 
 test_that("test-get_prior uncovered validation branches", {
-  expect_error(get_prior(model = "BKP", r0 = 0), "'r0' must be a positive scalar.")
-  expect_error(get_prior(model = "BKP", p0 = -0.1), "'p0' must be numeric and nonnegative.")
+  expect_error(get_prior(model = "BKP", r0 = 0), "'r0' must be a positive finite scalar.")
+  expect_error(get_prior(model = "BKP", p0 = -0.1),
+               "'p0' must be a numeric vector with nonnegative finite values.")
 
   expect_error(
     get_prior(prior = "adaptive", model = "BKP", y = c(1, 0), m = c(1, 1), K = matrix(1, nrow = 2, ncol = 3)),
@@ -133,7 +138,7 @@ test_that("test-get_prior uncovered validation branches", {
 
   expect_error(
     get_prior(prior = "fixed", model = "DKP", p0 = c(0.3, 0.3), Y = matrix(1, ncol = 3)),
-    "length\\(p0\\) must match number of classes."
+    "length\\(p0\\) must match the number of classes."
   )
 
   expect_error(
@@ -143,7 +148,7 @@ test_that("test-get_prior uncovered validation branches", {
 
   expect_error(
     get_prior(prior = "adaptive", model = "DKP", Y = matrix(c(0, 0, 1, 0), ncol = 2), K = diag(2)),
-    "each row of Y must have positive sum for adaptive prior."
+    "Each row of 'Y' must have a positive sum for adaptive prior."
   )
 
   alpha0_noninfo <- get_prior(prior = "noninformative", model = "DKP", p0 = c(0.4, 0.6))
