@@ -133,17 +133,27 @@ fit_TwinDKP <- function(
   Y_global <- Y[global_idx, , drop = FALSE]
 
   if (is.null(theta)) {
-    n_grid_cpp <- as.integer(max(10L, 10L * d))
+    # ---- Determine the number of optimization variables ----
+    n_theta <- ifelse(isTRUE(isotropic), 1L, d)
 
-    n_starts_cpp <- if (is.null(n_multi_start)) {
-      1L
+    # ---- Number of multi-start initial points ----
+    if (is.null(n_multi_start)) {
+      n_multi_start <- as.integer(10L * n_theta)
     } else {
-      as.integer(max(1L, n_multi_start))
+      n_multi_start <- as.integer(n_multi_start)
     }
 
-    max_iter_cpp <- 100L
-    g_lower <- (log10(d) - log10(500)) / 2
-    g_upper <- (log10(d) + 2) / 2
+    # ---- Initial search region Omega_0 for log10(theta) ----
+    gamma_bounds <- matrix(c((log10(n_theta) - log10(500))/2,   # lower bound
+                             (log10(n_theta) + 2)/2),           # upper bound
+                           ncol = 2, nrow = n_theta, byrow = TRUE)
+    init_gamma <- lhs(n = n_multi_start, rect = gamma_bounds) # tgp::lhs
+
+    # ---- Local optimization region Omega = [-3, 3]^p ----
+    lower <- rep(-3, n_theta)
+    upper <- rep(3, n_theta)
+
+    max_iter <- min(500L, ceiling(100 * log1p(n_theta)))
 
     opt_cpp <- optimize_dkp_theta_rcpp(
       Xnorm = Xnorm_global,
@@ -154,11 +164,10 @@ fit_TwinDKP <- function(
       loss = loss,
       kernel = kernel,
       isotropic = isotropic,
-      n_grid = n_grid_cpp,
-      n_starts = n_starts_cpp,
-      max_iter = max_iter_cpp,
-      g_lower = g_lower,
-      g_upper = g_upper
+      init_gamma = init_gamma,
+      lower = lower,
+      upper = upper,
+      max_iter = as.integer(max_iter)
     )
 
     gamma_opt <- as.numeric(opt_cpp$gamma_opt)

@@ -3,8 +3,7 @@
 //
 // This file contains the shared optimization workflow for both Beta Kernel
 // Process and Dirichlet Kernel Process models. The BKP and DKP routines are
-// kept together because they use the same gamma-scale parameterization,
-// candidate generation, and nloptr-based refinement strategy.
+// kept together because they use the same nloptr-based refinement strategy.
 // -----------------------------------------------------------------------------
 #include <RcppArmadillo.h>
 #include <nloptrAPI.h>

@@ -10,32 +10,26 @@ test_that("plot.DKP generates plots without errors for 1D and 2D inputs", {
   # Test Case 1: 1D Input
   # -------------------------------------------------------------------------
 
-  # Define a spatially-varying probability function for 1D data.
-  # This function must return a vector of length 'q' for each input point.
-  true_pi_fun_1d <- function(x) {
-    # Define probabilities for each class
-    p1 <- exp(sin(2 * pi * x))
-    p2 <- exp(sin(4 * pi * x))
-    p3 <- exp(cos(2 * pi * x))
+  set.seed(123)
 
-    # Normalize to ensure probabilities sum to 1
-    total <- p1 + p2 + p3
-    return(c(p1 / total, p2 / total, p3 / total))
+  # Define true class probability function (3-class)
+  true_pi_fun <- function(X) {
+    p1 <- 1/(1+exp(-3*X))
+    p2 <- (1 + exp(-X^2) * cos(10 * (1 - exp(-X)) / (1 + exp(-X)))) / 2
+    return(matrix(c(p1/2, p2/2, 1 - (p1+p2)/2), nrow = length(p1)))
   }
 
-  d <- 1
-  n <- 50
-  q <- 3 # number of classes
-  X <- matrix(runif(n * d), n, d)
-  m <- rep(10, n)
+  n <- 30
+  Xbounds <- matrix(c(-2, 2), nrow = 1)
+  X <- tgp::lhs(n = n, rect = Xbounds)
+  true_pi <- true_pi_fun(X)
+  m <- sample(150, n, replace = TRUE)
 
-  Y <- t(sapply(1:n, function(i) {
-    p <- true_pi_fun_1d(X[i])
-    rmultinom(1, size = m[i], prob = p)
-  }))
+  # Generate multinomial responses
+  Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 
   # Fit a 1D DKP model
-  model_1d <- fit_DKP(X, Y, prior = "noninformative")
+  model_1d <- fit_DKP(X, Y, Xbounds = Xbounds, prior = "noninformative")
 
   # Test that plot() runs without errors for a 1D model
   expect_no_error(plot(model_1d))
@@ -44,30 +38,35 @@ test_that("plot.DKP generates plots without errors for 1D and 2D inputs", {
   # Test Case 2: 2D Input
   # -------------------------------------------------------------------------
 
-  # Define a spatially-varying probability function for 2D data
-  true_pi_fun_2d <- function(X) {
-    p1 <- exp(sin(2 * pi * X[,1]) + cos(2 * pi * X[,2]))
-    p2 <- exp(sin(2 * pi * X[,2]) - cos(2 * pi * X[,1]))
-    p3 <- exp(sin(4 * pi * X[,1]))
+  set.seed(123)
 
-    # Normalize to ensure probabilities sum to 1
-    total <- p1 + p2 + p3
-    return(cbind(p1/total, p2/total, p3/total))
+  # Define latent function and transform to 3-class probabilities
+  true_pi_fun <- function(X) {
+    if (is.null(nrow(X))) X <- matrix(X, nrow = 1)
+    m <- 8.6928; s <- 2.4269
+    x1 <- 4 * X[,1] - 2
+    x2 <- 4 * X[,2] - 2
+    a <- 1 + (x1 + x2 + 1)^2 *
+      (19 - 14*x1 + 3*x1^2 - 14*x2 + 6*x1*x2 + 3*x2^2)
+    b <- 30 + (2*x1 - 3*x2)^2 *
+      (18 - 32*x1 + 12*x1^2 + 48*x2 - 36*x1*x2 + 27*x2^2)
+    f <- (log(a*b)- m)/s
+    p1 <- pnorm(f) # Transform to probability
+    p2 <- sin(pi * X[,1]) * sin(pi * X[,2])
+    return(matrix(c(p1/2, p2/2, 1 - (p1+p2)/2), nrow = length(p1)))
   }
 
-  d <- 2
-  n <- 50
-  q <- 3
-  X <- matrix(runif(n * d), n, d)
-  m <- rep(10, n)
+  n <- 100
+  Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
+  X <- tgp::lhs(n = n, rect = Xbounds)
+  true_pi <- true_pi_fun(X)
+  m <- sample(150, n, replace = TRUE)
 
-  Y <- t(sapply(1:n, function(i) {
-    p <- true_pi_fun_2d(X[i, , drop = FALSE])
-    rmultinom(1, size = m[i], prob = p)
-  }))
+  # Generate multinomial responses
+  Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 
   # Fit a 2D DKP model
-  model_2d <- fit_DKP(X, Y, prior = "fixed", r0 = 10, p0 = c(1/3, 1/3, 1/3))
+  model_2d <- fit_DKP(X, Y, Xbounds = Xbounds, prior = "fixed", r0 = 10, p0 = c(1/3, 1/3, 1/3))
 
   # Test with default arguments
   expect_no_error(plot(model_2d, n_grid = 30))

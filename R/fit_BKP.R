@@ -28,11 +28,12 @@
 #'   (default) or \code{"log_loss"}.
 #' @param n_multi_start Number of initial points used in multi-start
 #'   optimization of the kernel lengthscale parameters. If \code{NULL},
-#'   the default is \eqn{10d}, where \eqn{d} is the input dimension.
+#'   the default is \eqn{10p}, where \eqn{p = 1} for isotropic kernels and
+#'   \eqn{p = d} for anisotropic kernels.
 #' @param theta Optional. A positive scalar or numeric vector of length \code{d}
 #'   specifying kernel lengthscale parameters directly. If \code{NULL}
-#'   (default), lengthscales are optimized using multi-start L-BFGS-B to
-#'   minimize the specified loss.
+#'   (default), lengthscales are optimized using multi-start derivative-free
+#'   local optimization to minimize the specified loss.
 #' @param isotropic Logical. If \code{TRUE} (default), optimize/use a single
 #'   shared lengthscale across dimensions. If \code{FALSE}, use separate
 #'   per-dimension lengthscales.
@@ -246,8 +247,8 @@ fit_BKP <- function(
     }
 
     # ---- Initial search region Omega_0 for log10(theta) ----
-    gamma_bounds <- matrix(c((log10(d) - log10(500))/2,   # lower bound
-                             (log10(d) + 2)/2),           # upper bound
+    gamma_bounds <- matrix(c((log10(n_theta) - log10(500))/2,   # lower bound
+                             (log10(n_theta) + 2)/2),           # upper bound
                            ncol = 2, nrow = n_theta, byrow = TRUE)
     init_gamma <- lhs(n = n_multi_start, rect = gamma_bounds) # tgp::lhs
 

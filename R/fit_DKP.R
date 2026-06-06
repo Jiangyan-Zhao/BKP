@@ -241,8 +241,8 @@ fit_DKP <- function(
     }
 
     # ---- Initial search region Omega_0 for log10(theta) ----
-    gamma_bounds <- matrix(c((log10(d) - log10(500))/2,   # lower bound
-                             (log10(d) + 2)/2),           # upper bound
+    gamma_bounds <- matrix(c((log10(n_theta) - log10(500))/2,   # lower bound
+                             (log10(n_theta) + 2)/2),           # upper bound
                            ncol = 2, nrow = n_theta, byrow = TRUE)
     init_gamma <- lhs(n = n_multi_start, rect = gamma_bounds) # tgp::lhs
 
