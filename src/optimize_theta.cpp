@@ -17,7 +17,7 @@
 
 using namespace Rcpp;
 
-// ---- BEGIN: declarations from other cpp files ----
+// -------- BEGIN: declarations from other cpp files --------
 arma::mat kernel_matrix_arma(
     const arma::mat& Xm,
     const arma::mat& Xpm,
@@ -49,7 +49,7 @@ double loss_fun_rcpp(
     Nullable<NumericVector> beta0 = R_NilValue,
     Nullable<NumericMatrix> alpha0_mat = R_NilValue
 );
-// --------- END: declarations from other cpp files --------------------------
+// -------- END: declarations from other cpp files --------
 
 static double eval_bkp_loss_from_gamma(
     const arma::vec& gamma,
@@ -124,36 +124,6 @@ static double eval_dkp_loss_from_gamma(
   if (!std::isfinite(val)) return std::numeric_limits<double>::max();
 
   return val;
-}
-
-static List generate_anisotropic_candidates(
-    const int p,
-    const int n_candidates,
-    const double lower,
-    const double upper
-) {
-  arma::mat cand(n_candidates, p, arma::fill::zeros);
-
-  // first candidate = zero vector (theta = 1 for all dims)
-  cand.row(0).zeros();
-
-  if (n_candidates > 1) {
-    // Latin Hypercube Sampling for remaining n_candidates-1 points
-    const int n_lhs = n_candidates - 1;
-    arma::mat lhs(n_lhs, p);
-
-    for (int j = 0; j < p; ++j) {
-      arma::uvec perm = arma::randperm(n_lhs);
-      for (int i = 0; i < n_lhs; ++i) {
-        double u = (static_cast<double>(perm[i]) + R::runif(0.0, 1.0)) / static_cast<double>(n_lhs);
-        lhs(i, j) = lower + u * (upper - lower);
-      }
-    }
-
-    cand.rows(1, n_candidates - 1) = lhs;
-  }
-
-  return List::create(Named("cand") = cand);
 }
 
 // ---------- NLOPT objective ----------
@@ -318,123 +288,39 @@ Rcpp::List optimize_bkp_theta_rcpp(
     const std::string& loss,
     const std::string& kernel,
     const bool isotropic,
-    const int n_grid,
-    const int n_starts,
-    const int max_iter,
-    const double g_lower,
-    const double g_upper
+    const arma::mat& init_gamma,
+    const arma::vec& lower,
+    const arma::vec& upper,
+    const int max_iter
 ) {
-  if (n_grid < 5) stop("n_grid must be >= 5.");
-  if (n_starts < 1) stop("n_starts must be >= 1.");
-  if (max_iter < 1) stop("max_iter must be >= 1.");
-  if (Xnorm.n_rows == 0 || Xnorm.n_cols == 0) stop("Xnorm must be non-empty.");
-  if (static_cast<int>(y.n_elem) != static_cast<int>(Xnorm.n_rows)) stop("length(y) must equal nrow(Xnorm).");
-  if (static_cast<int>(m.n_elem) != static_cast<int>(Xnorm.n_rows)) stop("length(m) must equal nrow(Xnorm).");
+  const int n_starts = static_cast<int>(init_gamma.n_rows);
 
-  arma::vec gamma_opt;
-  double loss_min = std::numeric_limits<double>::infinity();
+  arma::vec best_gamma = init_gamma.row(0).t();
+  double best_val = std::numeric_limits<double>::infinity();
 
-  if (isotropic) {
-    // ---- coarse grid in 1D ----
-    arma::vec grid = arma::linspace(g_lower, g_upper, n_grid);
-    arma::vec vals(n_grid, arma::fill::value(std::numeric_limits<double>::max()));
+  for (int k = 0; k < n_starts; ++k) {
+    arma::vec g0 = init_gamma.row(k).t();
 
-    for (int i = 0; i < n_grid; ++i) {
-      arma::vec g(1);
-      g[0] = grid[i];
-      vals[i] = eval_bkp_loss_from_gamma(g, Xnorm, y, m, prior, r0, p0, loss, kernel, true);
+    List ref = nloptr_refine(
+      g0, Xnorm, y, m, prior, r0, p0, loss, kernel, isotropic,
+      lower, upper, max_iter
+    );
+
+    const arma::vec gk = as<arma::vec>(ref["gamma"]);
+    const double vk = as<double>(ref["value"]);
+
+    if (vk < best_val) {
+      best_val = vk;
+      best_gamma = gk;
     }
-
-    arma::uvec ord = arma::sort_index(vals, "ascend");
-    const int k_starts = std::min(n_starts, n_grid);
-
-    arma::vec best_gamma(1);
-    best_gamma[0] = grid[ord[0]];
-    double best_val = std::numeric_limits<double>::infinity();
-
-    for (int k = 0; k < k_starts; ++k) {
-      const int idx = static_cast<int>(ord[k]);
-      const int i_left  = std::max(0, idx - 1);
-      const int i_right = std::min(n_grid - 1, idx + 1);
-
-      arma::vec g0(1);
-      g0[0] = grid[idx];
-
-      arma::vec lower(1), upper(1);
-      lower[0] = grid[i_left];
-      upper[0] = grid[i_right];
-
-      List ref = nloptr_refine(
-        g0, Xnorm, y, m, prior, r0, p0, loss, kernel, true,
-        lower, upper, max_iter
-      );
-
-      const arma::vec gk = as<arma::vec>(ref["gamma"]);
-      const double vk = as<double>(ref["value"]);
-
-      if (vk < best_val) {
-        best_val = vk;
-        best_gamma = gk;
-      }
-    }
-
-    gamma_opt = best_gamma;
-    loss_min = best_val;
-
-  } else {
-    // ---- anisotropic: random coarse candidates + multi-start local refine ----
-    RNGScope scope;
-
-    const int p = static_cast<int>(Xnorm.n_cols);
-    const int n_candidates = std::max(10, n_grid);
-
-    List cand_obj = generate_anisotropic_candidates(p, n_candidates, g_lower, g_upper);
-    arma::mat cand = as<arma::mat>(cand_obj["cand"]);
-    arma::vec vals(n_candidates, arma::fill::value(std::numeric_limits<double>::max()));
-
-    for (int i = 0; i < n_candidates; ++i) {
-      arma::vec g = cand.row(i).t();
-      vals[i] = eval_bkp_loss_from_gamma(g, Xnorm, y, m, prior, r0, p0, loss, kernel, false);
-    }
-
-    arma::uvec ord = arma::sort_index(vals, "ascend");
-    const int k_starts = std::min(n_starts, n_candidates);
-
-    arma::vec lower(p), upper(p);
-    lower.fill(g_lower);
-    upper.fill(g_upper);
-
-    arma::vec best_gamma = cand.row(ord[0]).t();
-    double best_val = std::numeric_limits<double>::infinity();
-
-    for (int k = 0; k < k_starts; ++k) {
-      const int idx = static_cast<int>(ord[k]);
-      arma::vec g0 = cand.row(idx).t();
-
-      List ref = nloptr_refine(
-        g0, Xnorm, y, m, prior, r0, p0, loss, kernel, false,
-        lower, upper, max_iter
-      );
-
-      const arma::vec gk = as<arma::vec>(ref["gamma"]);
-      const double vk = as<double>(ref["value"]);
-
-      if (vk < best_val) {
-        best_val = vk;
-        best_gamma = gk;
-      }
-    }
-
-    gamma_opt = best_gamma;
-    loss_min = best_val;
   }
 
-  arma::vec theta_opt = arma::exp(std::log(10.0) * gamma_opt);
+  arma::vec theta_opt = arma::exp(std::log(10.0) * best_gamma);
 
   return List::create(
     Named("theta_opt") = theta_opt,
-    Named("gamma_opt") = gamma_opt,
-    Named("loss_min") = loss_min
+    Named("gamma_opt") = best_gamma,
+    Named("loss_min") = best_val
   );
 }
 
@@ -448,121 +334,38 @@ Rcpp::List optimize_dkp_theta_rcpp(
     const std::string& loss,
     const std::string& kernel,
     const bool isotropic,
-    const int n_grid,
-    const int n_starts,
-    const int max_iter,
-    const double g_lower,
-    const double g_upper
+    const arma::mat& init_gamma,
+    const arma::vec& lower,
+    const arma::vec& upper,
+    const int max_iter
 ) {
-  if (n_grid < 5) stop("n_grid must be >= 5.");
-  if (n_starts < 1) stop("n_starts must be >= 1.");
-  if (max_iter < 1) stop("max_iter must be >= 1.");
-  if (Xnorm.n_rows == 0 || Xnorm.n_cols == 0) stop("Xnorm must be non-empty.");
-  if (Y.n_rows != Xnorm.n_rows) stop("nrow(Y) must equal nrow(Xnorm).");
-  if (prior == "fixed" && static_cast<int>(p0.n_elem) != static_cast<int>(Y.n_cols)) {
-    stop("For fixed prior, length(p0) must equal ncol(Y).");
+  const int n_starts = static_cast<int>(init_gamma.n_rows);
+
+  arma::vec best_gamma = init_gamma.row(0).t();
+  double best_val = std::numeric_limits<double>::infinity();
+
+  for (int k = 0; k < n_starts; ++k) {
+    arma::vec g0 = init_gamma.row(k).t();
+
+    List ref = nloptr_refine_dkp(
+      g0, Xnorm, Y, prior, r0, p0, loss, kernel, isotropic,
+      lower, upper, max_iter
+    );
+
+    const arma::vec gk = as<arma::vec>(ref["gamma"]);
+    const double vk = as<double>(ref["value"]);
+
+    if (vk < best_val) {
+      best_val = vk;
+      best_gamma = gk;
+    }
   }
 
-  arma::vec gamma_opt;
-  double loss_min = std::numeric_limits<double>::infinity();
-
-  if (isotropic) {
-    arma::vec grid = arma::linspace(g_lower, g_upper, n_grid);
-    arma::vec vals(n_grid, arma::fill::value(std::numeric_limits<double>::max()));
-
-    for (int i = 0; i < n_grid; ++i) {
-      arma::vec g(1);
-      g[0] = grid[i];
-      vals[i] = eval_dkp_loss_from_gamma(g, Xnorm, Y, prior, r0, p0, loss, kernel, true);
-    }
-
-    arma::uvec ord = arma::sort_index(vals, "ascend");
-    const int k_starts = std::min(n_starts, n_grid);
-
-    arma::vec best_gamma(1);
-    best_gamma[0] = grid[ord[0]];
-    double best_val = std::numeric_limits<double>::infinity();
-
-    for (int k = 0; k < k_starts; ++k) {
-      const int idx = static_cast<int>(ord[k]);
-      const int i_left = std::max(0, idx - 1);
-      const int i_right = std::min(n_grid - 1, idx + 1);
-
-      arma::vec g0(1);
-      g0[0] = grid[idx];
-
-      arma::vec lower(1), upper(1);
-      lower[0] = grid[i_left];
-      upper[0] = grid[i_right];
-
-      List ref = nloptr_refine_dkp(
-        g0, Xnorm, Y, prior, r0, p0, loss, kernel, true,
-        lower, upper, max_iter
-      );
-
-      const arma::vec gk = as<arma::vec>(ref["gamma"]);
-      const double vk = as<double>(ref["value"]);
-
-      if (vk < best_val) {
-        best_val = vk;
-        best_gamma = gk;
-      }
-    }
-
-    gamma_opt = best_gamma;
-    loss_min = best_val;
-  } else {
-    RNGScope scope;
-
-    const int p = static_cast<int>(Xnorm.n_cols);
-    const int n_candidates = std::max(10, n_grid);
-
-    List cand_obj = generate_anisotropic_candidates(p, n_candidates, g_lower, g_upper);
-    arma::mat cand = as<arma::mat>(cand_obj["cand"]);
-    arma::vec vals(n_candidates, arma::fill::value(std::numeric_limits<double>::max()));
-
-    for (int i = 0; i < n_candidates; ++i) {
-      arma::vec g = cand.row(i).t();
-      vals[i] = eval_dkp_loss_from_gamma(g, Xnorm, Y, prior, r0, p0, loss, kernel, false);
-    }
-
-    arma::uvec ord = arma::sort_index(vals, "ascend");
-    const int k_starts = std::min(n_starts, n_candidates);
-
-    arma::vec lower(p), upper(p);
-    lower.fill(g_lower);
-    upper.fill(g_upper);
-
-    arma::vec best_gamma = cand.row(ord[0]).t();
-    double best_val = std::numeric_limits<double>::infinity();
-
-    for (int k = 0; k < k_starts; ++k) {
-      const int idx = static_cast<int>(ord[k]);
-      arma::vec g0 = cand.row(idx).t();
-
-      List ref = nloptr_refine_dkp(
-        g0, Xnorm, Y, prior, r0, p0, loss, kernel, false,
-        lower, upper, max_iter
-      );
-
-      const arma::vec gk = as<arma::vec>(ref["gamma"]);
-      const double vk = as<double>(ref["value"]);
-
-      if (vk < best_val) {
-        best_val = vk;
-        best_gamma = gk;
-      }
-    }
-
-    gamma_opt = best_gamma;
-    loss_min = best_val;
-  }
-
-  arma::vec theta_opt = arma::exp(std::log(10.0) * gamma_opt);
+  arma::vec theta_opt = arma::exp(std::log(10.0) * best_gamma);
 
   return List::create(
     Named("theta_opt") = theta_opt,
-    Named("gamma_opt") = gamma_opt,
-    Named("loss_min") = loss_min
+    Named("gamma_opt") = best_gamma,
+    Named("loss_min") = best_val
   );
 }

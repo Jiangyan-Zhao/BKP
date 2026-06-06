@@ -48,8 +48,9 @@ default bounds \eqn{[0,1]^d} are applied.}
 \item{loss}{Loss function for kernel hyperparameter tuning: \code{"brier"}
 (default) or \code{"log_loss"}.}
 
-\item{n_multi_start}{Number of local-refinement starts selected from coarse
-candidates. Default is \code{1}. Coarse candidate count is \eqn{10 \times d}.}
+\item{n_multi_start}{Number of initial points used in multi-start
+optimization of the kernel lengthscale parameters. If \code{NULL},
+the default is \eqn{10d}, where \eqn{d} is the input dimension.}
 
 \item{theta}{Optional. A positive scalar or numeric vector of length \code{d}
 specifying kernel lengthscale parameters directly. If \code{NULL}

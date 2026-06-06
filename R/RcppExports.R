@@ -25,12 +25,12 @@ optimize_lambda_dkp_rcpp <- function(K_g, K_l, Y, alpha0, loss, max_iter = 80L, 
     .Call(`_BKP_optimize_lambda_dkp_rcpp`, K_g, K_l, Y, alpha0, loss, max_iter, tol)
 }
 
-optimize_bkp_theta_rcpp <- function(Xnorm, y, m, prior, r0, p0, loss, kernel, isotropic, n_grid, n_starts, max_iter, g_lower, g_upper) {
-    .Call(`_BKP_optimize_bkp_theta_rcpp`, Xnorm, y, m, prior, r0, p0, loss, kernel, isotropic, n_grid, n_starts, max_iter, g_lower, g_upper)
+optimize_bkp_theta_rcpp <- function(Xnorm, y, m, prior, r0, p0, loss, kernel, isotropic, init_gamma, lower, upper, max_iter) {
+    .Call(`_BKP_optimize_bkp_theta_rcpp`, Xnorm, y, m, prior, r0, p0, loss, kernel, isotropic, init_gamma, lower, upper, max_iter)
 }
 
-optimize_dkp_theta_rcpp <- function(Xnorm, Y, prior, r0, p0, loss, kernel, isotropic, n_grid, n_starts, max_iter, g_lower, g_upper) {
-    .Call(`_BKP_optimize_dkp_theta_rcpp`, Xnorm, Y, prior, r0, p0, loss, kernel, isotropic, n_grid, n_starts, max_iter, g_lower, g_upper)
+optimize_dkp_theta_rcpp <- function(Xnorm, Y, prior, r0, p0, loss, kernel, isotropic, init_gamma, lower, upper, max_iter) {
+    .Call(`_BKP_optimize_dkp_theta_rcpp`, Xnorm, Y, prior, r0, p0, loss, kernel, isotropic, init_gamma, lower, upper, max_iter)
 }
 
 bkp_posterior_update_rcpp <- function(K, y, m, alpha0, beta0) {

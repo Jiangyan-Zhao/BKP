@@ -11,11 +11,11 @@ test_that("get_prior handles input validation correctly", {
 
   # Test for BKP fixed prior with missing p0
   expect_error(get_prior(prior = "fixed", model = "BKP", r0 = 10, y = NULL),
-               "For fixed prior in BKP, 'p0' must be a scalar in \\(0, 1\\)\\.")
+               "For fixed prior in BKP, 'p0' must be a scalar in (0, 1).")
 
   # Test for BKP fixed prior with invalid p0
   expect_error(get_prior(prior = "fixed", model = "BKP", r0 = 10, p0 = 2),
-               "For fixed prior in BKP, 'p0' must be a scalar in \\(0, 1\\)\\.")
+               "For fixed prior in BKP, 'p0' must be a scalar in (0, 1).")
 
   # Test for BKP adaptive prior with missing y/m
   expect_error(get_prior(prior = "adaptive", model = "BKP", K = matrix(1), r0 = 10, y = NULL),
@@ -128,7 +128,7 @@ test_that("test-get_prior uncovered validation branches", {
 
   expect_error(
     get_prior(prior = "adaptive", model = "BKP", y = c(1, 0), m = c(1, 1), K = matrix(1, nrow = 2, ncol = 3)),
-    "'K' must have ncol = length\\(y\\)."
+    "'K' must have ncol = length(y)."
   )
 
   expect_error(
@@ -138,12 +138,12 @@ test_that("test-get_prior uncovered validation branches", {
 
   expect_error(
     get_prior(prior = "fixed", model = "DKP", p0 = c(0.3, 0.3), Y = matrix(1, ncol = 3)),
-    "length\\(p0\\) must match the number of classes."
+    "length(p0) must match the number of classes."
   )
 
   expect_error(
     get_prior(prior = "adaptive", model = "DKP", Y = matrix(c(1, 0, 0, 1), ncol = 2), K = matrix(1, nrow = 2, ncol = 3)),
-    "'K' must have ncol = nrow\\(Y\\)."
+    "'K' must have ncol = nrow(Y)."
   )
 
   expect_error(

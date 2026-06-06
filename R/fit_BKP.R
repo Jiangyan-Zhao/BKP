@@ -26,8 +26,9 @@
 #'   (default), \code{"matern52"}, \code{"matern32"}, or \code{"wendland"}.
 #' @param loss Loss function for kernel hyperparameter tuning: \code{"brier"}
 #'   (default) or \code{"log_loss"}.
-#' @param n_multi_start Number of local-refinement starts selected from coarse
-#' candidates. Default is \code{1}. Coarse candidate count is \eqn{10 \times d}.
+#' @param n_multi_start Number of initial points used in multi-start
+#'   optimization of the kernel lengthscale parameters. If \code{NULL},
+#'   the default is \eqn{10d}, where \eqn{d} is the input dimension.
 #' @param theta Optional. A positive scalar or numeric vector of length \code{d}
 #'   specifying kernel lengthscale parameters directly. If \code{NULL}
 #'   (default), lengthscales are optimized using multi-start L-BFGS-B to
@@ -204,7 +205,8 @@ fit_BKP <- function(
 
   # ---- hyperparameters checks ----
   if (!is.null(n_multi_start)) {
-    if (!is.numeric(n_multi_start) || length(n_multi_start) != 1 || n_multi_start <= 0) {
+    if (!is.numeric(n_multi_start) || length(n_multi_start) != 1  ||
+        is.na(n_multi_start) || !is.finite(n_multi_start) || n_multi_start <= 0) {
       stop("'n_multi_start' must be a positive integer.")
     }
   }
@@ -233,20 +235,27 @@ fit_BKP <- function(
   Xnorm <- sweep(Xnorm, 2, Xbounds[,2] - Xbounds[,1], "/")
 
   if (is.null(theta)) {
-    n_theta <- if (isotropic) 1 else d
+    # ---- Determine the number of optimization variables ----
+    n_theta <- ifelse(isTRUE(isotropic), 1L, d)
 
-    # Set the coarse search candidate count to 10 * d
-    n_grid_cpp <- as.integer(max(10L, 10L * d))
-
-    n_starts_cpp <- if (is.null(n_multi_start)) {
-      1L
+    # ---- Number of multi-start initial points ----
+    if (is.null(n_multi_start)) {
+      n_multi_start <- as.integer(10L * n_theta)
     } else {
-      as.integer(max(1L, n_multi_start))
+      n_multi_start <- as.integer(n_multi_start)
     }
 
-    max_iter_cpp <- 100L
-    g_lower <- (log10(d) - log10(500)) / 2
-    g_upper <- (log10(d) + 2) / 2
+    # ---- Initial search region Omega_0 for log10(theta) ----
+    gamma_bounds <- matrix(c((log10(d) - log10(500))/2,   # lower bound
+                             (log10(d) + 2)/2),           # upper bound
+                           ncol = 2, nrow = n_theta, byrow = TRUE)
+    init_gamma <- lhs(n = n_multi_start, rect = gamma_bounds) # tgp::lhs
+
+    # ---- Local optimization region Omega = [-3, 3]^p ----
+    lower <- rep(-3, n_theta)
+    upper <- rep(3, n_theta)
+
+    max_iter <- min(500L, ceiling(100 * log1p(n_theta)))
 
     opt_cpp <- optimize_bkp_theta_rcpp(
       Xnorm = Xnorm,
@@ -258,11 +267,10 @@ fit_BKP <- function(
       loss = loss,
       kernel = kernel,
       isotropic = isotropic,
-      n_grid = n_grid_cpp,
-      n_starts = n_starts_cpp,
-      max_iter = max_iter_cpp,
-      g_lower = g_lower,
-      g_upper = g_upper
+      init_gamma = init_gamma,
+      lower = lower,
+      upper = upper,
+      max_iter = as.integer(max_iter)
     )
 
     gamma_opt <- as.numeric(opt_cpp$gamma_opt)

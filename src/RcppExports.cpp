@@ -113,8 +113,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // optimize_bkp_theta_rcpp
-Rcpp::List optimize_bkp_theta_rcpp(const arma::mat& Xnorm, const arma::vec& y, const arma::vec& m, const std::string& prior, const double r0, const double p0, const std::string& loss, const std::string& kernel, const bool isotropic, const int n_grid, const int n_starts, const int max_iter, const double g_lower, const double g_upper);
-RcppExport SEXP _BKP_optimize_bkp_theta_rcpp(SEXP XnormSEXP, SEXP ySEXP, SEXP mSEXP, SEXP priorSEXP, SEXP r0SEXP, SEXP p0SEXP, SEXP lossSEXP, SEXP kernelSEXP, SEXP isotropicSEXP, SEXP n_gridSEXP, SEXP n_startsSEXP, SEXP max_iterSEXP, SEXP g_lowerSEXP, SEXP g_upperSEXP) {
+Rcpp::List optimize_bkp_theta_rcpp(const arma::mat& Xnorm, const arma::vec& y, const arma::vec& m, const std::string& prior, const double r0, const double p0, const std::string& loss, const std::string& kernel, const bool isotropic, const arma::mat& init_gamma, const arma::vec& lower, const arma::vec& upper, const int max_iter);
+RcppExport SEXP _BKP_optimize_bkp_theta_rcpp(SEXP XnormSEXP, SEXP ySEXP, SEXP mSEXP, SEXP priorSEXP, SEXP r0SEXP, SEXP p0SEXP, SEXP lossSEXP, SEXP kernelSEXP, SEXP isotropicSEXP, SEXP init_gammaSEXP, SEXP lowerSEXP, SEXP upperSEXP, SEXP max_iterSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -127,18 +127,17 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const std::string& >::type loss(lossSEXP);
     Rcpp::traits::input_parameter< const std::string& >::type kernel(kernelSEXP);
     Rcpp::traits::input_parameter< const bool >::type isotropic(isotropicSEXP);
-    Rcpp::traits::input_parameter< const int >::type n_grid(n_gridSEXP);
-    Rcpp::traits::input_parameter< const int >::type n_starts(n_startsSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type init_gamma(init_gammaSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type lower(lowerSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type upper(upperSEXP);
     Rcpp::traits::input_parameter< const int >::type max_iter(max_iterSEXP);
-    Rcpp::traits::input_parameter< const double >::type g_lower(g_lowerSEXP);
-    Rcpp::traits::input_parameter< const double >::type g_upper(g_upperSEXP);
-    rcpp_result_gen = Rcpp::wrap(optimize_bkp_theta_rcpp(Xnorm, y, m, prior, r0, p0, loss, kernel, isotropic, n_grid, n_starts, max_iter, g_lower, g_upper));
+    rcpp_result_gen = Rcpp::wrap(optimize_bkp_theta_rcpp(Xnorm, y, m, prior, r0, p0, loss, kernel, isotropic, init_gamma, lower, upper, max_iter));
     return rcpp_result_gen;
 END_RCPP
 }
 // optimize_dkp_theta_rcpp
-Rcpp::List optimize_dkp_theta_rcpp(const arma::mat& Xnorm, const arma::mat& Y, const std::string& prior, const double r0, const arma::vec& p0, const std::string& loss, const std::string& kernel, const bool isotropic, const int n_grid, const int n_starts, const int max_iter, const double g_lower, const double g_upper);
-RcppExport SEXP _BKP_optimize_dkp_theta_rcpp(SEXP XnormSEXP, SEXP YSEXP, SEXP priorSEXP, SEXP r0SEXP, SEXP p0SEXP, SEXP lossSEXP, SEXP kernelSEXP, SEXP isotropicSEXP, SEXP n_gridSEXP, SEXP n_startsSEXP, SEXP max_iterSEXP, SEXP g_lowerSEXP, SEXP g_upperSEXP) {
+Rcpp::List optimize_dkp_theta_rcpp(const arma::mat& Xnorm, const arma::mat& Y, const std::string& prior, const double r0, const arma::vec& p0, const std::string& loss, const std::string& kernel, const bool isotropic, const arma::mat& init_gamma, const arma::vec& lower, const arma::vec& upper, const int max_iter);
+RcppExport SEXP _BKP_optimize_dkp_theta_rcpp(SEXP XnormSEXP, SEXP YSEXP, SEXP priorSEXP, SEXP r0SEXP, SEXP p0SEXP, SEXP lossSEXP, SEXP kernelSEXP, SEXP isotropicSEXP, SEXP init_gammaSEXP, SEXP lowerSEXP, SEXP upperSEXP, SEXP max_iterSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -150,12 +149,11 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const std::string& >::type loss(lossSEXP);
     Rcpp::traits::input_parameter< const std::string& >::type kernel(kernelSEXP);
     Rcpp::traits::input_parameter< const bool >::type isotropic(isotropicSEXP);
-    Rcpp::traits::input_parameter< const int >::type n_grid(n_gridSEXP);
-    Rcpp::traits::input_parameter< const int >::type n_starts(n_startsSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type init_gamma(init_gammaSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type lower(lowerSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type upper(upperSEXP);
     Rcpp::traits::input_parameter< const int >::type max_iter(max_iterSEXP);
-    Rcpp::traits::input_parameter< const double >::type g_lower(g_lowerSEXP);
-    Rcpp::traits::input_parameter< const double >::type g_upper(g_upperSEXP);
-    rcpp_result_gen = Rcpp::wrap(optimize_dkp_theta_rcpp(Xnorm, Y, prior, r0, p0, loss, kernel, isotropic, n_grid, n_starts, max_iter, g_lower, g_upper));
+    rcpp_result_gen = Rcpp::wrap(optimize_dkp_theta_rcpp(Xnorm, Y, prior, r0, p0, loss, kernel, isotropic, init_gamma, lower, upper, max_iter));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -252,8 +250,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_BKP_loss_fun_rcpp", (DL_FUNC) &_BKP_loss_fun_rcpp, 9},
     {"_BKP_optimize_lambda_bkp_rcpp", (DL_FUNC) &_BKP_optimize_lambda_bkp_rcpp, 9},
     {"_BKP_optimize_lambda_dkp_rcpp", (DL_FUNC) &_BKP_optimize_lambda_dkp_rcpp, 7},
-    {"_BKP_optimize_bkp_theta_rcpp", (DL_FUNC) &_BKP_optimize_bkp_theta_rcpp, 14},
-    {"_BKP_optimize_dkp_theta_rcpp", (DL_FUNC) &_BKP_optimize_dkp_theta_rcpp, 13},
+    {"_BKP_optimize_bkp_theta_rcpp", (DL_FUNC) &_BKP_optimize_bkp_theta_rcpp, 13},
+    {"_BKP_optimize_dkp_theta_rcpp", (DL_FUNC) &_BKP_optimize_dkp_theta_rcpp, 12},
     {"_BKP_bkp_posterior_update_rcpp", (DL_FUNC) &_BKP_bkp_posterior_update_rcpp, 5},
     {"_BKP_dkp_posterior_update_rcpp", (DL_FUNC) &_BKP_dkp_posterior_update_rcpp, 3},
     {"_BKP_predict_bkp_rcpp", (DL_FUNC) &_BKP_predict_bkp_rcpp, 5},
