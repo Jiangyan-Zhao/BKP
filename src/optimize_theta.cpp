@@ -4,7 +4,11 @@
 // This file contains the shared optimization workflow for both Beta Kernel
 // Process and Dirichlet Kernel Process models. The BKP and DKP routines are
 // kept together because they use the same nloptr-based refinement strategy.
+//
+// The objective functions use pure Armadillo engines only, so the outer
+// multi-start loop can be safely parallelized with OpenMP.
 // -----------------------------------------------------------------------------
+
 #include <RcppArmadillo.h>
 #include <nloptrAPI.h>
 #include <limits>
@@ -12,11 +16,16 @@
 #include <algorithm>
 #include <vector>
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 // [[Rcpp::depends(RcppArmadillo, nloptr)]]
 
 using namespace Rcpp;
 
 // -------- BEGIN: declarations from other cpp files --------
+
 arma::mat kernel_matrix_arma(
     const arma::mat& Xm,
     const arma::mat& Xpm,
@@ -26,29 +35,47 @@ arma::mat kernel_matrix_arma(
     const bool symmetric
 );
 
-List get_prior_rcpp(
-    std::string model,
-    std::string prior,
-    double r0,
-    Nullable<NumericVector> p0,
-    Nullable<NumericVector> y,
-    Nullable<NumericVector> m,
-    Nullable<NumericMatrix> Y,
-    Nullable<NumericMatrix> K
+void get_prior_bkp_arma(
+    const std::string& prior,
+    const double r0,
+    const double p0,
+    const arma::vec& y,
+    const arma::vec& m,
+    const arma::mat& K,
+    arma::vec& alpha0,
+    arma::vec& beta0
 );
 
-double loss_fun_rcpp(
-    std::string model,
-    std::string loss,
-    const arma::mat& K,
-    Nullable<NumericVector> y = R_NilValue,
-    Nullable<NumericVector> m = R_NilValue,
-    Nullable<NumericMatrix> Y = R_NilValue,
-    Nullable<NumericVector> alpha0 = R_NilValue,
-    Nullable<NumericVector> beta0 = R_NilValue,
-    Nullable<NumericMatrix> alpha0_mat = R_NilValue
+arma::mat get_prior_dkp_arma(
+    const std::string& prior,
+    const double r0,
+    const arma::vec& p0,
+    const arma::mat& Y,
+    const arma::mat& K
 );
+
+double loss_bkp_arma(
+    const std::string& loss,
+    const arma::mat& K,
+    const arma::vec& y,
+    const arma::vec& m,
+    const arma::vec& alpha0,
+    const arma::vec& beta0
+);
+
+double loss_dkp_arma(
+    const std::string& loss,
+    const arma::mat& K,
+    const arma::mat& Y,
+    const arma::mat& alpha0
+);
+
 // -------- END: declarations from other cpp files --------
+
+
+// -----------------------------------------------------------------------------
+// Pure C++ objective evaluation from gamma = log10(theta)
+// -----------------------------------------------------------------------------
 
 static double eval_bkp_loss_from_gamma(
     const arma::vec& gamma,
@@ -67,27 +94,19 @@ static double eval_bkp_loss_from_gamma(
   arma::mat K = kernel_matrix_arma(Xnorm, Xnorm, theta, kernel, isotropic, true);
   K.diag().zeros();
 
-  NumericVector p0_vec = NumericVector::create(p0);
-  NumericVector y_vec = wrap(y);
-  NumericVector m_vec = wrap(m);
-  NumericMatrix K_mat = wrap(K);
+  arma::vec alpha0;
+  arma::vec beta0;
 
-  List prior_par = get_prior_rcpp(
-    "BKP", prior, r0, p0_vec, y_vec, m_vec, R_NilValue, K_mat
-  );
+  get_prior_bkp_arma(prior, r0, p0, y, m, K, alpha0, beta0);
 
-  arma::vec alpha0 = as<arma::vec>(prior_par["alpha0"]);
-  arma::vec beta0  = as<arma::vec>(prior_par["beta0"]);
+  double val = loss_bkp_arma(loss, K, y, m, alpha0, beta0);
 
-  double val = loss_fun_rcpp(
-    "BKP", loss, K, wrap(y), wrap(m), R_NilValue, wrap(alpha0), wrap(beta0)
-  );
-
-  // guard: NaN or Inf -> return large finite value so sort_index won't crash
+  // Guard: NaN or Inf -> return a large finite value.
   if (!std::isfinite(val)) return std::numeric_limits<double>::max();
 
   return val;
 }
+
 
 static double eval_dkp_loss_from_gamma(
     const arma::vec& gamma,
@@ -105,27 +124,20 @@ static double eval_dkp_loss_from_gamma(
   arma::mat K = kernel_matrix_arma(Xnorm, Xnorm, theta, kernel, isotropic, true);
   K.diag().zeros();
 
-  NumericVector p0_vec = wrap(p0);
-  NumericMatrix Y_mat = wrap(Y);
-  NumericMatrix K_mat = wrap(K);
+  arma::mat alpha0 = get_prior_dkp_arma(prior, r0, p0, Y, K);
 
-  List prior_par = get_prior_rcpp(
-    "DKP", prior, r0, p0_vec, R_NilValue, R_NilValue, Y_mat, K_mat
-  );
-
-  arma::mat alpha0 = as<arma::mat>(prior_par["alpha0"]);
-
-  double val = loss_fun_rcpp(
-    "DKP", loss, K, R_NilValue, R_NilValue, wrap(Y),
-    R_NilValue, R_NilValue, wrap(alpha0)
-  );
+  double val = loss_dkp_arma(loss, K, Y, alpha0);
 
   if (!std::isfinite(val)) return std::numeric_limits<double>::max();
 
   return val;
 }
 
-// ---------- NLOPT objective ----------
+
+// -----------------------------------------------------------------------------
+// NLOPT objective data
+// -----------------------------------------------------------------------------
+
 struct BKPOptData {
   const arma::mat* Xnorm;
   const arma::vec* y;
@@ -138,6 +150,7 @@ struct BKPOptData {
   bool isotropic;
 };
 
+
 struct DKPOptData {
   const arma::mat* Xnorm;
   const arma::mat* Y;
@@ -149,12 +162,24 @@ struct DKPOptData {
   bool isotropic;
 };
 
+
+struct OptResult {
+  arma::vec gamma;
+  double value;
+  int status;
+
+  OptResult()
+    : gamma(), value(std::numeric_limits<double>::infinity()), status(0) {}
+};
+
+
 static double bkp_nlopt_obj(unsigned n, const double* x, double* grad, void* f_data) {
   if (grad != nullptr) {
     for (unsigned i = 0; i < n; ++i) grad[i] = 0.0; // SBPLX does not use gradient
   }
 
   BKPOptData* d = reinterpret_cast<BKPOptData*>(f_data);
+
   arma::vec gamma(n);
   for (unsigned i = 0; i < n; ++i) gamma[i] = x[i];
 
@@ -164,12 +189,14 @@ static double bkp_nlopt_obj(unsigned n, const double* x, double* grad, void* f_d
   );
 }
 
+
 static double dkp_nlopt_obj(unsigned n, const double* x, double* grad, void* f_data) {
   if (grad != nullptr) {
     for (unsigned i = 0; i < n; ++i) grad[i] = 0.0;
   }
 
   DKPOptData* d = reinterpret_cast<DKPOptData*>(f_data);
+
   arma::vec gamma(n);
   for (unsigned i = 0; i < n; ++i) gamma[i] = x[i];
 
@@ -179,7 +206,12 @@ static double dkp_nlopt_obj(unsigned n, const double* x, double* grad, void* f_d
   );
 }
 
-static Rcpp::List nloptr_refine(
+
+// -----------------------------------------------------------------------------
+// One local nloptr refinement from a single start
+// -----------------------------------------------------------------------------
+
+static OptResult nloptr_refine(
     arma::vec gamma_init,
     const arma::mat& Xnorm,
     const arma::vec& y,
@@ -197,6 +229,7 @@ static Rcpp::List nloptr_refine(
   for (arma::uword i = 0; i < gamma_init.n_elem; ++i) {
     gamma_init[i] = std::max(lower[i], std::min(upper[i], gamma_init[i]));
   }
+
   std::vector<double> x(gamma_init.begin(), gamma_init.end());
   std::vector<double> lb(lower.begin(), lower.end());
   std::vector<double> ub(upper.begin(), upper.end());
@@ -218,17 +251,21 @@ static Rcpp::List nloptr_refine(
   for (std::size_t i = 0; i < x.size(); ++i) g_opt[i] = x[i];
 
   if (!std::isfinite(f_min)) {
-    f_min = eval_bkp_loss_from_gamma(g_opt, Xnorm, y, m, prior, r0, p0, loss, kernel, isotropic);
+    f_min = eval_bkp_loss_from_gamma(
+      g_opt, Xnorm, y, m, prior, r0, p0, loss, kernel, isotropic
+    );
   }
 
-  return List::create(
-    Named("gamma") = g_opt,
-    Named("value") = f_min,
-    Named("status") = static_cast<int>(rc)
-  );
+  OptResult out;
+  out.gamma = g_opt;
+  out.value = f_min;
+  out.status = static_cast<int>(rc);
+
+  return out;
 }
 
-static Rcpp::List nloptr_refine_dkp(
+
+static OptResult nloptr_refine_dkp(
     arma::vec gamma_init,
     const arma::mat& Xnorm,
     const arma::mat& Y,
@@ -245,6 +282,7 @@ static Rcpp::List nloptr_refine_dkp(
   for (arma::uword i = 0; i < gamma_init.n_elem; ++i) {
     gamma_init[i] = std::max(lower[i], std::min(upper[i], gamma_init[i]));
   }
+
   std::vector<double> x(gamma_init.begin(), gamma_init.end());
   std::vector<double> lb(lower.begin(), lower.end());
   std::vector<double> ub(upper.begin(), upper.end());
@@ -266,15 +304,23 @@ static Rcpp::List nloptr_refine_dkp(
   for (std::size_t i = 0; i < x.size(); ++i) g_opt[i] = x[i];
 
   if (!std::isfinite(f_min)) {
-    f_min = eval_dkp_loss_from_gamma(g_opt, Xnorm, Y, prior, r0, p0, loss, kernel, isotropic);
+    f_min = eval_dkp_loss_from_gamma(
+      g_opt, Xnorm, Y, prior, r0, p0, loss, kernel, isotropic
+    );
   }
 
-  return List::create(
-    Named("gamma") = g_opt,
-    Named("value") = f_min,
-    Named("status") = static_cast<int>(rc)
-  );
+  OptResult out;
+  out.gamma = g_opt;
+  out.value = f_min;
+  out.status = static_cast<int>(rc);
+
+  return out;
 }
+
+
+// -----------------------------------------------------------------------------
+// Exported multi-start optimization wrappers
+// -----------------------------------------------------------------------------
 
 // [[Rcpp::export]]
 Rcpp::List optimize_bkp_theta_rcpp(
@@ -290,27 +336,54 @@ Rcpp::List optimize_bkp_theta_rcpp(
     const arma::mat& init_gamma,
     const arma::vec& lower,
     const arma::vec& upper,
-    const int max_iter
+    const int max_iter,
+    const int n_threads = 1
 ) {
   const int n_starts = static_cast<int>(init_gamma.n_rows);
+
+  int n_threads_used = 1;
+
+#ifdef _OPENMP
+  n_threads_used = std::max(1, std::min(n_threads, n_starts));
+#else
+  n_threads_used = 1;
+#endif
+
+  std::vector<OptResult> results(n_starts);
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic) num_threads(n_threads_used)
+#endif
+  for (int k = 0; k < n_starts; ++k) {
+    try {
+      arma::vec g0 = init_gamma.row(k).t();
+
+      results[k] = nloptr_refine(
+        g0, Xnorm, y, m,
+        prior, r0, p0, loss, kernel, isotropic,
+        lower, upper, max_iter
+      );
+
+    } catch (...) {
+      results[k].gamma = init_gamma.row(k).t();
+      results[k].value = std::numeric_limits<double>::infinity();
+      results[k].status = -999;
+    }
+  }
 
   arma::vec best_gamma = init_gamma.row(0).t();
   double best_val = std::numeric_limits<double>::infinity();
 
+  arma::vec all_loss(n_starts);
+  arma::ivec all_status(n_starts);
+
   for (int k = 0; k < n_starts; ++k) {
-    arma::vec g0 = init_gamma.row(k).t();
+    all_loss[k] = results[k].value;
+    all_status[k] = results[k].status;
 
-    List ref = nloptr_refine(
-      g0, Xnorm, y, m, prior, r0, p0, loss, kernel, isotropic,
-      lower, upper, max_iter
-    );
-
-    const arma::vec gk = as<arma::vec>(ref["gamma"]);
-    const double vk = as<double>(ref["value"]);
-
-    if (vk < best_val) {
-      best_val = vk;
-      best_gamma = gk;
+    if (results[k].value < best_val) {
+      best_val = results[k].value;
+      best_gamma = results[k].gamma;
     }
   }
 
@@ -319,9 +392,13 @@ Rcpp::List optimize_bkp_theta_rcpp(
   return List::create(
     Named("theta_opt") = theta_opt,
     Named("gamma_opt") = best_gamma,
-    Named("loss_min") = best_val
+    Named("loss_min") = best_val,
+    Named("all_loss") = all_loss,
+    Named("all_status") = all_status,
+    Named("n_threads") = n_threads_used
   );
 }
+
 
 // [[Rcpp::export]]
 Rcpp::List optimize_dkp_theta_rcpp(
@@ -336,27 +413,54 @@ Rcpp::List optimize_dkp_theta_rcpp(
     const arma::mat& init_gamma,
     const arma::vec& lower,
     const arma::vec& upper,
-    const int max_iter
+    const int max_iter,
+    const int n_threads = 1
 ) {
   const int n_starts = static_cast<int>(init_gamma.n_rows);
+
+  int n_threads_used = 1;
+
+#ifdef _OPENMP
+  n_threads_used = std::max(1, std::min(n_threads, n_starts));
+#else
+  n_threads_used = 1;
+#endif
+
+  std::vector<OptResult> results(n_starts);
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic) num_threads(n_threads_used)
+#endif
+  for (int k = 0; k < n_starts; ++k) {
+    try {
+      arma::vec g0 = init_gamma.row(k).t();
+
+      results[k] = nloptr_refine_dkp(
+        g0, Xnorm, Y,
+        prior, r0, p0, loss, kernel, isotropic,
+        lower, upper, max_iter
+      );
+
+    } catch (...) {
+      results[k].gamma = init_gamma.row(k).t();
+      results[k].value = std::numeric_limits<double>::infinity();
+      results[k].status = -999;
+    }
+  }
 
   arma::vec best_gamma = init_gamma.row(0).t();
   double best_val = std::numeric_limits<double>::infinity();
 
+  arma::vec all_loss(n_starts);
+  arma::ivec all_status(n_starts);
+
   for (int k = 0; k < n_starts; ++k) {
-    arma::vec g0 = init_gamma.row(k).t();
+    all_loss[k] = results[k].value;
+    all_status[k] = results[k].status;
 
-    List ref = nloptr_refine_dkp(
-      g0, Xnorm, Y, prior, r0, p0, loss, kernel, isotropic,
-      lower, upper, max_iter
-    );
-
-    const arma::vec gk = as<arma::vec>(ref["gamma"]);
-    const double vk = as<double>(ref["value"]);
-
-    if (vk < best_val) {
-      best_val = vk;
-      best_gamma = gk;
+    if (results[k].value < best_val) {
+      best_val = results[k].value;
+      best_gamma = results[k].gamma;
     }
   }
 
@@ -365,6 +469,9 @@ Rcpp::List optimize_dkp_theta_rcpp(
   return List::create(
     Named("theta_opt") = theta_opt,
     Named("gamma_opt") = best_gamma,
-    Named("loss_min") = best_val
+    Named("loss_min") = best_val,
+    Named("all_loss") = all_loss,
+    Named("all_status") = all_status,
+    Named("n_threads") = n_threads_used
   );
 }
