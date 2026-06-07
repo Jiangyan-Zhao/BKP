@@ -40,7 +40,7 @@
 #' }
 #' n <- 10000
 #' Xbounds <- matrix(c(-2, 2), nrow = 1)
-#' X <- lhs(n = n, rect = Xbounds)
+#' X <- tgp::lhs(n = n, rect = Xbounds)
 #' true_pi <- true_pi_fun(X)
 #' m <- sample(100, n, replace = TRUE)
 #' y <- rbinom(n, size = m, prob = true_pi)

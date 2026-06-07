@@ -99,7 +99,7 @@ and return posterior mean/variance/confidence interval.
   y <- rbinom(n, size = m, prob = true_pi)
 
   # Fit TwinBKP model (global stage only)
-  model1 <- fit_TwinBKP(X, y, m, Xbounds = Xbounds, g_nums = 10) 
+  model1 <- fit_TwinBKP(X, y, m, Xbounds = Xbounds, g_nums = 10)
 
   # Prediction on new data
   Xnew <- matrix(seq(-2, 2, length.out = 10), ncol = 1)
@@ -133,7 +133,7 @@ and return posterior mean/variance/confidence interval.
   y <- rbinom(n, size = m, prob = true_pi)
 
   # Fit TwinBKP model
-  model2 <- fit_TwinBKP(X, y, m, Xbounds = Xbounds, g_nums = 12) 
+  model2 <- fit_TwinBKP(X, y, m, Xbounds = Xbounds, g_nums = 12)
 
   # Prediction on new data
   x1 <- seq(Xbounds[1, 1], Xbounds[1, 2], length.out = 8)

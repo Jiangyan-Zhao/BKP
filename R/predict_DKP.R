@@ -1,40 +1,5 @@
 #' @rdname predict
 #'
-#' @description
-#' 
-#' S3 prediction method for fitted 
-#' \code{\link[=fit_DKP]{DKP}} models. This method supports posterior
-#' prediction on either probability scale (class probabilities) or count scale
-#' (marginal Beta-Binomial counts for each class), and returns posterior means,
-#' variances, and credible intervals.
-#'
-#' @param object A fitted \code{"DKP"} object, typically returned by
-#'   \code{\link{fit_DKP}}.
-#' @param Xnew A numeric vector or matrix of new input locations. If
-#'   \code{NULL}, predictions are returned for the training data.
-#' @param CI_level Numeric value in \code{(0, 1)} specifying the credible
-#'   interval level (default \code{0.95}).
-#' @param return_type Character string specifying prediction scale:
-#'   \code{"probability"} (default) or \code{"count"}.
-#' @param n_trials Positive integer total trial count used only when
-#'   \code{return_type = "count"}. Must be provided in count mode.
-#' @param ... Additional arguments for S3 method consistency (currently unused).
-#'
-#' @return A list of class \code{"predict_DKP"} including posterior
-#' Dirichlet parameters and predictive summaries:
-#' \describe{
-#'   \item{\code{alpha_n}}{Posterior Dirichlet parameters
-#'   (\code{n_new x q}, where \code{q} is number of classes).}
-#'   \item{\code{mean}}{Posterior mean class probabilities (or expected counts
-#'   when \code{return_type = "count"}).}
-#'   \item{\code{variance}}{Posterior predictive variances for each class.}
-#'   \item{\code{lower}, \code{upper}}{Marginal credible interval bounds for
-#'   each class.}
-#'   \item{\code{class}}{Predicted class index based on maximum posterior mean,
-#'   returned only when \code{return_type = "probability"} and
-#'   \code{rowSums(Y) == 1}.}
-#' }
-#'
 #' @keywords DKP
 #'
 #' @examples
@@ -116,7 +81,7 @@
 #' @method predict DKP
 
 predict.DKP <- function(object, Xnew = NULL, CI_level = 0.95,
-                        return_type = c("probability", "count"), n_trials = NULL, ...)
+                        type = c("probability", "count"), Mnew = NULL, ...)
 {
   #---- Argument checks ----
   X       <- object$X
@@ -137,15 +102,15 @@ predict.DKP <- function(object, Xnew = NULL, CI_level = 0.95,
   if (!is.numeric(CI_level) || length(CI_level) != 1 || CI_level <= 0 || CI_level >= 1) {
     stop("'CI_level' must be a single numeric value strictly between 0 and 1.")
   }
-  return_type <- match.arg(return_type)
-  if (return_type == "count") {
-    if (is.null(n_trials)) {
-      stop("When return_type = 'count', 'n_trials' must be provided.")
+  type <- match.arg(type)
+  if (type == "count") {
+    if (is.null(Mnew)) {
+      stop("When type = 'count', 'Mnew' must be provided.")
     }
-    if (!is.numeric(n_trials) || length(n_trials) != 1 || n_trials <= 0 || n_trials != as.integer(n_trials)) {
-      stop("'n_trials' must be a positive integer when return_type = 'count'.")
+    if (!is.numeric(Mnew) || length(Mnew) != 1 || Mnew <= 0 || Mnew != as.integer(Mnew)) {
+      stop("'Mnew' must be a positive integer when type = 'count'.")
     }
-    n_trials <- as.integer(n_trials)
+    Mnew <- as.integer(Mnew)
   }
 
   if(!is.null(Xnew)){
@@ -182,7 +147,7 @@ predict.DKP <- function(object, Xnew = NULL, CI_level = 0.95,
     alpha_n <- object$alpha_n
     Y       <- object$Y
     row_sum <- rowSums(alpha_n)
-    
+
     eps <- 1e-10
     pred_mean <- alpha_n / pmax(row_sum, eps)
     pred_mean <- pmin(pmax(pred_mean, eps), 1 - eps)
@@ -190,14 +155,14 @@ predict.DKP <- function(object, Xnew = NULL, CI_level = 0.95,
   }
 
   beta_n <- matrix(row_sum, nrow = nrow(alpha_n), ncol = ncol(alpha_n)) - alpha_n
-  if (return_type == "probability") {
+  if (type == "probability") {
     # Credible intervals on class probability p_j
     pred_lower <- suppressWarnings(qbeta((1 - CI_level) / 2, alpha_n, beta_n))
     pred_upper <- suppressWarnings(qbeta((1 + CI_level) / 2, alpha_n, beta_n))
   } else {
-    # Count prediction via marginal Beta-Binomial(n_trials, alpha_j, row_sum-alpha_j)
-    pred_mean <- n_trials * alpha_n / pmax(row_sum, 1e-10)
-    pred_var <- n_trials * alpha_n * beta_n * (matrix(row_sum, nrow(alpha_n), ncol(alpha_n)) + n_trials) /
+    # Count prediction via marginal Beta-Binomial(Mnew, alpha_j, row_sum-alpha_j)
+    pred_mean <- Mnew * alpha_n / pmax(row_sum, 1e-10)
+    pred_var <- Mnew * alpha_n * beta_n * (matrix(row_sum, nrow(alpha_n), ncol(alpha_n)) + Mnew) /
       (pmax(matrix(row_sum^2, nrow(alpha_n), ncol(alpha_n)), 1e-10) *
          pmax(matrix(row_sum + 1, nrow(alpha_n), ncol(alpha_n)), 1e-10))
 
@@ -205,8 +170,8 @@ predict.DKP <- function(object, Xnew = NULL, CI_level = 0.95,
     pred_upper <- matrix(0, nrow = nrow(alpha_n), ncol = ncol(alpha_n))
     for (i in seq_len(nrow(alpha_n))) {
       for (j in seq_len(ncol(alpha_n))) {
-        pred_lower[i, j] <- betabinom_quantile((1 - CI_level) / 2, n_trials, alpha_n[i, j], beta_n[i, j])
-        pred_upper[i, j] <- betabinom_quantile((1 + CI_level) / 2, n_trials, alpha_n[i, j], beta_n[i, j])
+        pred_lower[i, j] <- qbetabinom_rcpp((1 - CI_level) / 2, Mnew, alpha_n[i, j], beta_n[i, j])
+        pred_upper[i, j] <- qbetabinom_rcpp((1 + CI_level) / 2, Mnew, alpha_n[i, j], beta_n[i, j])
       }
     }
   }
@@ -226,15 +191,15 @@ predict.DKP <- function(object, Xnew = NULL, CI_level = 0.95,
     lower    = pred_lower,
     upper    = pred_upper,
     CI_level = CI_level,
-    return_type = return_type
+    type = type
   )
 
-  if (return_type == "count") {
-    prediction$n_trials <- n_trials
+  if (type == "count") {
+    prediction$Mnew <- Mnew
   }
 
   # Posterior classification label (only for classification data)
-  if (return_type == "probability" && all(rowSums(Y) == 1)) {
+  if (type == "probability" && all(rowSums(Y) == 1)) {
     prediction$class <- max.col(pred_mean)
   }
 

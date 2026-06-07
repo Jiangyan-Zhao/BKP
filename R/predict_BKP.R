@@ -2,10 +2,12 @@
 #'
 #' @title Posterior Prediction for BKP or DKP Models
 #'
-#' @description Generates posterior predictive summaries from a fitted Beta
-#'   Kernel Process (BKP) or Dirichlet Kernel Process (DKP) model at new input
-#'   locations. Supports prediction of posterior mean, variance, credible
-#'   intervals, and classification labels (where applicable).
+#' @description Generates posterior summaries from a fitted Beta Kernel Process
+#'   (BKP) or Dirichlet Kernel Process (DKP) model at new input locations. For
+#'   BKP models, summaries can be returned either for the latent success
+#'   probability or for a future success count under the Beta-Binomial posterior
+#'   predictive distribution. For DKP models, summaries are returned for the
+#'   class probability vector.
 #'
 #' @param object An object of class \code{"BKP"} or \code{"DKP"}, typically
 #'   returned by \code{\link{fit_BKP}} or \code{\link{fit_DKP}}.
@@ -17,50 +19,77 @@
 #' @param threshold Numeric between 0 and 1 specifying the classification
 #'   threshold for binary predictions based on posterior mean (used only for
 #'   BKP; default is \code{0.5}).
-#' @param return_type Character string specifying prediction scale:
-#'   \code{"probability"} (default, original behavior) or \code{"count"}
-#'   (Beta-Binomial success-count prediction).
-#' @param n_trials Positive integer total trial count used only when
-#'   \code{return_type = "count"}. If \code{NULL}, an error is thrown in
-#'   count mode.
+#' @param type Character string specifying the prediction target for BKP models.
+#'   The default \code{"probability"} returns posterior summaries for the latent
+#'   success probability \eqn{\pi(x)}. The option \code{"count"} returns posterior
+#'   predictive summaries for a future success count under the Beta-Binomial
+#'   distribution. This argument is ignored for DKP models unless otherwise
+#'   implemented.
+#' @param Mnew Positive integer trial size used only for BKP prediction when
+#'   \code{type = "count"}. It can be either a scalar, applied to all prediction
+#'   points, or a vector with the same length as the number of prediction points.
+#'   If \code{Xnew = NULL} and \code{Mnew = NULL}, the training trial sizes
+#'   \code{object$m} are used.
 #' @param ... Additional arguments passed to generic \code{predict} methods
 #'   (currently not used; included for S3 method consistency).
 #'
-#' @return A list containing posterior predictive summaries:
+#' @return A list containing posterior or posterior predictive summaries:
 #' \describe{
 #'   \item{\code{X}}{The original training input locations.}
-#'   \item{\code{Xnew}}{The new input locations for prediction (same as \code{Xnew} if provided).}
-#'   \item{\code{alpha_n}, \code{beta_n}}{Posterior shape parameters for each location:
+#'   \item{\code{Xnew}}{The new input locations for prediction. If \code{NULL},
+#'     predictions are returned at the training input locations.}
+#'   \item{\code{alpha_n}, \code{beta_n}}{Posterior shape parameters:
 #'     \itemize{
-#'       \item BKP: Vectors of posterior shape parameters (\code{alpha_n}, \code{beta_n}) for each input location.
-#'       \item DKP: Posterior shape parameter matrix \code{alpha_n} (rows = input locations, columns = classes).
+#'       \item BKP: Vectors \code{alpha_n} and \code{beta_n} of Beta posterior
+#'       shape parameters.
+#'       \item DKP: Matrix \code{alpha_n} of Dirichlet posterior concentration
+#'       parameters, with rows corresponding to input locations and columns to
+#'       classes.
 #'     }}
-#'   \item{\code{mean}}{Posterior mean prediction:
+#'   \item{\code{mean}}{Mean of the prediction target:
 #'     \itemize{
-#'       \item BKP: Posterior mean success probability at each location.
-#'       \item DKP: Matrix of posterior mean class probabilities (rows = inputs, columns = classes).
+#'       \item BKP with \code{type = "probability"}: posterior mean of the latent
+#'       success probability.
+#'       \item BKP with \code{type = "count"}: posterior predictive mean of the
+#'       future success count.
+#'       \item DKP: matrix of posterior mean class probabilities.
 #'     }}
-#'   \item{\code{variance}}{Posterior predictive variance:
+#'   \item{\code{variance}}{Variance of the prediction target:
 #'     \itemize{
-#'       \item BKP: Variance of success probability.
-#'       \item DKP: Matrix of predictive variances for each class.
+#'       \item BKP with \code{type = "probability"}: posterior variance of the
+#'       latent success probability.
+#'       \item BKP with \code{type = "count"}: posterior predictive variance of
+#'       the future success count.
+#'       \item DKP: matrix of posterior variances for class probabilities.
 #'     }}
-#'   \item{\code{lower}}{Lower bound of the posterior credible interval:
+#'   \item{\code{lower}}{Lower bound of the credible interval:
 #'     \itemize{
-#'       \item BKP: Lower bound (e.g., 2.5th percentile for 95% CI).
-#'       \item DKP: Matrix of lower bounds for each class.
+#'       \item BKP with \code{type = "probability"}: lower Beta posterior
+#'       quantile for the latent success probability.
+#'       \item BKP with \code{type = "count"}: lower Beta-Binomial posterior
+#'       predictive quantile for the future success count.
+#'       \item DKP: matrix of lower posterior quantiles for class probabilities.
 #'     }}
-#'   \item{\code{upper}}{Upper bound of the posterior credible interval:
+#'   \item{\code{upper}}{Upper bound of the credible interval:
 #'     \itemize{
-#'       \item BKP: Upper bound (e.g., 97.5th percentile for 95% CI).
-#'       \item DKP: Matrix of upper bounds for each class.
+#'       \item BKP with \code{type = "probability"}: upper Beta posterior
+#'       quantile for the latent success probability.
+#'       \item BKP with \code{type = "count"}: upper Beta-Binomial posterior
+#'       predictive quantile for the future success count.
+#'       \item DKP: matrix of upper posterior quantiles for class probabilities.
 #'     }}
-#'   \item{\code{class}}{Predicted label:
+#'   \item{\code{class}}{Predicted label, where applicable:
 #'     \itemize{
-#'       \item BKP: Binary class (0 or 1) based on posterior mean and \code{threshold}, only if \code{m = 1}.
-#'       \item DKP: Predicted class label with highest posterior mean probability.
+#'       \item BKP: binary class label based on posterior mean and
+#'       \code{threshold}, only for binary data with \code{m = 1} and
+#'       \code{type = "probability"}.
+#'       \item DKP: predicted class label with the highest posterior mean
+#'       probability.
 #'     }}
 #'   \item{\code{CI_level}}{The specified credible interval level.}
+#'   \item{\code{type}}{The prediction target used for BKP prediction.}
+#'   \item{\code{Mnew}}{The trial sizes used for count prediction, returned only
+#'     when \code{type = "count"}.}
 #' }
 #'
 #' @seealso \code{\link{fit_BKP}} and \code{\link{fit_DKP}} for model fitting;
@@ -100,9 +129,12 @@
 #' predict(model1)
 #'
 #' # Prediction on new data
-#' Xnew = matrix(seq(-2, 2, length = 10), ncol=1) #new data points
+#' Xnew <- matrix(seq(-2, 2, length = 10), ncol=1) #new data points
 #' predict(model1, Xnew = Xnew)
 #'
+#' # Posterior predictive summaries for future success counts
+#' Mnew <- sample(100, nrow(Xnew), replace = TRUE)
+#' predict(model1, Xnew = Xnew, type = "count", Mnew = Mnew)
 #'
 #' #-------------------------- 2D Example ---------------------------
 #' set.seed(123)
@@ -146,40 +178,78 @@
 #' @method predict BKP
 
 predict.BKP <- function(object, Xnew = NULL, CI_level = 0.95, threshold = 0.5,
-                        return_type = c("probability", "count"), n_trials = NULL, ...)
+                        type = c("probability", "count"), Mnew = NULL, ...)
 {
-  #---- Argument checks ----
-  X       <- object$X
-  d       <- ncol(X)
+  # ---- Extract basic information ----
+  X <- object$X
+  d <- ncol(X)
+
+  # ---- Check and format Xnew ----
   if (!is.null(Xnew)) {
-    if (is.null(nrow(Xnew))) {
-      Xnew <- matrix(Xnew, nrow = 1)
+    if (is.null(dim(Xnew))) {
+      if (d == 1L) {
+        Xnew <- matrix(Xnew, ncol = 1L)
+      } else {
+        Xnew <- matrix(Xnew, nrow = 1L)
+      }
+    } else {
+      Xnew <- as.matrix(Xnew)
     }
-    Xnew <- as.matrix(Xnew)
+
     if (!is.numeric(Xnew)) {
       stop("'Xnew' must be numeric.")
     }
+
     if (ncol(Xnew) != d) {
       stop("The number of columns in 'Xnew' must match the original input dimension.")
     }
   }
+  n_pred <- if (is.null(Xnew)) nrow(X) else nrow(Xnew)
+
+  # ---- Check scalar probability arguments ----
   if (!is.numeric(CI_level) || length(CI_level) != 1 || CI_level <= 0 || CI_level >= 1) {
     stop("'CI_level' must be a single numeric value strictly between 0 and 1.")
   }
+
   if (!is.numeric(threshold) || length(threshold) != 1 || threshold <= 0 || threshold >= 1) {
     stop("'threshold' must be a single numeric value strictly between 0 and 1.")
   }
-  return_type <- match.arg(return_type)
-  if (return_type == "count") {
-    if (is.null(n_trials)) {
-      stop("When return_type = 'count', 'n_trials' must be provided.")
+
+  type <- match.arg(type)
+  # ---- Check Mnew for count prediction ----
+  if (type == "count") {
+    if (is.null(Mnew)) {
+      if (is.null(Xnew)) {
+        Mnew <- object$m
+      } else {
+        stop("When type = 'count' and Xnew is provided, 'Mnew' must also be provided.")
+      }
     }
-    if (!is.numeric(n_trials) || length(n_trials) != 1 || n_trials <= 0 || n_trials != as.integer(n_trials)) {
-      stop("'n_trials' must be a positive integer when return_type = 'count'.")
+
+    if (!is.numeric(Mnew)) {
+      stop("'Mnew' must be a numeric vector when type = 'count'.")
     }
-    n_trials <- as.integer(n_trials)
+
+    if (!(length(Mnew) == 1L || length(Mnew) == n_pred)) {
+      stop("'Mnew' must have length 1 or the same length as the number of prediction points.")
+    }
+
+    if (anyNA(Mnew) || any(!is.finite(Mnew))) {
+      stop("'Mnew' must contain finite values with no NA.")
+    }
+
+    if (any(Mnew <= 0) || any(Mnew != floor(Mnew))) {
+      stop("'Mnew' must contain positive integers when type = 'count'.")
+    }
+
+    Mnew <- as.integer(Mnew)
+
+    if (length(Mnew) == 1L) {
+      Mnew <- rep.int(Mnew, n_pred)
+    }
   }
 
+  # ---- Posterior parameters ----
   if(!is.null(Xnew)){
     # Extract components
     Xnorm   <- object$Xnorm
@@ -198,74 +268,73 @@ predict.BKP <- function(object, Xnew = NULL, CI_level = 0.95, threshold = 0.5,
     Xnew_norm <- sweep(Xnew_norm, 2, Xbounds[, 2] - Xbounds[, 1], "/")
 
     # Compute kernel matrix
-    K <- kernel_matrix(Xnew_norm, Xnorm, theta = theta, kernel = kernel, isotropic = isotropic)
+    K <- kernel_matrix(Xnew_norm, Xnorm, theta = theta,
+                       kernel = kernel, isotropic = isotropic)
 
-    # Get prior parameters
+    # Prior parameters at prediction points
     prior_par <- get_prior(prior = prior, model = "BKP",
                            r0 = r0, p0 = p0, y = y, m = m, K = K)
     alpha0 <- prior_par$alpha0
     beta0 <- prior_par$beta0
 
-    # Call C++ function for posterior computation
-    result <- predict_bkp_rcpp(K, as.numeric(alpha0), as.numeric(beta0), 
-                               as.numeric(y), as.numeric(m))
-    alpha_n   <- result$alpha_n
-    beta_n    <- result$beta_n
-    pred_mean <- result$mean
-    pred_var  <- result$variance
-    
+    # Posterior parameters at prediction points
+    alpha_n <- alpha0 + as.vector(K %*% y)
+    beta_n  <- beta0 + as.vector(K %*% (m - y))
   }else{
-    # Use training data
+    # Use stored posterior parameters at training points
     alpha_n <- object$alpha_n
     beta_n  <- object$beta_n
-    pred_mean <- alpha_n / pmax(alpha_n + beta_n, 1e-10)
-    pred_mean <- pmin(pmax(pred_mean, 1e-10), 1 - 1e-10)
-    pred_var  <- pred_mean * (1 - pred_mean) / (alpha_n + beta_n + 1)
     m <- object$m
   }
 
-  if (return_type == "probability") {
-    # Credible intervals on success probability p
+  # ---- Posterior / posterior predictive summaries ----
+  s_n <- alpha_n + beta_n
+
+  if (anyNA(s_n) || any(!is.finite(s_n)) || any(s_n <= 0)) {
+    stop("Posterior shape parameters must be positive and finite.")
+  }
+
+  pi_hat <- alpha_n / s_n
+
+  if (type == "probability") {
+    # Posterior summaries for latent success probability pi(x)
+    pred_mean <- pi_hat
+    pred_var  <- pi_hat * (1 - pi_hat) / (s_n + 1)
+
+    # Credible intervals
     pred_lower <- suppressWarnings(qbeta((1 - CI_level) / 2, alpha_n, beta_n))
     pred_upper <- suppressWarnings(qbeta((1 + CI_level) / 2, alpha_n, beta_n))
   } else {
-    # Credible intervals on success count y via Beta-Binomial(n_trials, alpha_n, beta_n)
-    pred_mean <- n_trials * alpha_n / pmax(alpha_n + beta_n, 1e-10)
-    pred_var <- n_trials * alpha_n * beta_n * (alpha_n + beta_n + n_trials) /
-      (pmax((alpha_n + beta_n)^2, 1e-10) * pmax(alpha_n + beta_n + 1, 1e-10))
-    pred_lower <- vapply(seq_along(alpha_n), function(i) {
-      betabinom_quantile((1 - CI_level) / 2, n_trials, alpha_n[i], beta_n[i])
-    }, numeric(1))
-    pred_upper <- vapply(seq_along(alpha_n), function(i) {
-      betabinom_quantile((1 + CI_level) / 2, n_trials, alpha_n[i], beta_n[i])
-    }, numeric(1))
+    # Posterior predictive summaries for future count y(x)
+    pred_mean <- Mnew * pi_hat
+    pred_var <- Mnew * (s_n + Mnew) * pi_hat * (1 - pi_hat) / (s_n + 1)
+
+    # Credible intervals
+    pred_lower <- qbetabinom_rcpp((1 - CI_level) / 2, Mnew, alpha_n, beta_n)
+    pred_upper <- qbetabinom_rcpp((1 + CI_level) / 2, Mnew, alpha_n, beta_n)
   }
 
-  mean_mat <- matrix(as.numeric(pred_mean), ncol = 1)
-  var_mat <- matrix(as.numeric(pred_var), ncol = 1)
-  lower_mat <- matrix(as.numeric(pred_lower), ncol = 1)
-  upper_mat <- matrix(as.numeric(pred_upper), ncol = 1)
-
+  # ---- Return object ----
   prediction <- list(
     X = X,
     Xnew = Xnew,
-    alpha_n = as.numeric(alpha_n),
-    beta_n = as.numeric(beta_n),
-    mean = mean_mat,
-    variance = var_mat,
-    lower = lower_mat,
-    upper = upper_mat,
+    alpha_n = alpha_n,
+    beta_n = beta_n,
+    mean     = pred_mean,
+    variance = pred_var,
+    lower    = pred_lower,
+    upper    = pred_upper,
     CI_level = CI_level,
-    return_type = return_type
+    type = type
   )
 
-  if (return_type == "count") {
-    prediction$n_trials <- n_trials
+  if (type == "count") {
+    prediction$Mnew <- Mnew
   }
 
   # Posterior classification label (only for classification data)
-  if (return_type == "probability" && all(m == 1)) {
-    prediction$class <- ifelse(as.numeric(mean_mat) > threshold, 1, 0)
+  if (type == "probability" && all(m == 1)) {
+    prediction$class <- ifelse(pred_mean > threshold, 1, 0)
     prediction$threshold <- threshold
   }
 

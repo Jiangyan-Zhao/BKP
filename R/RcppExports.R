@@ -41,12 +41,12 @@ dkp_posterior_update_rcpp <- function(K, Y, alpha0) {
     .Call(`_BKP_dkp_posterior_update_rcpp`, K, Y, alpha0)
 }
 
-predict_bkp_rcpp <- function(K, alpha0, beta0, y, m) {
-    .Call(`_BKP_predict_bkp_rcpp`, K, alpha0, beta0, y, m)
-}
-
 predict_dkp_rcpp <- function(K, alpha0, Y) {
     .Call(`_BKP_predict_dkp_rcpp`, K, alpha0, Y)
+}
+
+qbetabinom_rcpp <- function(prob, size, alpha, beta) {
+    .Call(`_BKP_qbetabinom_rcpp`, prob, size, alpha, beta)
 }
 
 get_twin_indices_rcpp <- function(data, g, v = NULL, runs = 10L, seed = 123L) {

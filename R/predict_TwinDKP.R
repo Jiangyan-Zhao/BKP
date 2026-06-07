@@ -49,8 +49,9 @@
 #' }
 #'
 #' @seealso \code{\link{fit_TwinDKP}}, \code{\link{predict.DKP}}
-#' @importFrom stats qbeta
+
 #' @export
+#' @method predict TwinDKP
 predict.TwinDKP <- function(
     object,
     Xnew = NULL,
@@ -235,8 +236,8 @@ predict.TwinDKP <- function(
       pred_upper[i, ] <- suppressWarnings(qbeta((1 + CI_level) / 2, alpha_n_i, beta_i))
     } else {
       for (j in seq_len(q)) {
-        pred_lower[i, j] <- betabinom_quantile((1 - CI_level) / 2, n_trials, alpha_n_i[j], beta_i[j])
-        pred_upper[i, j] <- betabinom_quantile((1 + CI_level) / 2, n_trials, alpha_n_i[j], beta_i[j])
+        pred_lower[i, j] <- qbetabinom_rcpp((1 - CI_level) / 2, n_trials, alpha_n_i[j], beta_i[j])
+        pred_upper[i, j] <- qbetabinom_rcpp((1 + CI_level) / 2, n_trials, alpha_n_i[j], beta_i[j])
       }
     }
   }

@@ -75,7 +75,7 @@
 #'   y <- rbinom(n, size = m, prob = true_pi)
 #'
 #'   # Fit TwinBKP model (global stage only)
-#'   model1 <- fit_TwinBKP(X, y, m, Xbounds = Xbounds, g_nums = 10) 
+#'   model1 <- fit_TwinBKP(X, y, m, Xbounds = Xbounds, g_nums = 10)
 #'
 #'   # Prediction on new data
 #'   Xnew <- matrix(seq(-2, 2, length.out = 10), ncol = 1)
@@ -109,15 +109,16 @@
 #'   y <- rbinom(n, size = m, prob = true_pi)
 #'
 #'   # Fit TwinBKP model
-#'   model2 <- fit_TwinBKP(X, y, m, Xbounds = Xbounds, g_nums = 12) 
+#'   model2 <- fit_TwinBKP(X, y, m, Xbounds = Xbounds, g_nums = 12)
 #'
 #'   # Prediction on new data
 #'   x1 <- seq(Xbounds[1, 1], Xbounds[1, 2], length.out = 8)
 #'   x2 <- seq(Xbounds[2, 1], Xbounds[2, 2], length.out = 8)
 #'   Xnew <- expand.grid(x1 = x1, x2 = x2)
 #'   predict(model2, Xnew = Xnew, l_nums = 12)
-#' 
+#'
 #' @export
+#' @method predict TwinBKP
 predict.TwinBKP <- function(
     object,
     Xnew,
@@ -150,7 +151,7 @@ predict.TwinBKP <- function(
 
   n <- nrow(Xnorm)
   d <- ncol(Xnorm)
- 
+
 
   if (is.null(nrow(Xnew))) Xnew <- matrix(Xnew, nrow = 1)
   Xnew <- as.matrix(Xnew)
@@ -340,8 +341,8 @@ predict.TwinBKP <- function(
       pred_mean[i] <- n_trials * alpha_n_i / ab_sum
       pred_var[i] <- n_trials * alpha_n_i * beta_n_i * (ab_sum + n_trials) /
         (pmax(ab_sum^2, eps) * pmax(ab_sum + 1, eps))
-      pred_lower[i] <- betabinom_quantile((1 - CI_level) / 2, n_trials, alpha_n_i, beta_n_i)
-      pred_upper[i] <- betabinom_quantile((1 + CI_level) / 2, n_trials, alpha_n_i, beta_n_i)
+      pred_lower[i] <- qbetabinom_rcpp((1 - CI_level) / 2, n_trials, alpha_n_i, beta_n_i)
+      pred_upper[i] <- qbetabinom_rcpp((1 + CI_level) / 2, n_trials, alpha_n_i, beta_n_i)
     }
   }
 
@@ -352,18 +353,18 @@ predict.TwinBKP <- function(
 
   result <- list(
     X         = object$X,
-    Xnew      = Xnew,          
-    Xnew_norm = Xnew_norm,   
+    Xnew      = Xnew,
+    Xnew_norm = Xnew_norm,
     alpha_n   = as.numeric(pred_alpha_n),
     beta_n    = as.numeric(pred_beta_n),
     mean      = mean_mat,
     variance  = var_mat,
     lower     = lower_mat,
     upper     = upper_mat,
-    lambda    = pred_lambda, 
+    lambda    = pred_lambda,
     theta_l   = pred_theta_l,
     theta_global = theta_global,
-    local_idx = local_idx_out, 
+    local_idx = local_idx_out,
     CI_level  = CI_level,
     return_type = return_type,
     l_nums    = l_eff,
