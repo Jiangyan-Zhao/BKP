@@ -226,20 +226,21 @@ fit_TwinBKP <- function(
     y = y_global, m = m_global,
     K = K_global
   )
-  post_global <- bkp_posterior_update_rcpp(
-    K = K_global,
-    y = as.numeric(y_global),
-    m = as.numeric(m_global),
-    alpha0 = as.numeric(prior_global$alpha0),
-    beta0 = as.numeric(prior_global$beta0)
-  )
 
-  alpha0_global <- as.numeric(prior_global$alpha0)
-  beta0_global  <- as.numeric(prior_global$beta0)
-  alpha_n_global <- as.numeric(post_global$alpha_n)
-  beta_n_global  <- as.numeric(post_global$beta_n)
-  mean_global <- alpha_n_global / pmax(alpha_n_global + beta_n_global, 1e-10)
-  var_global  <- mean_global * (1 - mean_global) / (alpha_n_global + beta_n_global + 1)
+  alpha0_global <- prior_global$alpha0
+  beta0_global  <- prior_global$beta0
+
+  alpha_n_global <- alpha0_global + as.vector(K_global %*% y_global)
+  beta_n_global  <- beta0_global  + as.vector(K_global %*% (m_global - y_global))
+
+  s_global <- alpha_n_global + beta_n_global
+
+  if (anyNA(s_global) || any(!is.finite(s_global)) || any(s_global <= 0)) {
+    stop("Global-stage posterior shape parameters must be positive and finite.")
+  }
+
+  mean_global <- alpha_n_global / s_global
+  var_global  <- mean_global * (1 - mean_global) / (s_global + 1)
 
 
   TwinBKP_model <- list(

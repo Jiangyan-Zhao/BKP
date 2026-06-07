@@ -33,14 +33,6 @@ optimize_dkp_theta_rcpp <- function(Xnorm, Y, prior, r0, p0, loss, kernel, isotr
     .Call(`_BKP_optimize_dkp_theta_rcpp`, Xnorm, Y, prior, r0, p0, loss, kernel, isotropic, init_gamma, lower, upper, max_iter)
 }
 
-bkp_posterior_update_rcpp <- function(K, y, m, alpha0, beta0) {
-    .Call(`_BKP_bkp_posterior_update_rcpp`, K, y, m, alpha0, beta0)
-}
-
-dkp_posterior_update_rcpp <- function(K, Y, alpha0) {
-    .Call(`_BKP_dkp_posterior_update_rcpp`, K, Y, alpha0)
-}
-
 qbetabinom_rcpp <- function(prob, size, alpha, beta) {
     .Call(`_BKP_qbetabinom_rcpp`, prob, size, alpha, beta)
 }

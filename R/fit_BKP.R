@@ -302,16 +302,8 @@ fit_BKP <- function(
   beta0  <- prior_par$beta0
 
   # ---- Compute posterior parameters ----
-  post <- bkp_posterior_update_rcpp(
-    K = K,
-    y = as.numeric(y),
-    m = as.numeric(m),
-    alpha0 = as.numeric(alpha0),
-    beta0 = as.numeric(beta0)
-  )
-
-  alpha_n <- post$alpha_n
-  beta_n  <- post$beta_n
+  alpha_n <- alpha0 + as.vector(K %*% y)
+  beta_n  <- beta0 + as.vector(K %*% (m - y))
 
   # ---- Construct and return the fitted model ----
   BKP_model <- list(
