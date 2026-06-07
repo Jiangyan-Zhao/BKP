@@ -185,19 +185,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// predict_dkp_rcpp
-List predict_dkp_rcpp(const arma::mat& K, const arma::mat& alpha0, const arma::mat& Y);
-RcppExport SEXP _BKP_predict_dkp_rcpp(SEXP KSEXP, SEXP alpha0SEXP, SEXP YSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type K(KSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type alpha0(alpha0SEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type Y(YSEXP);
-    rcpp_result_gen = Rcpp::wrap(predict_dkp_rcpp(K, alpha0, Y));
-    return rcpp_result_gen;
-END_RCPP
-}
 // qbetabinom_rcpp
 IntegerVector qbetabinom_rcpp(NumericVector prob, NumericVector size, NumericVector alpha, NumericVector beta);
 RcppExport SEXP _BKP_qbetabinom_rcpp(SEXP probSEXP, SEXP sizeSEXP, SEXP alphaSEXP, SEXP betaSEXP) {
@@ -253,7 +240,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_BKP_optimize_dkp_theta_rcpp", (DL_FUNC) &_BKP_optimize_dkp_theta_rcpp, 12},
     {"_BKP_bkp_posterior_update_rcpp", (DL_FUNC) &_BKP_bkp_posterior_update_rcpp, 5},
     {"_BKP_dkp_posterior_update_rcpp", (DL_FUNC) &_BKP_dkp_posterior_update_rcpp, 3},
-    {"_BKP_predict_dkp_rcpp", (DL_FUNC) &_BKP_predict_dkp_rcpp, 3},
     {"_BKP_qbetabinom_rcpp", (DL_FUNC) &_BKP_qbetabinom_rcpp, 4},
     {"_BKP_get_twin_indices_rcpp", (DL_FUNC) &_BKP_get_twin_indices_rcpp, 5},
     {"_BKP_wendland_kernel_rcpp", (DL_FUNC) &_BKP_wendland_kernel_rcpp, 4},

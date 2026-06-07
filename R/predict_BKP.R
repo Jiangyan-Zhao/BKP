@@ -294,22 +294,27 @@ predict.BKP <- function(object, Xnew = NULL, CI_level = 0.95, threshold = 0.5,
     stop("Posterior shape parameters must be positive and finite.")
   }
 
-  pi_hat <- alpha_n / s_n
+  # Posterior summaries for the latent success probability pi(x).
+  # These quantities are always computed first, because both probability-scale
+  # and count-scale predictions are derived from pi(x) | D_n.
+  prod_mean <- alpha_n / s_n
+  prod_var  <- prod_mean * (1 - prod_mean) / (s_n + 1)
 
   if (type == "probability") {
-    # Posterior summaries for latent success probability pi(x)
-    pred_mean <- pi_hat
-    pred_var  <- pi_hat * (1 - pi_hat) / (s_n + 1)
+    # Prediction target: latent success probability pi(x).
+    pred_mean <- prod_mean
+    pred_var  <- prod_var
 
-    # Credible intervals
+    # Credible intervals for pi(x) | D_n.
     pred_lower <- suppressWarnings(qbeta((1 - CI_level) / 2, alpha_n, beta_n))
     pred_upper <- suppressWarnings(qbeta((1 + CI_level) / 2, alpha_n, beta_n))
   } else {
-    # Posterior predictive summaries for future count y(x)
-    pred_mean <- Mnew * pi_hat
-    pred_var <- Mnew * (s_n + Mnew) * pi_hat * (1 - pi_hat) / (s_n + 1)
+    # Prediction target: future success count y(x) given Mnew.
+    # Marginally, y(x) | D_n, Mnew follows a Beta-Binomial distribution.
+    pred_mean <- Mnew * prod_mean
+    pred_var <- Mnew * (s_n + Mnew) * prod_var
 
-    # Credible intervals
+    # Predictive intervals for y(x) | D_n, Mnew.
     pred_lower <- qbetabinom_rcpp((1 - CI_level) / 2, Mnew, alpha_n, beta_n)
     pred_upper <- qbetabinom_rcpp((1 + CI_level) / 2, Mnew, alpha_n, beta_n)
   }

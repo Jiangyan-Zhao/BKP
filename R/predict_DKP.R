@@ -83,36 +83,73 @@
 predict.DKP <- function(object, Xnew = NULL, CI_level = 0.95,
                         type = c("probability", "count"), Mnew = NULL, ...)
 {
-  #---- Argument checks ----
-  X       <- object$X
-  d       <- ncol(X)
+  # ---- Extract basic information ----
+  X <- object$X
+  d <- ncol(X)
+
+  # ---- Check and format Xnew ----
   if (!is.null(Xnew)) {
-    if (is.null(nrow(Xnew))) {
-      Xnew <- matrix(Xnew, nrow = 1)
+    if (is.null(dim(Xnew))) {
+      if (d == 1L) {
+        Xnew <- matrix(Xnew, ncol = 1L)
+      } else {
+        Xnew <- matrix(Xnew, nrow = 1L)
+      }
+    } else {
+      Xnew <- as.matrix(Xnew)
     }
-    Xnew <- as.matrix(Xnew)
+
     if (!is.numeric(Xnew)) {
       stop("'Xnew' must be numeric.")
     }
+
     if (ncol(Xnew) != d) {
       stop("The number of columns in 'Xnew' must match the original input dimension.")
     }
   }
+  n_pred <- if (is.null(Xnew)) nrow(X) else nrow(Xnew)
 
+  # ---- Check scalar probability arguments ----
   if (!is.numeric(CI_level) || length(CI_level) != 1 || CI_level <= 0 || CI_level >= 1) {
     stop("'CI_level' must be a single numeric value strictly between 0 and 1.")
   }
+
   type <- match.arg(type)
+
+  # ---- Check Mnew for count prediction ----
   if (type == "count") {
     if (is.null(Mnew)) {
-      stop("When type = 'count', 'Mnew' must be provided.")
+      if (is.null(Xnew)) {
+        Mnew <- rowSums(object$Y)
+      } else {
+        stop("When type = 'count' and Xnew is provided, 'Mnew' must also be provided.")
+      }
     }
-    if (!is.numeric(Mnew) || length(Mnew) != 1 || Mnew <= 0 || Mnew != as.integer(Mnew)) {
-      stop("'Mnew' must be a positive integer when type = 'count'.")
+
+    if (!is.numeric(Mnew)) {
+      stop("'Mnew' must be a numeric vector when type = 'count'.")
     }
+
+    if (!(length(Mnew) == 1L || length(Mnew) == n_pred)) {
+      stop("'Mnew' must have length 1 or the same length as the number of prediction points.")
+    }
+
+    if (anyNA(Mnew) || any(!is.finite(Mnew))) {
+      stop("'Mnew' must contain finite values with no NA.")
+    }
+
+    if (any(Mnew <= 0) || any(Mnew != floor(Mnew))) {
+      stop("'Mnew' must contain positive integers when type = 'count'.")
+    }
+
     Mnew <- as.integer(Mnew)
+
+    if (length(Mnew) == 1L) {
+      Mnew <- rep.int(Mnew, n_pred)
+    }
   }
 
+  # ---- Posterior parameters ----
   if(!is.null(Xnew)){
     # Extract components
     Xnorm   <- object$Xnorm
@@ -129,52 +166,97 @@ predict.DKP <- function(object, Xnew = NULL, CI_level = 0.95,
     Xnew_norm <- sweep(Xnew, 2, Xbounds[, 1], "-")
     Xnew_norm <- sweep(Xnew_norm, 2, Xbounds[, 2] - Xbounds[, 1], "/")
 
-    # Compute kernel matrix
-    K <- kernel_matrix(Xnew_norm, Xnorm, theta = theta, kernel = kernel, isotropic = isotropic)
+    # Prior parameters at prediction points
+    K <- kernel_matrix(Xnew_norm, Xnorm, theta = theta,
+                       kernel = kernel, isotropic = isotropic)
 
     # Get prior parameters
     alpha0 <- get_prior(prior = prior, model = "DKP",
                         r0 = r0, p0 = p0, Y = Y, K = K)
 
-    # Call C++ function for posterior computation
-    result <- predict_dkp_rcpp(K, as.matrix(alpha0), as.matrix(Y))
-    alpha_n <- result$alpha_n
-    row_sum <- result$row_sum
-    pred_mean <- result$mean
-    pred_var  <- result$variance
+    # Posterior parameters at prediction points
+    alpha_n <- alpha0 + as.matrix(K %*% Y) # [n × q]
   }else{
-    # Use training data
+    # Use stored posterior parameters at training points
     alpha_n <- object$alpha_n
     Y       <- object$Y
-    row_sum <- rowSums(alpha_n)
-
-    eps <- 1e-10
-    pred_mean <- alpha_n / pmax(row_sum, eps)
-    pred_mean <- pmin(pmax(pred_mean, eps), 1 - eps)
-    pred_var  <- pred_mean * (1 - pred_mean) / (row_sum + 1)
   }
 
-  beta_n <- matrix(row_sum, nrow = nrow(alpha_n), ncol = ncol(alpha_n)) - alpha_n
+  # ---- Posterior / posterior predictive summaries ----
+  alpha_n <- as.matrix(alpha_n)
+
+  if (anyNA(alpha_n) || any(!is.finite(alpha_n)) || any(alpha_n <= 0)) {
+    stop("Posterior concentration parameters 'alpha_n' must be positive and finite.")
+  }
+
+  # Total Dirichlet concentration parameter A_n(x) for each prediction point.
+  row_sum <- rowSums(alpha_n)
+
+  # Matrix form of A_n(x), used for element-wise operations over classes.
+  A_mat <- matrix(row_sum, nrow = nrow(alpha_n), ncol = ncol(alpha_n))
+
+  # For each class s, the marginal posterior distribution of pi_s(x) is
+  # Beta(alpha_{n,s}(x), A_n(x) - alpha_{n,s}(x)).
+  beta_n <- A_mat - alpha_n
+
+  # Posterior summaries for latent class probabilities pi_s(x).
+  # These are probability-scale quantities and are used as building blocks for
+  # both probability-scale and count-scale predictions.
+  prob_mean <- alpha_n / A_mat
+  prob_var  <- prob_mean * (1 - prob_mean) / (A_mat + 1)
+
   if (type == "probability") {
-    # Credible intervals on class probability p_j
-    pred_lower <- suppressWarnings(qbeta((1 - CI_level) / 2, alpha_n, beta_n))
-    pred_upper <- suppressWarnings(qbeta((1 + CI_level) / 2, alpha_n, beta_n))
-  } else {
-    # Count prediction via marginal Beta-Binomial(Mnew, alpha_j, row_sum-alpha_j)
-    pred_mean <- Mnew * alpha_n / pmax(row_sum, 1e-10)
-    pred_var <- Mnew * alpha_n * beta_n * (matrix(row_sum, nrow(alpha_n), ncol(alpha_n)) + Mnew) /
-      (pmax(matrix(row_sum^2, nrow(alpha_n), ncol(alpha_n)), 1e-10) *
-         pmax(matrix(row_sum + 1, nrow(alpha_n), ncol(alpha_n)), 1e-10))
+    # Prediction target: latent class probability pi_s(x).
+    # The returned mean, variance, and credible intervals are on the probability scale.
+    pred_mean <- prob_mean
+    pred_var  <- prob_var
 
-    pred_lower <- matrix(0, nrow = nrow(alpha_n), ncol = ncol(alpha_n))
-    pred_upper <- matrix(0, nrow = nrow(alpha_n), ncol = ncol(alpha_n))
-    for (i in seq_len(nrow(alpha_n))) {
-      for (j in seq_len(ncol(alpha_n))) {
-        pred_lower[i, j] <- qbetabinom_rcpp((1 - CI_level) / 2, Mnew, alpha_n[i, j], beta_n[i, j])
-        pred_upper[i, j] <- qbetabinom_rcpp((1 + CI_level) / 2, Mnew, alpha_n[i, j], beta_n[i, j])
-      }
-    }
+    # Marginal posterior credible intervals for each class probability pi_s(x).
+    pred_lower <- matrix(
+      suppressWarnings(qbeta((1 - CI_level) / 2, alpha_n, beta_n)),
+      nrow = nrow(alpha_n),
+      ncol = ncol(alpha_n)
+    )
+
+    pred_upper <- matrix(
+      suppressWarnings(qbeta((1 + CI_level) / 2, alpha_n, beta_n)),
+      nrow = nrow(alpha_n),
+      ncol = ncol(alpha_n)
+    )
+  } else {
+    # Prediction target: future class count y_s(x) given Mnew trials.
+    # Marginally, each class count follows a Beta-Binomial distribution:
+    # y_s(x) | D_n, Mnew ~ Beta-Binomial(Mnew, alpha_{n,s}, A_n - alpha_{n,s}).
+    M_mat <- matrix(Mnew, nrow = nrow(alpha_n), ncol = ncol(alpha_n))
+
+    # Posterior predictive mean and variance of the future class counts.
+    pred_mean <- M_mat * prob_mean
+    pred_var  <- M_mat * (A_mat + M_mat) * prob_var
+
+    # Marginal posterior predictive intervals for each future class count.
+    pred_lower <- matrix(
+      qbetabinom_rcpp(
+        prob = (1 - CI_level) / 2,
+        size = as.vector(M_mat),
+        alpha = as.vector(alpha_n),
+        beta = as.vector(beta_n)
+      ),
+      nrow = nrow(alpha_n),
+      ncol = ncol(alpha_n)
+    )
+
+    pred_upper <- matrix(
+      qbetabinom_rcpp(
+        prob = (1 + CI_level) / 2,
+        size = as.vector(M_mat),
+        alpha = as.vector(alpha_n),
+        beta = as.vector(beta_n)
+      ),
+      nrow = nrow(alpha_n),
+      ncol = ncol(alpha_n)
+    )
   }
+
   class_names <- paste0("class", seq_len(ncol(alpha_n)))
   colnames(pred_mean) <- class_names
   colnames(pred_var) <- class_names
