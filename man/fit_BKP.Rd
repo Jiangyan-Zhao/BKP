@@ -17,7 +17,8 @@ fit_BKP(
   n_multi_start = NULL,
   theta = NULL,
   isotropic = TRUE,
-  n_threads = 1
+  n_threads = 1,
+  ess = c("none", "shepard")
 )
 }
 \arguments{
@@ -66,6 +67,11 @@ per-dimension lengthscales.}
 \item{n_threads}{Number of OpenMP threads used for multi-start
 optimization. Default is \code{1}. This argument only affects
 hyperparameter optimization when \code{theta = NULL}.}
+
+\item{ess}{Effective-sample-size calibration for the BKP data contribution.
+Use \code{"none"} (default) for the standard BKP update, or
+\code{"shepard"} to rescale the kernel-weighted data contribution using
+Shepard interpolation of trial sizes on the normalized input scale.}
 }
 \value{
 A list of class \code{"BKP"} containing the fitted BKP model,
@@ -76,6 +82,8 @@ including:
 \item{\code{isotropic}}{Logical flag indicating whether a shared lengthscale (\code{TRUE}) or per-dimension lengthscales (\code{FALSE}) was used.}
 \item{\code{loss}}{Loss function used for hyperparameter tuning.}
 \item{\code{loss_min}}{Loss value at the selected/provided kernel parameters.}
+\item{\code{ess}}{Effective-sample-size calibration method used.}
+\item{\code{ess_info}}{ESS calibration diagnostics, including the scale factor and target/kernel trial sizes.}
 \item{\code{X}}{Original input matrix (\eqn{n \times d}).}
 \item{\code{Xnorm}}{Normalized input matrix scaled to \eqn{[0,1]^d}.}
 \item{\code{Xbounds}}{Normalization bounds for each input dimension (\eqn{d \times 2}).}

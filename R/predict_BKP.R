@@ -262,6 +262,7 @@ predict.BKP <- function(object, Xnew = NULL, CI_level = 0.95, threshold = 0.5,
     r0      <- object$r0
     p0      <- object$p0
     Xbounds <- object$Xbounds
+    ess     <- if (is.null(object$ess)) "none" else object$ess
 
     # Normalize Xnew to [0,1]^d
     Xnew_norm <- sweep(Xnew, 2, Xbounds[, 1], "-")
@@ -278,8 +279,19 @@ predict.BKP <- function(object, Xnew = NULL, CI_level = 0.95, threshold = 0.5,
     beta0 <- prior_par$beta0
 
     # Posterior parameters at prediction points
-    alpha_n <- alpha0 + as.vector(K %*% y)
-    beta_n  <- beta0 + as.vector(K %*% (m - y))
+    data_success <- as.vector(K %*% y)
+    data_failure <- as.vector(K %*% (m - y))
+
+    if (identical(ess, "shepard")) {
+      ess_info <- .bkp_ess_calibration(
+        Xquery_norm = Xnew_norm, Xtrain_norm = Xnorm, m = m, K = K
+      )
+      data_success <- ess_info$scale * data_success
+      data_failure <- ess_info$scale * data_failure
+    }
+
+    alpha_n <- alpha0 + data_success
+    beta_n  <- beta0 + data_failure
   }else{
     # Use stored posterior parameters at training points
     alpha_n <- object$alpha_n

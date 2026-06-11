@@ -281,6 +281,7 @@ fit_DKP <- function(
   }else{
     # ---- Use user-provided theta ----
     theta_opt <- theta
+    gamma_opt <- log10(theta_opt)
     loss_min <- loss_fun(
       gamma = gamma_opt, Xnorm = Xnorm, Y = Y,
       prior = prior, r0 = r0, p0 = p0,

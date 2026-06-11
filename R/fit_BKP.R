@@ -40,6 +40,10 @@
 #' @param n_threads Number of OpenMP threads used for multi-start
 #'   optimization. Default is \code{1}. This argument only affects
 #'   hyperparameter optimization when \code{theta = NULL}.
+#' @param ess Effective-sample-size calibration for the BKP data contribution.
+#'   Use \code{"none"} (default) for the standard BKP update, or
+#'   \code{"shepard"} to rescale the kernel-weighted data contribution using
+#'   Shepard interpolation of trial sizes on the normalized input scale.
 #'
 #' @return A list of class \code{"BKP"} containing the fitted BKP model,
 #'   including:
@@ -49,6 +53,8 @@
 #'   \item{\code{isotropic}}{Logical flag indicating whether a shared lengthscale (\code{TRUE}) or per-dimension lengthscales (\code{FALSE}) was used.}
 #'   \item{\code{loss}}{Loss function used for hyperparameter tuning.}
 #'   \item{\code{loss_min}}{Loss value at the selected/provided kernel parameters.}
+#'   \item{\code{ess}}{Effective-sample-size calibration method used.}
+#'   \item{\code{ess_info}}{ESS calibration diagnostics, including the scale factor and target/kernel trial sizes.}
 #'   \item{\code{X}}{Original input matrix (\eqn{n \times d}).}
 #'   \item{\code{Xnorm}}{Normalized input matrix scaled to \eqn{[0,1]^d}.}
 #'   \item{\code{Xbounds}}{Normalization bounds for each input dimension (\eqn{d \times 2}).}
@@ -132,7 +138,8 @@ fit_BKP <- function(
     kernel = c("gaussian", "matern52", "matern32", "wendland"),
     loss = c("brier", "log_loss"),
     n_multi_start = NULL, theta = NULL,
-    isotropic = TRUE, n_threads = 1
+    isotropic = TRUE, n_threads = 1,
+    ess = c("none", "shepard")
 ){
   # ---- Argument checking ----
   if (missing(X) || missing(y) || missing(m)) {
@@ -165,6 +172,7 @@ fit_BKP <- function(
   prior  <- match.arg(prior)
   kernel <- match.arg(kernel)
   loss   <- match.arg(loss)
+  ess    <- match.arg(ess)
 
   # ---- Xbounds checks ----
   if (is.null(Xbounds)) {
@@ -245,6 +253,10 @@ fit_BKP <- function(
   Xnorm <- sweep(X, 2, Xbounds[,1], "-")
   Xnorm <- sweep(Xnorm, 2, Xbounds[,2] - Xbounds[,1], "/")
 
+  if (identical(ess, "shepard")) {
+    .bkp_check_unique_locations(Xnorm)
+  }
+
   if (is.null(theta)) {
     # ---- Determine the number of optimization variables ----
     n_theta <- ifelse(isTRUE(isotropic), 1L, d)
@@ -290,6 +302,7 @@ fit_BKP <- function(
     loss_min <- as.numeric(opt_cpp$loss_min)
   } else {
     theta_opt <- theta
+    gamma_opt <- log10(theta_opt)
     loss_min <- loss_fun(
       gamma = gamma_opt, Xnorm = Xnorm, y = y, m = m,
       prior = prior, r0 = r0, p0 = p0,
@@ -313,13 +326,28 @@ fit_BKP <- function(
   beta0  <- prior_par$beta0
 
   # ---- Compute posterior parameters ----
-  alpha_n <- alpha0 + as.vector(K %*% y)
-  beta_n  <- beta0 + as.vector(K %*% (m - y))
+  # TODO: add hyperparameter tuning under ESS in a follow-up task; for now,
+  # theta optimization uses the standard BKP LOOCV objective.
+  data_success <- as.vector(K %*% y)
+  data_failure <- as.vector(K %*% (m - y))
+
+  if (identical(ess, "shepard")) {
+    ess_info <- .bkp_ess_calibration(
+      Xquery_norm = Xnorm, Xtrain_norm = Xnorm, m = m, K = K
+    )
+    data_success <- ess_info$scale * data_success
+    data_failure <- ess_info$scale * data_failure
+  } else {
+    ess_info <- .bkp_ess_none_info(K, m)
+  }
+
+  alpha_n <- alpha0 + data_success
+  beta_n  <- beta0 + data_failure
 
   # ---- Construct and return the fitted model ----
   BKP_model <- list(
     theta_opt = theta_opt, kernel = kernel, isotropic = isotropic,
-    loss = loss, loss_min = loss_min,
+    loss = loss, loss_min = loss_min, ess = ess, ess_info = ess_info,
     X = X, Xnorm = Xnorm, Xbounds = Xbounds, y = y, m = m,
     prior = prior, r0 = r0, p0 = p0, alpha0 = alpha0, beta0 = beta0,
     alpha_n = alpha_n, beta_n = beta_n
