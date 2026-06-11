@@ -137,3 +137,49 @@ test_that("fit_BKP uses user-provided theta and skips optimization", {
 
   expect_equal(model$theta_opt, user_theta)
 })
+
+test_that("fit_BKP optimizes theta with Shepard ESS calibration", {
+  set.seed(204)
+  X_test <- matrix(runif(18), ncol = 2)
+  m_test <- sample(6:12, nrow(X_test), replace = TRUE)
+  y_test <- rbinom(nrow(X_test), size = m_test, prob = 0.45)
+
+  expect_no_error({
+    model <- fit_BKP(
+      X = X_test,
+      y = y_test,
+      m = m_test,
+      ess = "shepard",
+      theta = NULL,
+      n_multi_start = 2,
+      n_threads = 1
+    )
+  })
+
+  expect_s3_class(model, "BKP")
+  expect_equal(model$ess, "shepard")
+  expect_true(is.numeric(model$theta_opt))
+  expect_true(is.finite(model$loss_min))
+})
+
+
+test_that("fit_BKP uses fixed theta with Shepard ESS calibration", {
+  set.seed(205)
+  X_test <- matrix(runif(20), ncol = 2)
+  m_test <- sample(6:12, nrow(X_test), replace = TRUE)
+  y_test <- rbinom(nrow(X_test), size = m_test, prob = 0.55)
+  fixed_theta <- 0.3
+
+  model <- fit_BKP(
+    X = X_test,
+    y = y_test,
+    m = m_test,
+    ess = "shepard",
+    theta = fixed_theta
+  )
+
+  expect_s3_class(model, "BKP")
+  expect_equal(model$ess, "shepard")
+  expect_equal(model$theta_opt, fixed_theta)
+  expect_true(is.finite(model$loss_min))
+})

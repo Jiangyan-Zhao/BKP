@@ -120,3 +120,63 @@ test_that("test-loss_fun uncovered DKP/BKP validation branches", {
   l_dkp_log <- loss_fun(gamma = c(-1, -1, -1), Xnorm = Xnorm, Y = Y, model = "DKP", loss = "log_loss", kernel = "matern32", isotropic = FALSE)
   expect_true(is.numeric(l_dkp_log) && length(l_dkp_log) == 1)
 })
+
+test_that("BKP loss_fun ess = none preserves default loss", {
+  set.seed(202)
+  Xnorm <- matrix(runif(18), ncol = 2)
+  y <- c(1, 3, 2, 5, 4, 0, 6, 2, 3)
+  m <- c(8, 9, 7, 10, 11, 6, 12, 8, 9)
+
+  for (loss_type in c("brier", "log_loss")) {
+    default_loss <- loss_fun(
+      gamma = -0.25,
+      Xnorm = Xnorm,
+      y = y,
+      m = m,
+      model = "BKP",
+      prior = "noninformative",
+      loss = loss_type,
+      kernel = "gaussian",
+      isotropic = TRUE
+    )
+    none_loss <- loss_fun(
+      gamma = -0.25,
+      Xnorm = Xnorm,
+      y = y,
+      m = m,
+      model = "BKP",
+      prior = "noninformative",
+      loss = loss_type,
+      kernel = "gaussian",
+      isotropic = TRUE,
+      ess = "none"
+    )
+
+    expect_equal(none_loss, default_loss)
+  }
+})
+
+
+test_that("BKP loss_fun supports Shepard ESS leave-one-out calibration", {
+  set.seed(203)
+  Xnorm <- matrix(runif(16), ncol = 2)
+  y <- c(1, 3, 2, 5, 4, 0, 6, 2)
+  m <- c(8, 9, 7, 10, 11, 6, 12, 8)
+
+  shepard_loss <- loss_fun(
+    gamma = -0.1,
+    Xnorm = Xnorm,
+    y = y,
+    m = m,
+    model = "BKP",
+    prior = "noninformative",
+    loss = "brier",
+    kernel = "gaussian",
+    ess = "shepard"
+  )
+
+  expect_true(is.numeric(shepard_loss))
+  expect_length(shepard_loss, 1)
+  expect_false(is.na(shepard_loss))
+  expect_false(is.infinite(shepard_loss))
+})

@@ -39,6 +39,30 @@
   out
 }
 
+.bkp_shepard_m_loo <- function(Xnorm, m, power = 2) {
+  Xnorm <- as.matrix(Xnorm)
+  m <- as.numeric(m)
+
+  .bkp_check_unique_locations(Xnorm)
+
+  n <- nrow(Xnorm)
+  if (n < 2L) {
+    stop(
+      "ESS calibration with ess = 'shepard' requires at least two input locations for leave-one-out calibration.",
+      call. = FALSE
+    )
+  }
+
+  out <- numeric(n)
+  for (i in seq_len(n)) {
+    diff <- sweep(Xnorm[-i, , drop = FALSE], 2L, Xnorm[i, ], "-")
+    dist_sq <- rowSums(diff^2)
+    weights <- dist_sq^(-power / 2)
+    out[i] <- sum(weights * m[-i]) / sum(weights)
+  }
+  out
+}
+
 .bkp_ess_calibration <- function(Xquery_norm, Xtrain_norm, m, K) {
   .bkp_check_unique_locations(Xtrain_norm)
 

@@ -58,8 +58,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // loss_fun_rcpp
-double loss_fun_rcpp(std::string model, std::string loss, const arma::mat& K, Nullable<NumericVector> y, Nullable<NumericVector> m, Nullable<NumericMatrix> Y, Nullable<NumericVector> alpha0, Nullable<NumericVector> beta0, Nullable<NumericMatrix> alpha0_mat);
-RcppExport SEXP _BKP_loss_fun_rcpp(SEXP modelSEXP, SEXP lossSEXP, SEXP KSEXP, SEXP ySEXP, SEXP mSEXP, SEXP YSEXP, SEXP alpha0SEXP, SEXP beta0SEXP, SEXP alpha0_matSEXP) {
+double loss_fun_rcpp(std::string model, std::string loss, const arma::mat& K, Nullable<NumericVector> y, Nullable<NumericVector> m, Nullable<NumericMatrix> Y, Nullable<NumericVector> alpha0, Nullable<NumericVector> beta0, Nullable<NumericMatrix> alpha0_mat, Nullable<NumericVector> data_scale);
+RcppExport SEXP _BKP_loss_fun_rcpp(SEXP modelSEXP, SEXP lossSEXP, SEXP KSEXP, SEXP ySEXP, SEXP mSEXP, SEXP YSEXP, SEXP alpha0SEXP, SEXP beta0SEXP, SEXP alpha0_matSEXP, SEXP data_scaleSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -72,7 +72,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Nullable<NumericVector> >::type alpha0(alpha0SEXP);
     Rcpp::traits::input_parameter< Nullable<NumericVector> >::type beta0(beta0SEXP);
     Rcpp::traits::input_parameter< Nullable<NumericMatrix> >::type alpha0_mat(alpha0_matSEXP);
-    rcpp_result_gen = Rcpp::wrap(loss_fun_rcpp(model, loss, K, y, m, Y, alpha0, beta0, alpha0_mat));
+    Rcpp::traits::input_parameter< Nullable<NumericVector> >::type data_scale(data_scaleSEXP);
+    rcpp_result_gen = Rcpp::wrap(loss_fun_rcpp(model, loss, K, y, m, Y, alpha0, beta0, alpha0_mat, data_scale));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -113,8 +114,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // optimize_bkp_theta_rcpp
-Rcpp::List optimize_bkp_theta_rcpp(const arma::mat& Xnorm, const arma::vec& y, const arma::vec& m, const std::string& prior, const double r0, const double p0, const std::string& loss, const std::string& kernel, const bool isotropic, const arma::mat& init_gamma, const arma::vec& lower, const arma::vec& upper, const int max_iter, const int n_threads);
-RcppExport SEXP _BKP_optimize_bkp_theta_rcpp(SEXP XnormSEXP, SEXP ySEXP, SEXP mSEXP, SEXP priorSEXP, SEXP r0SEXP, SEXP p0SEXP, SEXP lossSEXP, SEXP kernelSEXP, SEXP isotropicSEXP, SEXP init_gammaSEXP, SEXP lowerSEXP, SEXP upperSEXP, SEXP max_iterSEXP, SEXP n_threadsSEXP) {
+Rcpp::List optimize_bkp_theta_rcpp(const arma::mat& Xnorm, const arma::vec& y, const arma::vec& m, const std::string& prior, const double r0, const double p0, const std::string& loss, const std::string& kernel, const bool isotropic, const arma::mat& init_gamma, const arma::vec& lower, const arma::vec& upper, const int max_iter, const int n_threads, const std::string& ess, Nullable<NumericVector> m_shepard_loo);
+RcppExport SEXP _BKP_optimize_bkp_theta_rcpp(SEXP XnormSEXP, SEXP ySEXP, SEXP mSEXP, SEXP priorSEXP, SEXP r0SEXP, SEXP p0SEXP, SEXP lossSEXP, SEXP kernelSEXP, SEXP isotropicSEXP, SEXP init_gammaSEXP, SEXP lowerSEXP, SEXP upperSEXP, SEXP max_iterSEXP, SEXP n_threadsSEXP, SEXP essSEXP, SEXP m_shepard_looSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -132,7 +133,9 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::vec& >::type upper(upperSEXP);
     Rcpp::traits::input_parameter< const int >::type max_iter(max_iterSEXP);
     Rcpp::traits::input_parameter< const int >::type n_threads(n_threadsSEXP);
-    rcpp_result_gen = Rcpp::wrap(optimize_bkp_theta_rcpp(Xnorm, y, m, prior, r0, p0, loss, kernel, isotropic, init_gamma, lower, upper, max_iter, n_threads));
+    Rcpp::traits::input_parameter< const std::string& >::type ess(essSEXP);
+    Rcpp::traits::input_parameter< Nullable<NumericVector> >::type m_shepard_loo(m_shepard_looSEXP);
+    rcpp_result_gen = Rcpp::wrap(optimize_bkp_theta_rcpp(Xnorm, y, m, prior, r0, p0, loss, kernel, isotropic, init_gamma, lower, upper, max_iter, n_threads, ess, m_shepard_loo));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -207,10 +210,10 @@ static const R_CallMethodDef CallEntries[] = {
     {"_BKP_get_prior_rcpp", (DL_FUNC) &_BKP_get_prior_rcpp, 8},
     {"_BKP_get_knnx_nanoflann_rcpp", (DL_FUNC) &_BKP_get_knnx_nanoflann_rcpp, 3},
     {"_BKP_kernel_matrix_rcpp", (DL_FUNC) &_BKP_kernel_matrix_rcpp, 5},
-    {"_BKP_loss_fun_rcpp", (DL_FUNC) &_BKP_loss_fun_rcpp, 9},
+    {"_BKP_loss_fun_rcpp", (DL_FUNC) &_BKP_loss_fun_rcpp, 10},
     {"_BKP_optimize_lambda_bkp_rcpp", (DL_FUNC) &_BKP_optimize_lambda_bkp_rcpp, 9},
     {"_BKP_optimize_lambda_dkp_rcpp", (DL_FUNC) &_BKP_optimize_lambda_dkp_rcpp, 7},
-    {"_BKP_optimize_bkp_theta_rcpp", (DL_FUNC) &_BKP_optimize_bkp_theta_rcpp, 14},
+    {"_BKP_optimize_bkp_theta_rcpp", (DL_FUNC) &_BKP_optimize_bkp_theta_rcpp, 16},
     {"_BKP_optimize_dkp_theta_rcpp", (DL_FUNC) &_BKP_optimize_dkp_theta_rcpp, 13},
     {"_BKP_qbetabinom_rcpp", (DL_FUNC) &_BKP_qbetabinom_rcpp, 4},
     {"_BKP_get_twin_indices_rcpp", (DL_FUNC) &_BKP_get_twin_indices_rcpp, 5},

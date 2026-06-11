@@ -280,6 +280,8 @@ fit_BKP <- function(
 
     max_iter <- min(500L, ceiling(100 * log1p(n_theta)))
 
+    m_shepard_loo <- if (identical(ess, "shepard")) .bkp_shepard_m_loo(Xnorm, m, power = 2) else NULL
+
     opt_cpp <- optimize_bkp_theta_rcpp(
       Xnorm = Xnorm,
       y = y,
@@ -294,7 +296,9 @@ fit_BKP <- function(
       lower = lower,
       upper = upper,
       max_iter = max_iter,
-      n_threads = n_threads
+      n_threads = n_threads,
+      ess = ess,
+      m_shepard_loo = m_shepard_loo
     )
 
     gamma_opt <- as.numeric(opt_cpp$gamma_opt)
@@ -307,7 +311,7 @@ fit_BKP <- function(
       gamma = gamma_opt, Xnorm = Xnorm, y = y, m = m,
       prior = prior, r0 = r0, p0 = p0,
       model = "BKP", loss = loss, kernel = kernel,
-      isotropic = isotropic
+      isotropic = isotropic, ess = ess
     )
   }
 
@@ -326,8 +330,6 @@ fit_BKP <- function(
   beta0  <- prior_par$beta0
 
   # ---- Compute posterior parameters ----
-  # TODO: add hyperparameter tuning under ESS in a follow-up task; for now,
-  # theta optimization uses the standard BKP LOOCV objective.
   data_success <- as.vector(K %*% y)
   data_failure <- as.vector(K %*% (m - y))
 

@@ -22,10 +22,11 @@ double loss_bkp_arma(
     const arma::vec& y,
     const arma::vec& m,
     const arma::vec& alpha0,
-    const arma::vec& beta0
+    const arma::vec& beta0,
+    const arma::vec& data_scale
 ) {
-  arma::vec alpha_n = alpha0 + K * y;
-  arma::vec beta_n  = beta0 + K * (m - y);
+  arma::vec alpha_n = alpha0 + data_scale % (K * y);
+  arma::vec beta_n  = beta0 + data_scale % (K * (m - y));
 
   arma::vec pi_hat = alpha_n / (alpha_n + beta_n);
   arma::vec pi_tilde = y / m;
@@ -97,7 +98,8 @@ double loss_fun_rcpp(
     Nullable<NumericMatrix> Y = R_NilValue,
     Nullable<NumericVector> alpha0 = R_NilValue,
     Nullable<NumericVector> beta0 = R_NilValue,
-    Nullable<NumericMatrix> alpha0_mat = R_NilValue
+    Nullable<NumericMatrix> alpha0_mat = R_NilValue,
+    Nullable<NumericVector> data_scale = R_NilValue
 ) {
   if (model == "BKP") {
 
@@ -110,6 +112,14 @@ double loss_fun_rcpp(
     arma::vec m_vec = as<arma::vec>(m_R);
     arma::vec alpha0_vec = as<arma::vec>(alpha0_R);
     arma::vec beta0_vec = as<arma::vec>(beta0_R);
+    arma::vec data_scale_vec;
+
+    if (data_scale.isNotNull()) {
+      NumericVector data_scale_R(data_scale);
+      data_scale_vec = as<arma::vec>(data_scale_R);
+    } else {
+      data_scale_vec = arma::ones<arma::vec>(K.n_rows);
+    }
 
     return loss_bkp_arma(
       loss,
@@ -117,7 +127,8 @@ double loss_fun_rcpp(
       y_vec,
       m_vec,
       alpha0_vec,
-      beta0_vec
+      beta0_vec,
+      data_scale_vec
     );
 
   } else if (model == "DKP") {

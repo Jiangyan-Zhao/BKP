@@ -60,7 +60,8 @@ double loss_bkp_arma(
     const arma::vec& y,
     const arma::vec& m,
     const arma::vec& alpha0,
-    const arma::vec& beta0
+    const arma::vec& beta0,
+    const arma::vec& data_scale
 );
 
 double loss_dkp_arma(
@@ -87,7 +88,9 @@ static double eval_bkp_loss_from_gamma(
     const double p0,
     const std::string& loss,
     const std::string& kernel,
-    const bool isotropic
+    const bool isotropic,
+    const std::string& ess,
+    const arma::vec& m_shepard_loo
 ) {
   arma::vec theta = arma::exp(std::log(10.0) * gamma);
 
@@ -99,7 +102,18 @@ static double eval_bkp_loss_from_gamma(
 
   get_prior_bkp_arma(prior, r0, p0, y, m, K, alpha0, beta0);
 
-  double val = loss_bkp_arma(loss, K, y, m, alpha0, beta0);
+  arma::vec data_scale = arma::ones<arma::vec>(K.n_rows);
+  if (ess == "shepard") {
+    arma::vec m_kernel = K * m;
+    arma::vec rho = arma::max(K, 1);
+    arma::vec m_target = rho % m_shepard_loo;
+    arma::uvec positive_kernel_mass = arma::find(m_kernel > 0.0);
+    data_scale.zeros();
+    data_scale.elem(positive_kernel_mass) =
+      m_target.elem(positive_kernel_mass) / m_kernel.elem(positive_kernel_mass);
+  }
+
+  double val = loss_bkp_arma(loss, K, y, m, alpha0, beta0, data_scale);
 
   // Guard: NaN or Inf -> return a large finite value.
   if (!std::isfinite(val)) return std::numeric_limits<double>::max();
@@ -148,6 +162,8 @@ struct BKPOptData {
   std::string loss;
   std::string kernel;
   bool isotropic;
+  std::string ess;
+  const arma::vec* m_shepard_loo;
 };
 
 
@@ -185,7 +201,8 @@ static double bkp_nlopt_obj(unsigned n, const double* x, double* grad, void* f_d
 
   return eval_bkp_loss_from_gamma(
     gamma, *(d->Xnorm), *(d->y), *(d->m),
-    d->prior, d->r0, d->p0, d->loss, d->kernel, d->isotropic
+    d->prior, d->r0, d->p0, d->loss, d->kernel, d->isotropic,
+    d->ess, *(d->m_shepard_loo)
   );
 }
 
@@ -222,6 +239,8 @@ static OptResult nloptr_refine(
     const std::string& loss,
     const std::string& kernel,
     const bool isotropic,
+    const std::string& ess,
+    const arma::vec& m_shepard_loo,
     const arma::vec& lower,
     const arma::vec& upper,
     const int max_eval
@@ -234,7 +253,7 @@ static OptResult nloptr_refine(
   std::vector<double> lb(lower.begin(), lower.end());
   std::vector<double> ub(upper.begin(), upper.end());
 
-  BKPOptData data{&Xnorm, &y, &m, prior, r0, p0, loss, kernel, isotropic};
+  BKPOptData data{&Xnorm, &y, &m, prior, r0, p0, loss, kernel, isotropic, ess, &m_shepard_loo};
 
   nlopt_opt opt = nlopt_create(NLOPT_LN_SBPLX, static_cast<unsigned>(x.size()));
   nlopt_set_lower_bounds(opt, lb.data());
@@ -252,7 +271,8 @@ static OptResult nloptr_refine(
 
   if (!std::isfinite(f_min)) {
     f_min = eval_bkp_loss_from_gamma(
-      g_opt, Xnorm, y, m, prior, r0, p0, loss, kernel, isotropic
+      g_opt, Xnorm, y, m, prior, r0, p0, loss, kernel, isotropic,
+      ess, m_shepard_loo
     );
   }
 
@@ -337,9 +357,25 @@ Rcpp::List optimize_bkp_theta_rcpp(
     const arma::vec& lower,
     const arma::vec& upper,
     const int max_iter,
-    const int n_threads = 1
+    const int n_threads = 1,
+    const std::string& ess = "none",
+    Nullable<NumericVector> m_shepard_loo = R_NilValue
 ) {
   const int n_starts = static_cast<int>(init_gamma.n_rows);
+
+  arma::vec m_shepard_loo_vec;
+  if (ess == "shepard") {
+    if (m_shepard_loo.isNull()) {
+      stop("'m_shepard_loo' must be provided when ess = 'shepard'.");
+    }
+    NumericVector m_shepard_loo_R(m_shepard_loo);
+    m_shepard_loo_vec = as<arma::vec>(m_shepard_loo_R);
+    if (m_shepard_loo_vec.n_elem != m.n_elem) {
+      stop("'m_shepard_loo' must have the same length as 'm'.");
+    }
+  } else {
+    m_shepard_loo_vec = arma::ones<arma::vec>(m.n_elem);
+  }
 
   int n_threads_used = 1;
 
@@ -360,7 +396,7 @@ Rcpp::List optimize_bkp_theta_rcpp(
 
       results[k] = nloptr_refine(
         g0, Xnorm, y, m,
-        prior, r0, p0, loss, kernel, isotropic,
+        prior, r0, p0, loss, kernel, isotropic, ess, m_shepard_loo_vec,
         lower, upper, max_iter
       );
 
