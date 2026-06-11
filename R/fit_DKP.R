@@ -109,7 +109,7 @@ fit_DKP <- function(
     kernel = c("gaussian", "matern52", "matern32", "wendland"),
     loss = c("brier", "log_loss"),
     n_multi_start = NULL, theta = NULL,
-    isotropic = TRUE
+    isotropic = TRUE, n_threads = 1
 ){
   # ---- Argument checking ----
   if (missing(X) || missing(Y)) {
@@ -205,6 +205,13 @@ fit_DKP <- function(
       stop("'n_multi_start' must be a positive integer.")
     }
   }
+
+  if (!is.numeric(n_threads) || length(n_threads) != 1 ||
+      is.na(n_threads) || !is.finite(n_threads) || n_threads <= 0) {
+    stop("'n_threads' must be a positive integer.")
+  }
+  n_threads <- as.integer(n_threads)
+
   if (!is.null(theta)) {
     if (!is.numeric(theta)) stop("'theta' must be numeric.")
     if (!is.logical(isotropic) || length(isotropic) != 1) {
@@ -257,14 +264,15 @@ fit_DKP <- function(
       Y = Y,
       prior = prior,
       r0 = r0,
-      p0 = as.numeric(p0),
+      p0 = p0,
       loss = loss,
       kernel = kernel,
       isotropic = isotropic,
       init_gamma = init_gamma,
       lower = lower,
       upper = upper,
-      max_iter = as.integer(max_iter)
+      max_iter = max_iter,
+      n_threads = n_threads
     )
 
     gamma_opt  <- as.numeric(opt_cpp$gamma_opt)
@@ -273,10 +281,12 @@ fit_DKP <- function(
   }else{
     # ---- Use user-provided theta ----
     theta_opt <- theta
-    loss_min <- loss_fun(gamma = log10(theta_opt), Xnorm = Xnorm, Y = Y,
-                         prior = prior, r0 = r0, p0 = p0,
-                         model = "DKP", loss = loss, kernel = kernel,
-                         isotropic = isotropic)
+    loss_min <- loss_fun(
+      gamma = gamma_opt, Xnorm = Xnorm, Y = Y,
+      prior = prior, r0 = r0, p0 = p0,
+      model = "DKP", loss = loss, kernel = kernel,
+      isotropic = isotropic
+    )
   }
 
   # ---- Compute kernel matrix at optimized hyperparameters ----

@@ -16,7 +16,8 @@ fit_BKP(
   loss = c("brier", "log_loss"),
   n_multi_start = NULL,
   theta = NULL,
-  isotropic = TRUE
+  isotropic = TRUE,
+  n_threads = 1
 )
 }
 \arguments{
@@ -61,6 +62,10 @@ local optimization to minimize the specified loss.}
 \item{isotropic}{Logical. If \code{TRUE} (default), optimize/use a single
 shared lengthscale across dimensions. If \code{FALSE}, use separate
 per-dimension lengthscales.}
+
+\item{n_threads}{Number of OpenMP threads used for multi-start
+optimization. Default is \code{1}. This argument only affects
+hyperparameter optimization when \code{theta = NULL}.}
 }
 \value{
 A list of class \code{"BKP"} containing the fitted BKP model,

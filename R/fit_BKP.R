@@ -37,6 +37,9 @@
 #' @param isotropic Logical. If \code{TRUE} (default), optimize/use a single
 #'   shared lengthscale across dimensions. If \code{FALSE}, use separate
 #'   per-dimension lengthscales.
+#' @param n_threads Number of OpenMP threads used for multi-start
+#'   optimization. Default is \code{1}. This argument only affects
+#'   hyperparameter optimization when \code{theta = NULL}.
 #'
 #' @return A list of class \code{"BKP"} containing the fitted BKP model,
 #'   including:
@@ -129,7 +132,7 @@ fit_BKP <- function(
     kernel = c("gaussian", "matern52", "matern32", "wendland"),
     loss = c("brier", "log_loss"),
     n_multi_start = NULL, theta = NULL,
-    isotropic = TRUE
+    isotropic = TRUE, n_threads = 1
 ){
   # ---- Argument checking ----
   if (missing(X) || missing(y) || missing(m)) {
@@ -211,6 +214,13 @@ fit_BKP <- function(
       stop("'n_multi_start' must be a positive integer.")
     }
   }
+
+  if (!is.numeric(n_threads) || length(n_threads) != 1 ||
+      is.na(n_threads) || !is.finite(n_threads) || n_threads <= 0) {
+    stop("'n_threads' must be a positive integer.")
+  }
+  n_threads <- as.integer(n_threads)
+
   if (!is.null(theta)) {
     if (!is.numeric(theta)) stop("'theta' must be numeric.")
     if (!is.logical(isotropic) || length(isotropic) != 1) {
@@ -260,8 +270,8 @@ fit_BKP <- function(
 
     opt_cpp <- optimize_bkp_theta_rcpp(
       Xnorm = Xnorm,
-      y = as.numeric(y),
-      m = as.numeric(m),
+      y = y,
+      m = m,
       prior = prior,
       r0 = r0,
       p0 = p0,
@@ -271,7 +281,8 @@ fit_BKP <- function(
       init_gamma = init_gamma,
       lower = lower,
       upper = upper,
-      max_iter = as.integer(max_iter)
+      max_iter = max_iter,
+      n_threads = n_threads
     )
 
     gamma_opt <- as.numeric(opt_cpp$gamma_opt)
@@ -280,7 +291,7 @@ fit_BKP <- function(
   } else {
     theta_opt <- theta
     loss_min <- loss_fun(
-      gamma = log10(theta_opt), Xnorm = Xnorm, y = y, m = m,
+      gamma = gamma_opt, Xnorm = Xnorm, y = y, m = m,
       prior = prior, r0 = r0, p0 = p0,
       model = "BKP", loss = loss, kernel = kernel,
       isotropic = isotropic
