@@ -29,6 +29,8 @@
 #'   \item{\code{mean_global, var_global}}{Global-stage posterior mean/variance
 #'   on support points; used directly by \code{fitted.TwinBKP()} and
 #'   \code{summary.TwinBKP()} without recomputation.}
+#'   \item{\code{ess}}{Effective-sample-size calibration method used.}
+#'   \item{\code{ess_info_global}}{Global-stage ESS calibration diagnostics.}
 #' }
 #'
 #' @seealso \code{\link{fit_BKP}}
@@ -55,7 +57,8 @@ fit_TwinBKP <- function(
     loss = c("brier", "log_loss"),
     n_multi_start = NULL, theta = NULL,
     isotropic = TRUE,
-    g_nums = NULL
+    g_nums = NULL,
+    ess = c("none", "shepard")
 ) {
 
   if (missing(X) || missing(y) || missing(m)) {
@@ -86,6 +89,7 @@ fit_TwinBKP <- function(
   prior  <- match.arg(prior)
   kernel <- match.arg(kernel)
   loss   <- match.arg(loss)
+  ess    <- match.arg(ess)
 
   if (is.null(g_nums)) {
     g_default <- min(50 * d, max(10 * d, sqrt(n)))
@@ -181,6 +185,12 @@ fit_TwinBKP <- function(
 
     max_iter <- min(500L, ceiling(100 * log1p(n_theta)))
 
+    m_shepard_loo_global <- if (identical(ess, "shepard")) {
+      .bkp_shepard_m_loo(Xnorm_global, m_global, power = 2)
+    } else {
+      NULL
+    }
+
     opt_cpp <- optimize_bkp_theta_rcpp(
       Xnorm = Xnorm_global,
       y = as.numeric(y_global),
@@ -194,7 +204,9 @@ fit_TwinBKP <- function(
       init_gamma = init_gamma,
       lower = lower,
       upper = upper,
-      max_iter = as.integer(max_iter)
+      max_iter = as.integer(max_iter),
+      ess = ess,
+      m_shepard_loo = m_shepard_loo_global
     )
 
     gamma_opt    <- as.numeric(opt_cpp$gamma_opt)
@@ -209,7 +221,8 @@ fit_TwinBKP <- function(
       m      = m_global,
       prior  = prior, r0 = r0, p0 = p0,
       model  = "BKP", loss = loss,
-      kernel = kernel, isotropic = isotropic
+      kernel = kernel, isotropic = isotropic,
+      ess = ess
     )
   }
 
@@ -230,8 +243,24 @@ fit_TwinBKP <- function(
   alpha0_global <- prior_global$alpha0
   beta0_global  <- prior_global$beta0
 
-  alpha_n_global <- alpha0_global + as.vector(K_global %*% y_global)
-  beta_n_global  <- beta0_global  + as.vector(K_global %*% (m_global - y_global))
+  data_success_global <- as.vector(K_global %*% y_global)
+  data_failure_global <- as.vector(K_global %*% (m_global - y_global))
+
+  if (identical(ess, "shepard")) {
+    ess_info_global <- .bkp_ess_calibration(
+      Xquery_norm = Xnorm_global,
+      Xtrain_norm = Xnorm_global,
+      m = m_global,
+      K = K_global
+    )
+    data_success_global <- ess_info_global$scale * data_success_global
+    data_failure_global <- ess_info_global$scale * data_failure_global
+  } else {
+    ess_info_global <- .bkp_ess_none_info(K_global, m_global)
+  }
+
+  alpha_n_global <- alpha0_global + data_success_global
+  beta_n_global  <- beta0_global  + data_failure_global
 
   s_global <- alpha_n_global + beta_n_global
 
@@ -272,6 +301,8 @@ fit_TwinBKP <- function(
     r0        = r0,
     p0        = p0,
     loss      = loss,
+    ess       = ess,
+    ess_info_global = ess_info_global,
     g_nums    = g_eff,
 
     theta_opt = theta_global,

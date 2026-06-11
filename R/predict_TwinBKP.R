@@ -147,6 +147,7 @@ predict.TwinBKP <- function(
   r0           <- object$r0
   p0           <- object$p0
   loss_type    <- object$loss
+  ess          <- if (is.null(object$ess)) "none" else object$ess
   g_nums       <- object$g_nums
 
   n <- nrow(Xnorm)
@@ -248,6 +249,7 @@ predict.TwinBKP <- function(
   pred_lambda   <- numeric(n_new)
   pred_theta_l  <- rep(theta_l, n_new)
   local_idx_out <- vector("list", n_new)
+  ess_info_out  <- vector("list", n_new)
 
   for (i in seq_len(n_new)) {
 
@@ -313,16 +315,47 @@ predict.TwinBKP <- function(
       K = K_l_star
     )
 
-    # alpha_n = alpha0 + lambda * K_g * y_g + (1-lambda) * K_l * y_l
-    alpha_n_i <- lambda_i * (as.numeric(prior_g_star$alpha0) +
-                               as.numeric(K_g_star %*% as.numeric(y_global))) +
-      (1 - lambda_i) * (as.numeric(prior_l_star$alpha0) +
-                          as.numeric(K_l_star %*% as.numeric(y_loc)))
+    prior_alpha_i <- lambda_i * as.numeric(prior_g_star$alpha0) +
+      (1 - lambda_i) * as.numeric(prior_l_star$alpha0)
+    prior_beta_i <- lambda_i * as.numeric(prior_g_star$beta0) +
+      (1 - lambda_i) * as.numeric(prior_l_star$beta0)
 
-    beta_n_i  <- lambda_i * (as.numeric(prior_g_star$beta0) +
-                               as.numeric(K_g_star %*% as.numeric(m_global - y_global))) +
-      (1 - lambda_i) * (as.numeric(prior_l_star$beta0) +
-                          as.numeric(K_l_star %*% as.numeric(m_loc - y_loc)))
+    data_success_i <- lambda_i * as.numeric(K_g_star %*% as.numeric(y_global)) +
+      (1 - lambda_i) * as.numeric(K_l_star %*% as.numeric(y_loc))
+    data_failure_i <- lambda_i * as.numeric(K_g_star %*% as.numeric(m_global - y_global)) +
+      (1 - lambda_i) * as.numeric(K_l_star %*% as.numeric(m_loc - y_loc))
+
+    if (identical(ess, "shepard")) {
+      subset_idx <- union(global_idx, loc_idx)
+      K_subset <- numeric(length(subset_idx))
+
+      global_pos <- match(global_idx, subset_idx)
+      K_subset[global_pos] <- K_subset[global_pos] + lambda_i * as.numeric(K_g_star)
+
+      local_pos <- match(loc_idx, subset_idx)
+      K_subset[local_pos] <- K_subset[local_pos] + (1 - lambda_i) * as.numeric(K_l_star)
+
+      ess_info_i <- .bkp_ess_calibration(
+        Xquery_norm = matrix(Xnew_norm[i, ], nrow = 1),
+        Xtrain_norm = Xnorm[subset_idx, , drop = FALSE],
+        m = m_train[subset_idx, , drop = FALSE],
+        K = matrix(K_subset, nrow = 1)
+      )
+      data_success_i <- ess_info_i$scale * data_success_i
+      data_failure_i <- ess_info_i$scale * data_failure_i
+      ess_info_i$subset_idx <- subset_idx
+    } else {
+      ess_info_i <- .bkp_ess_none_info(
+        K = matrix(c(lambda_i * as.numeric(K_g_star),
+                     (1 - lambda_i) * as.numeric(K_l_star)), nrow = 1),
+        m = c(m_global, m_loc)
+      )
+      ess_info_i$subset_idx <- c(global_idx, loc_idx)
+    }
+    ess_info_out[[i]] <- ess_info_i
+
+    alpha_n_i <- prior_alpha_i + data_success_i
+    beta_n_i  <- prior_beta_i + data_failure_i
 
     pred_alpha_n[i] <- alpha_n_i
     pred_beta_n[i]  <- beta_n_i
@@ -369,7 +402,9 @@ predict.TwinBKP <- function(
     return_type = return_type,
     l_nums    = l_eff,
     v_nums    = v_eff,
-    g_nums    = as.integer(g_nums)
+    g_nums    = as.integer(g_nums),
+    ess       = ess,
+    ess_info  = ess_info_out
   )
 
   if (return_type == "count") {

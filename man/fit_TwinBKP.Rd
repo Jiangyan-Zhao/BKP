@@ -17,7 +17,8 @@ fit_TwinBKP(
   n_multi_start = NULL,
   theta = NULL,
   isotropic = TRUE,
-  g_nums = NULL
+  g_nums = NULL,
+  ess = c("none", "shepard")
 )
 }
 \arguments{
@@ -68,6 +69,11 @@ the Twining algorithm for hyperparameter tuning. If \code{NULL} (default),
 it is set adaptively as
 \eqn{\min\{50d, \max(10d, \sqrt{n})\}},
 where \eqn{d} is input dimensionality and \eqn{n} is sample size.}
+
+\item{ess}{Effective-sample-size calibration for the BKP data contribution.
+Use \code{"none"} (default) for the standard BKP update, or
+\code{"shepard"} to rescale the kernel-weighted data contribution using
+Shepard interpolation of trial sizes on the normalized input scale.}
 }
 \value{
 A list of class \code{"TwinBKP"} with the same structure as
@@ -82,6 +88,8 @@ parameters on support points.}
 \item{\code{mean_global, var_global}}{Global-stage posterior mean/variance
 on support points; used directly by \code{fitted.TwinBKP()} and
 \code{summary.TwinBKP()} without recomputation.}
+\item{\code{ess}}{Effective-sample-size calibration method used.}
+\item{\code{ess_info_global}}{Global-stage ESS calibration diagnostics.}
 }
 }
 \description{
