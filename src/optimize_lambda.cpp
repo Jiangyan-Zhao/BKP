@@ -14,7 +14,8 @@ double loss_fun_rcpp(
     Nullable<NumericMatrix> Y = R_NilValue,
     Nullable<NumericVector> alpha0 = R_NilValue,
     Nullable<NumericVector> beta0 = R_NilValue,
-    Nullable<NumericMatrix> alpha0_mat = R_NilValue
+    Nullable<NumericMatrix> alpha0_mat = R_NilValue,
+    Nullable<NumericVector> data_scale = R_NilValue
 );
 
 static inline double eval_bkp_lambda_loss(

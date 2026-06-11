@@ -16,7 +16,8 @@ loss_fun(
   p0 = NULL,
   loss = c("brier", "log_loss"),
   kernel = c("gaussian", "matern52", "matern32", "wendland"),
-  isotropic = TRUE
+  isotropic = TRUE,
+  ess = c("none", "shepard")
 )
 }
 \arguments{
@@ -56,6 +57,11 @@ which must sum to 1.}
 \item{isotropic}{Logical. If \code{TRUE} (default), optimize/use a single
 shared lengthscale across dimensions. If \code{FALSE}, use separate
 per-dimension lengthscales.}
+
+\item{ess}{Effective-sample-size calibration for BKP leave-one-out data
+contributions. Use \code{"none"} (default) for the standard BKP loss or
+\code{"shepard"} for leave-one-out Shepard ESS calibration. Ignored for
+DKP.}
 }
 \value{
 A single numeric value representing the total loss (to be minimized).
