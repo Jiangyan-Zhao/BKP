@@ -16,7 +16,8 @@ fit_DKP(
   n_multi_start = NULL,
   theta = NULL,
   isotropic = TRUE,
-  n_threads = 1
+  n_threads = 1,
+  ess = c("none", "shepard")
 )
 }
 \arguments{
@@ -64,6 +65,11 @@ per-dimension lengthscales.}
 \item{n_threads}{Number of OpenMP threads used for multi-start
 optimization. Default is \code{1}. This argument only affects
 hyperparameter optimization when \code{theta = NULL}.}
+
+\item{ess}{Effective-sample-size calibration for the DKP data contribution.
+Use \code{"none"} (default) for the ordinary DKP posterior update or
+\code{"shepard"} to calibrate the kernel-weighted class-count
+contribution to a Shepard-interpolated target trial size.}
 }
 \value{
 A list of class \code{"DKP"} representing the fitted DKP model, with
@@ -75,6 +81,8 @@ the following components:
 \item{\code{loss}}{Loss function used for hyperparameter tuning.}
 \item{\code{loss_min}}{Minimum loss value achieved during kernel
 hyperparameter optimization. Set to \code{NA} if \code{theta} is user-specified.}
+\item{\code{ess}}{Effective-sample-size calibration method used.}
+\item{\code{ess_info}}{ESS calibration diagnostics, including the scale factor and target/kernel trial sizes.}
 \item{\code{X}}{Original (unnormalized) input matrix of size \code{n × d}.}
 \item{\code{Xnorm}}{Normalized input matrix scaled to \eqn{[0,1]^d}.}
 \item{\code{Xbounds}}{Matrix specifying normalization bounds for each input dimension.}

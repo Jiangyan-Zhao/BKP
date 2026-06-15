@@ -8,10 +8,9 @@
 #' @inheritParams fit_BKP
 #' @param gamma A numeric vector of log10-transformed kernel hyperparameters.
 #' @param Xnorm A numeric matrix of normalized input features (\code{[0,1]^d}).
-#' @param ess Effective-sample-size calibration for BKP leave-one-out data
-#'   contributions. Use \code{"none"} (default) for the standard BKP loss or
-#'   \code{"shepard"} for leave-one-out Shepard ESS calibration. Ignored for
-#'   DKP.
+#' @param ess Effective-sample-size calibration for leave-one-out data
+#'   contributions. Use \code{"none"} (default) for the standard loss or
+#'   \code{"shepard"} for leave-one-out Shepard ESS calibration.
 #'
 #' @return A single numeric value representing the total loss (to be minimized).
 #'   The value corresponds to either the Brier score (squared error) or the
@@ -64,18 +63,19 @@ loss_fun <- function(
   kernel <- match.arg(kernel)
   ess <- match.arg(ess)
 
+  if (identical(ess, "shepard")) {
+    .bkp_check_unique_locations(Xnorm)
+    if (nrow(Xnorm) < 2L) {
+      stop("ESS calibration with ess = 'shepard' requires at least two input locations for leave-one-out calibration.")
+    }
+  }
+
   if (model == "BKP") {
     if (is.null(y) || is.null(m)) stop("'y' and 'm' must be provided for BKP model.")
     if (!is.numeric(y) || !is.numeric(m)) stop("'y' and 'm' must be numeric vectors.")
     if (any(y < 0) || any(m <= 0) || any(y > m)) stop("'y' must be in [0,m] and 'm' > 0.")
     if (length(y) != nrow(Xnorm) || length(m) != nrow(Xnorm)) {
       stop("'y' and 'm' must have the same length as number of rows in 'Xnorm'.")
-    }
-    if (identical(ess, "shepard")) {
-      .bkp_check_unique_locations(Xnorm)
-      if (nrow(Xnorm) < 2L) {
-        stop("ESS calibration with ess = 'shepard' requires at least two input locations for leave-one-out calibration.")
-      }
     }
   } else {
     if (is.null(Y)) stop("'Y' must be provided for DKP model.")
@@ -126,6 +126,17 @@ loss_fun <- function(
     # Get prior parameters for DKP
     alpha0 <- get_prior(prior = prior, model = model, r0 = r0, p0 = p0, Y = Y, K = K)
 
+    data_scale <- NULL
+    if (identical(ess, "shepard")) {
+      m_dkp <- rowSums(Y)
+      m_kernel <- as.vector(K %*% as.numeric(m_dkp))
+      rho <- apply(K, 1L, max)
+      m_target <- rho * .bkp_shepard_m_loo(Xnorm, m_dkp, power = 2)
+      data_scale <- numeric(length(m_kernel))
+      positive_kernel_mass <- m_kernel > 0
+      data_scale[positive_kernel_mass] <- m_target[positive_kernel_mass] / m_kernel[positive_kernel_mass]
+    }
+
     result <- loss_fun_rcpp(
       model = model,
       loss = loss,
@@ -135,7 +146,8 @@ loss_fun <- function(
       Y = as.matrix(Y),
       alpha0 = NULL,
       beta0 = NULL,
-      alpha0_mat = as.matrix(alpha0)
+      alpha0_mat = as.matrix(alpha0),
+      data_scale = data_scale
     )
   }
 

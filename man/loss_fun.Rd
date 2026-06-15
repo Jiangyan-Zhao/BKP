@@ -58,10 +58,9 @@ which must sum to 1.}
 shared lengthscale across dimensions. If \code{FALSE}, use separate
 per-dimension lengthscales.}
 
-\item{ess}{Effective-sample-size calibration for BKP leave-one-out data
-contributions. Use \code{"none"} (default) for the standard BKP loss or
-\code{"shepard"} for leave-one-out Shepard ESS calibration. Ignored for
-DKP.}
+\item{ess}{Effective-sample-size calibration for leave-one-out data
+contributions. Use \code{"none"} (default) for the standard loss or
+\code{"shepard"} for leave-one-out Shepard ESS calibration.}
 }
 \value{
 A single numeric value representing the total loss (to be minimized).

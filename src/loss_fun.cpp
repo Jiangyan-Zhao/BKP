@@ -55,9 +55,12 @@ double loss_dkp_arma(
     const std::string& loss,
     const arma::mat& K,
     const arma::mat& Y,
-    const arma::mat& alpha0
+    const arma::mat& alpha0,
+    const arma::vec& data_scale
 ) {
-  arma::mat alpha_n = alpha0 + K * Y;
+  arma::mat data_counts = K * Y;
+  data_counts.each_col() %= data_scale;
+  arma::mat alpha_n = alpha0 + data_counts;
 
   arma::vec alpha_row_sums = arma::sum(alpha_n, 1);
   arma::mat pi_hat = alpha_n.each_col() / alpha_row_sums;
@@ -138,12 +141,21 @@ double loss_fun_rcpp(
 
     arma::mat Y_mat = as<arma::mat>(Y_R);
     arma::mat alpha0_dkp = as<arma::mat>(alpha0_R);
+    arma::vec data_scale_vec;
+
+    if (data_scale.isNotNull()) {
+      NumericVector data_scale_R(data_scale);
+      data_scale_vec = as<arma::vec>(data_scale_R);
+    } else {
+      data_scale_vec = arma::ones<arma::vec>(K.n_rows);
+    }
 
     return loss_dkp_arma(
       loss,
       K,
       Y_mat,
-      alpha0_dkp
+      alpha0_dkp,
+      data_scale_vec
     );
 
   } else {

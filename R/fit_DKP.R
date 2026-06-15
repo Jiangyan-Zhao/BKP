@@ -10,6 +10,10 @@
 #' @inheritParams fit_BKP
 #' @param Y Numeric matrix of observed multinomial counts, with dimension
 #'   \eqn{n \times q}.
+#' @param ess Effective-sample-size calibration for the DKP data contribution.
+#'   Use \code{"none"} (default) for the ordinary DKP posterior update or
+#'   \code{"shepard"} to calibrate the kernel-weighted class-count
+#'   contribution to a Shepard-interpolated target trial size.
 #' @param p0 Global prior mean vector (used only when \code{prior = "fixed"}).
 #'   Defaults to the empirical class proportions \code{colMeans(Y / rowSums(Y))}.
 #'   Must have length equal to the number of categories \eqn{q}.
@@ -23,6 +27,8 @@
 #'   \item{\code{loss}}{Loss function used for hyperparameter tuning.}
 #'   \item{\code{loss_min}}{Minimum loss value achieved during kernel
 #'     hyperparameter optimization. Set to \code{NA} if \code{theta} is user-specified.}
+#'   \item{\code{ess}}{Effective-sample-size calibration method used.}
+#'   \item{\code{ess_info}}{ESS calibration diagnostics, including the scale factor and target/kernel trial sizes.}
 #'   \item{\code{X}}{Original (unnormalized) input matrix of size \code{n × d}.}
 #'   \item{\code{Xnorm}}{Normalized input matrix scaled to \eqn{[0,1]^d}.}
 #'   \item{\code{Xbounds}}{Matrix specifying normalization bounds for each input dimension.}
@@ -109,7 +115,8 @@ fit_DKP <- function(
     kernel = c("gaussian", "matern52", "matern32", "wendland"),
     loss = c("brier", "log_loss"),
     n_multi_start = NULL, theta = NULL,
-    isotropic = TRUE, n_threads = 1
+    isotropic = TRUE, n_threads = 1,
+    ess = c("none", "shepard")
 ){
   # ---- Argument checking ----
   if (missing(X) || missing(Y)) {
@@ -152,6 +159,7 @@ fit_DKP <- function(
   prior  <- match.arg(prior)
   kernel <- match.arg(kernel)
   loss   <- match.arg(loss)
+  ess    <- match.arg(ess)
 
   # ---- Xbounds checks ----
   if (is.null(Xbounds)) {
@@ -236,6 +244,12 @@ fit_DKP <- function(
   Xnorm <- sweep(X, 2, Xbounds[,1], "-")
   Xnorm <- sweep(Xnorm, 2, Xbounds[,2] - Xbounds[,1], "/")
 
+  if (identical(ess, "shepard")) {
+    .bkp_check_unique_locations(Xnorm)
+  }
+
+  m <- rowSums(Y)
+
   if (is.null(theta)) {
     # ---- Determine the number of optimization variables ----
     n_theta <- ifelse(isTRUE(isotropic), 1L, d)
@@ -259,6 +273,8 @@ fit_DKP <- function(
 
     max_iter <- min(500L, ceiling(100 * log1p(n_theta)))
 
+    m_shepard_loo <- if (identical(ess, "shepard")) .bkp_shepard_m_loo(Xnorm, m, power = 2) else NULL
+
     opt_cpp <- optimize_dkp_theta_rcpp(
       Xnorm = Xnorm,
       Y = Y,
@@ -272,7 +288,9 @@ fit_DKP <- function(
       lower = lower,
       upper = upper,
       max_iter = max_iter,
-      n_threads = n_threads
+      n_threads = n_threads,
+      ess = ess,
+      m_shepard_loo = m_shepard_loo
     )
 
     gamma_opt  <- as.numeric(opt_cpp$gamma_opt)
@@ -286,7 +304,8 @@ fit_DKP <- function(
       gamma = gamma_opt, Xnorm = Xnorm, Y = Y,
       prior = prior, r0 = r0, p0 = p0,
       model = "DKP", loss = loss, kernel = kernel,
-      isotropic = isotropic
+      isotropic = isotropic,
+      ess = ess
     )
   }
 
@@ -302,7 +321,14 @@ fit_DKP <- function(
   alpha0 <- get_prior(prior = prior, model = "DKP", r0 = r0, p0 = p0, Y = Y, K = K)
 
   # ---- Compute posterior parameters ----
-  alpha_n <- alpha0 + as.matrix(K %*% Y)
+  data_counts <- as.matrix(K %*% Y)
+  if (identical(ess, "shepard")) {
+    ess_info <- .bkp_ess_calibration(Xnorm, Xnorm, m, K)
+    data_counts <- data_counts * ess_info$scale
+  } else {
+    ess_info <- .bkp_ess_none_info(K, m)
+  }
+  alpha_n <- alpha0 + data_counts
 
   # ---- Construct and return the fitted model object ----
   DKP_model <- list(
@@ -310,7 +336,7 @@ fit_DKP <- function(
     loss = loss, loss_min = loss_min,
     X = X, Xnorm = Xnorm, Xbounds = Xbounds, Y = Y,
     prior = prior, r0 = r0, p0 = p0,
-    alpha0 = alpha0, alpha_n = alpha_n
+    alpha0 = alpha0, alpha_n = alpha_n, ess = ess, ess_info = ess_info
   )
   class(DKP_model) <- "DKP"
   return(DKP_model)

@@ -68,7 +68,8 @@ double loss_dkp_arma(
     const std::string& loss,
     const arma::mat& K,
     const arma::mat& Y,
-    const arma::mat& alpha0
+    const arma::mat& alpha0,
+    const arma::vec& data_scale
 );
 
 // -------- END: declarations from other cpp files --------
@@ -131,7 +132,9 @@ static double eval_dkp_loss_from_gamma(
     const arma::vec& p0,
     const std::string& loss,
     const std::string& kernel,
-    const bool isotropic
+    const bool isotropic,
+    const std::string& ess,
+    const arma::vec& m_shepard_loo
 ) {
   arma::vec theta = arma::exp(std::log(10.0) * gamma);
 
@@ -140,7 +143,19 @@ static double eval_dkp_loss_from_gamma(
 
   arma::mat alpha0 = get_prior_dkp_arma(prior, r0, p0, Y, K);
 
-  double val = loss_dkp_arma(loss, K, Y, alpha0);
+  arma::vec data_scale = arma::ones<arma::vec>(K.n_rows);
+  if (ess == "shepard") {
+    arma::vec m = arma::sum(Y, 1);
+    arma::vec m_kernel = K * m;
+    arma::vec rho = arma::max(K, 1);
+    arma::vec m_target = rho % m_shepard_loo;
+    arma::uvec positive_kernel_mass = arma::find(m_kernel > 0.0);
+    data_scale.zeros();
+    data_scale.elem(positive_kernel_mass) =
+      m_target.elem(positive_kernel_mass) / m_kernel.elem(positive_kernel_mass);
+  }
+
+  double val = loss_dkp_arma(loss, K, Y, alpha0, data_scale);
 
   if (!std::isfinite(val)) return std::numeric_limits<double>::max();
 
@@ -176,6 +191,8 @@ struct DKPOptData {
   std::string loss;
   std::string kernel;
   bool isotropic;
+  std::string ess;
+  const arma::vec* m_shepard_loo;
 };
 
 
@@ -219,7 +236,8 @@ static double dkp_nlopt_obj(unsigned n, const double* x, double* grad, void* f_d
 
   return eval_dkp_loss_from_gamma(
     gamma, *(d->Xnorm), *(d->Y),
-    d->prior, d->r0, d->p0, d->loss, d->kernel, d->isotropic
+    d->prior, d->r0, d->p0, d->loss, d->kernel, d->isotropic,
+    d->ess, *(d->m_shepard_loo)
   );
 }
 
@@ -295,6 +313,8 @@ static OptResult nloptr_refine_dkp(
     const std::string& loss,
     const std::string& kernel,
     const bool isotropic,
+    const std::string& ess,
+    const arma::vec& m_shepard_loo,
     const arma::vec& lower,
     const arma::vec& upper,
     const int max_eval
@@ -307,7 +327,7 @@ static OptResult nloptr_refine_dkp(
   std::vector<double> lb(lower.begin(), lower.end());
   std::vector<double> ub(upper.begin(), upper.end());
 
-  DKPOptData data{&Xnorm, &Y, prior, r0, p0, loss, kernel, isotropic};
+  DKPOptData data{&Xnorm, &Y, prior, r0, p0, loss, kernel, isotropic, ess, &m_shepard_loo};
 
   nlopt_opt opt = nlopt_create(NLOPT_LN_SBPLX, static_cast<unsigned>(x.size()));
   nlopt_set_lower_bounds(opt, lb.data());
@@ -325,7 +345,7 @@ static OptResult nloptr_refine_dkp(
 
   if (!std::isfinite(f_min)) {
     f_min = eval_dkp_loss_from_gamma(
-      g_opt, Xnorm, Y, prior, r0, p0, loss, kernel, isotropic
+      g_opt, Xnorm, Y, prior, r0, p0, loss, kernel, isotropic, ess, m_shepard_loo
     );
   }
 
@@ -450,9 +470,25 @@ Rcpp::List optimize_dkp_theta_rcpp(
     const arma::vec& lower,
     const arma::vec& upper,
     const int max_iter,
-    const int n_threads = 1
+    const int n_threads = 1,
+    const std::string& ess = "none",
+    Nullable<NumericVector> m_shepard_loo = R_NilValue
 ) {
   const int n_starts = static_cast<int>(init_gamma.n_rows);
+
+  arma::vec m_shepard_loo_vec;
+  if (ess == "shepard") {
+    if (m_shepard_loo.isNull()) {
+      stop("'m_shepard_loo' must be provided when ess = 'shepard'.");
+    }
+    NumericVector m_shepard_loo_R(m_shepard_loo);
+    m_shepard_loo_vec = as<arma::vec>(m_shepard_loo_R);
+    if (m_shepard_loo_vec.n_elem != Y.n_rows) {
+      stop("'m_shepard_loo' must have the same length as the number of rows in 'Y'.");
+    }
+  } else {
+    m_shepard_loo_vec = arma::ones<arma::vec>(Y.n_rows);
+  }
 
   int n_threads_used = 1;
 
@@ -473,7 +509,7 @@ Rcpp::List optimize_dkp_theta_rcpp(
 
       results[k] = nloptr_refine_dkp(
         g0, Xnorm, Y,
-        prior, r0, p0, loss, kernel, isotropic,
+        prior, r0, p0, loss, kernel, isotropic, ess, m_shepard_loo_vec,
         lower, upper, max_iter
       );
 

@@ -29,8 +29,8 @@ optimize_bkp_theta_rcpp <- function(Xnorm, y, m, prior, r0, p0, loss, kernel, is
     .Call(`_BKP_optimize_bkp_theta_rcpp`, Xnorm, y, m, prior, r0, p0, loss, kernel, isotropic, init_gamma, lower, upper, max_iter, n_threads, ess, m_shepard_loo)
 }
 
-optimize_dkp_theta_rcpp <- function(Xnorm, Y, prior, r0, p0, loss, kernel, isotropic, init_gamma, lower, upper, max_iter, n_threads = 1L) {
-    .Call(`_BKP_optimize_dkp_theta_rcpp`, Xnorm, Y, prior, r0, p0, loss, kernel, isotropic, init_gamma, lower, upper, max_iter, n_threads)
+optimize_dkp_theta_rcpp <- function(Xnorm, Y, prior, r0, p0, loss, kernel, isotropic, init_gamma, lower, upper, max_iter, n_threads = 1L, ess = "none", m_shepard_loo = NULL) {
+    .Call(`_BKP_optimize_dkp_theta_rcpp`, Xnorm, Y, prior, r0, p0, loss, kernel, isotropic, init_gamma, lower, upper, max_iter, n_threads, ess, m_shepard_loo)
 }
 
 qbetabinom_rcpp <- function(prob, size, alpha, beta) {

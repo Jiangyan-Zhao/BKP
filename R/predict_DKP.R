@@ -155,12 +155,14 @@ predict.DKP <- function(object, Xnew = NULL, CI_level = 0.95,
     Xnorm   <- object$Xnorm
     Y       <- object$Y
     theta   <- object$theta_opt
+    ess_info <- object$ess_info
     kernel  <- object$kernel
     isotropic <- object$isotropic
     prior   <- object$prior
     r0      <- object$r0
     p0      <- object$p0
     Xbounds <- object$Xbounds
+    ess     <- if (is.null(object$ess)) "none" else object$ess
 
     # Normalize Xnew to [0,1]^d
     Xnew_norm <- sweep(Xnew, 2, Xbounds[, 1], "-")
@@ -175,11 +177,19 @@ predict.DKP <- function(object, Xnew = NULL, CI_level = 0.95,
                         r0 = r0, p0 = p0, Y = Y, K = K)
 
     # Posterior parameters at prediction points
-    alpha_n <- alpha0 + as.matrix(K %*% Y) # [n × q]
+    data_counts <- as.matrix(K %*% Y)
+    if (identical(ess, "shepard")) {
+      ess_info <- .bkp_ess_calibration(Xnew_norm, Xnorm, rowSums(Y), K)
+      data_counts <- data_counts * ess_info$scale
+    } else {
+      ess_info <- .bkp_ess_none_info(K, rowSums(Y))
+    }
+    alpha_n <- alpha0 + data_counts # [n × q]
   }else{
     # Use stored posterior parameters at training points
     alpha_n <- object$alpha_n
     Y       <- object$Y
+    ess_info <- object$ess_info
   }
 
   # ---- Posterior / posterior predictive summaries ----
@@ -273,7 +283,9 @@ predict.DKP <- function(object, Xnew = NULL, CI_level = 0.95,
     lower    = pred_lower,
     upper    = pred_upper,
     CI_level = CI_level,
-    type = type
+    type = type,
+    ess = if (is.null(object$ess)) "none" else object$ess,
+    ess_info = ess_info
   )
 
   if (type == "count") {

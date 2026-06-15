@@ -116,7 +116,10 @@ test_that("fit_DKP returns a DKP object with correct structure and content", {
 
   # Check class and structure
   expect_true(is.list(model))
-  expect_equal(names(model), c("theta_opt", "kernel", "isotropic", "loss", "loss_min", "X", "Xnorm", "Xbounds", "Y", "prior", "r0", "p0", "alpha0", "alpha_n"))
+  expect_equal(names(model), c(
+    "theta_opt", "kernel", "isotropic", "loss", "loss_min",
+    "X", "Xnorm", "Xbounds", "Y", "prior", "r0",
+    "p0", "alpha0", "alpha_n", "ess", "ess_info"))
 
   # Check content
   expect_equal(model$loss, "brier")
@@ -194,3 +197,104 @@ test_that("fit_DKP validates extended argument branches", {
   expect_error(fit_DKP(X, Y, theta = -0.2), "'theta' must be strictly positive")
   expect_error(fit_DKP(X, Y, isotropic = c(TRUE, FALSE)), "'isotropic' must be a single logical value")
 })
+
+
+test_that("DKP ess = 'none' matches the standard posterior update", {
+  X <- matrix(c(0.05, 0.35, 0.70, 0.95), ncol = 1)
+  Y <- matrix(c(3, 1, 2,
+                1, 4, 2,
+                2, 2, 5,
+                5, 1, 1), ncol = 3, byrow = TRUE)
+
+  model <- fit_DKP(X, Y, theta = 0.3, prior = "fixed", r0 = 2,
+                   p0 = c(1/3, 1/3, 1/3), ess = "none")
+  K <- kernel_matrix(model$Xnorm, theta = model$theta_opt,
+                     kernel = model$kernel, isotropic = model$isotropic)
+
+  expect_equal(model$ess, "none")
+  expect_equal(model$alpha_n, model$alpha0 + as.matrix(K %*% Y), tolerance = 0)
+})
+
+test_that("DKP Shepard ESS calibrates training-point total data contribution", {
+  X <- matrix(c(0.05, 0.35, 0.70, 0.95), ncol = 1)
+  Y <- matrix(c(3, 1, 2,
+                1, 4, 2,
+                2, 2, 5,
+                5, 1, 1), ncol = 3, byrow = TRUE)
+  m <- rowSums(Y)
+
+  model <- fit_DKP(X, Y, theta = 0.25, prior = "fixed", r0 = 2,
+                   p0 = c(1/3, 1/3, 1/3), ess = "shepard")
+
+  expect_equal(rowSums(model$alpha_n - model$alpha0), as.numeric(m), tolerance = 1e-8)
+  expect_equal(model$ess_info$m_shepard, as.numeric(m), tolerance = 1e-10)
+})
+
+test_that("DKP Shepard ESS preserves kernel-weighted empirical class proportions", {
+  X <- matrix(c(0.05, 0.35, 0.70, 0.95), ncol = 1)
+  Y <- matrix(c(3, 1, 2,
+                1, 4, 2,
+                2, 2, 5,
+                5, 1, 1), ncol = 3, byrow = TRUE)
+
+  model <- fit_DKP(X, Y, theta = 0.4, prior = "fixed", r0 = 2,
+                   p0 = c(1/3, 1/3, 1/3), ess = "shepard")
+  K <- kernel_matrix(model$Xnorm, theta = model$theta_opt,
+                     kernel = model$kernel, isotropic = model$isotropic)
+  raw_counts <- as.matrix(K %*% Y)
+  raw_totals <- rowSums(raw_counts)
+  scaled_counts <- raw_counts * model$ess_info$scale
+  scaled_totals <- rowSums(scaled_counts)
+  positive <- raw_totals > 0
+
+  expect_equal(scaled_counts[positive, , drop = FALSE] / scaled_totals[positive],
+               raw_counts[positive, , drop = FALSE] / raw_totals[positive],
+               tolerance = 1e-10)
+})
+
+test_that("DKP Shepard ESS prediction on new points has no NA values", {
+  X <- matrix(c(0.05, 0.35, 0.70, 0.95), ncol = 1)
+  Y <- matrix(c(3, 1, 2,
+                1, 4, 2,
+                2, 2, 5,
+                5, 1, 1), ncol = 3, byrow = TRUE)
+
+  model <- fit_DKP(X, Y, theta = 0.35, ess = "shepard")
+  pred <- predict(model, Xnew = matrix(c(0.2, 0.6, 0.9), ncol = 1))
+
+  expect_false(anyNA(pred$alpha_n))
+  expect_false(anyNA(pred$mean))
+  expect_equal(pred$ess, "shepard")
+})
+
+test_that("DKP Shepard ESS rejects duplicated input locations", {
+  X <- matrix(c(0.1, 0.1, 0.7), ncol = 1)
+  Y <- matrix(c(2, 1, 1,
+                1, 3, 1,
+                2, 2, 4), ncol = 3, byrow = TRUE)
+
+  expect_error(
+    fit_DKP(X, Y, theta = 0.3, ess = "shepard"),
+    "requires unique input locations"
+  )
+})
+
+test_that("DKP Shepard ESS works with optimized and fixed theta", {
+  set.seed(12)
+  X <- matrix(seq(0.05, 0.95, length.out = 6), ncol = 1)
+  Y <- matrix(c(3, 1, 2,
+                1, 4, 2,
+                2, 2, 5,
+                5, 1, 1,
+                3, 3, 2,
+                1, 2, 6), ncol = 3, byrow = TRUE)
+
+  optimized <- fit_DKP(X, Y, theta = NULL, n_multi_start = 2, ess = "shepard")
+  fixed <- fit_DKP(X, Y, theta = 0.3, ess = "shepard")
+
+  expect_s3_class(optimized, "DKP")
+  expect_s3_class(fixed, "DKP")
+  expect_equal(optimized$ess, "shepard")
+  expect_equal(fixed$ess, "shepard")
+})
+
