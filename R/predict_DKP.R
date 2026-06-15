@@ -180,7 +180,7 @@ predict.DKP <- function(object, Xnew = NULL, CI_level = 0.95,
     data_counts <- as.matrix(K %*% Y)
     if (identical(ess, "shepard")) {
       ess_info <- .bkp_ess_calibration(Xnew_norm, Xnorm, rowSums(Y), K)
-      data_counts <- data_counts * ess_info$scale
+      data_counts <- sweep(data_counts, 1L, ess_info$scale, "*")
     } else {
       ess_info <- .bkp_ess_none_info(K, rowSums(Y))
     }

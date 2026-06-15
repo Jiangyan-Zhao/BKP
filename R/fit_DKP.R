@@ -324,7 +324,7 @@ fit_DKP <- function(
   data_counts <- as.matrix(K %*% Y)
   if (identical(ess, "shepard")) {
     ess_info <- .bkp_ess_calibration(Xnorm, Xnorm, m, K)
-    data_counts <- data_counts * ess_info$scale
+    data_counts <- sweep(data_counts, 1L, ess_info$scale, "*")
   } else {
     ess_info <- .bkp_ess_none_info(K, m)
   }

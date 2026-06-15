@@ -181,6 +181,13 @@ test_that("ess = 'none' matches the standard BKP posterior update", {
   expect_equal(model$ess, "none")
   expect_equal(model$alpha_n, prior_par$alpha0 + as.vector(K %*% model$y))
   expect_equal(model$beta_n, prior_par$beta0 + as.vector(K %*% (model$m - model$y)))
+
+  pred_train <- predict(model)
+  pred_new <- predict(model, Xnew = matrix(c(0.15, 0.55), ncol = 1))
+  expect_equal(pred_train$ess, "none")
+  expect_equal(pred_new$ess, "none")
+  expect_equal(pred_train$ess_info$scale, rep(1, length(m)))
+  expect_equal(pred_new$ess_info$scale, rep(1, 2))
 })
 
 test_that("Shepard ESS targets observed trial sizes at training points", {

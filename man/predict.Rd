@@ -40,18 +40,18 @@ posterior intervals (default \code{0.95} for 95\% credible interval).}
 threshold for binary predictions based on posterior mean (used only for
 BKP; default is \code{0.5}).}
 
-\item{type}{Character string specifying the prediction target for BKP models.
-The default \code{"probability"} returns posterior summaries for the latent
-success probability \eqn{\pi(x)}. The option \code{"count"} returns posterior
-predictive summaries for a future success count under the Beta-Binomial
-distribution. This argument is ignored for DKP models unless otherwise
-implemented.}
+\item{type}{Character string specifying the prediction target. The default
+\code{"probability"} returns posterior summaries for latent success
+probabilities (BKP) or latent class probabilities (DKP). The option
+\code{"count"} returns posterior predictive summaries for future counts
+under the Beta-Binomial distribution (BKP) or marginal Beta-Binomial
+distributions for each multinomial class (DKP).}
 
-\item{Mnew}{Positive integer trial size used only for BKP prediction when
-\code{type = "count"}. It can be either a scalar, applied to all prediction
-points, or a vector with the same length as the number of prediction points.
-If \code{Xnew = NULL} and \code{Mnew = NULL}, the training trial sizes
-\code{object$m} are used.}
+\item{Mnew}{Positive integer trial size used when \code{type = "count"}. It
+can be either a scalar, applied to all prediction points, or a vector with
+the same length as the number of prediction points. If \code{Xnew = NULL}
+and \code{Mnew = NULL}, the training trial sizes \code{object$m} (BKP) or
+\code{rowSums(object$Y)} (DKP) are used.}
 
 \item{...}{Additional arguments passed to generic \code{predict} methods
 (currently not used; included for S3 method consistency).}
@@ -76,7 +76,8 @@ classes.
 success probability.
 \item BKP with \code{type = "count"}: posterior predictive mean of the
 future success count.
-\item DKP: matrix of posterior mean class probabilities.
+\item DKP with \code{type = "probability"}: matrix of posterior mean class probabilities.
+\item DKP with \code{type = "count"}: matrix of posterior predictive mean class counts.
 }}
 \item{\code{variance}}{Variance of the prediction target:
 \itemize{
@@ -84,7 +85,8 @@ future success count.
 latent success probability.
 \item BKP with \code{type = "count"}: posterior predictive variance of
 the future success count.
-\item DKP: matrix of posterior variances for class probabilities.
+\item DKP with \code{type = "probability"}: matrix of posterior variances for class probabilities.
+\item DKP with \code{type = "count"}: matrix of posterior predictive variances for class counts.
 }}
 \item{\code{lower}}{Lower bound of the credible interval:
 \itemize{
@@ -92,7 +94,8 @@ the future success count.
 quantile for the latent success probability.
 \item BKP with \code{type = "count"}: lower Beta-Binomial posterior
 predictive quantile for the future success count.
-\item DKP: matrix of lower posterior quantiles for class probabilities.
+\item DKP with \code{type = "probability"}: matrix of lower posterior quantiles for class probabilities.
+\item DKP with \code{type = "count"}: matrix of lower posterior predictive quantiles for class counts.
 }}
 \item{\code{upper}}{Upper bound of the credible interval:
 \itemize{
@@ -100,7 +103,8 @@ predictive quantile for the future success count.
 quantile for the latent success probability.
 \item BKP with \code{type = "count"}: upper Beta-Binomial posterior
 predictive quantile for the future success count.
-\item DKP: matrix of upper posterior quantiles for class probabilities.
+\item DKP with \code{type = "probability"}: matrix of upper posterior quantiles for class probabilities.
+\item DKP with \code{type = "count"}: matrix of upper posterior predictive quantiles for class counts.
 }}
 \item{\code{class}}{Predicted label, where applicable:
 \itemize{
@@ -111,7 +115,9 @@ predictive quantile for the future success count.
 probability.
 }}
 \item{\code{CI_level}}{The specified credible interval level.}
-\item{\code{type}}{The prediction target used for BKP prediction.}
+\item{\code{type}}{The prediction target used.}
+\item{\code{ess}}{Effective-sample-size calibration method inherited from the fitted model.}
+\item{\code{ess_info}}{ESS diagnostics for the training or prediction locations. For \code{ess = "none"}, scale values are one and the posterior update is unchanged; for \code{ess = "shepard"}, scale values calibrate kernel-weighted data contributions without changing empirical proportions.}
 \item{\code{Mnew}}{The trial sizes used for count prediction, returned only
 when \code{type = "count"}.}
 }
@@ -121,8 +127,9 @@ Generates posterior summaries from a fitted Beta Kernel Process
 (BKP) or Dirichlet Kernel Process (DKP) model at new input locations. For
 BKP models, summaries can be returned either for the latent success
 probability or for a future success count under the Beta-Binomial posterior
-predictive distribution. For DKP models, summaries are returned for the
-class probability vector.
+predictive distribution. For DKP models, summaries can be returned either
+for the latent class probability vector or for future class counts using
+marginal Beta-Binomial posterior predictive distributions.
 }
 \examples{
 # ============================================================== #

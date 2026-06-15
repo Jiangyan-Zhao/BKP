@@ -243,7 +243,7 @@ test_that("DKP Shepard ESS preserves kernel-weighted empirical class proportions
                      kernel = model$kernel, isotropic = model$isotropic)
   raw_counts <- as.matrix(K %*% Y)
   raw_totals <- rowSums(raw_counts)
-  scaled_counts <- raw_counts * model$ess_info$scale
+  scaled_counts <- sweep(raw_counts, 1L, model$ess_info$scale, "*")
   scaled_totals <- rowSums(scaled_counts)
   positive <- raw_totals > 0
 

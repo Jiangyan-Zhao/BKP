@@ -6,8 +6,9 @@
 #'   (BKP) or Dirichlet Kernel Process (DKP) model at new input locations. For
 #'   BKP models, summaries can be returned either for the latent success
 #'   probability or for a future success count under the Beta-Binomial posterior
-#'   predictive distribution. For DKP models, summaries are returned for the
-#'   class probability vector.
+#'   predictive distribution. For DKP models, summaries can be returned either
+#'   for the latent class probability vector or for future class counts using
+#'   marginal Beta-Binomial posterior predictive distributions.
 #'
 #' @param object An object of class \code{"BKP"} or \code{"DKP"}, typically
 #'   returned by \code{\link{fit_BKP}} or \code{\link{fit_DKP}}.
@@ -19,17 +20,17 @@
 #' @param threshold Numeric between 0 and 1 specifying the classification
 #'   threshold for binary predictions based on posterior mean (used only for
 #'   BKP; default is \code{0.5}).
-#' @param type Character string specifying the prediction target for BKP models.
-#'   The default \code{"probability"} returns posterior summaries for the latent
-#'   success probability \eqn{\pi(x)}. The option \code{"count"} returns posterior
-#'   predictive summaries for a future success count under the Beta-Binomial
-#'   distribution. This argument is ignored for DKP models unless otherwise
-#'   implemented.
-#' @param Mnew Positive integer trial size used only for BKP prediction when
-#'   \code{type = "count"}. It can be either a scalar, applied to all prediction
-#'   points, or a vector with the same length as the number of prediction points.
-#'   If \code{Xnew = NULL} and \code{Mnew = NULL}, the training trial sizes
-#'   \code{object$m} are used.
+#' @param type Character string specifying the prediction target. The default
+#'   \code{"probability"} returns posterior summaries for latent success
+#'   probabilities (BKP) or latent class probabilities (DKP). The option
+#'   \code{"count"} returns posterior predictive summaries for future counts
+#'   under the Beta-Binomial distribution (BKP) or marginal Beta-Binomial
+#'   distributions for each multinomial class (DKP).
+#' @param Mnew Positive integer trial size used when \code{type = "count"}. It
+#'   can be either a scalar, applied to all prediction points, or a vector with
+#'   the same length as the number of prediction points. If \code{Xnew = NULL}
+#'   and \code{Mnew = NULL}, the training trial sizes \code{object$m} (BKP) or
+#'   \code{rowSums(object$Y)} (DKP) are used.
 #' @param ... Additional arguments passed to generic \code{predict} methods
 #'   (currently not used; included for S3 method consistency).
 #'
@@ -52,7 +53,8 @@
 #'       success probability.
 #'       \item BKP with \code{type = "count"}: posterior predictive mean of the
 #'       future success count.
-#'       \item DKP: matrix of posterior mean class probabilities.
+#'       \item DKP with \code{type = "probability"}: matrix of posterior mean class probabilities.
+#'       \item DKP with \code{type = "count"}: matrix of posterior predictive mean class counts.
 #'     }}
 #'   \item{\code{variance}}{Variance of the prediction target:
 #'     \itemize{
@@ -60,7 +62,8 @@
 #'       latent success probability.
 #'       \item BKP with \code{type = "count"}: posterior predictive variance of
 #'       the future success count.
-#'       \item DKP: matrix of posterior variances for class probabilities.
+#'       \item DKP with \code{type = "probability"}: matrix of posterior variances for class probabilities.
+#'       \item DKP with \code{type = "count"}: matrix of posterior predictive variances for class counts.
 #'     }}
 #'   \item{\code{lower}}{Lower bound of the credible interval:
 #'     \itemize{
@@ -68,7 +71,8 @@
 #'       quantile for the latent success probability.
 #'       \item BKP with \code{type = "count"}: lower Beta-Binomial posterior
 #'       predictive quantile for the future success count.
-#'       \item DKP: matrix of lower posterior quantiles for class probabilities.
+#'       \item DKP with \code{type = "probability"}: matrix of lower posterior quantiles for class probabilities.
+#'       \item DKP with \code{type = "count"}: matrix of lower posterior predictive quantiles for class counts.
 #'     }}
 #'   \item{\code{upper}}{Upper bound of the credible interval:
 #'     \itemize{
@@ -76,7 +80,8 @@
 #'       quantile for the latent success probability.
 #'       \item BKP with \code{type = "count"}: upper Beta-Binomial posterior
 #'       predictive quantile for the future success count.
-#'       \item DKP: matrix of upper posterior quantiles for class probabilities.
+#'       \item DKP with \code{type = "probability"}: matrix of upper posterior quantiles for class probabilities.
+#'       \item DKP with \code{type = "count"}: matrix of upper posterior predictive quantiles for class counts.
 #'     }}
 #'   \item{\code{class}}{Predicted label, where applicable:
 #'     \itemize{
@@ -87,7 +92,9 @@
 #'       probability.
 #'     }}
 #'   \item{\code{CI_level}}{The specified credible interval level.}
-#'   \item{\code{type}}{The prediction target used for BKP prediction.}
+#'   \item{\code{type}}{The prediction target used.}
+#'   \item{\code{ess}}{Effective-sample-size calibration method inherited from the fitted model.}
+#'   \item{\code{ess_info}}{ESS diagnostics for the training or prediction locations. For \code{ess = "none"}, scale values are one and the posterior update is unchanged; for \code{ess = "shepard"}, scale values calibrate kernel-weighted data contributions without changing empirical proportions.}
 #'   \item{\code{Mnew}}{The trial sizes used for count prediction, returned only
 #'     when \code{type = "count"}.}
 #' }
@@ -288,6 +295,8 @@ predict.BKP <- function(object, Xnew = NULL, CI_level = 0.95, threshold = 0.5,
       )
       data_success <- ess_info$scale * data_success
       data_failure <- ess_info$scale * data_failure
+    } else {
+      ess_info <- .bkp_ess_none_info(K, m)
     }
 
     alpha_n <- alpha0 + data_success
@@ -297,6 +306,7 @@ predict.BKP <- function(object, Xnew = NULL, CI_level = 0.95, threshold = 0.5,
     alpha_n <- object$alpha_n
     beta_n  <- object$beta_n
     m <- object$m
+    ess_info <- object$ess_info
   }
 
   # ---- Posterior / posterior predictive summaries ----
@@ -342,7 +352,9 @@ predict.BKP <- function(object, Xnew = NULL, CI_level = 0.95, threshold = 0.5,
     lower    = pred_lower,
     upper    = pred_upper,
     CI_level = CI_level,
-    type = type
+    type = type,
+    ess = if (is.null(object$ess)) "none" else object$ess,
+    ess_info = ess_info
   )
 
   if (type == "count") {
