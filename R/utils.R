@@ -304,6 +304,26 @@ my_2D_plot_fun_class_ggplot <- function(var, title, data, X, Y,
   p
 }
 
+#' Construct a fixed-slice plotting grid
+#'
+#' Internal helper used by plotting methods to expand a one- or two-dimensional
+#' display grid into the model's full input dimension. Dimensions not displayed
+#' in the plot are fixed at their training-data medians.
+#'
+#' @param X Training input matrix.
+#' @param Xbounds Matrix of input bounds.
+#' @param dims Integer vector of displayed dimensions.
+#' @param grid Matrix or data frame containing grid values for displayed dimensions.
+#' @return A numeric matrix with one row per grid point and one column per model input dimension.
+#'
+#' @keywords internal
+.make_plot_grid <- function(X, Xbounds, dims, grid) {
+  fixed <- apply(X, 2, stats::median)
+  Xnew_full <- matrix(rep(fixed, each = nrow(grid)), nrow = nrow(grid))
+  Xnew_full[, dims] <- as.matrix(grid)
+  Xnew_full
+}
+
 #' Summarize posterior means and variances
 #'
 #' Internal helper used by summary methods to compute compact descriptive

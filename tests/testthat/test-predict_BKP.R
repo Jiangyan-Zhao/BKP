@@ -101,3 +101,16 @@ test_that("test-predict_BKP validation and classification branches", {
   pred_count <- predict(model_count)
   expect_true(is.null(pred_count$class))
 })
+
+test_that("BKP count predictions have legal intervals", {
+  set.seed(2026)
+  X <- matrix(runif(20), ncol = 2)
+  m <- rep(12, nrow(X))
+  y <- rbinom(nrow(X), size = m, prob = 0.4)
+  fit <- fit_BKP(X, y, m, theta = 0.3, prior = "fixed", r0 = 3, p0 = 0.4)
+  pred <- predict(fit, Xnew = X[1:4, ], type = "count", Mnew = 20)
+
+  expect_true(all(pred$lower >= 0))
+  expect_true(all(pred$upper <= 20))
+  expect_true(all(pred$lower <= pred$upper))
+})

@@ -106,3 +106,19 @@ test_that("simulate.BKP handles input validation correctly", {
   # Xnew must be a matrix
   expect_error(simulate(model, Xnew = "invalid"), "'Xnew' must be numeric.")
 })
+
+test_that("simulate.BKP uses Shepard ESS posterior parameters at new inputs", {
+  set.seed(2026)
+  X <- matrix(seq(0.05, 0.95, length.out = 12), ncol = 1)
+  m <- rep(20, nrow(X))
+  y <- rbinom(nrow(X), size = m, prob = plogis(4 * X[, 1] - 2))
+  fit <- fit_BKP(X, y, m, theta = 0.4, ess = "shepard", prior = "fixed", r0 = 2, p0 = 0.5)
+  Xnew <- matrix(c(0.15, 0.55, 0.9), ncol = 1)
+
+  pred <- predict(fit, Xnew = Xnew, type = "probability")
+  sim <- simulate(fit, Xnew = Xnew, nsim = 2, seed = 1)
+
+  expect_equal(sim$mean, pred$mean)
+  expect_equal(sim$ess, pred$ess)
+  expect_equal(sim$ess_info$scale, pred$ess_info$scale)
+})

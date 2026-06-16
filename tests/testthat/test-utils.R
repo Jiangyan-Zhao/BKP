@@ -82,3 +82,16 @@ test_that("posterior_summary returns expected summary matrix", {
   expect_true(is.matrix(ps))
   expect_equal(rownames(ps), c("Posterior means", "Posterior variances"))
 })
+
+test_that(".make_plot_grid fixes non-displayed dimensions at training medians", {
+  X <- matrix(c(1, 10, 100,
+                2, 20, 200,
+                3, 30, 300), ncol = 3, byrow = TRUE)
+  Xbounds <- matrix(c(0, 0, 0, 4, 40, 400), nrow = 3)
+  grid <- expand.grid(x1 = c(0.1, 0.9), x3 = c(0.2, 0.8))
+
+  Xnew <- .make_plot_grid(X, Xbounds, dims = c(1, 3), grid = grid)
+
+  expect_equal(Xnew[, 2], rep(stats::median(X[, 2]), nrow(grid)))
+  expect_equal(Xnew[, c(1, 3)], unname(as.matrix(grid)))
+})

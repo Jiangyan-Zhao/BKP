@@ -62,43 +62,17 @@ simulate.DKP <- function(object, nsim = 1, seed = NULL, Xnew = NULL, ...)
   if (!is.null(seed)) set.seed(seed)
 
   if (!is.null(Xnew)) {
-    # complete posterior parameters at new inputs
-    # Extract components
-    Xnorm   <- object$Xnorm
-    Y       <- object$Y
-    theta   <- object$theta_opt
-    kernel  <- object$kernel
-    isotropic <- object$isotropic
-    prior   <- object$prior
-    r0      <- object$r0
-    p0      <- object$p0
-    Xbounds <- object$Xbounds
-    q       <- ncol(Y)
-
-    # --- Normalize new inputs ---
-    Xnew_norm <- sweep(Xnew, 2, Xbounds[, 1], "-")
-    Xnew_norm <- sweep(Xnew_norm, 2, Xbounds[, 2] - Xbounds[, 1], "/")
-
-    # --- Compute kernel matrix ---
-    K <- kernel_matrix(Xnew_norm, Xnorm, theta = theta, kernel = kernel, isotropic = isotropic)
-
-    # # Row-normalized kernel weights
-    # rs <- rowSums(K)
-    # rs[rs < 1e-10] <- 1
-    # W <- K / rs
-
-    # --- Get Dirichlet prior ---
-    alpha0 <- get_prior(prior = prior, model = "DKP",
-                        r0 = r0, p0 = p0, Y = Y, K = K)
-
-    # --- Posterior Dirichlet parameters ---
-    # alpha_n <- as.matrix(alpha0) + as.matrix(W %*% Y)
-    alpha_n <- as.matrix(alpha0) + as.matrix(K %*% Y)
-  }else{
+    prediction <- predict.DKP(object, Xnew = Xnew, type = "probability", ...)
+    alpha_n <- prediction$alpha_n
+    Y <- object$Y
+    q <- ncol(Y)
+    ess_info <- prediction$ess_info
+  } else {
     # Use training data
     q       <- ncol(object$Y)
     alpha_n <- object$alpha_n
     Y       <- object$Y
+    ess_info <- object$ess_info
   }
 
 
@@ -132,7 +106,9 @@ simulate.DKP <- function(object, nsim = 1, seed = NULL, Xnew = NULL, ...)
     mean    = pi_mean,    # [n_new × q]: posterior mean
     class   = class_pred, # [n_new × nsim]: MAP class (if available)
     X       = object$X,   # [n × d]: training inputs
-    Xnew    = Xnew        # [n_new × d]: new inputs (if provided)
+    Xnew    = Xnew,       # [n_new × d]: new inputs (if provided)
+    ess     = if (is.null(object$ess)) "none" else object$ess,
+    ess_info = ess_info
   )
 
   class(simulation) <- "simulate_DKP"

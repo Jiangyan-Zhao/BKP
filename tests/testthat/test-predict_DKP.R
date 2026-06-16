@@ -114,3 +114,19 @@ test_that("test-predict_DKP validation and class output branches", {
   pred_count <- predict(model_count)
   expect_true(is.null(pred_count$class))
 })
+
+test_that("DKP count predictions have legal intervals and dimensions", {
+  set.seed(2027)
+  X <- matrix(runif(24), ncol = 2)
+  Y <- t(vapply(seq_len(nrow(X)), function(i) {
+    as.vector(rmultinom(1, size = 12, prob = c(0.2, 0.3, 0.5)))
+  }, numeric(3)))
+  fit <- fit_DKP(X, Y, theta = 0.3, prior = "fixed", r0 = 3, p0 = rep(1 / 3, 3))
+  pred <- predict(fit, Xnew = X[1:4, ], type = "count", Mnew = 20)
+
+  expect_equal(dim(pred$lower), c(4, 3))
+  expect_equal(dim(pred$upper), c(4, 3))
+  expect_true(all(pred$lower >= 0))
+  expect_true(all(pred$upper <= 20))
+  expect_true(all(pred$lower <= pred$upper))
+})

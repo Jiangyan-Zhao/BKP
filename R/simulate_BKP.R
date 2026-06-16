@@ -134,46 +134,15 @@ simulate.BKP <- function(object, nsim = 1, seed = NULL, Xnew = NULL, threshold =
   if (!is.null(seed)) set.seed(seed)
 
   if (!is.null(Xnew)) {
-    # complete posterior parameters at new inputs
-    # Extract components
-    Xnorm   <- object$Xnorm
-    y       <- object$y
-    m       <- object$m
-    theta   <- object$theta_opt
-    kernel  <- object$kernel
-    isotropic <- object$isotropic
-    prior   <- object$prior
-    r0      <- object$r0
-    p0      <- object$p0
-    Xbounds <- object$Xbounds
-
-    # --- Normalize new inputs ---
-    Xnew_norm <- sweep(Xnew, 2, Xbounds[, 1], "-")
-    Xnew_norm <- sweep(Xnew_norm, 2, Xbounds[, 2] - Xbounds[, 1], "/")
-
-    # --- Compute kernel matrix between Xnew and training X ---
-    K <- kernel_matrix(Xnew_norm, Xnorm, theta = theta, kernel = kernel, isotropic = isotropic)
-
-    # # Row-normalized kernel weights
-    # rs <- rowSums(K)
-    # rs[rs < 1e-10] <- 1
-    # W <- K / rs
-
-    # --- Get prior parameters ---
-    prior_par <- get_prior(prior = prior, model = "BKP",
-                           r0 = r0, p0 = p0, y = y, m = m, K = K)
-    alpha0 <- prior_par$alpha0
-    beta0 <- prior_par$beta0
-
-    # --- Compute posterior Beta parameters ---
-    # alpha_n <- alpha0 + as.vector(W %*% y)
-    # beta_n  <- beta0 + as.vector(W %*% (m - y))
-    alpha_n <- alpha0 + as.vector(K %*% y)
-    beta_n  <- beta0 + as.vector(K %*% (m - y))
-  }else{
+    prediction <- predict.BKP(object, Xnew = Xnew, type = "probability", ...)
+    alpha_n <- prediction$alpha_n
+    beta_n <- prediction$beta_n
+    ess_info <- prediction$ess_info
+  } else {
     # Use training data
     alpha_n <- object$alpha_n
     beta_n  <- object$beta_n
+    ess_info <- object$ess_info
   }
 
   # --- Simulate from posterior Beta distributions ---
@@ -200,7 +169,9 @@ simulate.BKP <- function(object, nsim = 1, seed = NULL, Xnew = NULL, threshold =
     class     = class_pred, # [n_new × nsim]: binary labels (if threshold provided)
     X         = object$X,   # [n × d]: training inputs
     Xnew      = Xnew,       # [n_new × d]: new inputs (if provided)
-    threshold = threshold   # classification threshold
+    threshold = threshold,  # classification threshold
+    ess       = if (is.null(object$ess)) "none" else object$ess,
+    ess_info  = ess_info
   )
 
   class(simulation) <- "simulate_BKP"

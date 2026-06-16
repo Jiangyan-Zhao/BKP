@@ -72,7 +72,7 @@
 #' @importFrom ggplot2 unit guide_legend guide_colorbar coord_cartesian annotate geom_hline
 #' @importFrom ggplot2 labs scale_color_discrete guides scale_fill_brewer scale_shape_manual
 #' @importFrom lattice levelplot panel.contourplot panel.levelplot panel.points
-#' @importFrom optimx multistart
+#' @import nloptr # Import nloptr so its registered C-callable NLopt symbols are available to the C++ optimization backend at package load time.
 #' @importFrom Rcpp evalCpp
 #' @importFrom rlang .data
 #' @importFrom stats as.formula median qbeta quantile rbeta rgamma sd simulate

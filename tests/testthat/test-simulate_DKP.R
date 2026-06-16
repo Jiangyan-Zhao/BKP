@@ -118,3 +118,38 @@ test_that("simulate.DKP handles input validation correctly", {
   # no error to reflect the current function behavior.
   expect_no_error(simulate(model, threshold = 0.5))
 })
+
+test_that("simulate.DKP uses Shepard ESS posterior parameters at new inputs", {
+  set.seed(2026)
+  X <- matrix(seq(0.05, 0.95, length.out = 12), ncol = 1)
+
+  eta <- plogis(3 * X[, 1] - 1.5)
+  probs <- cbind(
+    0.5 * eta,
+    0.3 + 0 * eta,
+    0.7 - 0.5 * eta
+  )
+  probs <- probs / rowSums(probs)
+
+  Y <- t(vapply(seq_len(nrow(X)), function(i) {
+    as.vector(rmultinom(1, size = 15, prob = probs[i, ]))
+  }, numeric(3)))
+
+  fit <- fit_DKP(
+    X, Y,
+    theta = 0.4,
+    ess = "shepard",
+    prior = "fixed",
+    r0 = 2,
+    p0 = c(1/3, 1/3, 1/3)
+  )
+
+  Xnew <- matrix(c(0.15, 0.55, 0.9), ncol = 1)
+
+  pred <- predict(fit, Xnew = Xnew, type = "probability")
+  sim <- simulate(fit, Xnew = Xnew, nsim = 2, seed = 1)
+
+  expect_equal(sim$mean, unname(pred$mean))
+  expect_equal(sim$ess, pred$ess)
+  expect_equal(sim$ess_info$scale, pred$ess_info$scale)
+})

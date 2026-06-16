@@ -263,6 +263,8 @@ static OptResult nloptr_refine(
     const arma::vec& upper,
     const int max_eval
 ) {
+  // Defensive projection: R-generated starts should already satisfy bounds,
+  // but this protects direct C++ calls and future changes to initialization.
   for (arma::uword i = 0; i < gamma_init.n_elem; ++i) {
     gamma_init[i] = std::max(lower[i], std::min(upper[i], gamma_init[i]));
   }

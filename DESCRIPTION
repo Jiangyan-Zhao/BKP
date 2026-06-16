@@ -1,6 +1,6 @@
 Package: BKP
 Title: Beta Kernel Process Modeling
-Version: 0.2.4
+Version: 0.2.4.9000
 Authors@R: c(
     person(given = "Jiangyan", family = "Zhao", email = "zhaojy2017@126.com", role = c("cre", "aut")),
     person(given = "Kunhai", family = "Qing", email = "kunhaiq@qq.com", role = "aut"),
@@ -18,7 +18,7 @@ Encoding: UTF-8
 NeedsCompilation: yes
 Roxygen: list(markdown = TRUE)
 Depends: R (>= 3.5.0)
-Imports: dirmult, ggplot2, gridExtra, lattice, optimx, rlang, tgp, Rcpp
+Imports: dirmult, ggplot2, gridExtra, lattice, nloptr, rlang, Rcpp, tgp
 Suggests: knitr, mlbench, testthat (>= 3.0.0)
 Config/testthat/edition: 3
 LinkingTo: Rcpp, RcppArmadillo, nloptr

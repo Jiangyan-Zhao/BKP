@@ -65,7 +65,7 @@
 #' model2 <- fit_DKP(X, Y, Xbounds = Xbounds)
 #'
 #' # Plot results
-#' plot(model2, n_grid = 50)
+#' plot(model2)
 #'
 #' @export
 #' @method plot DKP
@@ -125,8 +125,7 @@ plot.DKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL,
     Xnew <- matrix(seq(Xbounds[dims, 1], Xbounds[dims, 2], length.out = 10 * n_grid), ncol = 1)
 
     # Get the prediction for the new X values.
-    Xnew_full <- lhs(nrow(Xnew), Xbounds)
-    Xnew_full[, dims] <- Xnew
+    Xnew_full <- .make_plot_grid(X, Xbounds, dims, Xnew)
     prediction <- predict.DKP(x, Xnew_full, ...)
 
     # Determine whether it is a classification problem
@@ -313,8 +312,7 @@ plot.DKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL,
     grid <- expand.grid(x1 = x1, x2 = x2)
 
     # Get the prediction for the new X values.
-    Xnew_full <- lhs(nrow(grid), Xbounds)
-    Xnew_full[, dims] <- as.matrix(grid)
+    Xnew_full <- .make_plot_grid(X, Xbounds, dims, grid)
     prediction <- predict.DKP(x, Xnew_full, ...)
 
     # Determine whether it is a classification problem
