@@ -25,3 +25,11 @@ qbetabinom_rcpp <- function(prob, size, alpha, beta) {
     .Call(`_BKP_qbetabinom_rcpp`, prob, size, alpha, beta)
 }
 
+shepard_m_rcpp <- function(Xquery_norm, Xtrain_norm, m, power = 2.0) {
+    .Call(`_BKP_shepard_m_rcpp`, Xquery_norm, Xtrain_norm, m, power)
+}
+
+shepard_m_loo_rcpp <- function(Xnorm, m, power = 2.0) {
+    .Call(`_BKP_shepard_m_loo_rcpp`, Xnorm, m, power)
+}
+

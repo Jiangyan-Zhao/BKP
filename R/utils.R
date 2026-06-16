@@ -513,27 +513,14 @@ posterior_summary <- function(mean_vals, var_vals) {
   if (ncol(Xquery_norm) != ncol(Xtrain_norm)) {
     stop("'Xquery_norm' and 'Xtrain_norm' must have the same number of columns.", call. = FALSE)
   }
-
-  # Vectorized inverse-distance Shepard interpolation.  The cross-product form
-  # avoids an R loop over prediction locations while preserving exact-match
-  # behavior: if a query equals a training location, return that location's m.
-  q_norm <- rowSums(Xquery_norm^2)
-  t_norm <- rowSums(Xtrain_norm^2)
-  dist_sq <- outer(q_norm, t_norm, "+") - 2 * tcrossprod(Xquery_norm, Xtrain_norm)
-  dist_sq[dist_sq < 0] <- 0
-
-  exact <- dist_sq == 0
-  weights <- dist_sq^(-power / 2)
-  weights[exact] <- 0
-  interpolated <- as.vector((weights %*% m) / rowSums(weights))
-
-  exact_rows <- rowSums(exact) > 0L
-  if (any(exact_rows)) {
-    first_exact <- max.col(exact[exact_rows, , drop = FALSE], ties.method = "first")
-    interpolated[exact_rows] <- m[first_exact]
+  if (length(m) != nrow(Xtrain_norm)) {
+    stop("'m' must have the same length as the number of training locations.", call. = FALSE)
+  }
+  if (!is.numeric(power) || length(power) != 1L || !is.finite(power) || power <= 0) {
+    stop("'power' must be a positive finite scalar.", call. = FALSE)
   }
 
-  interpolated
+  as.vector(shepard_m_rcpp(Xquery_norm, Xtrain_norm, m, power))
 }
 
 #' Leave-one-out Shepard interpolation of trial sizes
@@ -563,17 +550,14 @@ posterior_summary <- function(mean_vals, var_vals) {
       call. = FALSE
     )
   }
+  if (length(m) != n) {
+    stop("'m' must have the same length as the number of input locations.", call. = FALSE)
+  }
+  if (!is.numeric(power) || length(power) != 1L || !is.finite(power) || power <= 0) {
+    stop("'power' must be a positive finite scalar.", call. = FALSE)
+  }
 
-  # Leave-one-out version of the vectorized Shepard interpolation.  Duplicates
-  # are rejected above, so setting the diagonal to Inf is sufficient to remove
-  # each observation's self-weight.
-  x_norm <- rowSums(Xnorm^2)
-  dist_sq <- outer(x_norm, x_norm, "+") - 2 * tcrossprod(Xnorm)
-  dist_sq[dist_sq < 0] <- 0
-  diag(dist_sq) <- Inf
-  weights <- dist_sq^(-power / 2)
-
-  as.vector((weights %*% m) / rowSums(weights))
+  as.vector(shepard_m_loo_rcpp(Xnorm, m, power))
 }
 
 #' Compute Shepard ESS calibration diagnostics

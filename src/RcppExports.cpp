@@ -129,6 +129,33 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// shepard_m_rcpp
+arma::vec shepard_m_rcpp(const arma::mat& Xquery_norm, const arma::mat& Xtrain_norm, const arma::vec& m, const double power);
+RcppExport SEXP _BKP_shepard_m_rcpp(SEXP Xquery_normSEXP, SEXP Xtrain_normSEXP, SEXP mSEXP, SEXP powerSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type Xquery_norm(Xquery_normSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type Xtrain_norm(Xtrain_normSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type m(mSEXP);
+    Rcpp::traits::input_parameter< const double >::type power(powerSEXP);
+    rcpp_result_gen = Rcpp::wrap(shepard_m_rcpp(Xquery_norm, Xtrain_norm, m, power));
+    return rcpp_result_gen;
+END_RCPP
+}
+// shepard_m_loo_rcpp
+arma::vec shepard_m_loo_rcpp(const arma::mat& Xnorm, const arma::vec& m, const double power);
+RcppExport SEXP _BKP_shepard_m_loo_rcpp(SEXP XnormSEXP, SEXP mSEXP, SEXP powerSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type Xnorm(XnormSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type m(mSEXP);
+    Rcpp::traits::input_parameter< const double >::type power(powerSEXP);
+    rcpp_result_gen = Rcpp::wrap(shepard_m_loo_rcpp(Xnorm, m, power));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_BKP_get_prior_rcpp", (DL_FUNC) &_BKP_get_prior_rcpp, 8},
@@ -137,6 +164,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_BKP_optimize_bkp_theta_rcpp", (DL_FUNC) &_BKP_optimize_bkp_theta_rcpp, 16},
     {"_BKP_optimize_dkp_theta_rcpp", (DL_FUNC) &_BKP_optimize_dkp_theta_rcpp, 15},
     {"_BKP_qbetabinom_rcpp", (DL_FUNC) &_BKP_qbetabinom_rcpp, 4},
+    {"_BKP_shepard_m_rcpp", (DL_FUNC) &_BKP_shepard_m_rcpp, 4},
+    {"_BKP_shepard_m_loo_rcpp", (DL_FUNC) &_BKP_shepard_m_loo_rcpp, 3},
     {NULL, NULL, 0}
 };
 

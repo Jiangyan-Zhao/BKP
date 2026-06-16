@@ -95,3 +95,43 @@ test_that(".make_plot_grid fixes non-displayed dimensions at training medians", 
   expect_equal(Xnew[, 2], rep(stats::median(X[, 2]), nrow(grid)))
   expect_equal(Xnew[, c(1, 3)], unname(as.matrix(grid)))
 })
+
+test_that("C++ Shepard interpolation matches reference R implementation", {
+  Xtrain <- matrix(c(0, 0,
+                     1, 0,
+                     0, 1,
+                     1, 1), ncol = 2, byrow = TRUE)
+  Xquery <- matrix(c(0.5, 0.5,
+                     0, 0), ncol = 2, byrow = TRUE)
+  m <- c(10, 20, 30, 40)
+
+  ref <- function(Xquery, Xtrain, m, power = 2) {
+    vapply(seq_len(nrow(Xquery)), function(i) {
+      dist_sq <- rowSums((t(t(Xtrain) - Xquery[i, ]))^2)
+      if (any(dist_sq == 0)) {
+        return(m[which(dist_sq == 0)[1]])
+      }
+      w <- dist_sq^(-power / 2)
+      sum(w * m) / sum(w)
+    }, numeric(1))
+  }
+
+  expect_equal(.bkp_shepard_m(Xquery, Xtrain, m), ref(Xquery, Xtrain, m))
+})
+
+test_that("C++ leave-one-out Shepard interpolation matches reference R implementation", {
+  X <- matrix(c(0, 0,
+                1, 0,
+                0, 1,
+                1, 1), ncol = 2, byrow = TRUE)
+  m <- c(10, 20, 30, 40)
+
+  ref <- vapply(seq_len(nrow(X)), function(i) {
+    idx <- setdiff(seq_len(nrow(X)), i)
+    dist_sq <- rowSums((t(t(X[idx, , drop = FALSE]) - X[i, ]))^2)
+    w <- dist_sq^(-1)
+    sum(w * m[idx]) / sum(w)
+  }, numeric(1))
+
+  expect_equal(.bkp_shepard_m_loo(X, m), ref)
+})
