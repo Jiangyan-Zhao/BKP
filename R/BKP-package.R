@@ -63,16 +63,18 @@
 #' @importFrom dirmult rdirichlet
 #' @importFrom graphics abline legend lines par points polygon text
 #' @importFrom grDevices hcl.colors rainbow
-#' @importFrom grid gpar textGrob
+#' @importFrom grid gpar textGrob unit
 #' @importFrom gridExtra grid.arrange
 #' @importFrom ggplot2 ggplot aes geom_ribbon geom_line geom_point geom_raster
 #' @importFrom ggplot2 geom_contour scale_x_continuous scale_y_continuous
 #' @importFrom ggplot2 scale_fill_viridis_c scale_color_manual scale_fill_manual
 #' @importFrom ggplot2 theme_bw theme element_blank element_rect element_text
-#' @importFrom ggplot2 unit guide_legend guide_colorbar coord_cartesian annotate geom_hline
+#' @importFrom ggplot2 guide_legend guide_colorbar coord_cartesian annotate geom_hline
 #' @importFrom ggplot2 labs scale_color_discrete guides scale_fill_brewer scale_shape_manual
 #' @importFrom lattice levelplot panel.contourplot panel.levelplot panel.points
-#' @import nloptr # Import nloptr so its registered C-callable NLopt symbols are available to the C++ optimization backend at package load time.
+# Import nloptr so its registered C-callable NLopt symbols are available
+# to the C++ optimization backend at package load time.
+#' @import nloptr
 #' @importFrom Rcpp evalCpp
 #' @importFrom rlang .data
 #' @importFrom stats as.formula median qbeta quantile rbeta rgamma sd simulate

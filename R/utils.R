@@ -357,3 +357,162 @@ posterior_summary <- function(mean_vals, var_vals) {
   )
   return(round(summary_mat, 4))
 }
+
+# Internal posterior update helpers shared by fit(), predict(), and simulate().
+# They are intentionally not exported; public APIs continue to return the same
+# model and prediction structures as before.
+
+.bkp_compute_posterior <- function(Xquery_norm, Xtrain_norm, y, m, theta,
+                                   kernel, isotropic, prior, r0, p0,
+                                   ess = "none") {
+  K <- kernel_matrix(Xquery_norm, Xtrain_norm, theta = theta,
+                     kernel = kernel, isotropic = isotropic)
+  prior_par <- get_prior(prior = prior, model = "BKP",
+                         r0 = r0, p0 = p0, y = y, m = m, K = K)
+  alpha0 <- prior_par$alpha0
+  beta0 <- prior_par$beta0
+
+  data_success <- as.vector(K %*% y)
+  data_failure <- as.vector(K %*% (m - y))
+
+  if (identical(ess, "shepard")) {
+    ess_info <- .bkp_ess_calibration(
+      Xquery_norm = Xquery_norm, Xtrain_norm = Xtrain_norm, m = m, K = K
+    )
+    data_success <- ess_info$scale * data_success
+    data_failure <- ess_info$scale * data_failure
+  } else {
+    ess_info <- .bkp_ess_none_info(K, m)
+  }
+
+  list(
+    K = K, alpha0 = alpha0, beta0 = beta0,
+    alpha_n = alpha0 + data_success,
+    beta_n = beta0 + data_failure,
+    ess_info = ess_info
+  )
+}
+
+.dkp_compute_posterior <- function(Xquery_norm, Xtrain_norm, Y, theta,
+                                   kernel, isotropic, prior, r0, p0,
+                                   ess = "none") {
+  K <- kernel_matrix(Xquery_norm, Xtrain_norm, theta = theta,
+                     kernel = kernel, isotropic = isotropic)
+  alpha0 <- get_prior(prior = prior, model = "DKP", r0 = r0,
+                      p0 = p0, Y = Y, K = K)
+
+  data_counts <- as.matrix(K %*% Y)
+  m <- rowSums(Y)
+  if (identical(ess, "shepard")) {
+    ess_info <- .bkp_ess_calibration(Xquery_norm, Xtrain_norm, m, K)
+    data_counts <- sweep(data_counts, 1L, ess_info$scale, "*")
+  } else {
+    ess_info <- .bkp_ess_none_info(K, m)
+  }
+
+  list(K = K, alpha0 = alpha0, alpha_n = alpha0 + data_counts, ess_info = ess_info)
+}
+
+# Internal helpers for optional BKP effective-sample-size calibration.
+
+.bkp_check_unique_locations <- function(Xnorm) {
+  if (anyDuplicated(as.data.frame(Xnorm)) > 0L) {
+    stop(
+      paste0(
+        "ESS calibration with ess = 'shepard' requires unique input locations; ",
+        "duplicated rows in 'X' are not supported because strict Shepard ",
+        "interpolation is not well-defined for duplicates."
+      ),
+      call. = FALSE
+    )
+  }
+  invisible(TRUE)
+}
+
+.bkp_shepard_m <- function(Xquery_norm, Xtrain_norm, m, power = 2) {
+  Xquery_norm <- as.matrix(Xquery_norm)
+  Xtrain_norm <- as.matrix(Xtrain_norm)
+  m <- as.numeric(m)
+
+  if (ncol(Xquery_norm) != ncol(Xtrain_norm)) {
+    stop("'Xquery_norm' and 'Xtrain_norm' must have the same number of columns.", call. = FALSE)
+  }
+
+  # Vectorized inverse-distance Shepard interpolation.  The cross-product form
+  # avoids an R loop over prediction locations while preserving exact-match
+  # behavior: if a query equals a training location, return that location's m.
+  q_norm <- rowSums(Xquery_norm^2)
+  t_norm <- rowSums(Xtrain_norm^2)
+  dist_sq <- outer(q_norm, t_norm, "+") - 2 * tcrossprod(Xquery_norm, Xtrain_norm)
+  dist_sq[dist_sq < 0] <- 0
+
+  exact <- dist_sq == 0
+  weights <- dist_sq^(-power / 2)
+  weights[exact] <- 0
+  interpolated <- as.vector((weights %*% m) / rowSums(weights))
+
+  exact_rows <- rowSums(exact) > 0L
+  if (any(exact_rows)) {
+    first_exact <- max.col(exact[exact_rows, , drop = FALSE], ties.method = "first")
+    interpolated[exact_rows] <- m[first_exact]
+  }
+
+  interpolated
+}
+
+.bkp_shepard_m_loo <- function(Xnorm, m, power = 2) {
+  Xnorm <- as.matrix(Xnorm)
+  m <- as.numeric(m)
+
+  .bkp_check_unique_locations(Xnorm)
+
+  n <- nrow(Xnorm)
+  if (n < 2L) {
+    stop(
+      "ESS calibration with ess = 'shepard' requires at least two input locations for leave-one-out calibration.",
+      call. = FALSE
+    )
+  }
+
+  # Leave-one-out version of the vectorized Shepard interpolation.  Duplicates
+  # are rejected above, so setting the diagonal to Inf is sufficient to remove
+  # each observation's self-weight.
+  x_norm <- rowSums(Xnorm^2)
+  dist_sq <- outer(x_norm, x_norm, "+") - 2 * tcrossprod(Xnorm)
+  dist_sq[dist_sq < 0] <- 0
+  diag(dist_sq) <- Inf
+  weights <- dist_sq^(-power / 2)
+
+  as.vector((weights %*% m) / rowSums(weights))
+}
+
+.bkp_ess_calibration <- function(Xquery_norm, Xtrain_norm, m, K) {
+  .bkp_check_unique_locations(Xtrain_norm)
+
+  m_kernel <- as.vector(K %*% as.numeric(m))
+  m_shepard <- .bkp_shepard_m(Xquery_norm, Xtrain_norm, m, power = 2)
+  rho <- apply(K, 1L, max)
+  m_target <- rho * m_shepard
+
+  scale <- numeric(length(m_kernel))
+  positive_kernel_mass <- m_kernel > 0
+  scale[positive_kernel_mass] <- m_target[positive_kernel_mass] / m_kernel[positive_kernel_mass]
+
+  list(
+    scale = scale,
+    m_kernel = m_kernel,
+    m_shepard = m_shepard,
+    m_target = m_target,
+    rho = rho
+  )
+}
+
+.bkp_ess_none_info <- function(K, m) {
+  list(
+    scale = rep(1, nrow(K)),
+    m_kernel = as.vector(K %*% as.numeric(m)),
+    m_shepard = NULL,
+    m_target = NULL,
+    rho = apply(K, 1L, max)
+  )
+}

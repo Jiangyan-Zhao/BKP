@@ -315,36 +315,18 @@ fit_BKP <- function(
     )
   }
 
-  # ---- Compute kernel matrix at optimized hyperparameters ----
-  K <- kernel_matrix(Xnorm, theta = theta_opt, kernel = kernel, isotropic = isotropic)
-
-  # # Row-normalized kernel weights
-  # rs <- rowSums(K)
-  # rs[rs < 1e-10] <- 1
-  # W <- K / rs
-
-  # ---- Compute prior parameters (alpha0 and beta0) ----
-  prior_par <- get_prior(prior = prior, model = "BKP",
-                         r0 = r0, p0 = p0, y = y, m = m, K = K)
-  alpha0 <- prior_par$alpha0
-  beta0  <- prior_par$beta0
-
-  # ---- Compute posterior parameters ----
-  data_success <- as.vector(K %*% y)
-  data_failure <- as.vector(K %*% (m - y))
-
-  if (identical(ess, "shepard")) {
-    ess_info <- .bkp_ess_calibration(
-      Xquery_norm = Xnorm, Xtrain_norm = Xnorm, m = m, K = K
-    )
-    data_success <- ess_info$scale * data_success
-    data_failure <- ess_info$scale * data_failure
-  } else {
-    ess_info <- .bkp_ess_none_info(K, m)
-  }
-
-  alpha_n <- alpha0 + data_success
-  beta_n  <- beta0 + data_failure
+  # ---- Compute prior and posterior parameters ----
+  posterior <- .bkp_compute_posterior(
+    Xquery_norm = Xnorm, Xtrain_norm = Xnorm, y = y, m = m,
+    theta = theta_opt, kernel = kernel, isotropic = isotropic,
+    prior = prior, r0 = r0, p0 = p0, ess = ess
+  )
+  K <- posterior$K
+  alpha0 <- posterior$alpha0
+  beta0 <- posterior$beta0
+  alpha_n <- posterior$alpha_n
+  beta_n <- posterior$beta_n
+  ess_info <- posterior$ess_info
 
   # ---- Construct and return the fitted model ----
   BKP_model <- list(

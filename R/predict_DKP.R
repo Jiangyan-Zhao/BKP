@@ -168,23 +168,13 @@ predict.DKP <- function(object, Xnew = NULL, CI_level = 0.95,
     Xnew_norm <- sweep(Xnew, 2, Xbounds[, 1], "-")
     Xnew_norm <- sweep(Xnew_norm, 2, Xbounds[, 2] - Xbounds[, 1], "/")
 
-    # Prior parameters at prediction points
-    K <- kernel_matrix(Xnew_norm, Xnorm, theta = theta,
-                       kernel = kernel, isotropic = isotropic)
-
-    # Get prior parameters
-    alpha0 <- get_prior(prior = prior, model = "DKP",
-                        r0 = r0, p0 = p0, Y = Y, K = K)
-
-    # Posterior parameters at prediction points
-    data_counts <- as.matrix(K %*% Y)
-    if (identical(ess, "shepard")) {
-      ess_info <- .bkp_ess_calibration(Xnew_norm, Xnorm, rowSums(Y), K)
-      data_counts <- sweep(data_counts, 1L, ess_info$scale, "*")
-    } else {
-      ess_info <- .bkp_ess_none_info(K, rowSums(Y))
-    }
-    alpha_n <- alpha0 + data_counts # [n × q]
+    posterior <- .dkp_compute_posterior(
+      Xquery_norm = Xnew_norm, Xtrain_norm = Xnorm, Y = Y, theta = theta,
+      kernel = kernel, isotropic = isotropic, prior = prior, r0 = r0,
+      p0 = p0, ess = ess
+    )
+    alpha_n <- posterior$alpha_n
+    ess_info <- posterior$ess_info
   }else{
     # Use stored posterior parameters at training points
     alpha_n <- object$alpha_n

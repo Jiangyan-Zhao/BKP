@@ -151,7 +151,7 @@ y <- rbinom(n, size = m, prob = true_pi)
 model2 <- fit_BKP(X, y, m, Xbounds=Xbounds)
 
 # Plot results
-plot(model2, n_grid = 50)
+plot(model2)
 
 # ============================================================== #
 # ========================= DKP Examples ======================= #
@@ -215,7 +215,7 @@ Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 model2 <- fit_DKP(X, Y, Xbounds = Xbounds)
 
 # Plot results
-plot(model2, n_grid = 50)
+plot(model2)
 
 }
 \references{

@@ -275,32 +275,14 @@ predict.BKP <- function(object, Xnew = NULL, CI_level = 0.95, threshold = 0.5,
     Xnew_norm <- sweep(Xnew, 2, Xbounds[, 1], "-")
     Xnew_norm <- sweep(Xnew_norm, 2, Xbounds[, 2] - Xbounds[, 1], "/")
 
-    # Compute kernel matrix
-    K <- kernel_matrix(Xnew_norm, Xnorm, theta = theta,
-                       kernel = kernel, isotropic = isotropic)
-
-    # Prior parameters at prediction points
-    prior_par <- get_prior(prior = prior, model = "BKP",
-                           r0 = r0, p0 = p0, y = y, m = m, K = K)
-    alpha0 <- prior_par$alpha0
-    beta0 <- prior_par$beta0
-
-    # Posterior parameters at prediction points
-    data_success <- as.vector(K %*% y)
-    data_failure <- as.vector(K %*% (m - y))
-
-    if (identical(ess, "shepard")) {
-      ess_info <- .bkp_ess_calibration(
-        Xquery_norm = Xnew_norm, Xtrain_norm = Xnorm, m = m, K = K
-      )
-      data_success <- ess_info$scale * data_success
-      data_failure <- ess_info$scale * data_failure
-    } else {
-      ess_info <- .bkp_ess_none_info(K, m)
-    }
-
-    alpha_n <- alpha0 + data_success
-    beta_n  <- beta0 + data_failure
+    posterior <- .bkp_compute_posterior(
+      Xquery_norm = Xnew_norm, Xtrain_norm = Xnorm, y = y, m = m,
+      theta = theta, kernel = kernel, isotropic = isotropic,
+      prior = prior, r0 = r0, p0 = p0, ess = ess
+    )
+    alpha_n <- posterior$alpha_n
+    beta_n <- posterior$beta_n
+    ess_info <- posterior$ess_info
   }else{
     # Use stored posterior parameters at training points
     alpha_n <- object$alpha_n

@@ -309,26 +309,16 @@ fit_DKP <- function(
     )
   }
 
-  # ---- Compute kernel matrix at optimized hyperparameters ----
-  K <- kernel_matrix(Xnorm, theta = theta_opt, kernel = kernel, isotropic = isotropic)
-
-  # # Row-normalized kernel weights
-  # rs <- rowSums(K)
-  # rs[rs < 1e-10] <- 1
-  # W <- K / rs
-
-  # ---- Compute prior parameters (alpha0 and beta0) ----
-  alpha0 <- get_prior(prior = prior, model = "DKP", r0 = r0, p0 = p0, Y = Y, K = K)
-
-  # ---- Compute posterior parameters ----
-  data_counts <- as.matrix(K %*% Y)
-  if (identical(ess, "shepard")) {
-    ess_info <- .bkp_ess_calibration(Xnorm, Xnorm, m, K)
-    data_counts <- sweep(data_counts, 1L, ess_info$scale, "*")
-  } else {
-    ess_info <- .bkp_ess_none_info(K, m)
-  }
-  alpha_n <- alpha0 + data_counts
+  # ---- Compute prior and posterior parameters ----
+  posterior <- .dkp_compute_posterior(
+    Xquery_norm = Xnorm, Xtrain_norm = Xnorm, Y = Y, theta = theta_opt,
+    kernel = kernel, isotropic = isotropic, prior = prior, r0 = r0,
+    p0 = p0, ess = ess
+  )
+  K <- posterior$K
+  alpha0 <- posterior$alpha0
+  alpha_n <- posterior$alpha_n
+  ess_info <- posterior$ess_info
 
   # ---- Construct and return the fitted model object ----
   DKP_model <- list(

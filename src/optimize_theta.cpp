@@ -401,17 +401,18 @@ Rcpp::List optimize_bkp_theta_rcpp(
 
   int n_threads_used = 1;
 
-#ifdef _OPENMP
-  n_threads_used = std::max(1, std::min(n_threads, n_starts));
-#else
-  n_threads_used = 1;
-#endif
+  #ifdef _OPENMP
+    n_threads_used = std::max(1, std::min(n_threads, n_starts));
+  #else
+    n_threads_used = 1;
+  #endif
 
   std::vector<OptResult> results(n_starts);
 
-#ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic) num_threads(n_threads_used)
-#endif
+  #ifdef _OPENMP
+  #pragma omp parallel for schedule(dynamic) num_threads(n_threads_used)
+  #endif
+
   for (int k = 0; k < n_starts; ++k) {
     try {
       arma::vec g0 = init_gamma.row(k).t();
@@ -443,6 +444,13 @@ Rcpp::List optimize_bkp_theta_rcpp(
       best_val = results[k].value;
       best_gamma = results[k].gamma;
     }
+  }
+
+  if (!std::isfinite(best_val)) {
+    Rcpp::stop(
+      "All hyperparameter optimization starts failed. "
+      "Try providing 'theta' manually, reducing 'n_threads', or checking the input data."
+    );
   }
 
   arma::vec theta_opt = arma::exp(std::log(10.0) * best_gamma);
@@ -494,17 +502,18 @@ Rcpp::List optimize_dkp_theta_rcpp(
 
   int n_threads_used = 1;
 
-#ifdef _OPENMP
-  n_threads_used = std::max(1, std::min(n_threads, n_starts));
-#else
-  n_threads_used = 1;
-#endif
+  #ifdef _OPENMP
+    n_threads_used = std::max(1, std::min(n_threads, n_starts));
+  #else
+    n_threads_used = 1;
+  #endif
 
   std::vector<OptResult> results(n_starts);
 
-#ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic) num_threads(n_threads_used)
-#endif
+  #ifdef _OPENMP
+  #pragma omp parallel for schedule(dynamic) num_threads(n_threads_used)
+  #endif
+
   for (int k = 0; k < n_starts; ++k) {
     try {
       arma::vec g0 = init_gamma.row(k).t();
@@ -536,6 +545,13 @@ Rcpp::List optimize_dkp_theta_rcpp(
       best_val = results[k].value;
       best_gamma = results[k].gamma;
     }
+  }
+
+  if (!std::isfinite(best_val)) {
+    Rcpp::stop(
+      "All hyperparameter optimization starts failed. "
+      "Try providing 'theta' manually, reducing 'n_threads', or checking the input data."
+    );
   }
 
   arma::vec theta_opt = arma::exp(std::log(10.0) * best_gamma);

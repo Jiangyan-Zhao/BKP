@@ -297,4 +297,3 @@ test_that("DKP Shepard ESS works with optimized and fixed theta", {
   expect_equal(optimized$ess, "shepard")
   expect_equal(fixed$ess, "shepard")
 })
-
