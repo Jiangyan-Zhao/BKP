@@ -1,10 +1,9 @@
-# BKP 0.2.4
+# BKP 0.2.4 (2026-06-16)
 
-* Added optional Shepard effective-sample-size calibration for `fit_DKP(ess = "shepard")`, including prediction and DKP hyperparameter loss support.
-* Added optional Shepard effective-sample-size calibration for `fit_BKP(ess = "shepard")`, leaving the default `ess = "none"` behavior unchanged.
-* Added **ggplot2** support for plotting: `plot.BKP(..., engine = "ggplot")` now produces ggplot2-based visualizations.
-* Added a package-wide `isotropic` argument (default: `TRUE`) to use isotropic kernels (a shared length-scale across dimensions); set `isotropic = FALSE` for anisotropic kernels with dimension-specific length-scales.
-
+* Improved computational efficiency by implementing core optimization and posterior-updating routines in C++.
+* Added optional Shepard effective-sample-size calibration for `fit_BKP(ess = "shepard")` and `fit_DKP(ess = "shepard")`, while keeping the default `ess = "none"` behavior unchanged.
+* Added **ggplot2** support for plotting; `plot.BKP(..., engine = "ggplot")` now produces ggplot2-based visualizations.
+* Added a package-wide `isotropic` argument, defaulting to `TRUE`, for isotropic kernels with a shared length-scale across dimensions. Set `isotropic = FALSE` to use anisotropic kernels with dimension-specific length-scales.
 # BKP 0.2.3 (2025-09-22)
 
 * Removed vignettes to avoid redundancy with the arXiv paper and to resolve CRAN thread limit issues during vignette building.
