@@ -109,9 +109,7 @@ arma::mat kernel_matrix_arma(
       return (v > 0.0) ? v : 0.0;
     });
 
-    K =
-      (q_w * dist + 1.0) %
-      arma::pow(one_minus, q_w);
+    K = (q_w * dist + 1.0) % arma::pow(one_minus, q_w);
   }
 
   return K;

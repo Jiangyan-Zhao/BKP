@@ -337,34 +337,3 @@ posterior_summary <- function(mean_vals, var_vals) {
   )
   return(round(summary_mat, 4))
 }
-
-#' Select global twin indices for TwinBKP/TwinDKP approximations
-#'
-#' Internal wrapper around the C++ implementation used to select a subset of
-#' representative global indices from normalized input locations. The selected
-#' indices are used by TwinBKP/TwinDKP-style approximations to construct a
-#' reduced global design.
-#'
-#' @param Xnorm Numeric matrix of normalized input locations, typically scaled to
-#'   the unit hypercube.
-#' @param g Positive integer specifying the number of global twin indices to
-#'   select.
-#' @param v Positive integer specifying the validation or candidate subset size
-#'   used by the underlying twin-selection routine. Default is \code{2L * g}.
-#' @param runs Positive integer specifying the number of random runs used by the
-#'   underlying C++ routine. Default is \code{10L}.
-#' @param seed Integer random seed passed to the C++ routine for reproducibility.
-#'
-#' @return An integer vector of selected row indices.
-#'
-#' @keywords internal
-
-get_twin_indices <- function(Xnorm, g, v = 2L * g, runs = 10L, seed = 123L) {
-  get_twin_indices_rcpp(
-    data = as.matrix(Xnorm),
-    g = as.integer(g),
-    v = as.integer(v),
-    runs = as.integer(runs),
-    seed = as.integer(seed)
-  )
-}

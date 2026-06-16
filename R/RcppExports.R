@@ -5,24 +5,12 @@ get_prior_rcpp <- function(model, prior, r0, p0 = NULL, y = NULL, m = NULL, Y = 
     .Call(`_BKP_get_prior_rcpp`, model, prior, r0, p0, y, m, Y, K)
 }
 
-get_knnx_nanoflann_rcpp <- function(data, query, k) {
-    .Call(`_BKP_get_knnx_nanoflann_rcpp`, data, query, k)
-}
-
 kernel_matrix_rcpp <- function(X, Xprime = NULL, theta = as.numeric( c(0.1)), kernel = "gaussian", isotropic = TRUE) {
     .Call(`_BKP_kernel_matrix_rcpp`, X, Xprime, theta, kernel, isotropic)
 }
 
 loss_fun_rcpp <- function(model, loss, K, y = NULL, m = NULL, Y = NULL, alpha0 = NULL, beta0 = NULL, alpha0_mat = NULL, data_scale = NULL) {
     .Call(`_BKP_loss_fun_rcpp`, model, loss, K, y, m, Y, alpha0, beta0, alpha0_mat, data_scale)
-}
-
-optimize_lambda_bkp_rcpp <- function(K_g, K_l, y, m, alpha0, beta0, loss, max_iter = 80L, tol = 1e-8) {
-    .Call(`_BKP_optimize_lambda_bkp_rcpp`, K_g, K_l, y, m, alpha0, beta0, loss, max_iter, tol)
-}
-
-optimize_lambda_dkp_rcpp <- function(K_g, K_l, Y, alpha0, loss, max_iter = 80L, tol = 1e-8) {
-    .Call(`_BKP_optimize_lambda_dkp_rcpp`, K_g, K_l, Y, alpha0, loss, max_iter, tol)
 }
 
 optimize_bkp_theta_rcpp <- function(Xnorm, y, m, prior, r0, p0, loss, kernel, isotropic, init_gamma, lower, upper, max_iter, n_threads = 1L, ess = "none", m_shepard_loo = NULL) {
@@ -35,13 +23,5 @@ optimize_dkp_theta_rcpp <- function(Xnorm, Y, prior, r0, p0, loss, kernel, isotr
 
 qbetabinom_rcpp <- function(prob, size, alpha, beta) {
     .Call(`_BKP_qbetabinom_rcpp`, prob, size, alpha, beta)
-}
-
-get_twin_indices_rcpp <- function(data, g, v = NULL, runs = 10L, seed = 123L) {
-    .Call(`_BKP_get_twin_indices_rcpp`, data, g, v, runs, seed)
-}
-
-wendland_kernel_rcpp <- function(X1, X2, theta, q_wend) {
-    .Call(`_BKP_wendland_kernel_rcpp`, X1, X2, theta, q_wend)
 }
 
