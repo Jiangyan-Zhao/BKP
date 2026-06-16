@@ -38,8 +38,13 @@ my_2D_plot_fun <- function(var, title, data, X = NULL, y = NULL, dims = NULL, ..
     panel = function(...) {
       panel.levelplot(...)
       panel.contourplot(..., col = "black", lwd = 0.5)
-      panel.points(X[,1], X[,2], pch = ifelse(y == 1, 16, 4),
-                   col = "red", lwd = 2, cex = 1.2)
+      if (!is.null(X) && !is.null(y)) {
+        lattice::panel.points(
+          X[, 1], X[, 2],
+          pch = ifelse(y == 1, 16, 4),
+          col = "red", lwd = 2, cex = 1.2
+        )
+      }
     }
   )
 }
@@ -358,9 +363,29 @@ posterior_summary <- function(mean_vals, var_vals) {
   return(round(summary_mat, 4))
 }
 
-# Internal posterior update helpers shared by fit(), predict(), and simulate().
-# They are intentionally not exported; public APIs continue to return the same
-# model and prediction structures as before.
+#' Compute BKP posterior parameters
+#'
+#' Internal helper shared by \code{fit_BKP()}, \code{predict.BKP()}, and
+#' \code{simulate.BKP()}. It computes kernel weights, prior Beta parameters,
+#' posterior Beta parameters, and ESS diagnostics for a set of query locations.
+#'
+#' @param Xquery_norm Numeric matrix of normalized query locations.
+#' @param Xtrain_norm Numeric matrix of normalized training locations.
+#' @param y Numeric vector of observed success counts.
+#' @param m Numeric vector of observed trial counts.
+#' @param theta Positive kernel length-scale parameter or parameter vector.
+#' @param kernel Character string specifying the kernel function.
+#' @param isotropic Logical; whether to use a shared length-scale across input
+#'   dimensions.
+#' @param prior Character string specifying the prior type.
+#' @param r0 Positive prior precision parameter.
+#' @param p0 Prior mean parameter for fixed BKP priors.
+#' @param ess Character string specifying the ESS calibration method.
+#'
+#' @return A list containing the kernel matrix, prior Beta parameters, posterior
+#'   Beta parameters, and ESS diagnostics.
+#'
+#' @keywords internal
 
 .bkp_compute_posterior <- function(Xquery_norm, Xtrain_norm, y, m, theta,
                                    kernel, isotropic, prior, r0, p0,
@@ -393,6 +418,30 @@ posterior_summary <- function(mean_vals, var_vals) {
   )
 }
 
+#' Compute DKP posterior parameters
+#'
+#' Internal helper shared by \code{fit_DKP()}, \code{predict.DKP()}, and
+#' \code{simulate.DKP()}. It computes kernel weights, prior Dirichlet
+#' parameters, posterior Dirichlet parameters, and ESS diagnostics for a set of
+#' query locations.
+#'
+#' @param Xquery_norm Numeric matrix of normalized query locations.
+#' @param Xtrain_norm Numeric matrix of normalized training locations.
+#' @param Y Numeric matrix of observed multinomial counts.
+#' @param theta Positive kernel length-scale parameter or parameter vector.
+#' @param kernel Character string specifying the kernel function.
+#' @param isotropic Logical; whether to use a shared length-scale across input
+#'   dimensions.
+#' @param prior Character string specifying the prior type.
+#' @param r0 Positive prior precision parameter.
+#' @param p0 Prior mean vector for fixed DKP priors.
+#' @param ess Character string specifying the ESS calibration method.
+#'
+#' @return A list containing the kernel matrix, prior Dirichlet parameters,
+#'   posterior Dirichlet parameters, and ESS diagnostics.
+#'
+#' @keywords internal
+
 .dkp_compute_posterior <- function(Xquery_norm, Xtrain_norm, Y, theta,
                                    kernel, isotropic, prior, r0, p0,
                                    ess = "none") {
@@ -413,7 +462,18 @@ posterior_summary <- function(mean_vals, var_vals) {
   list(K = K, alpha0 = alpha0, alpha_n = alpha0 + data_counts, ess_info = ess_info)
 }
 
-# Internal helpers for optional BKP effective-sample-size calibration.
+#' Check uniqueness of normalized input locations
+#'
+#' Internal validation helper for Shepard ESS calibration. Strict Shepard
+#' interpolation is ambiguous when duplicated training locations carry different
+#' trial sizes, so duplicated rows are rejected before calibration.
+#'
+#' @param Xnorm Numeric matrix of normalized input locations.
+#'
+#' @return Invisibly returns \code{TRUE} if all rows are unique; otherwise throws
+#'   an error.
+#'
+#' @keywords internal
 
 .bkp_check_unique_locations <- function(Xnorm) {
   if (anyDuplicated(as.data.frame(Xnorm)) > 0L) {
@@ -428,6 +488,22 @@ posterior_summary <- function(mean_vals, var_vals) {
   }
   invisible(TRUE)
 }
+
+#' Interpolate trial sizes using Shepard weights
+#'
+#' Internal helper used by optional Shepard ESS calibration. It interpolates
+#' trial sizes from normalized training locations to normalized query locations
+#' using inverse-distance weights, preserving exact-match values.
+#'
+#' @param Xquery_norm Numeric matrix of normalized query locations.
+#' @param Xtrain_norm Numeric matrix of normalized training locations.
+#' @param m Numeric vector of training trial sizes.
+#' @param power Positive numeric Shepard inverse-distance power. The default is
+#'   \code{2}.
+#'
+#' @return A numeric vector of interpolated trial sizes, one per query location.
+#'
+#' @keywords internal
 
 .bkp_shepard_m <- function(Xquery_norm, Xtrain_norm, m, power = 2) {
   Xquery_norm <- as.matrix(Xquery_norm)
@@ -460,6 +536,20 @@ posterior_summary <- function(mean_vals, var_vals) {
   interpolated
 }
 
+#' Leave-one-out Shepard interpolation of trial sizes
+#'
+#' Internal helper used during hyperparameter tuning with \code{ess = "shepard"}.
+#' For each training location, it interpolates the trial size from all other
+#' training locations and excludes the observation's own contribution.
+#'
+#' @param Xnorm Numeric matrix of normalized training locations.
+#' @param m Numeric vector of training trial sizes.
+#' @param power Positive numeric Shepard inverse-distance power. The default is
+#'   \code{2}.
+#'
+#' @return A numeric vector of leave-one-out interpolated trial sizes.
+#'
+#' @keywords internal
 .bkp_shepard_m_loo <- function(Xnorm, m, power = 2) {
   Xnorm <- as.matrix(Xnorm)
   m <- as.numeric(m)
@@ -486,6 +576,22 @@ posterior_summary <- function(mean_vals, var_vals) {
   as.vector((weights %*% m) / rowSums(weights))
 }
 
+#' Compute Shepard ESS calibration diagnostics
+#'
+#' Internal helper that rescales kernel-weighted data contributions so their
+#' effective trial size matches a Shepard-interpolated target, adjusted by the
+#' maximum kernel similarity at each query location.
+#'
+#' @param Xquery_norm Numeric matrix of normalized query locations.
+#' @param Xtrain_norm Numeric matrix of normalized training locations.
+#' @param m Numeric vector of training trial sizes.
+#' @param K Numeric kernel matrix between query and training locations.
+#'
+#' @return A list containing \code{scale}, \code{m_kernel},
+#'   \code{m_shepard}, \code{m_target}, and \code{rho}.
+#'
+#' @keywords internal
+
 .bkp_ess_calibration <- function(Xquery_norm, Xtrain_norm, m, K) {
   .bkp_check_unique_locations(Xtrain_norm)
 
@@ -507,6 +613,19 @@ posterior_summary <- function(mean_vals, var_vals) {
   )
 }
 
+#' Construct ESS diagnostics for the default uncalibrated update
+#'
+#' Internal helper used when \code{ess = "none"}. It returns the same diagnostic
+#' structure as Shepard calibration, with unit scale factors and no Shepard
+#' target values.
+#'
+#' @param K Numeric kernel matrix between query and training locations.
+#' @param m Numeric vector of training trial sizes.
+#'
+#' @return A list containing unit \code{scale}, kernel-weighted trial sizes, and
+#'   placeholder Shepard calibration fields.
+#'
+#' @keywords internal
 .bkp_ess_none_info <- function(K, m) {
   list(
     scale = rep(1, nrow(K)),
