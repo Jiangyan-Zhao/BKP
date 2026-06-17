@@ -132,7 +132,8 @@ plot.DKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL,
     is_classification <- !is.null(prediction$class)
 
     if (engine == "ggplot") {
-      plot_list <- list()
+      plot_list <- vector("list", q + is_classification)
+      class_Y <- if (is_classification) max.col(Y) else NULL
 
       lbl_line <- "Estimated Probability"
       lbl_ci   <- paste0(prediction$CI_level * 100, "% CI")
@@ -144,7 +145,7 @@ plot.DKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL,
           prob = as.vector(prediction$mean),
           Class = factor(rep(1:q, each = nrow(Xnew)))
         )
-        obs_class <- apply(Y, 1, which.max)
+        obs_class <- class_Y
         all_obs_df <- data.frame(
           x = as.numeric(X_sub),
           y = rep(-0.05, nrow(X_sub)),
@@ -182,7 +183,7 @@ plot.DKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL,
         pred_df_j <- data.frame(x = as.numeric(Xnew), mean = mean_j, lower = lower_j, upper = upper_j)
 
         if (is_classification) {
-          obs_j <- as.integer(apply(Y, 1, which.max) == j)
+          obs_j <- as.integer(class_Y == j)
           ylim_j <- c(0, 1)
         } else {
           obs_j <- Y[, j] / rowSums(Y)
@@ -237,6 +238,8 @@ plot.DKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL,
       old_par <- par(mfrow = c(2, 2))
       # on.exit(par(old_par))  # Restore par on exit
 
+      class_Y <- if (is_classification) max.col(Y) else NULL
+
       # --- First panel: all mean curves together ---
       if(is_classification){
         cols <- rainbow(q)
@@ -250,8 +253,7 @@ plot.DKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL,
           lines(Xnew, prediction$mean[, j], col = cols[j], lwd = 2)
         }
         for (i in 1:nrow(X)) {
-          class_idx <- which.max(Y[i, ])
-          points(X_sub[i], -0.05, col = cols[class_idx], pch = 20)
+          points(X_sub[i], -0.05, col = cols[class_Y[i]], pch = 20)
         }
         legend("top", legend = paste("Class", 1:q), col = cols, lty = 1, lwd = 2,
                horiz = TRUE, bty = "n")
@@ -285,7 +287,7 @@ plot.DKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL,
 
         # If class label is known, show binary observed indicator (1 if this class, 0 otherwise)
         if (is_classification) {
-          obs_j <- as.integer(apply(Y, 1, which.max) == j)
+          obs_j <- as.integer(class_Y == j)
           points(X_sub, obs_j, pch = 20, col = "red")
         } else {
           # Proportions from multinomial

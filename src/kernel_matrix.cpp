@@ -1,8 +1,105 @@
 // [[Rcpp::depends(RcppArmadillo)]]
 #include <RcppArmadillo.h>
 #include <cmath>
+#include <algorithm>
 
 using namespace Rcpp;
+
+
+static inline double scaled_dist_sq_row(
+    const arma::mat& Xm,
+    const arma::mat& Xpm,
+    const arma::vec& theta,
+    const bool isotropic,
+    const arma::uword i,
+    const arma::uword j
+) {
+  const arma::uword d = Xm.n_cols;
+  double out = 0.0;
+
+  if (isotropic) {
+    const double inv_th = 1.0 / theta[0];
+    for (arma::uword k = 0; k < d; ++k) {
+      const double diff = (Xm(i, k) - Xpm(j, k)) * inv_th;
+      out += diff * diff;
+    }
+  } else if (theta.n_elem == 1) {
+    const double inv_th = 1.0 / theta[0];
+    for (arma::uword k = 0; k < d; ++k) {
+      const double diff = (Xm(i, k) - Xpm(j, k)) * inv_th;
+      out += diff * diff;
+    }
+  } else {
+    for (arma::uword k = 0; k < d; ++k) {
+      const double diff = (Xm(i, k) - Xpm(j, k)) / theta[k];
+      out += diff * diff;
+    }
+  }
+
+  return out;
+}
+
+static inline double kernel_from_dist_sq(
+    const double dist_sq,
+    const std::string& kernel,
+    const arma::uword d
+) {
+  if (kernel == "gaussian") {
+    return std::exp(-dist_sq);
+  }
+
+  const double dist = std::sqrt(dist_sq);
+
+  if (kernel == "matern52") {
+    const double sqrt5 = std::sqrt(5.0);
+    return (1.0 + sqrt5 * dist + (5.0 / 3.0) * dist_sq) *
+      std::exp(-sqrt5 * dist);
+  }
+
+  if (kernel == "matern32") {
+    const double sqrt3 = std::sqrt(3.0);
+    return (1.0 + sqrt3 * dist) * std::exp(-sqrt3 * dist);
+  }
+
+  const double q_w = std::floor(static_cast<double>(d) / 2.0) + 3.0;
+  const double one_minus = std::max(0.0, 1.0 - dist);
+  return (q_w * dist + 1.0) * std::pow(one_minus, q_w);
+}
+
+arma::mat kernel_matrix_arma_loop(
+    const arma::mat& Xm,
+    const arma::mat& Xpm,
+    const arma::vec& theta,
+    const std::string& kernel,
+    const bool isotropic,
+    const bool symmetric
+) {
+  const arma::uword n = Xm.n_rows;
+  const arma::uword m = symmetric ? Xm.n_rows : Xpm.n_rows;
+  const arma::uword d = Xm.n_cols;
+  arma::mat K(n, m, arma::fill::none);
+
+  if (symmetric) {
+    for (arma::uword i = 0; i < n; ++i) {
+      K(i, i) = 1.0;
+      for (arma::uword j = i + 1; j < n; ++j) {
+        const double dist_sq = scaled_dist_sq_row(Xm, Xm, theta, isotropic, i, j);
+        const double val = kernel_from_dist_sq(dist_sq, kernel, d);
+        K(i, j) = val;
+        K(j, i) = val;
+      }
+    }
+  } else {
+    for (arma::uword i = 0; i < n; ++i) {
+      for (arma::uword j = 0; j < m; ++j) {
+        const double dist_sq = scaled_dist_sq_row(Xm, Xpm, theta, isotropic, i, j);
+        K(i, j) = kernel_from_dist_sq(dist_sq, kernel, d);
+      }
+    }
+  }
+
+  return K;
+}
 
 // -----------------------------------------------------------------------------
 // Internal C++ kernel matrix engine.
@@ -22,6 +119,16 @@ arma::mat kernel_matrix_arma(
     const bool symmetric
 ) {
   const arma::uword d = Xm.n_cols;
+  const double n_pairs = static_cast<double>(Xm.n_rows) *
+    static_cast<double>(symmetric ? Xm.n_rows : Xpm.n_rows);
+
+  // GEMM is faster for smaller kernels, but it materializes several n x m
+  // temporaries.  For large kernels, use the loop engine to cap peak memory at
+  // the output matrix.  The 1e6-pair cutoff is intentionally simple and can be
+  // tuned later with package-level benchmarks.
+  if (n_pairs > 1e6) {
+    return kernel_matrix_arma_loop(Xm, Xpm, theta, kernel, isotropic, symmetric);
+  }
 
   // ---- Scale inputs by lengthscale(s) ----
   arma::mat X_scaled;

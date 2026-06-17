@@ -72,13 +72,11 @@
 #' @importFrom ggplot2 guide_legend guide_colorbar coord_cartesian annotate geom_hline
 #' @importFrom ggplot2 labs scale_color_discrete guides scale_fill_brewer scale_shape_manual
 #' @importFrom lattice levelplot panel.contourplot panel.levelplot panel.points
-# Import nloptr so its registered C-callable NLopt symbols are available
-# to the C++ optimization backend at package load time.
-#' @import nloptr
-#' @importFrom Rcpp evalCpp
 #' @importFrom rlang .data
 #' @importFrom stats as.formula median qbeta quantile rbeta rgamma sd simulate
 #' @importFrom tgp lhs
 #' @importFrom utils head
+#' @import nloptr
+#' @importFrom Rcpp sourceCpp
 #' @useDynLib BKP, .registration = TRUE
 NULL

@@ -67,13 +67,23 @@ quantile.BKP <- function(x, probs = c(0.025, 0.5, 0.975), ...) {
   alpha_n <- x$alpha_n
   beta_n  <- x$beta_n
 
+  n <- length(alpha_n)
+
   if (length(probs) > 1) {
-    # Posterior quantiles matrix: rows = observations, cols = probs
-    post_q <- t(mapply(function(a, b) qbeta(probs, a, b), alpha_n, beta_n))
+    # Posterior quantiles matrix: rows = observations, cols = probs.
+    post_q <- matrix(
+      qbeta(
+        rep(probs, each = n),
+        rep(alpha_n, times = length(probs)),
+        rep(beta_n, times = length(probs))
+      ),
+      nrow = n,
+      ncol = length(probs)
+    )
     colnames(post_q) <- paste0(probs * 100, "%")
   } else {
     # Single probability: return a vector
-    post_q <- mapply(function(a, b) qbeta(probs, a, b), alpha_n, beta_n)
+    post_q <- qbeta(probs, alpha_n, beta_n)
   }
 
   return(post_q)

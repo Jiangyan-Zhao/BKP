@@ -46,7 +46,12 @@ arma::vec shepard_m_rcpp(
         break;
       }
 
-      const double weight = std::pow(dist_sq, -0.5 * power);
+      double weight;
+      if (std::abs(power - 2.0) < 1e-9) {
+        weight = 1.0 / dist_sq;
+      } else {
+        weight = std::pow(dist_sq, -0.5 * power);
+      }
       numerator += weight * m[j];
       denominator += weight;
     }
@@ -78,7 +83,12 @@ arma::vec shepard_m_loo_rcpp(
       if (i == j) continue;
 
       const double dist_sq = squared_distance_row(Xnorm, Xnorm, i, j);
-      const double weight = std::pow(dist_sq, -0.5 * power);
+      double weight;
+      if (std::abs(power - 2.0) < 1e-9) {
+        weight = 1.0 / dist_sq;
+      } else {
+        weight = std::pow(dist_sq, -0.5 * power);
+      }
 
       numerator += weight * m[j];
       denominator += weight;

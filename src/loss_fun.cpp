@@ -25,8 +25,11 @@ double loss_bkp_arma(
     const arma::vec& beta0,
     const arma::vec& data_scale
 ) {
-  arma::vec alpha_n = alpha0 + data_scale % (K * y);
-  arma::vec beta_n  = beta0 + data_scale % (K * (m - y));
+  arma::vec Ky = K * y;
+  arma::vec Km = K * m;
+
+  arma::vec alpha_n = alpha0 + data_scale % Ky;
+  arma::vec beta_n  = beta0 + data_scale % (Km - Ky);
 
   arma::vec pi_hat = alpha_n / (alpha_n + beta_n);
   arma::vec pi_tilde = y / m;
@@ -95,7 +98,7 @@ double loss_dkp_arma(
 double loss_fun_rcpp(
     std::string model,
     std::string loss,
-    const arma::mat& K,
+    SEXP K,
     Nullable<NumericVector> y = R_NilValue,
     Nullable<NumericVector> m = R_NilValue,
     Nullable<NumericMatrix> Y = R_NilValue,
@@ -104,6 +107,9 @@ double loss_fun_rcpp(
     Nullable<NumericMatrix> alpha0_mat = R_NilValue,
     Nullable<NumericVector> data_scale = R_NilValue
 ) {
+  NumericMatrix K_R(K);
+  arma::mat K_mat(K_R.begin(), K_R.nrow(), K_R.ncol(), false);
+
   if (model == "BKP") {
 
     NumericVector y_R(y);
@@ -111,27 +117,22 @@ double loss_fun_rcpp(
     NumericVector alpha0_R(alpha0);
     NumericVector beta0_R(beta0);
 
-    arma::vec y_vec = as<arma::vec>(y_R);
-    arma::vec m_vec = as<arma::vec>(m_R);
-    arma::vec alpha0_vec = as<arma::vec>(alpha0_R);
-    arma::vec beta0_vec = as<arma::vec>(beta0_R);
-    arma::vec data_scale_vec;
+    arma::vec y_vec(y_R.begin(), y_R.size(), false);
+    arma::vec m_vec(m_R.begin(), m_R.size(), false);
+    arma::vec alpha0_vec(alpha0_R.begin(), alpha0_R.size(), false);
+    arma::vec beta0_vec(beta0_R.begin(), beta0_R.size(), false);
 
     if (data_scale.isNotNull()) {
       NumericVector data_scale_R(data_scale);
-      data_scale_vec = as<arma::vec>(data_scale_R);
-    } else {
-      data_scale_vec = arma::ones<arma::vec>(K.n_rows);
+      arma::vec data_scale_vec(data_scale_R.begin(), data_scale_R.size(), false);
+      return loss_bkp_arma(
+        loss, K_mat, y_vec, m_vec, alpha0_vec, beta0_vec, data_scale_vec
+      );
     }
 
+    arma::vec data_scale_vec = arma::ones<arma::vec>(K_mat.n_rows);
     return loss_bkp_arma(
-      loss,
-      K,
-      y_vec,
-      m_vec,
-      alpha0_vec,
-      beta0_vec,
-      data_scale_vec
+      loss, K_mat, y_vec, m_vec, alpha0_vec, beta0_vec, data_scale_vec
     );
 
   } else if (model == "DKP") {
@@ -139,24 +140,17 @@ double loss_fun_rcpp(
     NumericMatrix Y_R(Y);
     NumericMatrix alpha0_R(alpha0_mat);
 
-    arma::mat Y_mat = as<arma::mat>(Y_R);
-    arma::mat alpha0_dkp = as<arma::mat>(alpha0_R);
-    arma::vec data_scale_vec;
+    arma::mat Y_mat(Y_R.begin(), Y_R.nrow(), Y_R.ncol(), false);
+    arma::mat alpha0_dkp(alpha0_R.begin(), alpha0_R.nrow(), alpha0_R.ncol(), false);
 
     if (data_scale.isNotNull()) {
       NumericVector data_scale_R(data_scale);
-      data_scale_vec = as<arma::vec>(data_scale_R);
-    } else {
-      data_scale_vec = arma::ones<arma::vec>(K.n_rows);
+      arma::vec data_scale_vec(data_scale_R.begin(), data_scale_R.size(), false);
+      return loss_dkp_arma(loss, K_mat, Y_mat, alpha0_dkp, data_scale_vec);
     }
 
-    return loss_dkp_arma(
-      loss,
-      K,
-      Y_mat,
-      alpha0_dkp,
-      data_scale_vec
-    );
+    arma::vec data_scale_vec = arma::ones<arma::vec>(K_mat.n_rows);
+    return loss_dkp_arma(loss, K_mat, Y_mat, alpha0_dkp, data_scale_vec);
 
   } else {
     stop("Unsupported model: " + model);

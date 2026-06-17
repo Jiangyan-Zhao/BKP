@@ -45,14 +45,14 @@ BEGIN_RCPP
 END_RCPP
 }
 // loss_fun_rcpp
-double loss_fun_rcpp(std::string model, std::string loss, const arma::mat& K, Nullable<NumericVector> y, Nullable<NumericVector> m, Nullable<NumericMatrix> Y, Nullable<NumericVector> alpha0, Nullable<NumericVector> beta0, Nullable<NumericMatrix> alpha0_mat, Nullable<NumericVector> data_scale);
+double loss_fun_rcpp(std::string model, std::string loss, SEXP K, Nullable<NumericVector> y, Nullable<NumericVector> m, Nullable<NumericMatrix> Y, Nullable<NumericVector> alpha0, Nullable<NumericVector> beta0, Nullable<NumericMatrix> alpha0_mat, Nullable<NumericVector> data_scale);
 RcppExport SEXP _BKP_loss_fun_rcpp(SEXP modelSEXP, SEXP lossSEXP, SEXP KSEXP, SEXP ySEXP, SEXP mSEXP, SEXP YSEXP, SEXP alpha0SEXP, SEXP beta0SEXP, SEXP alpha0_matSEXP, SEXP data_scaleSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< std::string >::type model(modelSEXP);
     Rcpp::traits::input_parameter< std::string >::type loss(lossSEXP);
-    Rcpp::traits::input_parameter< const arma::mat& >::type K(KSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type K(KSEXP);
     Rcpp::traits::input_parameter< Nullable<NumericVector> >::type y(ySEXP);
     Rcpp::traits::input_parameter< Nullable<NumericVector> >::type m(mSEXP);
     Rcpp::traits::input_parameter< Nullable<NumericMatrix> >::type Y(YSEXP);

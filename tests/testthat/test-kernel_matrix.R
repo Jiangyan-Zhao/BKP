@@ -64,3 +64,16 @@ test_that("anisotropic scaling is applied dimension-wise", {
   K <- kernel_matrix(X, theta = c(1, 2), kernel = "gaussian", isotropic = FALSE)
   expect_equal(K[1, 2], exp(-((1 / 1)^2 + (2 / 2)^2)))
 })
+
+test_that("kernel_matrix low-memory engine matches direct Gaussian formula", {
+  X <- matrix(seq(0, 1, length.out = 1001), ncol = 1)
+  Xp <- matrix(seq(0.25, 0.75, length.out = 1000), ncol = 1)
+  theta <- 0.3
+
+  K <- kernel_matrix(X, Xp, theta = theta, kernel = "gaussian")
+
+  idx_i <- c(1, 17, 1001)
+  idx_j <- c(1, 503, 1000)
+  expected <- exp(-outer(X[idx_i, 1], Xp[idx_j, 1], function(a, b) ((a - b) / theta)^2))
+  expect_equal(K[idx_i, idx_j], expected, tolerance = 1e-12)
+})

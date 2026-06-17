@@ -42,31 +42,29 @@ quantile.DKP <- function(x, probs = c(0.025, 0.5, 0.975), ...) {
   q <- ncol(alpha_n)
   row_sum <- rowSums(alpha_n)
 
-  if (length(probs) > 1) {
-    # Create 3D array: obs x class x probs
-    post_q_array <- array(NA, dim = c(n, q, length(probs)),
-                          dimnames = list(NULL,
-                                          paste0("class", 1:q),
-                                          paste0(probs*100, "%")))
+  beta_n <- row_sum - alpha_n
 
-    # Loop over classes to compute Beta approximation quantiles
-    for (j in 1:q) {
-      post_q_array[, j, ] <- t(mapply(function(alpha_ij, row_sum_i) {
-        qbeta(probs, alpha_ij, row_sum_i - alpha_ij)
-      }, alpha_n[, j], row_sum))
-    }
+  if (length(probs) > 1) {
+    # Vectorized Beta approximation quantiles, reshaped to obs x class x probs.
+    post_q_array <- array(
+      qbeta(
+        rep(probs, each = n * q),
+        rep(as.vector(alpha_n), times = length(probs)),
+        rep(as.vector(beta_n), times = length(probs))
+      ),
+      dim = c(n, q, length(probs)),
+      dimnames = list(NULL, paste0("class", 1:q), paste0(probs * 100, "%"))
+    )
 
     return(post_q_array)
   } else {
     # Single probability: return matrix obs x class
-    post_q_matrix <- matrix(NA, nrow = n, ncol = q,
-                            dimnames = list(NULL, paste0("class", 1:q)))
-
-    for (j in 1:q) {
-      post_q_matrix[, j] <- mapply(function(alpha_ij, row_sum_i) {
-        qbeta(probs, alpha_ij, row_sum_i - alpha_ij)
-      }, alpha_n[, j], row_sum)
-    }
+    post_q_matrix <- matrix(
+      qbeta(probs, as.vector(alpha_n), as.vector(beta_n)),
+      nrow = n,
+      ncol = q,
+      dimnames = list(NULL, paste0("class", 1:q))
+    )
 
     return(post_q_matrix)
   }

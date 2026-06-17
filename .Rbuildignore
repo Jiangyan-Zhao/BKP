@@ -10,7 +10,6 @@
 ^pkgdown$
 ^vignettes/articles$
 ^.*\.html$
-
 ^doc$
 ^Meta$
 ^LICENSE\.md$

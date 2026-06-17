@@ -47,10 +47,11 @@ void get_prior_bkp_arma(
     // Equivalent to R's pmax(row_sum_K, 1e-6); no finite upper bound.
     arma::vec denom_K = arma::clamp(row_sum_K, 1e-6, arma::datum::inf);
 
-    // Row-normalized kernel weights: W_ij = K_ij / rowSums(K)_i
-    arma::mat W = K.each_col() / denom_K;
-
-    arma::vec p_hat = W * (y / m);
+    // Avoid materializing row-normalized weights W = K.each_col() / denom_K.
+    // Algebraically equivalent to W * (y / m), with one fewer n x n
+    // temporary matrix on the adaptive-prior hot path.
+    arma::vec prop = y / m;
+    arma::vec p_hat = (K * prop) / denom_K;
     arma::vec r_hat = r0 * arma::clamp(row_sum_K, 1e-3, arma::datum::inf);
 
     alpha0 = r_hat % p_hat;
@@ -91,10 +92,10 @@ arma::mat get_prior_dkp_arma(
     arma::vec row_sum_K = arma::sum(K, 1);
     arma::vec denom_K = arma::clamp(row_sum_K, 1e-6, arma::datum::inf);
 
-    // Row-normalized kernel weights
-    arma::mat W = K.each_col() / denom_K;
-
-    arma::mat Pi_hat = W * Pi;
+    // Avoid materializing row-normalized weights W.  Compute K * Pi first,
+    // then divide each row by the kernel row sum.
+    arma::mat Pi_hat = K * Pi;
+    Pi_hat.each_col() /= denom_K;
     arma::vec r_hat = r0 * arma::clamp(row_sum_K, 1e-3, arma::datum::inf);
 
     alpha0 = Pi_hat.each_col() % r_hat;
@@ -131,27 +132,13 @@ List get_prior_rcpp(
 ) {
   if (model == "BKP") {
 
-    arma::mat K_mat;
+    NumericVector y_R;
+    if (y.isNotNull()) y_R = NumericVector(y);
+    arma::vec y_vec(y_R.begin(), y_R.size(), false);
 
-    if (K.isNotNull()) {
-      NumericMatrix K_R(K);
-      K_mat = as<arma::mat>(K_R);
-    } else {
-      // Preserve old behavior: when K is absent, prior length is 1.
-      K_mat = arma::mat(1, 1, arma::fill::ones);
-    }
-
-    arma::vec y_vec;
-    if (y.isNotNull()) {
-      NumericVector y_R(y);
-      y_vec = as<arma::vec>(y_R);
-    }
-
-    arma::vec m_vec;
-    if (m.isNotNull()) {
-      NumericVector m_R(m);
-      m_vec = as<arma::vec>(m_R);
-    }
+    NumericVector m_R;
+    if (m.isNotNull()) m_R = NumericVector(m);
+    arma::vec m_vec(m_R.begin(), m_R.size(), false);
 
     double p0_scalar = 0.5;
     if (p0.isNotNull()) {
@@ -162,16 +149,15 @@ List get_prior_rcpp(
     arma::vec alpha0;
     arma::vec beta0;
 
-    get_prior_bkp_arma(
-      prior,
-      r0,
-      p0_scalar,
-      y_vec,
-      m_vec,
-      K_mat,
-      alpha0,
-      beta0
-    );
+    if (K.isNotNull()) {
+      NumericMatrix K_R(K);
+      arma::mat K_mat(K_R.begin(), K_R.nrow(), K_R.ncol(), false);
+      get_prior_bkp_arma(prior, r0, p0_scalar, y_vec, m_vec, K_mat, alpha0, beta0);
+    } else {
+      // Preserve old behavior: when K is absent, prior length is 1.
+      arma::mat K_mat(1, 1, arma::fill::ones);
+      get_prior_bkp_arma(prior, r0, p0_scalar, y_vec, m_vec, K_mat, alpha0, beta0);
+    }
 
     return List::create(
       Named("alpha0") = alpha0,
@@ -180,35 +166,24 @@ List get_prior_rcpp(
 
   } else {  // model == "DKP"
 
-    arma::mat K_mat;
+    NumericMatrix Y_R;
+    if (Y.isNotNull()) Y_R = NumericMatrix(Y);
+    arma::mat Y_mat(Y_R.begin(), Y_R.nrow(), Y_R.ncol(), false);
 
+    NumericVector p0_R;
+    if (p0.isNotNull()) p0_R = NumericVector(p0);
+    arma::vec p0_vec(p0_R.begin(), p0_R.size(), false);
+
+    arma::mat alpha0;
     if (K.isNotNull()) {
       NumericMatrix K_R(K);
-      K_mat = as<arma::mat>(K_R);
+      arma::mat K_mat(K_R.begin(), K_R.nrow(), K_R.ncol(), false);
+      alpha0 = get_prior_dkp_arma(prior, r0, p0_vec, Y_mat, K_mat);
     } else {
       // Preserve old behavior: when K is absent, prior has one row.
-      K_mat = arma::mat(1, 1, arma::fill::ones);
+      arma::mat K_mat(1, 1, arma::fill::ones);
+      alpha0 = get_prior_dkp_arma(prior, r0, p0_vec, Y_mat, K_mat);
     }
-
-    arma::mat Y_mat;
-    if (Y.isNotNull()) {
-      NumericMatrix Y_R(Y);
-      Y_mat = as<arma::mat>(Y_R);
-    }
-
-    arma::vec p0_vec;
-    if (p0.isNotNull()) {
-      NumericVector p0_R(p0);
-      p0_vec = as<arma::vec>(p0_R);
-    }
-
-    arma::mat alpha0 = get_prior_dkp_arma(
-      prior,
-      r0,
-      p0_vec,
-      Y_mat,
-      K_mat
-    );
 
     return List::create(
       Named("alpha0") = alpha0
