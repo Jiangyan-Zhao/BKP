@@ -121,11 +121,7 @@ arma::mat kernel_matrix_arma_loop(
         for (arma::uword j = i + 1; j < n; ++j) {
           const double dist_sq = scaled_dist_sq_scalar(Xm, Xm, inv_th, i, j);
           const double val = kernel_from_dist_sq_fast(
-            dist_sq,
-            kernel_type,
-            sqrt3,
-            sqrt5,
-            q_w
+            dist_sq, kernel_type, sqrt3, sqrt5, q_w
           );
           K(i, j) = val;
           K(j, i) = val;
@@ -136,11 +132,7 @@ arma::mat kernel_matrix_arma_loop(
         for (arma::uword j = 0; j < m; ++j) {
           const double dist_sq = scaled_dist_sq_scalar(Xm, Xpm, inv_th, i, j);
           K(i, j) = kernel_from_dist_sq_fast(
-            dist_sq,
-            kernel_type,
-            sqrt3,
-            sqrt5,
-            q_w
+            dist_sq, kernel_type, sqrt3, sqrt5, q_w
           );
         }
       }
@@ -152,11 +144,7 @@ arma::mat kernel_matrix_arma_loop(
         for (arma::uword j = i + 1; j < n; ++j) {
           const double dist_sq = scaled_dist_sq_aniso(Xm, Xm, theta, i, j);
           const double val = kernel_from_dist_sq_fast(
-            dist_sq,
-            kernel_type,
-            sqrt3,
-            sqrt5,
-            q_w
+            dist_sq, kernel_type, sqrt3, sqrt5, q_w
           );
           K(i, j) = val;
           K(j, i) = val;
@@ -167,11 +155,7 @@ arma::mat kernel_matrix_arma_loop(
         for (arma::uword j = 0; j < m; ++j) {
           const double dist_sq = scaled_dist_sq_aniso(Xm, Xpm, theta, i, j);
           K(i, j) = kernel_from_dist_sq_fast(
-            dist_sq,
-            kernel_type,
-            sqrt3,
-            sqrt5,
-            q_w
+            dist_sq, kernel_type, sqrt3, sqrt5, q_w
           );
         }
       }
@@ -202,11 +186,13 @@ arma::mat kernel_matrix_arma(
   const double n_pairs = static_cast<double>(Xm.n_rows) *
     static_cast<double>(symmetric ? Xm.n_rows : Xpm.n_rows);
 
-  // GEMM is faster for smaller kernels, but it materializes several n x m
-  // temporaries.  For large kernels, use the loop engine to cap peak memory at
-  // the output matrix.  The 1e6-pair cutoff is intentionally simple and can be
-  // tuned later with package-level benchmarks.
-  if (n_pairs > 1e6) {
+  // GEMM is usually faster for moderate kernel matrices.  A 2000 x 2000
+  // double matrix is about 32 MB; even with several temporaries this is
+  // acceptable on ordinary machines.  For larger kernels, switch to the
+  // loop engine to cap peak memory.
+  const double loop_cutoff_pairs = 4e6;
+
+  if (n_pairs > loop_cutoff_pairs) {
     return kernel_matrix_arma_loop(Xm, Xpm, theta, kernel, isotropic, symmetric);
   }
 
@@ -240,20 +226,14 @@ arma::mat kernel_matrix_arma(
     arma::vec g = arma::sum(arma::square(X_scaled), 1); // n x 1
     arma::mat G = X_scaled * X_scaled.t();              // n x n
 
-    dist_sq =
-      arma::repmat(g, 1, g.n_elem) +
-      arma::repmat(g.t(), g.n_elem, 1) -
-      2.0 * G;
+    dist_sq = arma::repmat(g, 1, g.n_elem) + arma::repmat(g.t(), g.n_elem, 1) - 2.0 * G;
 
   } else {
     arma::vec g  = arma::sum(arma::square(X_scaled), 1);  // n x 1
     arma::vec gp = arma::sum(arma::square(Xp_scaled), 1); // m x 1
     arma::mat G  = X_scaled * Xp_scaled.t();              // n x m
 
-    dist_sq =
-      arma::repmat(g, 1, gp.n_elem) +
-      arma::repmat(gp.t(), g.n_elem, 1) -
-      2.0 * G;
+    dist_sq = arma::repmat(g, 1, gp.n_elem) + arma::repmat(gp.t(), g.n_elem, 1) - 2.0 * G;
   }
 
   // Guard against tiny negative values caused by floating-point roundoff.
@@ -271,17 +251,13 @@ arma::mat kernel_matrix_arma(
     const double sqrt5 = std::sqrt(5.0);
     arma::mat dist = arma::sqrt(dist_sq);
 
-    K =
-      (1.0 + sqrt5 * dist + (5.0 / 3.0) * dist_sq) %
-      arma::exp(-sqrt5 * dist);
+    K = (1.0 + sqrt5 * dist + (5.0 / 3.0) * dist_sq) % arma::exp(-sqrt5 * dist);
 
   } else if (kernel == "matern32") {
     const double sqrt3 = std::sqrt(3.0);
     arma::mat dist = arma::sqrt(dist_sq);
 
-    K =
-      (1.0 + sqrt3 * dist) %
-      arma::exp(-sqrt3 * dist);
+    K = (1.0 + sqrt3 * dist) % arma::exp(-sqrt3 * dist);
 
   } else {
     // Wendland compactly supported kernel:
