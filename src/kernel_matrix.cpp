@@ -6,64 +6,92 @@
 using namespace Rcpp;
 
 
-static inline double scaled_dist_sq_row(
+enum KernelType {
+  GAUSSIAN = 0,
+  MATERN52 = 1,
+  MATERN32 = 2,
+  WENDLAND = 3
+};
+
+static inline KernelType parse_kernel_type(const std::string& kernel) {
+  if (kernel == "gaussian") {
+    return GAUSSIAN;
+  }
+  if (kernel == "matern52") {
+    return MATERN52;
+  }
+  if (kernel == "matern32") {
+    return MATERN32;
+  }
+  return WENDLAND;
+}
+
+static inline double scaled_dist_sq_scalar(
     const arma::mat& Xm,
     const arma::mat& Xpm,
-    const arma::vec& theta,
-    const bool isotropic,
+    const double inv_th,
     const arma::uword i,
     const arma::uword j
 ) {
   const arma::uword d = Xm.n_cols;
   double out = 0.0;
 
-  if (isotropic) {
-    const double inv_th = 1.0 / theta[0];
-    for (arma::uword k = 0; k < d; ++k) {
-      const double diff = (Xm(i, k) - Xpm(j, k)) * inv_th;
-      out += diff * diff;
-    }
-  } else if (theta.n_elem == 1) {
-    const double inv_th = 1.0 / theta[0];
-    for (arma::uword k = 0; k < d; ++k) {
-      const double diff = (Xm(i, k) - Xpm(j, k)) * inv_th;
-      out += diff * diff;
-    }
-  } else {
-    for (arma::uword k = 0; k < d; ++k) {
-      const double diff = (Xm(i, k) - Xpm(j, k)) / theta[k];
-      out += diff * diff;
-    }
+  for (arma::uword k = 0; k < d; ++k) {
+    const double diff = (Xm(i, k) - Xpm(j, k)) * inv_th;
+    out += diff * diff;
   }
 
   return out;
 }
 
-static inline double kernel_from_dist_sq(
-    const double dist_sq,
-    const std::string& kernel,
-    const arma::uword d
+static inline double scaled_dist_sq_aniso(
+    const arma::mat& Xm,
+    const arma::mat& Xpm,
+    const arma::vec& theta,
+    const arma::uword i,
+    const arma::uword j
 ) {
-  if (kernel == "gaussian") {
-    return std::exp(-dist_sq);
+  const arma::uword d = Xm.n_cols;
+  double out = 0.0;
+
+  for (arma::uword k = 0; k < d; ++k) {
+    const double diff = (Xm(i, k) - Xpm(j, k)) / theta[k];
+    out += diff * diff;
   }
 
-  const double dist = std::sqrt(dist_sq);
+  return out;
+}
 
-  if (kernel == "matern52") {
-    const double sqrt5 = std::sqrt(5.0);
+static inline double kernel_from_dist_sq_fast(
+    const double dist_sq,
+    const KernelType kernel_type,
+    const double sqrt3,
+    const double sqrt5,
+    const double q_w
+) {
+  switch (kernel_type) {
+  case GAUSSIAN:
+    return std::exp(-dist_sq);
+
+  case MATERN52: {
+    const double dist = std::sqrt(dist_sq);
     return (1.0 + sqrt5 * dist + (5.0 / 3.0) * dist_sq) *
       std::exp(-sqrt5 * dist);
   }
 
-  if (kernel == "matern32") {
-    const double sqrt3 = std::sqrt(3.0);
+  case MATERN32: {
+    const double dist = std::sqrt(dist_sq);
     return (1.0 + sqrt3 * dist) * std::exp(-sqrt3 * dist);
   }
 
-  const double q_w = std::floor(static_cast<double>(d) / 2.0) + 3.0;
-  const double one_minus = std::max(0.0, 1.0 - dist);
-  return (q_w * dist + 1.0) * std::pow(one_minus, q_w);
+  case WENDLAND: {
+    const double dist = std::sqrt(dist_sq);
+    const double one_minus = std::max(0.0, 1.0 - dist);
+    return (q_w * dist + 1.0) * std::pow(one_minus, q_w);
+  }
+  }
+
+  return R_NaReal;
 }
 
 arma::mat kernel_matrix_arma_loop(
@@ -77,23 +105,75 @@ arma::mat kernel_matrix_arma_loop(
   const arma::uword n = Xm.n_rows;
   const arma::uword m = symmetric ? Xm.n_rows : Xpm.n_rows;
   const arma::uword d = Xm.n_cols;
+  const KernelType kernel_type = parse_kernel_type(kernel);
+  const double sqrt3 = std::sqrt(3.0);
+  const double sqrt5 = std::sqrt(5.0);
+  const double q_w = std::floor(static_cast<double>(d) / 2.0) + 3.0;
+  const bool scalar_lengthscale = isotropic || theta.n_elem == 1;
   arma::mat K(n, m, arma::fill::none);
 
-  if (symmetric) {
-    for (arma::uword i = 0; i < n; ++i) {
-      K(i, i) = 1.0;
-      for (arma::uword j = i + 1; j < n; ++j) {
-        const double dist_sq = scaled_dist_sq_row(Xm, Xm, theta, isotropic, i, j);
-        const double val = kernel_from_dist_sq(dist_sq, kernel, d);
-        K(i, j) = val;
-        K(j, i) = val;
+  if (scalar_lengthscale) {
+    const double inv_th = 1.0 / theta[0];
+
+    if (symmetric) {
+      for (arma::uword i = 0; i < n; ++i) {
+        K(i, i) = 1.0;
+        for (arma::uword j = i + 1; j < n; ++j) {
+          const double dist_sq = scaled_dist_sq_scalar(Xm, Xm, inv_th, i, j);
+          const double val = kernel_from_dist_sq_fast(
+            dist_sq,
+            kernel_type,
+            sqrt3,
+            sqrt5,
+            q_w
+          );
+          K(i, j) = val;
+          K(j, i) = val;
+        }
+      }
+    } else {
+      for (arma::uword i = 0; i < n; ++i) {
+        for (arma::uword j = 0; j < m; ++j) {
+          const double dist_sq = scaled_dist_sq_scalar(Xm, Xpm, inv_th, i, j);
+          K(i, j) = kernel_from_dist_sq_fast(
+            dist_sq,
+            kernel_type,
+            sqrt3,
+            sqrt5,
+            q_w
+          );
+        }
       }
     }
   } else {
-    for (arma::uword i = 0; i < n; ++i) {
-      for (arma::uword j = 0; j < m; ++j) {
-        const double dist_sq = scaled_dist_sq_row(Xm, Xpm, theta, isotropic, i, j);
-        K(i, j) = kernel_from_dist_sq(dist_sq, kernel, d);
+    if (symmetric) {
+      for (arma::uword i = 0; i < n; ++i) {
+        K(i, i) = 1.0;
+        for (arma::uword j = i + 1; j < n; ++j) {
+          const double dist_sq = scaled_dist_sq_aniso(Xm, Xm, theta, i, j);
+          const double val = kernel_from_dist_sq_fast(
+            dist_sq,
+            kernel_type,
+            sqrt3,
+            sqrt5,
+            q_w
+          );
+          K(i, j) = val;
+          K(j, i) = val;
+        }
+      }
+    } else {
+      for (arma::uword i = 0; i < n; ++i) {
+        for (arma::uword j = 0; j < m; ++j) {
+          const double dist_sq = scaled_dist_sq_aniso(Xm, Xpm, theta, i, j);
+          K(i, j) = kernel_from_dist_sq_fast(
+            dist_sq,
+            kernel_type,
+            sqrt3,
+            sqrt5,
+            q_w
+          );
+        }
       }
     }
   }

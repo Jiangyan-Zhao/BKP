@@ -77,3 +77,54 @@ test_that("kernel_matrix low-memory engine matches direct Gaussian formula", {
   expected <- exp(-outer(X[idx_i, 1], Xp[idx_j, 1], function(a, b) ((a - b) / theta)^2))
   expect_equal(K[idx_i, idx_j], expected, tolerance = 1e-12)
 })
+
+test_that("kernel_matrix loop engine preserves kernel properties", {
+  set.seed(1)
+
+  X <- matrix(runif(80), ncol = 4)
+  Xprime <- matrix(runif(60), ncol = 4)
+  kernels <- c("gaussian", "matern52", "matern32", "wendland")
+
+  for (ker in kernels) {
+    K1 <- kernel_matrix(X, theta = 0.3, kernel = ker, isotropic = TRUE)
+    K2 <- kernel_matrix(X, Xprime, theta = 0.3, kernel = ker, isotropic = TRUE)
+
+    expect_true(all(is.finite(K1)))
+    expect_true(all(is.finite(K2)))
+    expect_equal(K1, t(K1), tolerance = 1e-12)
+    expect_equal(diag(K1), rep(1, nrow(X)), tolerance = 1e-12)
+
+    K3 <- kernel_matrix(X, theta = c(0.2, 0.3, 0.4, 0.5),
+                        kernel = ker, isotropic = FALSE)
+    K4 <- kernel_matrix(X, Xprime,
+                        theta = c(0.2, 0.3, 0.4, 0.5),
+                        kernel = ker, isotropic = FALSE)
+
+    expect_true(all(is.finite(K3)))
+    expect_true(all(is.finite(K4)))
+    expect_equal(K3, t(K3), tolerance = 1e-12)
+    expect_equal(diag(K3), rep(1, nrow(X)), tolerance = 1e-12)
+  }
+})
+
+test_that("kernel_matrix low-memory engine supports all kernels and lengthscales", {
+  set.seed(2)
+
+  X <- matrix(runif(1001 * 2), ncol = 2)
+  Xprime <- matrix(runif(1000 * 2), ncol = 2)
+  kernels <- c("gaussian", "matern52", "matern32", "wendland")
+
+  idx_i <- c(1, 101, 1001)
+  idx_j <- c(1, 500, 1000)
+
+  for (ker in kernels) {
+    K_iso <- kernel_matrix(X, Xprime, theta = 0.3, kernel = ker, isotropic = TRUE)
+    K_aniso <- kernel_matrix(X, Xprime, theta = c(0.2, 0.5), kernel = ker,
+                             isotropic = FALSE)
+
+    expect_true(all(is.finite(K_iso[idx_i, idx_j])))
+    expect_true(all(is.finite(K_aniso[idx_i, idx_j])))
+    expect_equal(dim(K_iso), c(nrow(X), nrow(Xprime)))
+    expect_equal(dim(K_aniso), c(nrow(X), nrow(Xprime)))
+  }
+})
