@@ -9,8 +9,9 @@
 #' @param gamma A numeric vector of log10-transformed kernel hyperparameters.
 #' @param Xnorm A numeric matrix of normalized input features (\code{[0,1]^d}).
 #' @param ess Effective-sample-size calibration for leave-one-out data
-#'   contributions. Use \code{"none"} (default) for the standard loss or
-#'   \code{"shepard"} for leave-one-out Shepard ESS calibration.
+#'   contributions. Use \code{"none"} (default) for the standard LOOCV loss.
+#'   Use \code{"shepard"} to apply the same data-precision rescaling as in
+#'   model fitting, with the Shepard target computed in leave-one-out form.
 #'
 #' @return A single numeric value representing the total loss (to be minimized).
 #'   The value corresponds to either the Brier score (squared error) or the
@@ -127,7 +128,7 @@ loss_fun <- function(
     alpha0 <- get_prior(prior = prior, model = model, r0 = r0, p0 = p0, Y = Y, K = K)
 
     data_scale <- NULL
-    if (identical(ess, "shepard")) {
+    if (ess == "shepard") {
       m_dkp <- rowSums(Y)
       m_kernel <- as.vector(K %*% as.numeric(m_dkp))
       rho <- apply(K, 1L, max)

@@ -59,8 +59,9 @@ shared lengthscale across dimensions. If \code{FALSE}, use separate
 per-dimension lengthscales.}
 
 \item{ess}{Effective-sample-size calibration for leave-one-out data
-contributions. Use \code{"none"} (default) for the standard loss or
-\code{"shepard"} for leave-one-out Shepard ESS calibration.}
+contributions. Use \code{"none"} (default) for the standard LOOCV loss.
+Use \code{"shepard"} to apply the same data-precision rescaling as in
+model fitting, with the Shepard target computed in leave-one-out form.}
 }
 \value{
 A single numeric value representing the total loss (to be minimized).

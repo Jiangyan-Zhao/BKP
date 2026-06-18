@@ -67,9 +67,13 @@ optimization. Default is \code{1}. This argument only affects
 hyperparameter optimization when \code{theta = NULL}.}
 
 \item{ess}{Effective-sample-size calibration for the DKP data contribution.
-Use \code{"none"} (default) for the ordinary DKP posterior update or
-\code{"shepard"} to calibrate the kernel-weighted class-count
-contribution to a Shepard-interpolated target trial size.}
+Use \code{"none"} (default) for the ordinary DKP posterior update. Use
+\code{"shepard"} to rescale the kernel-weighted class-count contribution
+so that its effective trial size is
+\eqn{\rho(\mathbf{x}) m_S(\mathbf{x})}, where \eqn{m_S(\mathbf{x})} is a
+Shepard interpolation of row sums \code{rowSums(Y)} and
+\eqn{\rho(\mathbf{x}) = \max_i K(\mathbf{x}, \mathbf{x}_i)}. The class
+proportions are preserved while the data precision is calibrated.}
 }
 \value{
 A list of class \code{"DKP"} representing the fitted DKP model, with
@@ -79,8 +83,7 @@ the following components:
 \item{\code{kernel}}{Kernel function used, as a string.}
 \item{\code{isotropic}}{Logical flag indicating whether a shared lengthscale (\code{TRUE}) or per-dimension lengthscales (\code{FALSE}) was used.}
 \item{\code{loss}}{Loss function used for hyperparameter tuning.}
-\item{\code{loss_min}}{Minimum loss value achieved during kernel
-hyperparameter optimization. Set to \code{NA} if \code{theta} is user-specified.}
+\item{\code{loss_min}}{Loss value at the selected or user-specified kernel parameters.}
 \item{\code{ess}}{Effective-sample-size calibration method used.}
 \item{\code{ess_info}}{ESS calibration diagnostics, including the scale factor and target/kernel trial sizes.}
 \item{\code{X}}{Original (unnormalized) input matrix of size \code{n × d}.}

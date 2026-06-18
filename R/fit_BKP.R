@@ -41,9 +41,14 @@
 #'   optimization. Default is \code{1}. This argument only affects
 #'   hyperparameter optimization when \code{theta = NULL}.
 #' @param ess Effective-sample-size calibration for the BKP data contribution.
-#'   Use \code{"none"} (default) for the standard BKP update, or
-#'   \code{"shepard"} to rescale the kernel-weighted data contribution using
-#'   Shepard interpolation of trial sizes on the normalized input scale.
+#'   Use \code{"none"} (default) for the standard BKP update. Use
+#'   \code{"shepard"} to rescale the kernel-weighted data contribution so that
+#'   its effective trial size is
+#'   \eqn{\rho(\mathbf{x}) m_S(\mathbf{x})}, where \eqn{m_S(\mathbf{x})} is a
+#'   Shepard interpolation of the observed trial sizes on the normalized input
+#'   scale and \eqn{\rho(\mathbf{x}) = \max_i K(\mathbf{x}, \mathbf{x}_i)}.
+#'   This calibration preserves the kernel-weighted empirical proportion and
+#'   changes only the data precision, not the prior parameters.
 #'
 #' @return A list of class \code{"BKP"} containing the fitted BKP model,
 #'   including:
@@ -52,7 +57,7 @@
 #'   \item{\code{kernel}}{Kernel function used, as a string.}
 #'   \item{\code{isotropic}}{Logical flag indicating whether a shared lengthscale (\code{TRUE}) or per-dimension lengthscales (\code{FALSE}) was used.}
 #'   \item{\code{loss}}{Loss function used for hyperparameter tuning.}
-#'   \item{\code{loss_min}}{Loss value at the selected/provided kernel parameters.}
+#'   \item{\code{loss_min}}{Loss value at the selected or user-specified kernel parameters.}
 #'   \item{\code{ess}}{Effective-sample-size calibration method used.}
 #'   \item{\code{ess_info}}{ESS calibration diagnostics, including the scale factor and target/kernel trial sizes.}
 #'   \item{\code{X}}{Original input matrix (\eqn{n \times d}).}
@@ -211,8 +216,11 @@ fit_BKP <- function(
     stop("'r0' must be a positive scalar.")
   }
 
-  if (!is.numeric(p0) || length(p0) != 1 || p0 <= 0 || p0 >= 1) {
-    stop("'p0' must be a positive scalar.")
+  if (prior == "fixed") {
+    if (!is.numeric(p0) || length(p0) != 1 ||
+        is.na(p0) || !is.finite(p0) || p0 <= 0 || p0 >= 1) {
+      stop("For fixed prior in BKP, 'p0' must be a scalar in (0, 1).")
+    }
   }
 
   # ---- hyperparameters checks ----

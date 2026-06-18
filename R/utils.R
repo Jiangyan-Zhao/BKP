@@ -563,8 +563,11 @@ posterior_summary <- function(mean_vals, var_vals) {
 #' Compute Shepard ESS calibration diagnostics
 #'
 #' Internal helper that rescales kernel-weighted data contributions so their
-#' effective trial size matches a Shepard-interpolated target, adjusted by the
-#' maximum kernel similarity at each query location.
+#' effective trial size matches \eqn{\rho(\mathbf{x}) m_S(\mathbf{x})}, where
+#' \eqn{m_S(\mathbf{x})} is a Shepard interpolation of trial sizes and
+#' \eqn{\rho(\mathbf{x})} is the maximum kernel similarity to the training set.
+#' The scaling preserves kernel-weighted empirical proportions and changes only
+#' the data contribution.
 #'
 #' @param Xquery_norm Numeric matrix of normalized query locations.
 #' @param Xtrain_norm Numeric matrix of normalized training locations.
