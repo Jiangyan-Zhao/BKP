@@ -56,7 +56,7 @@ model <- fit_BKP(X, y, m, Xbounds = Xbounds)
 fitted(model)
 
 # -------------------------- DKP ---------------------------
-#' set.seed(123)
+set.seed(123)
 
 # Define true class probability function (3-class)
 true_pi_fun <- function(X) {

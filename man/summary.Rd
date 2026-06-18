@@ -23,6 +23,7 @@ A list containing key summaries of the fitted model:
 \item{\code{n_obs}}{Number of training observations.}
 \item{\code{input_dim}}{Input dimensionality (number of columns in X).}
 \item{\code{kernel}}{Kernel type used in the model.}
+\item{\code{isotropic}}{Logical flag indicating whether a shared lengthscale was used.}
 \item{\code{theta_opt}}{Estimated kernel hyperparameters.}
 \item{\code{loss}}{Loss function type used in the model.}
 \item{\code{loss_min}}{Minimum value of the loss function achieved.}

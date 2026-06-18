@@ -157,7 +157,8 @@ test_that("fit_BKP validates extended argument branches", {
   y <- rbinom(nrow(X), size = 5, prob = 0.5)
   m <- rep(5, nrow(X))
   expect_error(fit_BKP(X, y, m, r0 = 0), "'r0' must be a positive scalar")
-  expect_error(fit_BKP(X, y, m, p0 = 1), "'p0' must be a positive scalar")
+  expect_error(fit_BKP(X, y, m, prior = "fixed", p0 = 1),
+               "For fixed prior in BKP, 'p0' must be a scalar in \\(0, 1\\).")
   expect_error(fit_BKP(X, y, m, n_multi_start = 0), "'n_multi_start' must be a positive integer")
   expect_error(fit_BKP(X, y, m, theta = "bad"), "'theta' must be numeric")
   expect_error(fit_BKP(X, y, m, theta = c(0.2, 0.3), isotropic = TRUE), "When isotropic=TRUE")

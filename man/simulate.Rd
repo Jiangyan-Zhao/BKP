@@ -33,7 +33,7 @@ A list with the following components:
 \item{\code{samples}}{
 For \strong{BKP}: A numeric matrix of size \code{nrow(Xnew) × nsim}, where
 each column corresponds to one posterior draw of success probabilities.\cr
-For \strong{DKP}: A numeric array of dimension \code{nsim × q × nrow(Xnew)},
+For \strong{DKP}: A numeric array of dimension \code{nrow(Xnew) × q × nsim},
     containing simulated class probabilities from Dirichlet posteriors, where
 \code{q} is the number of classes.
 }

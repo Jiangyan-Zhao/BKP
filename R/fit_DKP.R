@@ -18,9 +18,10 @@
 #'   Shepard interpolation of row sums \code{rowSums(Y)} and
 #'   \eqn{\rho(\mathbf{x}) = \max_i K(\mathbf{x}, \mathbf{x}_i)}. The class
 #'   proportions are preserved while the data precision is calibrated.
-#' @param p0 Global prior mean vector (used only when \code{prior = "fixed"}).
+#' @param p0 Global prior mean vector used only when \code{prior = "fixed"}.
 #'   Defaults to the empirical class proportions \code{colMeans(Y / rowSums(Y))}.
-#'   Must have length equal to the number of categories \eqn{q}.
+#'   It must be a nonnegative finite numeric vector of length \eqn{q} and sum to 1.
+#'
 #'
 #' @return A list of class \code{"DKP"} representing the fitted DKP model, with
 #'   the following components:
@@ -204,8 +205,8 @@ fit_DKP <- function(
   if (prior == "fixed") {
     if (is.null(p0) || !is.numeric(p0) || length(p0) != q ||
         anyNA(p0) || any(!is.finite(p0)) ||
-        any(p0 < 0) || abs(sum(p0) - 1) > 1e-10) {
-      stop("For fixed prior in DKP, 'p0' must be a positive finite numeric vector of length equal to the number of classes and sum to 1.")
+        any(p0 <= 0) || abs(sum(p0) - 1) > 1e-10) {
+      stop("For fixed prior in DKP, 'p0' must be a nonnegative finite numeric vector of length equal to the number of classes and sum to 1.")
     }
   }
 

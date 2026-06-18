@@ -38,9 +38,9 @@ default bounds \eqn{[0,1]^d} are applied.}
 \item{r0}{Global prior precision (used when \code{prior = "fixed"} or
 \code{"adaptive"}).}
 
-\item{p0}{Global prior mean vector (used only when \code{prior = "fixed"}).
+\item{p0}{Global prior mean vector used only when \code{prior = "fixed"}.
 Defaults to the empirical class proportions \code{colMeans(Y / rowSums(Y))}.
-Must have length equal to the number of categories \eqn{q}.}
+It must be a nonnegative finite numeric vector of length \eqn{q} and sum to 1.}
 
 \item{kernel}{Kernel function for local weighting: \code{"gaussian"}
 (default), \code{"matern52"}, \code{"matern32"}, or \code{"wendland"}.}

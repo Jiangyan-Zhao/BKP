@@ -188,8 +188,10 @@ test_that("fit_DKP validates extended argument branches", {
   probs <- c(0.2, 0.3, 0.5)
   Y <- t(sapply(seq_len(nrow(X)), function(i) rmultinom(1, size = 8, prob = probs)))
   expect_error(fit_DKP(X, Y, r0 = 0), "'r0' must be a positive scalar")
-  expect_error(fit_DKP(X, Y, p0 = c(0.7, -0.2, 0.5)), "'p0' must be numeric, nonnegative, and sum to 1")
-  expect_error(fit_DKP(X, Y, prior = "fixed", p0 = c(0.5, 0.5)), "must provide 'p0' with length equal to number of classes")
+  expect_error(fit_DKP(X, Y, prior = "fixed", p0 = c(0.7, -0.2, 0.5)),
+               "For fixed prior in DKP, 'p0' must be a nonnegative finite numeric vector of length equal to the number of classes and sum to 1.")
+  expect_error(fit_DKP(X, Y, prior = "fixed", p0 = c(0.5, 0.5)),
+               "For fixed prior in DKP, 'p0' must be a nonnegative finite numeric vector of length equal to the number of classes and sum to 1.")
   expect_error(fit_DKP(X, Y, n_multi_start = 0), "'n_multi_start' must be a positive integer")
   expect_error(fit_DKP(X, Y, theta = "bad"), "'theta' must be numeric")
   expect_error(fit_DKP(X, Y, theta = c(0.2, 0.3), isotropic = TRUE), "When isotropic=TRUE")
