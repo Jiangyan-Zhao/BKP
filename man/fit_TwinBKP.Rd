@@ -127,7 +127,7 @@ trial-size column when \code{include_m_in_twin = TRUE}.}
 
 \item{store_kernel}{Logical. If \code{TRUE}, store dense diagnostic
 kernel matrices \code{K}, \code{K_global}, and \code{K_local}. The
-default \code{FALSE} avoids \eqn{n 	imes n} kernel storage and is
+default \code{FALSE} avoids \eqn{n \times n} kernel storage and is
 required for the stated TwinBKP memory complexity.}
 }
 \value{
@@ -178,7 +178,7 @@ For BKP, the default augmented Twinning data is
 \code{cbind(Xnorm, response_weight * y / m)}. Local neighbours are selected
 using a kd-tree over non-global training points via \pkg{nanoflann}. By
 default, posterior pseudo-counts are aggregated row-wise and dense
-\eqn{n 	imes n} kernel matrices are not stored. Fitting posterior
+\eqn{n \times n} kernel matrices are not stored. Fitting posterior
 aggregation is \eqn{O(n(g + l))}. Prediction under \code{ess = "none"}
 is \eqn{O(t(\log n + g + l))} for fixed input dimension. Exact
 \code{ess = "shepard"} at new prediction points may add \eqn{O(tn)}
@@ -192,7 +192,7 @@ m <- sample(10:30, n, replace = TRUE)
 p <- plogis(2 * (X[, 1] - 0.5))
 y <- rbinom(n, size = m, prob = p)
 
-model <- fit_TwinBKP(X, y, m, g = 10, runs = 2, theta_g = 0.25)
+model <- fit_TwinBKP(X, y, m, g = 10, runs = 2)
 model$theta_g
 model$theta_l
 

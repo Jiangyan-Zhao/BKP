@@ -1,5 +1,11 @@
 # BKP 0.3.0
 
+- Added `fit_TwinBKP()` and `predict.TwinBKP()` for scalable Twin Beta Kernel Process modeling.
+- Implemented Twinning-based global subset selection and kd-tree local-neighbour search.
+- Added C++ row-wise TwinBKP posterior aggregation, avoiding dense `n x n` kernel storage by default.
+- Added optional dense kernel storage via `store_kernel = TRUE` for diagnostics and tests.
+- Added test coverage for TwinBKP fitting, prediction, ESS calibration, and reproducibility.
+
 # BKP 0.2.4 (2026-06-16)
 
 - Improved computational efficiency by implementing kernel evaluation, prior construction, loss evaluation, and hyperparameter optimization routines in C++.

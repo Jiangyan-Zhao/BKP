@@ -159,17 +159,15 @@ Rcpp::List twin_bkp_posterior_rcpp(
       alpha0[qi] = r0 * p0;
       beta0[qi] = r0 * (1.0 - p0);
     } else if (prior == "adaptive") {
-      if (sum_w > 0.0) {
-        const double p_adapt = clamp_prob(sum_w_prop / sum_w);
-        const double r_adapt = r0 * sum_w;
-        alpha0[qi] = r_adapt * p_adapt;
-        beta0[qi] = r_adapt * (1.0 - p_adapt);
-      } else {
-        const double p_adapt = clamp_prob(p0);
-        const double r_adapt = 0.0;
-        alpha0[qi] = r_adapt * p_adapt;
-        beta0[qi] = r_adapt * (1.0 - p_adapt);
-      }
+      // Match the adaptive BKP prior behavior used by get_prior_bkp_arma().
+      // Even if no global/local kernel weights fire, keep both Beta shape
+      // parameters strictly positive.
+      const double denom_w = std::max(sum_w, 1e-6);
+      const double p_adapt = clamp_prob(sum_w_prop / denom_w);
+      const double r_adapt = r0 * std::max(sum_w, 1e-3);
+
+      alpha0[qi] = std::max(1e-2, r_adapt * p_adapt);
+      beta0[qi]  = std::max(1e-2, r_adapt * (1.0 - p_adapt));
     }
 
     double sc = 1.0;

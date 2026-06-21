@@ -147,7 +147,7 @@
 #' p <- plogis(2 * (X[, 1] - 0.5))
 #' y <- rbinom(n, size = m, prob = p)
 #'
-#' model <- fit_TwinBKP(X, y, m, g = 10, runs = 2, theta_g = 0.25)
+#' model <- fit_TwinBKP(X, y, m, g = 10, runs = 2)
 #' model$theta_g
 #' model$theta_l
 #'
@@ -555,101 +555,6 @@ fit_TwinBKP <- function(
   }
 
   as.integer(c(which.max(d2), sample.int(n, runs - 1L, replace = TRUE)))
-}
-
-
-.bkp_twin_local_indices <- function(Xnorm, g_indices, l) {
-  n <- nrow(Xnorm)
-
-  if (l == 0L) {
-    return(matrix(integer(0), nrow = n, ncol = 0L))
-  }
-
-  non_global <- setdiff(seq_len(n), as.integer(g_indices))
-  out <- matrix(NA_integer_, nrow = n, ncol = l)
-
-  for (i in seq_len(n)) {
-    dif <- sweep(Xnorm[non_global, , drop = FALSE], 2, Xnorm[i, ], "-")
-    d2 <- rowSums(dif^2)
-    out[i, ] <- non_global[order(d2)[seq_len(l)]]
-  }
-
-  out
-}
-
-
-.twin_bkp_compute_posterior <- function(Xnorm, y, m, g_indices, local_indices,
-                                        theta_g, theta_l,
-                                        global_kernel, local_kernel, isotropic,
-                                        prior, r0, p0, ess = "none") {
-  n <- nrow(Xnorm)
-  y <- as.numeric(y)
-  m <- as.numeric(m)
-  g_indices <- as.integer(g_indices)
-
-  K_global <- matrix(0, nrow = n, ncol = n)
-  K_global[, g_indices] <- kernel_matrix(
-    X = Xnorm,
-    Xprime = Xnorm[g_indices, , drop = FALSE],
-    theta = theta_g,
-    kernel = global_kernel,
-    isotropic = isotropic
-  )
-
-  K_local <- matrix(0, nrow = n, ncol = n)
-  if (ncol(local_indices) > 0L) {
-    for (i in seq_len(n)) {
-      idx <- local_indices[i, ]
-      K_local[i, idx] <- as.numeric(kernel_matrix(
-        X = Xnorm[i, , drop = FALSE],
-        Xprime = Xnorm[idx, , drop = FALSE],
-        theta = theta_l,
-        kernel = local_kernel,
-        isotropic = TRUE
-      ))
-    }
-  }
-
-  K <- K_global + K_local
-
-  prior_par <- get_prior(
-    prior = prior,
-    model = "BKP",
-    r0 = r0,
-    p0 = p0,
-    y = y,
-    m = m,
-    K = K
-  )
-  alpha0 <- prior_par$alpha0
-  beta0 <- prior_par$beta0
-
-  data_success <- as.vector(K %*% y)
-  data_failure <- as.vector(K %*% (m - y))
-
-  if (identical(ess, "shepard")) {
-    ess_info <- .bkp_ess_calibration(
-      Xquery_norm = Xnorm,
-      Xtrain_norm = Xnorm,
-      m = m,
-      K = K
-    )
-    data_success <- ess_info$scale * data_success
-    data_failure <- ess_info$scale * data_failure
-  } else {
-    ess_info <- .bkp_ess_none_info(K, m)
-  }
-
-  list(
-    K = K,
-    K_global = K_global,
-    K_local = K_local,
-    alpha0 = alpha0,
-    beta0 = beta0,
-    alpha_n = alpha0 + data_success,
-    beta_n = beta0 + data_failure,
-    ess_info = ess_info
-  )
 }
 
 .twin_bkp_compute_posterior_fast <- function(

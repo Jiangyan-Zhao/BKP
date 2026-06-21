@@ -16,13 +16,19 @@
 }
 \arguments{
 \item{object}{A fitted object of class \code{"TwinBKP"}.}
+
 \item{Xnew}{Optional numeric matrix of new input locations.}
+
 \item{CI_level}{Credible interval level.}
+
 \item{threshold}{Classification threshold used when all training trial counts are one.}
+
 \item{type}{Prediction scale: \code{"probability"} or \code{"count"}.}
+
 \item{Mnew}{Trial counts for count prediction.}
+
 \item{...}{Additional arguments, currently unused.}
 }
 \description{
-Predict from a TwinBKP model using stored training posterior parameters or efficient row-wise new-point posterior aggregation.
+Predict from a TwinBKP model
 }

@@ -91,3 +91,37 @@ test_that("predict.TwinBKP supports Shepard ESS", {
   expect_true(all(is.finite(pred_new$mean)))
   expect_false(anyNA(pred_new$ess_info$scale))
 })
+
+test_that("predict.TwinBKP keeps adaptive prior positive when all kernel weights are zero", {
+  set.seed(123)
+
+  n <- 20
+  X <- matrix(runif(n * 2), ncol = 2)
+  m <- sample(8:20, n, replace = TRUE)
+  y <- rbinom(n, size = m, prob = 0.4)
+
+  model <- fit_TwinBKP(
+    X, y, m,
+    prior = "adaptive",
+    r0 = 2,
+    global_kernel = "wendland",
+    local_kernel = "wendland",
+    theta_g = 0.05,
+    theta_l = 0.05,
+    g = 6,
+    runs = 2
+  )
+
+  ## Far outside the normalized training domain; both Wendland components
+  ## should have zero weight.
+  Xnew <- matrix(c(10, 10), ncol = 2)
+
+  pred <- predict(model, Xnew = Xnew)
+
+  expect_true(all(is.finite(pred$alpha_n)))
+  expect_true(all(is.finite(pred$beta_n)))
+  expect_true(all(pred$alpha_n > 0))
+  expect_true(all(pred$beta_n > 0))
+  expect_true(all(is.finite(pred$mean)))
+  expect_true(all(pred$mean >= 0 & pred$mean <= 1))
+})
