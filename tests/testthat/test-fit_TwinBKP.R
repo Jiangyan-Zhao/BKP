@@ -94,6 +94,11 @@ test_that("fit_TwinBKP handles input validation similarly to fit_BKP", {
     fit_TwinBKP(X = X_inf, y = y_test, m = m_test),
     "'X', 'y', and 'm' must contain only finite values."
   )
+
+  expect_error(
+    fit_TwinBKP(X_test, y_test, m_test, store_kernel = c(TRUE, FALSE)),
+    "'store_kernel' must be a single logical value."
+  )
 })
 
 
@@ -290,12 +295,39 @@ test_that("fit_TwinBKP returns an object with expected structure and content", {
   expect_equal(model$prior, "noninformative")
   expect_equal(model$X, X)
   expect_equal(dim(model$Xnorm), dim(X))
-  expect_equal(dim(model$K), c(n, n))
-  expect_equal(dim(model$K_global), c(n, n))
-  expect_equal(dim(model$K_local), c(n, n))
-  expect_equal(model$K, model$K_global + model$K_local)
-  expect_equal(nrow(model$local_indices), n)
+  expect_null(model$K)
+  expect_null(model$K_global)
+  expect_null(model$K_local)
+  expect_false(model$store_kernel)
+  expect_true(all(is.finite(model$alpha_n)))
+  expect_true(all(is.finite(model$beta_n)))
+  expect_equal(nrow(model$local_indices), nrow(model$X))
   expect_equal(ncol(model$local_indices), model$l)
+  expect_false(any(model$local_indices %in% model$global_indices))
+})
+
+
+test_that("fit_TwinBKP stores dense diagnostic kernels only on request", {
+  set.seed(44)
+
+  n <- 24
+  X <- matrix(runif(n * 2), ncol = 2)
+  m <- sample(8:15, n, replace = TRUE)
+  y <- rbinom(n, size = m, prob = 0.45)
+
+  model <- fit_TwinBKP(
+    X = X, y = y, m = m,
+    theta_g = 0.3, theta_l = 0.4,
+    g = 8, runs = 2, store_kernel = TRUE,
+    ess = "none"
+  )
+
+  expect_true(is.matrix(model$K))
+  expect_true(is.matrix(model$K_global))
+  expect_true(is.matrix(model$K_local))
+  expect_equal(model$K, model$K_global + model$K_local)
+  expect_equal(model$alpha_n, model$alpha0 + as.vector(model$K %*% model$y))
+  expect_equal(model$beta_n, model$beta0 + as.vector(model$K %*% (model$m - model$y)))
 })
 
 
@@ -334,7 +366,8 @@ test_that("fit_TwinBKP posterior matches the combined global-local kernel update
     X = X, y = y, m = m,
     theta_g = 0.25, theta_l = 0.35,
     g = 8, runs = 2, u1 = c(1L, 2L),
-    ess = "none"
+    ess = "none",
+    store_kernel = TRUE
   )
 
   prior_par <- get_prior(

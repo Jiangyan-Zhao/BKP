@@ -76,6 +76,10 @@
 #'   column is included in the augmented Twinning data.
 #' @param size_weight Nonnegative scalar weight applied to the normalized log
 #'   trial-size column when \code{include_m_in_twin = TRUE}.
+#' @param store_kernel Logical. If \code{TRUE}, store dense diagnostic
+#'   kernel matrices \code{K}, \code{K_global}, and \code{K_local}. The
+#'   default \code{FALSE} avoids \eqn{n \times n} kernel storage and is
+#'   required for the stated TwinBKP memory complexity.
 #'
 #' @return A list of class \code{"TwinBKP"} containing the fitted TwinBKP model,
 #'   including:
@@ -111,11 +115,14 @@
 #'
 #' @details The global subset is selected using \code{twin_select_global_rcpp()}.
 #'   For BKP, the default augmented Twinning data is
-#'   \code{cbind(Xnorm, response_weight * y / m)}. The local subsets are selected
-#'   from the non-global training points using nearest neighbours in the
-#'   normalized input space. This initial implementation constructs local
-#'   neighbours in R for clarity and consistency with the current package
-#'   interface.
+#'   \code{cbind(Xnorm, response_weight * y / m)}. Local neighbours are selected
+#'   using a kd-tree over non-global training points via \pkg{nanoflann}. By
+#'   default, posterior pseudo-counts are aggregated row-wise and dense
+#'   \eqn{n \times n} kernel matrices are not stored. Fitting posterior
+#'   aggregation is \eqn{O(n(g + l))}. Prediction under \code{ess = "none"}
+#'   is \eqn{O(t(\log n + g + l))} for fixed input dimension. Exact
+#'   \code{ess = "shepard"} at new prediction points may add \eqn{O(tn)}
+#'   arithmetic for exact Shepard interpolation.
 #'
 #' @seealso \code{\link{fit_BKP}} for the full BKP model,
 #'   \code{\link{fit_DKP}} for multinomial responses, \code{\link{predict.BKP}},
@@ -158,7 +165,8 @@ fit_TwinBKP <- function(
     runs = 10, u1 = NULL, leaf_size = 8,
     response_weight = 1,
     include_m_in_twin = FALSE,
-    size_weight = 0
+    size_weight = 0,
+    store_kernel = FALSE
 ) {
   # ---- Argument checking ----
   if (missing(X) || missing(y) || missing(m)) {
@@ -318,6 +326,10 @@ fit_TwinBKP <- function(
     stop("'include_m_in_twin' must be a single logical value.")
   }
 
+  if (!is.logical(store_kernel) || length(store_kernel) != 1) {
+    stop("'store_kernel' must be a single logical value.")
+  }
+
   if (!is.numeric(size_weight) || length(size_weight) != 1 ||
       is.na(size_weight) || !is.finite(size_weight) || size_weight < 0) {
     stop("'size_weight' must be a nonnegative scalar.")
@@ -444,10 +456,17 @@ fit_TwinBKP <- function(
   }
 
   # ---- Compute posterior parameters ----
-  local_indices <- .bkp_twin_local_indices(Xnorm, g_indices, l)
+  local_indices <- twin_local_indices_rcpp(
+    Xtrain_norm = Xnorm,
+    Xquery_norm = Xnorm,
+    g_indices = g_indices,
+    l = l,
+    leaf_size = leaf_size
+  )
 
-  posterior <- .twin_bkp_compute_posterior(
-    Xnorm = Xnorm,
+  posterior <- .twin_bkp_compute_posterior_fast(
+    Xquery_norm = Xnorm,
+    Xtrain_norm = Xnorm,
     y = y,
     m = m,
     g_indices = g_indices,
@@ -460,7 +479,8 @@ fit_TwinBKP <- function(
     prior = prior,
     r0 = r0,
     p0 = p0,
-    ess = ess
+    ess = ess,
+    store_kernel = store_kernel
   )
 
   # ---- Construct and return the fitted model ----
@@ -477,7 +497,16 @@ fit_TwinBKP <- function(
     global_indices = g_indices, local_indices = local_indices,
     g_target = g, g = g_actual, r = r, l = l, runs = runs, u1 = u1,
     response_weight = response_weight, include_m_in_twin = include_m_in_twin,
-    size_weight = size_weight, leaf_size = leaf_size
+    size_weight = size_weight, leaf_size = leaf_size,
+    store_kernel = store_kernel,
+    complexity = list(
+      global_selection = "Twinning global subset selection using kd-tree nearest-neighbour search",
+      global_tuning = "O(T_g g^2), where T_g is the number of global-subset loss evaluations",
+      training_posterior = "O(n(g + l)) row-wise pseudo-count aggregation",
+      prediction = "O(t(log n + g + l)) for ess = 'none' and fixed input dimension",
+      memory = "O(n + n l + g) by default, excluding input storage; dense kernels are stored only when store_kernel = TRUE",
+      ess_note = "With exact ess = 'shepard', new-point prediction may require O(t n) arithmetic for exact Shepard interpolation."
+    )
   )
 
   class(TwinBKP_model) <- "TwinBKP"
@@ -620,5 +649,42 @@ fit_TwinBKP <- function(
     alpha_n = alpha0 + data_success,
     beta_n = beta0 + data_failure,
     ess_info = ess_info
+  )
+}
+
+.twin_bkp_compute_posterior_fast <- function(
+    Xquery_norm, Xtrain_norm, y, m, g_indices, local_indices,
+    theta_g, theta_l, global_kernel, local_kernel, isotropic,
+    prior, r0, p0, ess = "none", store_kernel = FALSE
+) {
+  m_shepard <- NULL
+
+  if (identical(ess, "shepard")) {
+    m_shepard <- .bkp_shepard_m(
+      Xquery_norm = Xquery_norm,
+      Xtrain_norm = Xtrain_norm,
+      m = as.numeric(m),
+      power = 2
+    )
+  }
+
+  twin_bkp_posterior_rcpp(
+    Xquery_norm = Xquery_norm,
+    Xtrain_norm = Xtrain_norm,
+    y = as.numeric(y),
+    m = as.numeric(m),
+    g_indices = as.integer(g_indices),
+    local_indices = local_indices,
+    theta_g = as.numeric(theta_g),
+    theta_l = as.numeric(theta_l),
+    global_kernel = global_kernel,
+    local_kernel = local_kernel,
+    isotropic = isTRUE(isotropic),
+    prior = prior,
+    r0 = r0,
+    p0 = p0,
+    ess = ess,
+    m_shepard = m_shepard,
+    store_kernel = store_kernel
   )
 }
