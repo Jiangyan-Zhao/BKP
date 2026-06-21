@@ -156,6 +156,22 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// twin_select_global_rcpp
+Rcpp::List twin_select_global_rcpp(Rcpp::NumericMatrix twin_data, Rcpp::NumericMatrix Xnorm, std::size_t r, std::size_t runs, Rcpp::IntegerVector u1, std::size_t leaf_size);
+RcppExport SEXP _BKP_twin_select_global_rcpp(SEXP twin_dataSEXP, SEXP XnormSEXP, SEXP rSEXP, SEXP runsSEXP, SEXP u1SEXP, SEXP leaf_sizeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type twin_data(twin_dataSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type Xnorm(XnormSEXP);
+    Rcpp::traits::input_parameter< std::size_t >::type r(rSEXP);
+    Rcpp::traits::input_parameter< std::size_t >::type runs(runsSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type u1(u1SEXP);
+    Rcpp::traits::input_parameter< std::size_t >::type leaf_size(leaf_sizeSEXP);
+    rcpp_result_gen = Rcpp::wrap(twin_select_global_rcpp(twin_data, Xnorm, r, runs, u1, leaf_size));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_BKP_get_prior_rcpp", (DL_FUNC) &_BKP_get_prior_rcpp, 8},
@@ -166,6 +182,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_BKP_qbetabinom_rcpp", (DL_FUNC) &_BKP_qbetabinom_rcpp, 4},
     {"_BKP_shepard_m_rcpp", (DL_FUNC) &_BKP_shepard_m_rcpp, 4},
     {"_BKP_shepard_m_loo_rcpp", (DL_FUNC) &_BKP_shepard_m_loo_rcpp, 3},
+    {"_BKP_twin_select_global_rcpp", (DL_FUNC) &_BKP_twin_select_global_rcpp, 6},
     {NULL, NULL, 0}
 };
 

@@ -33,3 +33,7 @@ shepard_m_loo_rcpp <- function(Xnorm, m, power = 2.0) {
     .Call(`_BKP_shepard_m_loo_rcpp`, Xnorm, m, power)
 }
 
+twin_select_global_rcpp <- function(twin_data, Xnorm, r, runs, u1, leaf_size = 8L) {
+    .Call(`_BKP_twin_select_global_rcpp`, twin_data, Xnorm, r, runs, u1, leaf_size)
+}
+
