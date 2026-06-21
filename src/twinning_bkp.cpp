@@ -299,3 +299,67 @@ Rcpp::List twin_select_global_rcpp(
 
   return tree.twin();
 }
+
+// [[Rcpp::export]]
+Rcpp::IntegerMatrix twin_local_indices_rcpp(
+    Rcpp::NumericMatrix Xtrain_norm,
+    Rcpp::NumericMatrix Xquery_norm,
+    Rcpp::IntegerVector g_indices,
+    std::size_t l,
+    std::size_t leaf_size = 8)
+{
+  const std::size_t n_train = Xtrain_norm.nrow();
+  const std::size_t n_query = Xquery_norm.nrow();
+  const std::size_t dim = Xtrain_norm.ncol();
+
+  Rcpp::IntegerMatrix out(n_query, l);
+  if (l == 0) {
+    return out;
+  }
+
+  std::vector<bool> is_global(n_train, false);
+  for (R_xlen_t i = 0; i < g_indices.size(); i++) {
+    const int idx1 = g_indices[i];
+    if (idx1 >= 1 && static_cast<std::size_t>(idx1) <= n_train) {
+      is_global[static_cast<std::size_t>(idx1 - 1)] = true;
+    }
+  }
+
+  std::vector<std::size_t> non_global0;
+  non_global0.reserve(n_train);
+  for (std::size_t i = 0; i < n_train; i++) {
+    if (!is_global[i]) {
+      non_global0.push_back(i);
+    }
+  }
+
+  DF2 x_train;
+  x_train.import_data(Xtrain_norm);
+  x_train.subset_on(&non_global0);
+
+  kdTree tree(
+      dim,
+      x_train,
+      nanoflann::KDTreeSingleIndexAdaptorParams(leaf_size)
+  );
+
+  std::vector<std::size_t> index(l);
+  std::vector<double> distance(l);
+  std::vector<double> query(dim);
+
+  for (std::size_t i = 0; i < n_query; i++) {
+    for (std::size_t k = 0; k < dim; k++) {
+      query[k] = Xquery_norm(i, k);
+    }
+
+    nanoflann::KNNResultSet<double> resultSet(l);
+    resultSet.init(&index[0], &distance[0]);
+    tree.findNeighbors(resultSet, &query[0]);
+
+    for (std::size_t j = 0; j < l; j++) {
+      out(i, j) = static_cast<int>(non_global0[index[j]] + 1);
+    }
+  }
+
+  return out;
+}

@@ -29,7 +29,8 @@ fit_TwinBKP(
   leaf_size = 8,
   response_weight = 1,
   include_m_in_twin = FALSE,
-  size_weight = 0
+  size_weight = 0,
+  store_kernel = FALSE
 )
 }
 \arguments{
@@ -123,6 +124,11 @@ column is included in the augmented Twinning data.}
 
 \item{size_weight}{Nonnegative scalar weight applied to the normalized log
 trial-size column when \code{include_m_in_twin = TRUE}.}
+
+\item{store_kernel}{Logical. If \code{TRUE}, store dense diagnostic
+kernel matrices \code{K}, \code{K_global}, and \code{K_local}. The
+default \code{FALSE} avoids \eqn{n 	imes n} kernel storage and is
+required for the stated TwinBKP memory complexity.}
 }
 \value{
 A list of class \code{"TwinBKP"} containing the fitted TwinBKP model,
@@ -169,11 +175,14 @@ supported local contribution from nearest non-global neighbours.
 \details{
 The global subset is selected using \code{twin_select_global_rcpp()}.
 For BKP, the default augmented Twinning data is
-\code{cbind(Xnorm, response_weight * y / m)}. The local subsets are selected
-from the non-global training points using nearest neighbours in the
-normalized input space. This initial implementation constructs local
-neighbours in R for clarity and consistency with the current package
-interface.
+\code{cbind(Xnorm, response_weight * y / m)}. Local neighbours are selected
+using a kd-tree over non-global training points via \pkg{nanoflann}. By
+default, posterior pseudo-counts are aggregated row-wise and dense
+\eqn{n 	imes n} kernel matrices are not stored. Fitting posterior
+aggregation is \eqn{O(n(g + l))}. Prediction under \code{ess = "none"}
+is \eqn{O(t(\log n + g + l))} for fixed input dimension. Exact
+\code{ess = "shepard"} at new prediction points may add \eqn{O(tn)}
+arithmetic for exact Shepard interpolation.
 }
 \examples{
 set.seed(1)

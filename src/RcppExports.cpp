@@ -173,6 +173,49 @@ BEGIN_RCPP
 END_RCPP
 }
 
+// twin_local_indices_rcpp
+Rcpp::IntegerMatrix twin_local_indices_rcpp(Rcpp::NumericMatrix Xtrain_norm, Rcpp::NumericMatrix Xquery_norm, Rcpp::IntegerVector g_indices, std::size_t l, std::size_t leaf_size);
+RcppExport SEXP _BKP_twin_local_indices_rcpp(SEXP Xtrain_normSEXP, SEXP Xquery_normSEXP, SEXP g_indicesSEXP, SEXP lSEXP, SEXP leaf_sizeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type Xtrain_norm(Xtrain_normSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type Xquery_norm(Xquery_normSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type g_indices(g_indicesSEXP);
+    Rcpp::traits::input_parameter< std::size_t >::type l(lSEXP);
+    Rcpp::traits::input_parameter< std::size_t >::type leaf_size(leaf_sizeSEXP);
+    rcpp_result_gen = Rcpp::wrap(twin_local_indices_rcpp(Xtrain_norm, Xquery_norm, g_indices, l, leaf_size));
+    return rcpp_result_gen;
+END_RCPP
+}
+// twin_bkp_posterior_rcpp
+Rcpp::List twin_bkp_posterior_rcpp(Rcpp::NumericMatrix Xquery_norm, Rcpp::NumericMatrix Xtrain_norm, Rcpp::NumericVector y, Rcpp::NumericVector m, Rcpp::IntegerVector g_indices, Rcpp::IntegerMatrix local_indices, Rcpp::NumericVector theta_g, double theta_l, std::string global_kernel, std::string local_kernel, bool isotropic, std::string prior, double r0, double p0, std::string ess, Rcpp::Nullable<Rcpp::NumericVector> m_shepard, bool store_kernel);
+RcppExport SEXP _BKP_twin_bkp_posterior_rcpp(SEXP Xquery_normSEXP, SEXP Xtrain_normSEXP, SEXP ySEXP, SEXP mSEXP, SEXP g_indicesSEXP, SEXP local_indicesSEXP, SEXP theta_gSEXP, SEXP theta_lSEXP, SEXP global_kernelSEXP, SEXP local_kernelSEXP, SEXP isotropicSEXP, SEXP priorSEXP, SEXP r0SEXP, SEXP p0SEXP, SEXP essSEXP, SEXP m_shepardSEXP, SEXP store_kernelSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type Xquery_norm(Xquery_normSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type Xtrain_norm(Xtrain_normSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type y(ySEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type m(mSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type g_indices(g_indicesSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerMatrix >::type local_indices(local_indicesSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type theta_g(theta_gSEXP);
+    Rcpp::traits::input_parameter< double >::type theta_l(theta_lSEXP);
+    Rcpp::traits::input_parameter< std::string >::type global_kernel(global_kernelSEXP);
+    Rcpp::traits::input_parameter< std::string >::type local_kernel(local_kernelSEXP);
+    Rcpp::traits::input_parameter< bool >::type isotropic(isotropicSEXP);
+    Rcpp::traits::input_parameter< std::string >::type prior(priorSEXP);
+    Rcpp::traits::input_parameter< double >::type r0(r0SEXP);
+    Rcpp::traits::input_parameter< double >::type p0(p0SEXP);
+    Rcpp::traits::input_parameter< std::string >::type ess(essSEXP);
+    Rcpp::traits::input_parameter< Rcpp::Nullable<Rcpp::NumericVector> >::type m_shepard(m_shepardSEXP);
+    Rcpp::traits::input_parameter< bool >::type store_kernel(store_kernelSEXP);
+    rcpp_result_gen = Rcpp::wrap(twin_bkp_posterior_rcpp(Xquery_norm, Xtrain_norm, y, m, g_indices, local_indices, theta_g, theta_l, global_kernel, local_kernel, isotropic, prior, r0, p0, ess, m_shepard, store_kernel));
+    return rcpp_result_gen;
+END_RCPP
+}
+
 static const R_CallMethodDef CallEntries[] = {
     {"_BKP_get_prior_rcpp", (DL_FUNC) &_BKP_get_prior_rcpp, 8},
     {"_BKP_kernel_matrix_rcpp", (DL_FUNC) &_BKP_kernel_matrix_rcpp, 5},
@@ -183,6 +226,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_BKP_shepard_m_rcpp", (DL_FUNC) &_BKP_shepard_m_rcpp, 4},
     {"_BKP_shepard_m_loo_rcpp", (DL_FUNC) &_BKP_shepard_m_loo_rcpp, 3},
     {"_BKP_twin_select_global_rcpp", (DL_FUNC) &_BKP_twin_select_global_rcpp, 6},
+    {"_BKP_twin_local_indices_rcpp", (DL_FUNC) &_BKP_twin_local_indices_rcpp, 5},
+    {"_BKP_twin_bkp_posterior_rcpp", (DL_FUNC) &_BKP_twin_bkp_posterior_rcpp, 17},
     {NULL, NULL, 0}
 };
 
