@@ -6,7 +6,7 @@ test_that("predict.TwinBKP supports training, new-point, and count predictions",
   y <- rbinom(n, size = m, prob = 0.45)
 
   model <- fit_TwinBKP(X, y, m, theta_g = 0.3, theta_l = 0.4,
-                       g = 8, runs = 2)
+                       g = 8, twins = 2)
 
   pred <- predict(model)
 
@@ -41,7 +41,7 @@ test_that("predict.TwinBKP supports classification summaries", {
   y <- rbinom(n, size = m, prob = 0.5)
 
   model <- fit_TwinBKP(X, y, m, theta_g = 0.3, theta_l = 0.4,
-                       g = 6, runs = 2)
+                       g = 6, twins = 2)
 
   pred <- predict(model)
 
@@ -58,7 +58,7 @@ test_that("predict.TwinBKP validates inputs", {
   Xnew <- matrix(runif(10), ncol = 2)
 
   model <- fit_TwinBKP(X, y, m, theta_g = 0.3, theta_l = 0.4,
-                       g = 6, runs = 2)
+                       g = 6, twins = 2)
 
   expect_error(predict(model, Xnew = matrix(runif(9), ncol = 3)),
                "The number of columns in 'Xnew' must match the original input dimension.")
@@ -82,7 +82,7 @@ test_that("predict.TwinBKP supports Shepard ESS", {
   Xnew <- matrix(runif(10), ncol = 2)
 
   model <- fit_TwinBKP(X, y, m, theta_g = 0.3, theta_l = 0.4,
-                       g = 6, runs = 2, ess = "shepard")
+                       g = 6, twins = 2, ess = "shepard")
 
   pred_train <- predict(model)
   pred_new <- predict(model, Xnew = Xnew)
@@ -109,7 +109,7 @@ test_that("predict.TwinBKP keeps adaptive prior positive when all kernel weights
     theta_g = 0.05,
     theta_l = 0.05,
     g = 6,
-    runs = 2
+    twins = 2
   )
 
   ## Far outside the normalized training domain; both Wendland components

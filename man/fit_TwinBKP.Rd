@@ -22,11 +22,8 @@ fit_TwinBKP(
   n_threads = 1,
   ess = c("none", "shepard"),
   g = NULL,
-  r = NULL,
   l = NULL,
-  runs = 10,
-  u1 = NULL,
-  leaf_size = 8,
+  twins = 5,
   store_kernel = FALSE
 )
 }
@@ -97,27 +94,15 @@ This calibration preserves the kernel-weighted empirical proportion and
 changes only the data precision, not the prior parameters.}
 
 \item{g}{Target global subset size. If \code{NULL}, the default is
-\eqn{\min\{n-1, 50d, \max(\lfloor\sqrt n\rfloor, 10d)\}}. The underlying
-C++ Twinning routine follows the \code{twingp} compression-parameter
-formulation, so the actual selected size may differ slightly from this
-target.}
-
-\item{r}{Optional Twinning compression parameter. If supplied, it overrides
-\code{g}. Larger values produce smaller global subsets.}
+\eqn{\min\{n-1, 50d, \max(\lfloor\sqrt n\rfloor, 10d)\}}.}
 
 \item{l}{Number of local non-global neighbours used at each training
 location. If \code{NULL}, the default is
 \eqn{\min\{n-|G|, \max(25, 3d)\}} after the global subset has been selected.}
 
-\item{runs}{Number of Twinning runs with different starting points.}
-
-\item{u1}{Optional integer vector of 1-based starting indices for the
-Twinning runs. If \code{NULL}, the first starting point is the observation
-farthest from the centroid of the augmented Twinning data, and the remaining
-starts are sampled uniformly from the training indices.}
-
-\item{leaf_size}{Leaf size passed to the \pkg{nanoflann} kd-tree used by the
-Twinning routine.}
+\item{twins}{Number of Twinning runs used to identify the global subset.
+Larger values may improve the selected global subset at additional
+computational cost. Default is \code{5}.}
 
 \item{store_kernel}{Logical. If \code{TRUE}, store dense diagnostic kernel
 matrices \code{K}, \code{K_global}, and \code{K_local}. The default
@@ -168,9 +153,11 @@ supported local contribution from nearest non-global neighbours.
 }
 \details{
 The global subset is selected using \code{twin_select_global_rcpp()}.
-For BKP, the augmented Twinning data is fixed as
-\code{cbind(Xnorm, y / m)}, so the global subset is selected to represent both
-the normalized input distribution and the empirical response surface. Local neighbours are selected
+For BKP, the augmented Twinning data is fixed as \code{cbind(Xnorm, y / m)},
+so the global subset is selected to represent both the normalized input
+distribution and the empirical response surface. The low-level Twinning
+compression parameter, starting indices, and kd-tree leaf size are set
+internally from \code{g} and \code{twins}. Local neighbours are selected
 using a kd-tree over non-global training points via \pkg{nanoflann}. By
 default, posterior pseudo-counts are aggregated row-wise and dense
 \eqn{n \times n} kernel matrices are not stored. Fitting posterior

@@ -86,12 +86,14 @@ predict.TwinBKP <- function(object, Xnew = NULL, CI_level = 0.95,
     Xnew_norm <- sweep(Xnew, 2, object$Xbounds[, 1], "-")
     Xnew_norm <- sweep(Xnew_norm, 2, object$Xbounds[, 2] - object$Xbounds[, 1], "/")
 
+    leaf_size <- if (!is.null(object$leaf_size)) object$leaf_size else 8L
+
     local_indices <- twin_local_indices_rcpp(
       Xtrain_norm = object$Xnorm,
       Xquery_norm = Xnew_norm,
       g_indices = object$global_indices,
       l = object$l,
-      leaf_size = object$leaf_size
+      leaf_size = leaf_size
     )
 
     posterior <- .twin_bkp_compute_posterior(

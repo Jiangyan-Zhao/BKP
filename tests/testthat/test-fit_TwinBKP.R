@@ -13,7 +13,7 @@ test_that("fit_TwinBKP runs correctly with a documentation-style example", {
   y <- rbinom(n, size = m, prob = p)
 
   expect_no_error({
-    model <- fit_TwinBKP(X, y, m, g = 10, runs = 2, theta_g = 0.25)
+    model <- fit_TwinBKP(X, y, m, g = 10, twins = 2, theta_g = 0.25)
   })
 
   expect_s3_class(model, "TwinBKP")
@@ -139,7 +139,7 @@ test_that("fit_TwinBKP validates Xbounds and prior settings", {
   X_out <- matrix(runif(n * d, min = -0.2, max = 1.2), nrow = n)
   expect_warning(
     expect_s3_class(
-      fit_TwinBKP(X_out, y, m, theta_g = 0.25, g = 6, runs = 1),
+      fit_TwinBKP(X_out, y, m, theta_g = 0.25, g = 6, twins = 1),
       "TwinBKP"
     ),
     "Input X does not appear to be normalized to \\[0,1\\]"
@@ -197,23 +197,18 @@ test_that("fit_TwinBKP validates hyperparameter and twinning controls", {
   )
 
   expect_error(
-    fit_TwinBKP(X, y, m, runs = 0),
-    "'runs' must be a positive integer."
+    fit_TwinBKP(X, y, m, theta_g = 0.3, g = 6, twins = 0),
+    "'twins' must be a positive integer."
   )
 
   expect_error(
-    fit_TwinBKP(X, y, m, leaf_size = 0),
-    "'leaf_size' must be a positive integer."
+    fit_TwinBKP(X, y, m, theta_g = 0.3, g = 6, twins = NA),
+    "'twins' must be a positive integer."
   )
 
   expect_error(
     fit_TwinBKP(X, y, m, g = 1),
     "'g' must be an integer between 2 and n - 1."
-  )
-
-  expect_error(
-    fit_TwinBKP(X, y, m, r = 1),
-    "'r' must be an integer between 2 and n - 1."
   )
 
   expect_error(
@@ -226,16 +221,6 @@ test_that("fit_TwinBKP validates hyperparameter and twinning controls", {
     "'l' cannot exceed the number of non-global training points."
   )
 
-
-  expect_error(
-    fit_TwinBKP(X, y, m, runs = 2, u1 = 1),
-    "'u1' must be an integer vector of length 'runs'."
-  )
-
-  expect_error(
-    fit_TwinBKP(X, y, m, runs = 2, u1 = c(1, n + 1)),
-    "'u1' must contain valid 1-based row indices."
-  )
 })
 
 
@@ -251,7 +236,7 @@ test_that("fit_TwinBKP returns an object with expected structure and content", {
   model <- fit_TwinBKP(
     X = X, y = y, m = m,
     theta_g = 0.3, theta_l = 0.4,
-    g = 8, runs = 2, u1 = c(1L, 2L)
+    g = 8, twins = 2
   )
 
   expect_s3_class(model, "TwinBKP")
@@ -263,7 +248,7 @@ test_that("fit_TwinBKP returns an object with expected structure and content", {
     "X", "Xnorm", "Xbounds", "y", "m", "prior", "r0", "p0",
     "alpha0", "beta0", "alpha_n", "beta_n",
     "K", "K_global", "K_local", "twin_data", "twin_info",
-    "global_indices", "local_indices", "g_target", "g", "r", "l", "runs", "u1",
+    "global_indices", "local_indices", "g_target", "g", "r", "l", "twins", "u1",
     "leaf_size", "store_kernel", "complexity"
   )
 
@@ -278,6 +263,12 @@ test_that("fit_TwinBKP returns an object with expected structure and content", {
   expect_equal(model$loss, "brier")
   expect_equal(model$ess, "none")
   expect_equal(model$prior, "noninformative")
+  expect_equal(model$twins, 2L)
+  expect_true(is.integer(model$u1))
+  expect_equal(length(model$u1), 2L)
+  expect_true(is.numeric(model$r) || is.integer(model$r))
+  expect_true(model$r >= 2L)
+  expect_equal(model$leaf_size, 8L)
   expect_equal(model$X, X)
   expect_equal(dim(model$Xnorm), dim(X))
   expect_null(model$K)
@@ -305,7 +296,7 @@ test_that("fit_TwinBKP uses fixed augmented Twinning data", {
     theta_g = 0.3,
     theta_l = 0.4,
     g = 6,
-    runs = 2
+    twins = 2
   )
 
   expect_equal(ncol(model$twin_data), ncol(model$Xnorm) + 1L)
@@ -327,7 +318,7 @@ test_that("fit_TwinBKP stores dense diagnostic kernels only on request", {
   model <- fit_TwinBKP(
     X = X, y = y, m = m,
     theta_g = 0.3, theta_l = 0.4,
-    g = 8, runs = 2, store_kernel = TRUE,
+    g = 8, twins = 2, store_kernel = TRUE,
     ess = "none"
   )
 
@@ -350,7 +341,7 @@ test_that("fit_TwinBKP computes theta_l as the empirical covering radius", {
 
   model <- fit_TwinBKP(
     X = X, y = y, m = m,
-    theta_g = 0.25, g = 10, runs = 2, u1 = c(1L, 2L)
+    theta_g = 0.25, g = 10, twins = 2
   )
 
   G <- model$global_indices
@@ -374,7 +365,7 @@ test_that("fit_TwinBKP posterior matches the combined global-local kernel update
   model <- fit_TwinBKP(
     X = X, y = y, m = m,
     theta_g = 0.25, theta_l = 0.35,
-    g = 8, runs = 2, u1 = c(1L, 2L),
+    g = 8, twins = 2,
     ess = "none",
     store_kernel = TRUE
   )
@@ -409,7 +400,7 @@ test_that("fit_TwinBKP supports fixed prior, adaptive prior, and anisotropic the
     X, y, m,
     prior = "fixed", r0 = 0.5, p0 = 0.5,
     theta_g = 0.3, theta_l = 0.4,
-    g = 8, runs = 2
+    g = 8, twins = 2
   )
 
   adaptive_model <- fit_TwinBKP(
@@ -417,7 +408,7 @@ test_that("fit_TwinBKP supports fixed prior, adaptive prior, and anisotropic the
     prior = "adaptive", r0 = mean(m),
     theta_g = c(0.3, 0.4), theta_l = 0.4,
     isotropic = FALSE,
-    g = 8, runs = 2
+    g = 8, twins = 2
   )
 
   expect_s3_class(fixed_model, "TwinBKP")
@@ -448,7 +439,7 @@ test_that("fit_TwinBKP handles Shepard ESS without NA values", {
     theta_g = 0.35,
     theta_l = 0.45,
     g = 4,
-    runs = 2,
+    twins = 2,
     ess = "shepard"
   )
 
@@ -469,13 +460,13 @@ test_that("fit_TwinBKP rejects duplicated input locations for Shepard ESS", {
   y <- c(4, 9, 7, 6)
 
   expect_error(
-    fit_TwinBKP(X, y, m, theta_g = 0.3, ess = "shepard", g = 2, runs = 1),
+    fit_TwinBKP(X, y, m, theta_g = 0.3, ess = "shepard", g = 2, twins = 1),
     "requires unique input locations"
   )
 })
 
 
-test_that("fit_TwinBKP is reproducible with fixed starting indices", {
+test_that("fit_TwinBKP is reproducible with a fixed random seed", {
   set.seed(9)
 
   n <- 26
@@ -483,22 +474,23 @@ test_that("fit_TwinBKP is reproducible with fixed starting indices", {
   m <- sample(10:20, n, replace = TRUE)
   y <- rbinom(n, size = m, prob = 0.4)
 
+  set.seed(123)
   model1 <- fit_TwinBKP(
     X, y, m,
     theta_g = 0.25,
     g = 8,
-    runs = 3,
-    u1 = c(1L, 5L, 9L)
+    twins = 3
   )
 
+  set.seed(123)
   model2 <- fit_TwinBKP(
     X, y, m,
     theta_g = 0.25,
     g = 8,
-    runs = 3,
-    u1 = c(1L, 5L, 9L)
+    twins = 3
   )
 
+  expect_equal(model1$u1, model2$u1)
   expect_equal(model1$global_indices, model2$global_indices)
   expect_equal(model1$theta_l, model2$theta_l)
   expect_equal(model1$K, model2$K)
@@ -516,7 +508,7 @@ test_that("fit_TwinBKP can optimize theta_g on a small global subset", {
   model <- fit_TwinBKP(
     X, y, m,
     g = 6,
-    runs = 1,
+    twins = 1,
     n_multi_start = 1,
     n_threads = 1
   )

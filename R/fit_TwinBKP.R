@@ -30,22 +30,13 @@
 #'   If \code{NULL} (default), it is set to the empirical covering radius of the
 #'   global subset on the normalized input scale.
 #' @param g Target global subset size. If \code{NULL}, the default is
-#'   \eqn{\min\{n-1, 50d, \max(\lfloor\sqrt n\rfloor, 10d)\}}. The underlying
-#'   C++ Twinning routine follows the \code{twingp} compression-parameter
-#'   formulation, so the actual selected size may differ slightly from this
-#'   target.
-#' @param r Optional Twinning compression parameter. If supplied, it overrides
-#'   \code{g}. Larger values produce smaller global subsets.
+#'   \eqn{\min\{n-1, 50d, \max(\lfloor\sqrt n\rfloor, 10d)\}}.
 #' @param l Number of local non-global neighbours used at each training
 #'   location. If \code{NULL}, the default is
 #'   \eqn{\min\{n-|G|, \max(25, 3d)\}} after the global subset has been selected.
-#' @param runs Number of Twinning runs with different starting points.
-#' @param u1 Optional integer vector of 1-based starting indices for the
-#'   Twinning runs. If \code{NULL}, the first starting point is the observation
-#'   farthest from the centroid of the augmented Twinning data, and the remaining
-#'   starts are sampled uniformly from the training indices.
-#' @param leaf_size Leaf size passed to the \pkg{nanoflann} kd-tree used by the
-#'   Twinning routine.
+#' @param twins Number of Twinning runs used to identify the global subset.
+#'   Larger values may improve the selected global subset at additional
+#'   computational cost. Default is \code{5}.
 #' @param store_kernel Logical. If \code{TRUE}, store dense diagnostic kernel
 #'   matrices \code{K}, \code{K_global}, and \code{K_local}. The default
 #'   \code{FALSE} avoids \eqn{n \times n} kernel storage and preserves the
@@ -84,9 +75,11 @@
 #' }
 #'
 #' @details The global subset is selected using \code{twin_select_global_rcpp()}.
-#'   For BKP, the augmented Twinning data is fixed as
-#'   \code{cbind(Xnorm, y / m)}, so the global subset is selected to represent both
-#'   the normalized input distribution and the empirical response surface. Local neighbours are selected
+#'   For BKP, the augmented Twinning data is fixed as \code{cbind(Xnorm, y / m)},
+#'   so the global subset is selected to represent both the normalized input
+#'   distribution and the empirical response surface. The low-level Twinning
+#'   compression parameter, starting indices, and kd-tree leaf size are set
+#'   internally from \code{g} and \code{twins}. Local neighbours are selected
 #'   using a kd-tree over non-global training points via \pkg{nanoflann}. By
 #'   default, posterior pseudo-counts are aggregated row-wise and dense
 #'   \eqn{n \times n} kernel matrices are not stored. Fitting posterior
@@ -168,8 +161,8 @@ fit_TwinBKP <- function(
     n_multi_start = NULL, theta_g = NULL, theta_l = NULL,
     isotropic = TRUE, n_threads = 1,
     ess = c("none", "shepard"),
-    g = NULL, r = NULL, l = NULL,
-    runs = 10, u1 = NULL, leaf_size = 8,
+    g = NULL, l = NULL,
+    twins = 5,
     store_kernel = FALSE
 ) {
   # ---- Argument checking ----
@@ -309,18 +302,11 @@ fit_TwinBKP <- function(
   }
 
   # ---- Twinning controls ----
-  if (!is.numeric(runs) || length(runs) != 1 ||
-      is.na(runs) || !is.finite(runs) || runs <= 0) {
-    stop("'runs' must be a positive integer.")
+  if (!is.numeric(twins) || length(twins) != 1 ||
+      is.na(twins) || !is.finite(twins) || twins <= 0) {
+    stop("'twins' must be a positive integer.")
   }
-  runs <- as.integer(runs)
-
-  if (!is.numeric(leaf_size) || length(leaf_size) != 1 ||
-      is.na(leaf_size) || !is.finite(leaf_size) || leaf_size <= 0) {
-    stop("'leaf_size' must be a positive integer.")
-  }
-  leaf_size <- as.integer(leaf_size)
-
+  twins <- as.integer(twins)
 
   if (!is.logical(store_kernel) || length(store_kernel) != 1) {
     stop("'store_kernel' must be a single logical value.")
@@ -338,42 +324,27 @@ fit_TwinBKP <- function(
     g <- as.integer(g)
   }
 
-  if (is.null(r)) {
-    r <- ceiling(n / g)
+  r <- ceiling(n / g)
+  r <- as.integer(max(2L, r))
+  leaf_size <- 8L
+
+  twin_data <- cbind(Xnorm, y / m)
+  storage.mode(twin_data) <- "double"
+
+  center <- colMeans(twin_data)
+  d2 <- rowSums(sweep(twin_data, 2, center, "-")^2)
+
+  if (twins <= 1L) {
+    u1 <- as.integer(which.max(d2))
   } else {
-    if (!is.numeric(r) || length(r) != 1 ||
-        is.na(r) || !is.finite(r) || r < 2 || r >= n) {
-      stop("'r' must be an integer between 2 and n - 1.")
-    }
-    r <- as.integer(r)
-  }
-
-  twin_data <- cbind(Xnorm, y/m)
-
-  if (is.null(u1)) {
-    center <- colMeans(twin_data)
-    d2 <- rowSums(sweep(twin_data, 2, center, "-")^2)
-
-    if (runs <= 1L) {
-      u1 <- as.integer(which.max(d2))
-    } else {
-      u1 <- as.integer(c(which.max(d2), sample.int(n, runs - 1L, replace = TRUE)))
-    }
-  } else {
-    if (!is.numeric(u1) || length(u1) != runs || anyNA(u1) || any(!is.finite(u1))) {
-      stop("'u1' must be an integer vector of length 'runs'.")
-    }
-    if (any(u1 < 1) || any(u1 > n)) {
-      stop("'u1' must contain valid 1-based row indices.")
-    }
-    u1 <- as.integer(u1)
+    u1 <- as.integer(c(which.max(d2), sample.int(n, twins - 1L, replace = TRUE)))
   }
 
   twin_info <- twin_select_global_rcpp(
     twin_data = twin_data,
     Xnorm = Xnorm,
     r = r,
-    runs = runs,
+    runs = twins,
     u1 = u1,
     leaf_size = leaf_size
   )
@@ -488,7 +459,7 @@ fit_TwinBKP <- function(
     K = posterior$K, K_global = posterior$K_global, K_local = posterior$K_local,
     twin_data = twin_data, twin_info = twin_info,
     global_indices = g_indices, local_indices = local_indices,
-    g_target = g, g = g_actual, r = r, l = l, runs = runs, u1 = u1,
+    g_target = g, g = g_actual, r = r, l = l, twins = twins, u1 = u1,
     leaf_size = leaf_size, store_kernel = store_kernel,
     complexity = list(
       global_selection = "Twinning global subset selection using kd-tree nearest-neighbour search",
