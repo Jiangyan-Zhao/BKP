@@ -46,16 +46,9 @@
 #'   starts are sampled uniformly from the training indices.
 #' @param leaf_size Leaf size passed to the \pkg{nanoflann} kd-tree used by the
 #'   Twinning routine.
-#' @param response_weight Nonnegative scalar weight applied to the empirical
-#'   response proportion \code{y/m} when constructing the augmented Twinning
-#'   data.
-#' @param include_m_in_twin Logical. If \code{TRUE}, a normalized log trial-size
-#'   column is included in the augmented Twinning data.
-#' @param size_weight Nonnegative scalar weight applied to the normalized log
-#'   trial-size column when \code{include_m_in_twin = TRUE}.
 #' @param store_kernel Logical. If \code{TRUE}, store dense diagnostic kernel
 #'   matrices \code{K}, \code{K_global}, and \code{K_local}. The default
-#'   \code{FALSE} avoids \eqn{n \times n} kernel storage and is required for the
+#'   \code{FALSE} avoids \eqn{n \times n} kernel storage and preserves the
 #'   stated TwinBKP memory complexity.
 #'
 #' @return A list of class \code{"TwinBKP"} containing the fitted TwinBKP model,
@@ -91,8 +84,9 @@
 #' }
 #'
 #' @details The global subset is selected using \code{twin_select_global_rcpp()}.
-#'   For BKP, the default augmented Twinning data is
-#'   \code{cbind(Xnorm, response_weight * y / m)}. Local neighbours are selected
+#'   For BKP, the augmented Twinning data is fixed as
+#'   \code{cbind(Xnorm, y / m)}, so the global subset is selected to represent both
+#'   the normalized input distribution and the empirical response surface. Local neighbours are selected
 #'   using a kd-tree over non-global training points via \pkg{nanoflann}. By
 #'   default, posterior pseudo-counts are aggregated row-wise and dense
 #'   \eqn{n \times n} kernel matrices are not stored. Fitting posterior
@@ -176,9 +170,6 @@ fit_TwinBKP <- function(
     ess = c("none", "shepard"),
     g = NULL, r = NULL, l = NULL,
     runs = 10, u1 = NULL, leaf_size = 8,
-    response_weight = 1,
-    include_m_in_twin = FALSE,
-    size_weight = 0,
     store_kernel = FALSE
 ) {
   # ---- Argument checking ----
@@ -330,23 +321,11 @@ fit_TwinBKP <- function(
   }
   leaf_size <- as.integer(leaf_size)
 
-  if (!is.numeric(response_weight) || length(response_weight) != 1 ||
-      is.na(response_weight) || !is.finite(response_weight) || response_weight < 0) {
-    stop("'response_weight' must be a nonnegative scalar.")
-  }
-
-  if (!is.logical(include_m_in_twin) || length(include_m_in_twin) != 1) {
-    stop("'include_m_in_twin' must be a single logical value.")
-  }
 
   if (!is.logical(store_kernel) || length(store_kernel) != 1) {
     stop("'store_kernel' must be a single logical value.")
   }
 
-  if (!is.numeric(size_weight) || length(size_weight) != 1 ||
-      is.na(size_weight) || !is.finite(size_weight) || size_weight < 0) {
-    stop("'size_weight' must be a nonnegative scalar.")
-  }
 
   if (is.null(g)) {
     g <- .bkp_twin_default_g(n, d)
@@ -371,10 +350,7 @@ fit_TwinBKP <- function(
   twin_data <- .bkp_build_twin_data_bkp(
     Xnorm = Xnorm,
     y = y,
-    m = m,
-    response_weight = response_weight,
-    include_m_in_twin = include_m_in_twin,
-    size_weight = size_weight
+    m = m
   )
 
   if (is.null(u1)) {
@@ -509,9 +485,7 @@ fit_TwinBKP <- function(
     twin_data = twin_data, twin_info = twin_info,
     global_indices = g_indices, local_indices = local_indices,
     g_target = g, g = g_actual, r = r, l = l, runs = runs, u1 = u1,
-    response_weight = response_weight, include_m_in_twin = include_m_in_twin,
-    size_weight = size_weight, leaf_size = leaf_size,
-    store_kernel = store_kernel,
+    leaf_size = leaf_size, store_kernel = store_kernel,
     complexity = list(
       global_selection = "Twinning global subset selection using kd-tree nearest-neighbour search",
       global_tuning = "O(T_g g^2), where T_g is the number of global-subset loss evaluations",
@@ -533,26 +507,9 @@ fit_TwinBKP <- function(
 }
 
 
-.bkp_build_twin_data_bkp <- function(Xnorm, y, m,
-                                     response_weight = 1,
-                                     include_m_in_twin = FALSE,
-                                     size_weight = 0) {
+.bkp_build_twin_data_bkp <- function(Xnorm, y, m) {
   p_hat <- as.numeric(y) / as.numeric(m)
-  twin_data <- cbind(Xnorm, response_weight * p_hat)
-
-  if (isTRUE(include_m_in_twin)) {
-    log_m <- log1p(as.numeric(m))
-    rng <- range(log_m)
-
-    if (diff(rng) > 0) {
-      m_scaled <- (log_m - rng[1L]) / diff(rng)
-    } else {
-      m_scaled <- rep(0, length(log_m))
-    }
-
-    twin_data <- cbind(twin_data, size_weight * m_scaled)
-  }
-
+  twin_data <- cbind(Xnorm, p_hat)
   storage.mode(twin_data) <- "double"
   twin_data
 }

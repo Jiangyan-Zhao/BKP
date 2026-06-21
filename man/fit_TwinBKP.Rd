@@ -27,9 +27,6 @@ fit_TwinBKP(
   runs = 10,
   u1 = NULL,
   leaf_size = 8,
-  response_weight = 1,
-  include_m_in_twin = FALSE,
-  size_weight = 0,
   store_kernel = FALSE
 )
 }
@@ -122,19 +119,9 @@ starts are sampled uniformly from the training indices.}
 \item{leaf_size}{Leaf size passed to the \pkg{nanoflann} kd-tree used by the
 Twinning routine.}
 
-\item{response_weight}{Nonnegative scalar weight applied to the empirical
-response proportion \code{y/m} when constructing the augmented Twinning
-data.}
-
-\item{include_m_in_twin}{Logical. If \code{TRUE}, a normalized log trial-size
-column is included in the augmented Twinning data.}
-
-\item{size_weight}{Nonnegative scalar weight applied to the normalized log
-trial-size column when \code{include_m_in_twin = TRUE}.}
-
 \item{store_kernel}{Logical. If \code{TRUE}, store dense diagnostic kernel
 matrices \code{K}, \code{K_global}, and \code{K_local}. The default
-\code{FALSE} avoids \eqn{n \times n} kernel storage and is required for the
+\code{FALSE} avoids \eqn{n \times n} kernel storage and preserves the
 stated TwinBKP memory complexity.}
 }
 \value{
@@ -181,8 +168,9 @@ supported local contribution from nearest non-global neighbours.
 }
 \details{
 The global subset is selected using \code{twin_select_global_rcpp()}.
-For BKP, the default augmented Twinning data is
-\code{cbind(Xnorm, response_weight * y / m)}. Local neighbours are selected
+For BKP, the augmented Twinning data is fixed as
+\code{cbind(Xnorm, y / m)}, so the global subset is selected to represent both
+the normalized input distribution and the empirical response surface. Local neighbours are selected
 using a kd-tree over non-global training points via \pkg{nanoflann}. By
 default, posterior pseudo-counts are aggregated row-wise and dense
 \eqn{n \times n} kernel matrices are not stored. Fitting posterior

@@ -226,20 +226,6 @@ test_that("fit_TwinBKP validates hyperparameter and twinning controls", {
     "'l' cannot exceed the number of non-global training points."
   )
 
-  expect_error(
-    fit_TwinBKP(X, y, m, response_weight = -1),
-    "'response_weight' must be a nonnegative scalar."
-  )
-
-  expect_error(
-    fit_TwinBKP(X, y, m, include_m_in_twin = c(TRUE, FALSE)),
-    "'include_m_in_twin' must be a single logical value."
-  )
-
-  expect_error(
-    fit_TwinBKP(X, y, m, size_weight = -1),
-    "'size_weight' must be a nonnegative scalar."
-  )
 
   expect_error(
     fit_TwinBKP(X, y, m, runs = 2, u1 = 1),
@@ -265,8 +251,7 @@ test_that("fit_TwinBKP returns an object with expected structure and content", {
   model <- fit_TwinBKP(
     X = X, y = y, m = m,
     theta_g = 0.3, theta_l = 0.4,
-    g = 8, runs = 2, u1 = c(1L, 2L),
-    include_m_in_twin = TRUE, size_weight = 0.5
+    g = 8, runs = 2, u1 = c(1L, 2L)
   )
 
   expect_s3_class(model, "TwinBKP")
@@ -279,7 +264,7 @@ test_that("fit_TwinBKP returns an object with expected structure and content", {
     "alpha0", "beta0", "alpha_n", "beta_n",
     "K", "K_global", "K_local", "twin_data", "twin_info",
     "global_indices", "local_indices", "g_target", "g", "r", "l", "runs", "u1",
-    "response_weight", "include_m_in_twin", "size_weight", "leaf_size"
+    "leaf_size", "store_kernel", "complexity"
   )
 
   expect_true(all(expected_names %in% names(model)))
@@ -304,6 +289,34 @@ test_that("fit_TwinBKP returns an object with expected structure and content", {
   expect_equal(nrow(model$local_indices), nrow(model$X))
   expect_equal(ncol(model$local_indices), model$l)
   expect_false(any(model$local_indices %in% model$global_indices))
+})
+
+
+test_that("fit_TwinBKP uses fixed augmented Twinning data", {
+  set.seed(123)
+
+  n <- 20
+  X <- matrix(runif(n * 2), ncol = 2)
+  m <- sample(8:20, n, replace = TRUE)
+  y <- rbinom(n, size = m, prob = 0.4)
+
+  model <- fit_TwinBKP(
+    X, y, m,
+    theta_g = 0.3,
+    theta_l = 0.4,
+    g = 6,
+    runs = 2
+  )
+
+  expect_equal(ncol(model$twin_data), ncol(model$Xnorm) + 1L)
+  expect_equal(
+    model$twin_data[, seq_len(ncol(model$Xnorm)), drop = FALSE],
+    model$Xnorm
+  )
+  expect_equal(
+    model$twin_data[, ncol(model$twin_data)],
+    as.numeric(y) / as.numeric(m)
+  )
 })
 
 
