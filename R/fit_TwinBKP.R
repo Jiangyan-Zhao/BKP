@@ -10,29 +10,14 @@
 #'   kernel contribution from the selected global subset with a compactly
 #'   supported local contribution from nearest non-global neighbours.
 #'
-#' @param X A numeric input matrix of size \eqn{n \times d}, where each row
-#'   corresponds to a covariate vector.
-#' @param y A numeric vector of observed successes of length \code{n}.
-#' @param m A numeric vector of total binomial trials of length \code{n},
-#'   corresponding to each \code{y}.
-#' @param Xbounds Optional \eqn{d \times 2} matrix specifying the lower and
-#'   upper bounds of each input dimension. Used to normalize inputs to
-#'   \eqn{[0,1]^d}. If \code{NULL}, inputs are assumed to be pre-normalized, and
-#'   default bounds \eqn{[0,1]^d} are applied.
-#' @param prior Type of prior: \code{"noninformative"} (default),
-#'   \code{"fixed"}, or \code{"adaptive"}.
-#' @param r0 Global prior precision (used when \code{prior = "fixed"} or
-#'   \code{"adaptive"}).
-#' @param p0 Global prior mean (used when \code{prior = "fixed"}). Default is
-#'   \code{mean(y/m)}.
+#' @inheritParams fit_BKP
+#'
 #' @param global_kernel Kernel function for the global component:
 #'   \code{"gaussian"} (default), \code{"matern52"}, \code{"matern32"}, or
 #'   \code{"wendland"}.
 #' @param local_kernel Kernel function for the local component. The current
 #'   default is \code{"wendland"}, corresponding to the compactly supported
 #'   local kernel used by the TwinBKP approximation.
-#' @param loss Loss function for global kernel hyperparameter tuning:
-#'   \code{"brier"} (default) or \code{"log_loss"}.
 #' @param n_multi_start Number of initial points used in multi-start
 #'   optimization of the global kernel lengthscale parameters. If \code{NULL},
 #'   the default from \code{\link{fit_BKP}} is used on the selected global
@@ -44,14 +29,6 @@
 #' @param theta_l Optional. A positive scalar specifying the local kernel range.
 #'   If \code{NULL} (default), it is set to the empirical covering radius of the
 #'   global subset on the normalized input scale.
-#' @param isotropic Logical. If \code{TRUE} (default), optimize/use a single
-#'   shared global lengthscale across dimensions. If \code{FALSE}, use separate
-#'   per-dimension global lengthscales.
-#' @param n_threads Number of OpenMP threads used for global hyperparameter
-#'   optimization when \code{theta_g = NULL}. Default is \code{1}.
-#' @param ess Effective-sample-size calibration for the TwinBKP data
-#'   contribution. Use \code{"none"} (default) for the standard update. Use
-#'   \code{"shepard"} to rescale the combined global-local data contribution.
 #' @param g Target global subset size. If \code{NULL}, the default is
 #'   \eqn{\min\{n-1, 50d, \max(\lfloor\sqrt n\rfloor, 10d)\}}. The underlying
 #'   C++ Twinning routine follows the \code{twingp} compression-parameter
@@ -76,10 +53,10 @@
 #'   column is included in the augmented Twinning data.
 #' @param size_weight Nonnegative scalar weight applied to the normalized log
 #'   trial-size column when \code{include_m_in_twin = TRUE}.
-#' @param store_kernel Logical. If \code{TRUE}, store dense diagnostic
-#'   kernel matrices \code{K}, \code{K_global}, and \code{K_local}. The
-#'   default \code{FALSE} avoids \eqn{n \times n} kernel storage and is
-#'   required for the stated TwinBKP memory complexity.
+#' @param store_kernel Logical. If \code{TRUE}, store dense diagnostic kernel
+#'   matrices \code{K}, \code{K_global}, and \code{K_local}. The default
+#'   \code{FALSE} avoids \eqn{n \times n} kernel storage and is required for the
+#'   stated TwinBKP memory complexity.
 #'
 #' @return A list of class \code{"TwinBKP"} containing the fitted TwinBKP model,
 #'   including:
@@ -140,16 +117,52 @@
 #'   295--305.
 #'
 #' @examples
-#' set.seed(1)
-#' n <- 30
-#' X <- matrix(runif(n * 2), ncol = 2)
-#' m <- sample(10:30, n, replace = TRUE)
-#' p <- plogis(2 * (X[, 1] - 0.5))
-#' y <- rbinom(n, size = m, prob = p)
+#' #-------------------------- 1D Example ---------------------------
+#' set.seed(123)
 #'
-#' model <- fit_TwinBKP(X, y, m, g = 10, runs = 2)
-#' model$theta_g
-#' model$theta_l
+#' # Define true success probability function
+#' true_pi_fun <- function(x) {
+#'   (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
+#' }
+#'
+#' n <- 1e4
+#' Xbounds <- matrix(c(-2, 2), nrow = 1)
+#' X <- tgp::lhs(n = n, rect = Xbounds)
+#' true_pi <- true_pi_fun(X)
+#' m <- sample(100, n, replace = TRUE)
+#' y <- rbinom(n, size = m, prob = true_pi)
+#'
+#' # Fit TwinBKP model
+#' model1 <- fit_TwinBKP(X, y, m, Xbounds = Xbounds)
+#'
+#' #-------------------------- 2D Example ---------------------------
+#' set.seed(123)
+#'
+#' # Define 2D latent function and probability transformation
+#' true_pi_fun <- function(X) {
+#'   if(is.null(nrow(X))) X <- matrix(X, nrow=1)
+#'   m <- 8.6928
+#'   s <- 2.4269
+#'   x1 <- 4*X[,1]- 2
+#'   x2 <- 4*X[,2]- 2
+#'   a <- 1 + (x1 + x2 + 1)^2 *
+#'     (19- 14*x1 + 3*x1^2- 14*x2 + 6*x1*x2 + 3*x2^2)
+#'   b <- 30 + (2*x1- 3*x2)^2 *
+#'     (18- 32*x1 + 12*x1^2 + 48*x2- 36*x1*x2 + 27*x2^2)
+#'   f <- log(a*b)
+#'   f <- (f- m)/s
+#'   return(pnorm(f))  # Transform to probability
+#' }
+#'
+#' n <- 1e4
+#' Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
+#' X <- tgp::lhs(n = n, rect = Xbounds)
+#' true_pi <- true_pi_fun(X)
+#' m <- sample(100, n, replace = TRUE)
+#' y <- rbinom(n, size = m, prob = true_pi)
+#'
+#' # Fit BKP model
+#' model2 <- fit_TwinBKP(X, y, m, Xbounds=Xbounds)
 #'
 #' @export
 fit_TwinBKP <- function(
