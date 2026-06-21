@@ -68,8 +68,8 @@ The available kernels are defined as:
      }
 \item \strong{Wendland:}
 \deqn{
-       k(\mathbf{x}, \mathbf{x}') = (q r + 1)\max(0,1-r)^q,
-       \quad q = \lfloor d/2 \rfloor + 3
+       k(\mathbf{x}, \mathbf{x}') = (\zeta r + 1)\max(0,1-r)^\zeta,
+       \quad \zeta = \lfloor d/2 \rfloor + 3
      }
 }
 

@@ -1,6 +1,9 @@
+# BKP 0.3.0
+
 # BKP 0.2.4 (2026-06-16)
 
 - Improved computational efficiency by implementing kernel evaluation, prior construction, loss evaluation, and hyperparameter optimization routines in C++.
+- Added support for the compactly supported Wendland kernel via `kernel = "wendland"`.
 - Added optional Shepard effective-sample-size calibration for `fit_BKP(ess = "shepard")` and `fit_DKP(ess = "shepard")`, while keeping the default `ess = "none"` behavior unchanged.
 - Added **ggplot2** support for plotting; `plot.BKP(..., engine = "ggplot")` now produces ggplot2-based visualizations.
 - Added a package-wide `isotropic` argument, defaulting to `TRUE`, for isotropic kernels with a shared length-scale across dimensions. Set `isotropic = FALSE` to use anisotropic kernels with dimension-specific length-scales.

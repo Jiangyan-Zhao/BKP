@@ -1,0 +1,18 @@
+This package includes third-party header-only code from nanoflann.
+
+nanoflann
+---------
+
+File:
+  inst/include/nanoflann.hpp
+
+Copyright:
+  Copyright 2008-2009 Marius Muja
+  Copyright 2008-2009 David G. Lowe
+  Copyright 2011-2022 Jose Luis Blanco
+
+License:
+  BSD license, as stated in the header of inst/include/nanoflann.hpp.
+
+The nanoflann header is redistributed as part of this package to support
+kd-tree nearest-neighbour search used by the TwinBKP and TwinDKP routines.

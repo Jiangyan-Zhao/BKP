@@ -77,6 +77,6 @@
 #' @importFrom tgp lhs
 #' @importFrom utils head
 #' @import nloptr
-#' @importFrom Rcpp sourceCpp
+#' @importFrom Rcpp evalCpp
 #' @useDynLib BKP, .registration = TRUE
 NULL
