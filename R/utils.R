@@ -622,3 +622,75 @@ posterior_summary <- function(mean_vals, var_vals) {
     rho = apply(K, 1L, max)
   )
 }
+
+
+#' Compute TwinBKP posterior parameters using the C++ backend
+#'
+#' Internal helper used by \code{fit_TwinBKP()} and \code{predict.TwinBKP()} to
+#' compute TwinBKP posterior Beta shape parameters. The function prepares the
+#' optional Shepard effective-sample-size target and then delegates row-wise
+#' global-local pseudo-count aggregation to \code{twin_bkp_posterior_rcpp()}.
+#'
+#' @param Xquery_norm Numeric matrix of normalized query locations.
+#' @param Xtrain_norm Numeric matrix of normalized training locations.
+#' @param y Numeric vector of observed success counts.
+#' @param m Numeric vector of observed binomial trial counts.
+#' @param g_indices Integer vector of 1-based global subset indices.
+#' @param local_indices Integer matrix of 1-based local-neighbour indices, with
+#'   one row per query location.
+#' @param theta_g Numeric scalar or vector giving the global kernel lengthscale.
+#' @param theta_l Positive scalar giving the local kernel range.
+#' @param global_kernel Character string specifying the global kernel.
+#' @param local_kernel Character string specifying the local kernel.
+#' @param isotropic Logical. If \code{TRUE}, the global kernel uses one shared
+#'   lengthscale; otherwise it uses dimension-specific lengthscales.
+#' @param prior Character string specifying the prior type.
+#' @param r0 Positive scalar prior precision.
+#' @param p0 Prior mean used by the fixed prior and passed to the C++ backend.
+#' @param ess Character string specifying the ESS calibration method:
+#'   \code{"none"} or \code{"shepard"}.
+#' @param store_kernel Logical. If \code{TRUE}, dense diagnostic kernel matrices
+#'   are returned; otherwise they are omitted.
+#'
+#' @return A list returned by \code{twin_bkp_posterior_rcpp()}, containing
+#'   \code{alpha0}, \code{beta0}, \code{alpha_n}, \code{beta_n},
+#'   \code{ess_info}, and optionally \code{K}, \code{K_global}, and
+#'   \code{K_local}.
+#'
+#' @keywords internal
+.twin_bkp_compute_posterior <- function(
+    Xquery_norm, Xtrain_norm, y, m, g_indices, local_indices,
+    theta_g, theta_l, global_kernel, local_kernel, isotropic,
+    prior, r0, p0, ess = "none", store_kernel = FALSE
+) {
+  m_shepard <- NULL
+
+  if (identical(ess, "shepard")) {
+    m_shepard <- .bkp_shepard_m(
+      Xquery_norm = Xquery_norm,
+      Xtrain_norm = Xtrain_norm,
+      m = as.numeric(m),
+      power = 2
+    )
+  }
+
+  twin_bkp_posterior_rcpp(
+    Xquery_norm = Xquery_norm,
+    Xtrain_norm = Xtrain_norm,
+    y = as.numeric(y),
+    m = as.numeric(m),
+    g_indices = as.integer(g_indices),
+    local_indices = local_indices,
+    theta_g = as.numeric(theta_g),
+    theta_l = as.numeric(theta_l),
+    global_kernel = global_kernel,
+    local_kernel = local_kernel,
+    isotropic = isTRUE(isotropic),
+    prior = prior,
+    r0 = r0,
+    p0 = p0,
+    ess = ess,
+    m_shepard = m_shepard,
+    store_kernel = store_kernel
+  )
+}

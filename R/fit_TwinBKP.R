@@ -119,7 +119,7 @@
 #'   (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
 #' }
 #'
-#' n <- 1e4
+#' n <- 1000
 #' Xbounds <- matrix(c(-2, 2), nrow = 1)
 #' X <- tgp::lhs(n = n, rect = Xbounds)
 #' true_pi <- true_pi_fun(X)
@@ -148,7 +148,7 @@
 #'   return(pnorm(f))  # Transform to probability
 #' }
 #'
-#' n <- 1e4
+#' n <- 1000
 #' Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
 #' X <- tgp::lhs(n = n, rect = Xbounds)
 #' true_pi <- true_pi_fun(X)
@@ -328,7 +328,8 @@ fit_TwinBKP <- function(
 
 
   if (is.null(g)) {
-    g <- .bkp_twin_default_g(n, d)
+    g <- min(n - 1L, 50L * d, max(floor(sqrt(n)), 10L * d))
+    g <- as.integer(max(2L, g))
   } else {
     if (!is.numeric(g) || length(g) != 1 ||
         is.na(g) || !is.finite(g) || g < 2 || g >= n) {
@@ -347,14 +348,17 @@ fit_TwinBKP <- function(
     r <- as.integer(r)
   }
 
-  twin_data <- .bkp_build_twin_data_bkp(
-    Xnorm = Xnorm,
-    y = y,
-    m = m
-  )
+  twin_data <- cbind(Xnorm, y/m)
 
   if (is.null(u1)) {
-    u1 <- .bkp_twin_starts(twin_data, runs)
+    center <- colMeans(twin_data)
+    d2 <- rowSums(sweep(twin_data, 2, center, "-")^2)
+
+    if (runs <= 1L) {
+      u1 <- as.integer(which.max(d2))
+    } else {
+      u1 <- as.integer(c(which.max(d2), sample.int(n, runs - 1L, replace = TRUE)))
+    }
   } else {
     if (!is.numeric(u1) || length(u1) != runs || anyNA(u1) || any(!is.finite(u1))) {
       stop("'u1' must be an integer vector of length 'runs'.")
@@ -453,7 +457,7 @@ fit_TwinBKP <- function(
     leaf_size = leaf_size
   )
 
-  posterior <- .twin_bkp_compute_posterior_fast(
+  posterior <- .twin_bkp_compute_posterior(
     Xquery_norm = Xnorm,
     Xtrain_norm = Xnorm,
     y = y,
@@ -498,68 +502,4 @@ fit_TwinBKP <- function(
 
   class(TwinBKP_model) <- "TwinBKP"
   return(TwinBKP_model)
-}
-
-
-.bkp_twin_default_g <- function(n, d) {
-  g <- min(n - 1L, 50L * d, max(floor(sqrt(n)), 10L * d))
-  as.integer(max(2L, g))
-}
-
-
-.bkp_build_twin_data_bkp <- function(Xnorm, y, m) {
-  p_hat <- as.numeric(y) / as.numeric(m)
-  twin_data <- cbind(Xnorm, p_hat)
-  storage.mode(twin_data) <- "double"
-  twin_data
-}
-
-
-.bkp_twin_starts <- function(twin_data, runs) {
-  n <- nrow(twin_data)
-  center <- colMeans(twin_data)
-  d2 <- rowSums(sweep(twin_data, 2, center, "-")^2)
-
-  if (runs <= 1L) {
-    return(as.integer(which.max(d2)))
-  }
-
-  as.integer(c(which.max(d2), sample.int(n, runs - 1L, replace = TRUE)))
-}
-
-.twin_bkp_compute_posterior_fast <- function(
-    Xquery_norm, Xtrain_norm, y, m, g_indices, local_indices,
-    theta_g, theta_l, global_kernel, local_kernel, isotropic,
-    prior, r0, p0, ess = "none", store_kernel = FALSE
-) {
-  m_shepard <- NULL
-
-  if (identical(ess, "shepard")) {
-    m_shepard <- .bkp_shepard_m(
-      Xquery_norm = Xquery_norm,
-      Xtrain_norm = Xtrain_norm,
-      m = as.numeric(m),
-      power = 2
-    )
-  }
-
-  twin_bkp_posterior_rcpp(
-    Xquery_norm = Xquery_norm,
-    Xtrain_norm = Xtrain_norm,
-    y = as.numeric(y),
-    m = as.numeric(m),
-    g_indices = as.integer(g_indices),
-    local_indices = local_indices,
-    theta_g = as.numeric(theta_g),
-    theta_l = as.numeric(theta_l),
-    global_kernel = global_kernel,
-    local_kernel = local_kernel,
-    isotropic = isTRUE(isotropic),
-    prior = prior,
-    r0 = r0,
-    p0 = p0,
-    ess = ess,
-    m_shepard = m_shepard,
-    store_kernel = store_kernel
-  )
 }

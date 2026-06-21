@@ -94,7 +94,7 @@ predict.TwinBKP <- function(object, Xnew = NULL, CI_level = 0.95,
       leaf_size = object$leaf_size
     )
 
-    posterior <- .twin_bkp_compute_posterior_fast(
+    posterior <- .twin_bkp_compute_posterior(
       Xquery_norm = Xnew_norm,
       Xtrain_norm = object$Xnorm,
       y = object$y,

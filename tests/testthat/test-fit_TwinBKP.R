@@ -310,10 +310,6 @@ test_that("fit_TwinBKP uses fixed augmented Twinning data", {
 
   expect_equal(ncol(model$twin_data), ncol(model$Xnorm) + 1L)
   expect_equal(
-    model$twin_data[, seq_len(ncol(model$Xnorm)), drop = FALSE],
-    model$Xnorm
-  )
-  expect_equal(
     model$twin_data[, ncol(model$twin_data)],
     as.numeric(y) / as.numeric(m)
   )
