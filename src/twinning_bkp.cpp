@@ -1,21 +1,26 @@
 /*
  src/twinning_bkp.cpp
 
- Adapted from twingp/src/twinning.cpp.
+ This file contains code adapted from twingp/src/twinning.cpp.
 
  Original copyright:
  Copyright 2023 Akhil Vakayil (akhilv@gatech.edu).
- License: Apache-2.0.
 
- Modifications for BKP:
+ Original license:
+ Apache License, Version 2.0.
+
+ Modifications for the BKP package:
+ Copyright 2026 Jiangyan Zhao.
+
+ The modified version is distributed as part of the BKP package under
+ GPL (>= 3), while preserving the original Apache-2.0 notice.
+
+ Main modifications:
  - Separate twin_data from Xnorm.
- - Use twin_data for Twinning selection.
+ - Use twin_data for Twinning-based global subset selection.
  - Use Xnorm for input-space scoring and theta_l.
- - Remove vIndices, since validation indices are TwinGP-specific.
- - Return R-facing indices as 1-based integers.
-
- Design principle:
- R validates inputs. C++ performs computation.
+ - Remove validation-index construction specific to TwinGP.
+ - Return R-facing indices as one-based integers.
  */
 
 // [[Rcpp::plugins("cpp11")]]

@@ -1,7 +1,12 @@
-This package includes third-party header-only code from nanoflann.
+COPYRIGHTS
 
-nanoflann
----------
+This package includes and adapts third-party code for nearest-neighbour
+search and Twinning-based subset selection. The BKP package as a whole is
+licensed under GPL (>= 3). The third-party components listed below retain
+their original copyright notices and license terms.
+
+1. nanoflann
+------------
 
 File:
   inst/include/nanoflann.hpp
@@ -14,5 +19,44 @@ Copyright:
 License:
   BSD license, as stated in the header of inst/include/nanoflann.hpp.
 
-The nanoflann header is redistributed as part of this package to support
-kd-tree nearest-neighbour search used by the TwinBKP and TwinDKP routines.
+Use in this package:
+  The nanoflann header is redistributed as part of this package to support
+  kd-tree nearest-neighbour search used by the TwinBKP and TwinDKP routines.
+
+Notes:
+  The original copyright notice and BSD license text are retained in
+  inst/include/nanoflann.hpp.
+
+
+2. Twinning code adapted from twingp
+-----------------------------------
+
+File:
+  src/twinning_bkp.cpp
+
+Original source:
+  The implementation is adapted from src/twinning.cpp in the twingp package
+  by Akhil Vakayil and V. Roshan Joseph.
+
+Original copyright:
+  Copyright 2023 Akhil Vakayil
+
+Original license:
+  Apache License, Version 2.0.
+
+Modifications in this package:
+  The original Twinning implementation has been modified for the BKP package.
+  In particular, the modified version separates the matrix used for global
+  subset selection from the normalized input matrix, uses the normalized input
+  matrix to compute the empirical covering radius, removes validation-index
+  construction specific to TwinGP, and returns R-facing indices using
+  one-based indexing.
+
+Use in this package:
+  The adapted code supports the global-subset selection step used by the
+  TwinBKP and TwinDKP routines.
+
+Notes:
+  The original Apache-2.0 copyright notice is retained in the source file.
+  The modifications are distributed as part of the BKP package under GPL
+  (>= 3), which is compatible with Apache License 2.0 for this use.
