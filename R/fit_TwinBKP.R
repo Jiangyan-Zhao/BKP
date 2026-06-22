@@ -303,7 +303,8 @@ fit_TwinBKP <- function(
 
   # ---- Twinning controls ----
   if (!is.numeric(twins) || length(twins) != 1 ||
-      is.na(twins) || !is.finite(twins) || twins <= 0) {
+      is.na(twins) || !is.finite(twins) ||
+      twins <= 0 || twins != floor(twins)) {
     stop("'twins' must be a positive integer.")
   }
   twins <- as.integer(twins)
@@ -317,7 +318,7 @@ fit_TwinBKP <- function(
     g <- min(n - 1L, 50L * d, max(floor(sqrt(n)), 10L * d))
     g <- as.integer(max(2L, g))
   } else {
-    if (!is.numeric(g) || length(g) != 1 ||
+    if (!is.numeric(g) || length(g) != 1 || g != floor(g) ||
         is.na(g) || !is.finite(g) || g < 2 || g >= n) {
       stop("'g' must be an integer between 2 and n - 1.")
     }
@@ -334,10 +335,13 @@ fit_TwinBKP <- function(
   center <- colMeans(twin_data)
   d2 <- rowSums(sweep(twin_data, 2, center, "-")^2)
 
+  first <- which.max(d2)
   if (twins <= 1L) {
-    u1 <- as.integer(which.max(d2))
+    u1 <- as.integer(first)
   } else {
-    u1 <- as.integer(c(which.max(d2), sample.int(n, twins - 1L, replace = TRUE)))
+    pool <- setdiff(seq_len(n), first)
+    replace <- (twins - 1L) > length(pool)
+    u1 <- as.integer(c(first, sample(pool, twins - 1L, replace = replace)))
   }
 
   twin_info <- twin_select_global_rcpp(
@@ -352,7 +356,7 @@ fit_TwinBKP <- function(
   g_indices <- as.integer(twin_info$g_indices)
   g_actual <- length(g_indices)
   if (g_actual < 2L) {
-    stop("The Twinning step selected fewer than two global points; decrease 'r'.")
+    stop("The Twinning step selected fewer than two global points; try increasing 'g'.")
   }
 
   if (is.null(theta_l)) {
@@ -366,7 +370,7 @@ fit_TwinBKP <- function(
   if (is.null(l)) {
     l <- min(non_global_n, max(25L, 3L * d))
   } else {
-    if (!is.numeric(l) || length(l) != 1 ||
+    if (!is.numeric(l) || length(l) != 1 || l != floor(g) ||
         is.na(l) || !is.finite(l) || l < 0) {
       stop("'l' must be a nonnegative integer.")
     }
