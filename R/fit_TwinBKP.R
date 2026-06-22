@@ -364,7 +364,7 @@ fit_TwinBKP <- function(
   if (is.null(l)) {
     l <- min(non_global_n, max(25L, 3L * d))
   } else {
-    if (!is.numeric(l) || length(l) != 1 || l != floor(g) ||
+    if (!is.numeric(l) || length(l) != 1 || l != floor(l) ||
         is.na(l) || !is.finite(l) || l < 0) {
       stop("'l' must be a nonnegative integer.")
     }

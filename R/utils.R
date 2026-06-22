@@ -675,8 +675,6 @@ posterior_summary <- function(mean_vals, var_vals) {
     prior = prior,
     r0 = r0,
     p0 = p0,
-    ess = "none",
-    m_shepard = NULL,
     store_kernel = store_kernel
   )
 }

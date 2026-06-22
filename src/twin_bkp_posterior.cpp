@@ -88,8 +88,6 @@ Rcpp::List twin_bkp_posterior_rcpp(
     std::string prior,
     double r0,
     double p0,
-    std::string ess,
-    Rcpp::Nullable<Rcpp::NumericVector> m_shepard = R_NilValue,
     bool store_kernel = false)
 {
   const std::size_t t = Xquery_norm.nrow();
@@ -99,8 +97,6 @@ Rcpp::List twin_bkp_posterior_rcpp(
   const std::size_t l = local_indices.ncol();
 
   NumericVector alpha0(t), beta0(t), alpha_n(t), beta_n(t);
-  (void) ess;
-  (void) m_shepard;
 
   NumericMatrix K, K_global, K_local;
   if (store_kernel) {
