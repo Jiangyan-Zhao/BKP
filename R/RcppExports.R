@@ -33,8 +33,8 @@ shepard_m_loo_rcpp <- function(Xnorm, m, power = 2.0) {
     .Call(`_BKP_shepard_m_loo_rcpp`, Xnorm, m, power)
 }
 
-twin_bkp_posterior_rcpp <- function(Xquery_norm, Xtrain_norm, y, m, g_indices, local_indices, theta_g, theta_l, global_kernel, local_kernel, isotropic, prior, r0, p0, ess, m_shepard = NULL, store_kernel = FALSE) {
-    .Call(`_BKP_twin_bkp_posterior_rcpp`, Xquery_norm, Xtrain_norm, y, m, g_indices, local_indices, theta_g, theta_l, global_kernel, local_kernel, isotropic, prior, r0, p0, ess, m_shepard, store_kernel)
+twin_bkp_posterior_rcpp <- function(Xquery_norm, Xtrain_norm, y, m, g_indices, local_indices, theta_g, theta_l, global_kernel, local_kernel, isotropic, prior, r0, p0, store_kernel = FALSE) {
+    .Call(`_BKP_twin_bkp_posterior_rcpp`, Xquery_norm, Xtrain_norm, y, m, g_indices, local_indices, theta_g, theta_l, global_kernel, local_kernel, isotropic, prior, r0, p0, store_kernel)
 }
 
 twin_select_global_rcpp <- function(twin_data, Xnorm, r, runs, u1, leaf_size = 8L) {

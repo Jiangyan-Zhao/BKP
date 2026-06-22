@@ -157,8 +157,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // twin_bkp_posterior_rcpp
-Rcpp::List twin_bkp_posterior_rcpp(Rcpp::NumericMatrix Xquery_norm, Rcpp::NumericMatrix Xtrain_norm, Rcpp::NumericVector y, Rcpp::NumericVector m, Rcpp::IntegerVector g_indices, Rcpp::IntegerMatrix local_indices, Rcpp::NumericVector theta_g, double theta_l, std::string global_kernel, std::string local_kernel, bool isotropic, std::string prior, double r0, double p0, std::string ess, Rcpp::Nullable<Rcpp::NumericVector> m_shepard, bool store_kernel);
-RcppExport SEXP _BKP_twin_bkp_posterior_rcpp(SEXP Xquery_normSEXP, SEXP Xtrain_normSEXP, SEXP ySEXP, SEXP mSEXP, SEXP g_indicesSEXP, SEXP local_indicesSEXP, SEXP theta_gSEXP, SEXP theta_lSEXP, SEXP global_kernelSEXP, SEXP local_kernelSEXP, SEXP isotropicSEXP, SEXP priorSEXP, SEXP r0SEXP, SEXP p0SEXP, SEXP essSEXP, SEXP m_shepardSEXP, SEXP store_kernelSEXP) {
+Rcpp::List twin_bkp_posterior_rcpp(Rcpp::NumericMatrix Xquery_norm, Rcpp::NumericMatrix Xtrain_norm, Rcpp::NumericVector y, Rcpp::NumericVector m, Rcpp::IntegerVector g_indices, Rcpp::IntegerMatrix local_indices, Rcpp::NumericVector theta_g, double theta_l, std::string global_kernel, std::string local_kernel, bool isotropic, std::string prior, double r0, double p0, bool store_kernel);
+RcppExport SEXP _BKP_twin_bkp_posterior_rcpp(SEXP Xquery_normSEXP, SEXP Xtrain_normSEXP, SEXP ySEXP, SEXP mSEXP, SEXP g_indicesSEXP, SEXP local_indicesSEXP, SEXP theta_gSEXP, SEXP theta_lSEXP, SEXP global_kernelSEXP, SEXP local_kernelSEXP, SEXP isotropicSEXP, SEXP priorSEXP, SEXP r0SEXP, SEXP p0SEXP, SEXP store_kernelSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -176,10 +176,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< std::string >::type prior(priorSEXP);
     Rcpp::traits::input_parameter< double >::type r0(r0SEXP);
     Rcpp::traits::input_parameter< double >::type p0(p0SEXP);
-    Rcpp::traits::input_parameter< std::string >::type ess(essSEXP);
-    Rcpp::traits::input_parameter< Rcpp::Nullable<Rcpp::NumericVector> >::type m_shepard(m_shepardSEXP);
     Rcpp::traits::input_parameter< bool >::type store_kernel(store_kernelSEXP);
-    rcpp_result_gen = Rcpp::wrap(twin_bkp_posterior_rcpp(Xquery_norm, Xtrain_norm, y, m, g_indices, local_indices, theta_g, theta_l, global_kernel, local_kernel, isotropic, prior, r0, p0, ess, m_shepard, store_kernel));
+    rcpp_result_gen = Rcpp::wrap(twin_bkp_posterior_rcpp(Xquery_norm, Xtrain_norm, y, m, g_indices, local_indices, theta_g, theta_l, global_kernel, local_kernel, isotropic, prior, r0, p0, store_kernel));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -224,7 +222,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_BKP_qbetabinom_rcpp", (DL_FUNC) &_BKP_qbetabinom_rcpp, 4},
     {"_BKP_shepard_m_rcpp", (DL_FUNC) &_BKP_shepard_m_rcpp, 4},
     {"_BKP_shepard_m_loo_rcpp", (DL_FUNC) &_BKP_shepard_m_loo_rcpp, 3},
-    {"_BKP_twin_bkp_posterior_rcpp", (DL_FUNC) &_BKP_twin_bkp_posterior_rcpp, 17},
+    {"_BKP_twin_bkp_posterior_rcpp", (DL_FUNC) &_BKP_twin_bkp_posterior_rcpp, 15},
     {"_BKP_twin_select_global_rcpp", (DL_FUNC) &_BKP_twin_select_global_rcpp, 6},
     {"_BKP_twin_local_indices_rcpp", (DL_FUNC) &_BKP_twin_local_indices_rcpp, 5},
     {NULL, NULL, 0}
