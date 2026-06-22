@@ -426,18 +426,18 @@ fit_TwinBKP <- function(
     leaf_size = leaf_size
   )
 
-  posterior <- .twin_bkp_compute_posterior(
+  posterior <- twin_bkp_posterior_rcpp(
     Xquery_norm = Xnorm,
     Xtrain_norm = Xnorm,
-    y = y,
-    m = m,
-    g_indices = g_indices,
+    y = as.numeric(y),
+    m = as.numeric(m),
+    g_indices = as.integer(g_indices),
     local_indices = local_indices,
-    theta_g = theta_g,
-    theta_l = theta_l,
+    theta_g = as.numeric(theta_g),
+    theta_l = as.numeric(theta_l),
     global_kernel = global_kernel,
     local_kernel = local_kernel,
-    isotropic = isotropic,
+    isotropic = isTRUE(isotropic),
     prior = prior,
     r0 = r0,
     p0 = p0,

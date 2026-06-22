@@ -95,18 +95,18 @@ predict.TwinBKP <- function(object, Xnew = NULL, CI_level = 0.95,
       leaf_size = leaf_size
     )
 
-    posterior <- .twin_bkp_compute_posterior(
+    posterior <- twin_bkp_posterior_rcpp(
       Xquery_norm = Xnew_norm,
       Xtrain_norm = object$Xnorm,
-      y = object$y,
-      m = object$m,
-      g_indices = object$global_indices,
+      y = as.numeric(object$y),
+      m = as.numeric(object$m),
+      g_indices = as.integer(object$global_indices),
       local_indices = local_indices,
-      theta_g = object$theta_g,
-      theta_l = object$theta_l,
+      theta_g = as.numeric(object$theta_g),
+      theta_l = as.numeric(object$theta_l),
       global_kernel = object$global_kernel,
       local_kernel = object$local_kernel,
-      isotropic = object$isotropic,
+      isotropic = isTRUE(object$isotropic),
       prior = object$prior,
       r0 = object$r0,
       p0 = object$p0,
