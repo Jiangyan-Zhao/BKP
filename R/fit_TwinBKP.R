@@ -57,7 +57,6 @@
 #'     uses a shared lengthscale.}
 #'   \item{\code{loss}, \code{loss_min}}{Loss function and minimum loss value for
 #'     global lengthscale tuning.}
-#'   \item{\code{ess}, \code{ess_info}}{ESS calibration method and diagnostics.}
 #'   \item{\code{X}, \code{Xnorm}, \code{Xbounds}}{Original inputs, normalized
 #'     inputs, and normalization bounds.}
 #'   \item{\code{y}, \code{m}}{Observed success counts and binomial trial counts.}
@@ -83,10 +82,11 @@
 #'   using a kd-tree over non-global training points via \pkg{nanoflann}. By
 #'   default, posterior pseudo-counts are aggregated row-wise and dense
 #'   \eqn{n \times n} kernel matrices are not stored. Fitting posterior
-#'   aggregation is \eqn{O(n(g + l))}. Prediction under \code{ess = "none"}
-#'   is \eqn{O(t(\log n + g + l))} for fixed input dimension. Exact
-#'   \code{ess = "shepard"} at new prediction points may add \eqn{O(tn)}
-#'   arithmetic for exact Shepard interpolation.
+#'   aggregation is \eqn{O(n(g + l))}. Prediction at \eqn{t} new input
+#'   points is \eqn{O(t(\log n + g + l))} for fixed input dimension. ESS
+#'   calibration is currently available for full BKP and DKP models. TwinBKP
+#'   keeps the uncalibrated posterior update to preserve the intended scalable
+#'   global-local approximation.
 #'
 #' @seealso \code{\link{fit_BKP}} for the full BKP model,
 #'   \code{\link{fit_DKP}} for multinomial responses, \code{\link{predict.BKP}},
@@ -160,7 +160,6 @@ fit_TwinBKP <- function(
     loss = c("brier", "log_loss"),
     n_multi_start = NULL, theta_g = NULL, theta_l = NULL,
     isotropic = TRUE, n_threads = 1,
-    ess = c("none", "shepard"),
     g = NULL, l = NULL,
     twins = 5,
     store_kernel = FALSE
@@ -201,8 +200,6 @@ fit_TwinBKP <- function(
   global_kernel <- match.arg(global_kernel)
   local_kernel <- match.arg(local_kernel)
   loss <- match.arg(loss)
-  ess <- match.arg(ess)
-
   # ---- Xbounds checks ----
   if (is.null(Xbounds)) {
     xmin <- min(X)
@@ -297,9 +294,6 @@ fit_TwinBKP <- function(
   Xnorm <- sweep(X, 2, Xbounds[,1], "-")
   Xnorm <- sweep(Xnorm, 2, Xbounds[,2] - Xbounds[,1], "/")
 
-  if (identical(ess, "shepard")) {
-    .bkp_check_unique_locations(Xnorm)
-  }
 
   # ---- Twinning controls ----
   if (!is.numeric(twins) || length(twins) != 1 ||
@@ -401,7 +395,7 @@ fit_TwinBKP <- function(
       theta = NULL,
       isotropic = isotropic,
       n_threads = n_threads,
-      ess = ess
+      ess = "none"
     )
 
     theta_g <- as.numeric(global_fit$theta_opt)
@@ -419,7 +413,7 @@ fit_TwinBKP <- function(
       loss = loss,
       kernel = global_kernel,
       isotropic = isotropic,
-      ess = ess
+      ess = "none"
     )
   }
 
@@ -447,7 +441,6 @@ fit_TwinBKP <- function(
     prior = prior,
     r0 = r0,
     p0 = p0,
-    ess = ess,
     store_kernel = store_kernel
   )
 
@@ -456,7 +449,6 @@ fit_TwinBKP <- function(
     theta_opt = theta_g, theta_g = theta_g, theta_l = theta_l,
     kernel = global_kernel, global_kernel = global_kernel, local_kernel = local_kernel,
     isotropic = isotropic, loss = loss, loss_min = loss_min,
-    ess = ess, ess_info = posterior$ess_info,
     X = X, Xnorm = Xnorm, Xbounds = Xbounds, y = matrix(y, ncol = 1), m = matrix(m, ncol = 1),
     prior = prior, r0 = r0, p0 = p0, alpha0 = posterior$alpha0, beta0 = posterior$beta0,
     alpha_n = posterior$alpha_n, beta_n = posterior$beta_n,
@@ -469,9 +461,8 @@ fit_TwinBKP <- function(
       global_selection = "Twinning global subset selection using kd-tree nearest-neighbour search",
       global_tuning = "O(T_g g^2), where T_g is the number of global-subset loss evaluations",
       training_posterior = "O(n(g + l)) row-wise pseudo-count aggregation",
-      prediction = "O(t(log n + g + l)) for ess = 'none' and fixed input dimension",
-      memory = "O(n + n l + g) by default, excluding input storage; dense kernels are stored only when store_kernel = TRUE",
-      ess_note = "With exact ess = 'shepard', new-point prediction may require O(t n) arithmetic for exact Shepard interpolation."
+      prediction = "O(t(log n + g + l)) for fixed input dimension",
+      memory = "O(n + n l + g) by default, excluding input storage; dense kernels are stored only when store_kernel = TRUE"
     )
   )
 

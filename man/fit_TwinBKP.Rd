@@ -20,7 +20,6 @@ fit_TwinBKP(
   theta_l = NULL,
   isotropic = TRUE,
   n_threads = 1,
-  ess = c("none", "shepard"),
   g = NULL,
   l = NULL,
   twins = 5,
@@ -83,16 +82,6 @@ per-dimension lengthscales.}
 optimization. Default is \code{1}. This argument only affects
 hyperparameter optimization when \code{theta = NULL}.}
 
-\item{ess}{Effective-sample-size calibration for the BKP data contribution.
-Use \code{"none"} (default) for the standard BKP update. Use
-\code{"shepard"} to rescale the kernel-weighted data contribution so that
-its effective trial size is
-\eqn{\rho(\mathbf{x}) m_S(\mathbf{x})}, where \eqn{m_S(\mathbf{x})} is a
-Shepard interpolation of the observed trial sizes on the normalized input
-scale and \eqn{\rho(\mathbf{x}) = \max_i K(\mathbf{x}, \mathbf{x}_i)}.
-This calibration preserves the kernel-weighted empirical proportion and
-changes only the data precision, not the prior parameters.}
-
 \item{g}{Target global subset size. If \code{NULL}, the default is
 \eqn{\min\{n-1, 50d, \max(\lfloor\sqrt n\rfloor, 10d)\}}.}
 
@@ -125,7 +114,6 @@ the global and local components.}
 uses a shared lengthscale.}
 \item{\code{loss}, \code{loss_min}}{Loss function and minimum loss value for
 global lengthscale tuning.}
-\item{\code{ess}, \code{ess_info}}{ESS calibration method and diagnostics.}
 \item{\code{X}, \code{Xnorm}, \code{Xbounds}}{Original inputs, normalized
 inputs, and normalization bounds.}
 \item{\code{y}, \code{m}}{Observed success counts and binomial trial counts.}
@@ -161,10 +149,11 @@ internally from \code{g} and \code{twins}. Local neighbours are selected
 using a kd-tree over non-global training points via \pkg{nanoflann}. By
 default, posterior pseudo-counts are aggregated row-wise and dense
 \eqn{n \times n} kernel matrices are not stored. Fitting posterior
-aggregation is \eqn{O(n(g + l))}. Prediction under \code{ess = "none"}
-is \eqn{O(t(\log n + g + l))} for fixed input dimension. Exact
-\code{ess = "shepard"} at new prediction points may add \eqn{O(tn)}
-arithmetic for exact Shepard interpolation.
+aggregation is \eqn{O(n(g + l))}. Prediction at \eqn{t} new input
+points is \eqn{O(t(\log n + g + l))} for fixed input dimension. ESS
+calibration is currently available for full BKP and DKP models. TwinBKP
+keeps the uncalibrated posterior update to preserve the intended scalable
+global-local approximation.
 }
 \examples{
 #-------------------------- 1D Example ---------------------------

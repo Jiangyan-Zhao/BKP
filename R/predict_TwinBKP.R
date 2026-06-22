@@ -80,7 +80,6 @@ predict.TwinBKP <- function(object, Xnew = NULL, CI_level = 0.95,
   if (is.null(Xnew)) {
     alpha_n <- object$alpha_n
     beta_n <- object$beta_n
-    ess_info <- object$ess_info
     m <- object$m
   } else {
     Xnew_norm <- sweep(Xnew, 2, object$Xbounds[, 1], "-")
@@ -111,13 +110,11 @@ predict.TwinBKP <- function(object, Xnew = NULL, CI_level = 0.95,
       prior = object$prior,
       r0 = object$r0,
       p0 = object$p0,
-      ess = object$ess,
       store_kernel = FALSE
     )
 
     alpha_n <- posterior$alpha_n
     beta_n <- posterior$beta_n
-    ess_info <- posterior$ess_info
     m <- object$m
   }
 
@@ -151,9 +148,7 @@ predict.TwinBKP <- function(object, Xnew = NULL, CI_level = 0.95,
     lower = pred_lower,
     upper = pred_upper,
     CI_level = CI_level,
-    type = type,
-    ess = object$ess,
-    ess_info = ess_info
+    type = type
   )
 
   if (type == "count") {

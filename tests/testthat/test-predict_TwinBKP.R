@@ -73,25 +73,6 @@ test_that("predict.TwinBKP validates inputs", {
                "When type = 'count' and Xnew is provided, 'Mnew' must also be provided.")
 })
 
-test_that("predict.TwinBKP supports Shepard ESS", {
-  set.seed(104)
-  n <- 20
-  X <- matrix(runif(n * 2), ncol = 2)
-  m <- rep(1, n)
-  y <- rbinom(n, size = m, prob = 0.5)
-  Xnew <- matrix(runif(10), ncol = 2)
-
-  model <- fit_TwinBKP(X, y, m, theta_g = 0.3, theta_l = 0.4,
-                       g = 6, twins = 2, ess = "shepard")
-
-  pred_train <- predict(model)
-  pred_new <- predict(model, Xnew = Xnew)
-
-  expect_true(all(is.finite(pred_train$mean)))
-  expect_true(all(is.finite(pred_new$mean)))
-  expect_false(anyNA(pred_new$ess_info$scale))
-})
-
 test_that("predict.TwinBKP keeps adaptive prior positive when all kernel weights are zero", {
   set.seed(123)
 

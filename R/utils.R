@@ -627,9 +627,8 @@ posterior_summary <- function(mean_vals, var_vals) {
 #' Compute TwinBKP posterior parameters using the C++ backend
 #'
 #' Internal helper used by \code{fit_TwinBKP()} and \code{predict.TwinBKP()} to
-#' compute TwinBKP posterior Beta shape parameters. The function prepares the
-#' optional Shepard effective-sample-size target and then delegates row-wise
-#' global-local pseudo-count aggregation to \code{twin_bkp_posterior_rcpp()}.
+#' compute TwinBKP posterior Beta shape parameters using the uncalibrated
+#' row-wise global-local pseudo-count aggregation in \code{twin_bkp_posterior_rcpp()}.
 #'
 #' @param Xquery_norm Numeric matrix of normalized query locations.
 #' @param Xtrain_norm Numeric matrix of normalized training locations.
@@ -647,33 +646,20 @@ posterior_summary <- function(mean_vals, var_vals) {
 #' @param prior Character string specifying the prior type.
 #' @param r0 Positive scalar prior precision.
 #' @param p0 Prior mean used by the fixed prior and passed to the C++ backend.
-#' @param ess Character string specifying the ESS calibration method:
-#'   \code{"none"} or \code{"shepard"}.
 #' @param store_kernel Logical. If \code{TRUE}, dense diagnostic kernel matrices
 #'   are returned; otherwise they are omitted.
 #'
 #' @return A list returned by \code{twin_bkp_posterior_rcpp()}, containing
 #'   \code{alpha0}, \code{beta0}, \code{alpha_n}, \code{beta_n},
-#'   \code{ess_info}, and optionally \code{K}, \code{K_global}, and
+#'   \code{K}, \code{K_global}, and
 #'   \code{K_local}.
 #'
 #' @keywords internal
 .twin_bkp_compute_posterior <- function(
     Xquery_norm, Xtrain_norm, y, m, g_indices, local_indices,
     theta_g, theta_l, global_kernel, local_kernel, isotropic,
-    prior, r0, p0, ess = "none", store_kernel = FALSE
+    prior, r0, p0, store_kernel = FALSE
 ) {
-  m_shepard <- NULL
-
-  if (identical(ess, "shepard")) {
-    m_shepard <- .bkp_shepard_m(
-      Xquery_norm = Xquery_norm,
-      Xtrain_norm = Xtrain_norm,
-      m = as.numeric(m),
-      power = 2
-    )
-  }
-
   twin_bkp_posterior_rcpp(
     Xquery_norm = Xquery_norm,
     Xtrain_norm = Xtrain_norm,
@@ -689,8 +675,8 @@ posterior_summary <- function(mean_vals, var_vals) {
     prior = prior,
     r0 = r0,
     p0 = p0,
-    ess = ess,
-    m_shepard = m_shepard,
+    ess = "none",
+    m_shepard = NULL,
     store_kernel = store_kernel
   )
 }

@@ -244,7 +244,7 @@ test_that("fit_TwinBKP returns an object with expected structure and content", {
 
   expected_names <- c(
     "theta_opt", "theta_g", "theta_l", "kernel", "global_kernel", "local_kernel",
-    "isotropic", "loss", "loss_min", "ess", "ess_info",
+    "isotropic", "loss", "loss_min",
     "X", "Xnorm", "Xbounds", "y", "m", "prior", "r0", "p0",
     "alpha0", "beta0", "alpha_n", "beta_n",
     "K", "K_global", "K_local", "twin_data", "twin_info",
@@ -261,7 +261,6 @@ test_that("fit_TwinBKP returns an object with expected structure and content", {
   expect_equal(model$global_kernel, "gaussian")
   expect_equal(model$local_kernel, "wendland")
   expect_equal(model$loss, "brier")
-  expect_equal(model$ess, "none")
   expect_equal(model$prior, "noninformative")
   expect_equal(model$twins, 2L)
   expect_true(is.integer(model$u1))
@@ -318,8 +317,7 @@ test_that("fit_TwinBKP stores dense diagnostic kernels only on request", {
   model <- fit_TwinBKP(
     X = X, y = y, m = m,
     theta_g = 0.3, theta_l = 0.4,
-    g = 8, twins = 2, store_kernel = TRUE,
-    ess = "none"
+    g = 8, twins = 2, store_kernel = TRUE
   )
 
   expect_true(is.matrix(model$K))
@@ -366,7 +364,6 @@ test_that("fit_TwinBKP posterior matches the combined global-local kernel update
     X = X, y = y, m = m,
     theta_g = 0.25, theta_l = 0.35,
     g = 8, twins = 2,
-    ess = "none",
     store_kernel = TRUE
   )
 
@@ -384,7 +381,6 @@ test_that("fit_TwinBKP posterior matches the combined global-local kernel update
   expect_equal(model$beta0, prior_par$beta0)
   expect_equal(model$alpha_n, prior_par$alpha0 + as.vector(model$K %*% model$y))
   expect_equal(model$beta_n, prior_par$beta0 + as.vector(model$K %*% (model$m - model$y)))
-  expect_equal(model$ess_info$scale, rep(1, n))
 })
 
 
@@ -418,53 +414,16 @@ test_that("fit_TwinBKP supports fixed prior, adaptive prior, and anisotropic the
 })
 
 
-test_that("fit_TwinBKP handles Shepard ESS without NA values", {
-  set.seed(8)
-
-  X <- matrix(c(
-    0.05, 0.15,
-    0.20, 0.70,
-    0.35, 0.30,
-    0.50, 0.85,
-    0.65, 0.20,
-    0.80, 0.60,
-    0.95, 0.40,
-    0.12, 0.92
-  ), ncol = 2, byrow = TRUE)
-  m <- c(10, 14, 18, 12, 20, 16, 22, 15)
-  y <- c(3, 6, 8, 7, 11, 9, 15, 5)
-
-  model <- fit_TwinBKP(
-    X, y, m,
-    theta_g = 0.35,
-    theta_l = 0.45,
-    g = 4,
-    twins = 2,
-    ess = "shepard"
-  )
-
-  expect_s3_class(model, "TwinBKP")
-  expect_false(anyNA(model$alpha_n))
-  expect_false(anyNA(model$beta_n))
-  expect_false(anyNA(model$ess_info$scale))
-  expect_true(all(is.finite(model$alpha_n)))
-  expect_true(all(is.finite(model$beta_n)))
-  expect_true(all(is.finite(model$ess_info$scale)))
-})
-
-
-test_that("fit_TwinBKP rejects duplicated input locations for Shepard ESS", {
-  X <- matrix(c(0.10, 0.20, 0.10, 0.20, 0.75, 0.90, 0.40, 0.55),
-              ncol = 2, byrow = TRUE)
-  m <- c(10, 20, 15, 12)
-  y <- c(4, 9, 7, 6)
+test_that("fit_TwinBKP rejects removed ESS arguments", {
+  X <- matrix(runif(12), ncol = 2)
+  m <- rep(10, 6)
+  y <- rbinom(6, size = m, prob = 0.4)
 
   expect_error(
     fit_TwinBKP(X, y, m, theta_g = 0.3, ess = "shepard", g = 2, twins = 1),
-    "requires unique input locations"
+    "unused argument"
   )
 })
-
 
 test_that("fit_TwinBKP is reproducible with a fixed random seed", {
   set.seed(9)

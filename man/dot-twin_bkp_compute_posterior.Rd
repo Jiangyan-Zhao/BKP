@@ -19,7 +19,6 @@
   prior,
   r0,
   p0,
-  ess = "none",
   store_kernel = FALSE
 )
 }
@@ -54,22 +53,18 @@ lengthscale; otherwise it uses dimension-specific lengthscales.}
 
 \item{p0}{Prior mean used by the fixed prior and passed to the C++ backend.}
 
-\item{ess}{Character string specifying the ESS calibration method:
-\code{"none"} or \code{"shepard"}.}
-
 \item{store_kernel}{Logical. If \code{TRUE}, dense diagnostic kernel matrices
 are returned; otherwise they are omitted.}
 }
 \value{
 A list returned by \code{twin_bkp_posterior_rcpp()}, containing
 \code{alpha0}, \code{beta0}, \code{alpha_n}, \code{beta_n},
-\code{ess_info}, and optionally \code{K}, \code{K_global}, and
+\code{K}, \code{K_global}, and
 \code{K_local}.
 }
 \description{
 Internal helper used by \code{fit_TwinBKP()} and \code{predict.TwinBKP()} to
-compute TwinBKP posterior Beta shape parameters. The function prepares the
-optional Shepard effective-sample-size target and then delegates row-wise
-global-local pseudo-count aggregation to \code{twin_bkp_posterior_rcpp()}.
+compute TwinBKP posterior Beta shape parameters using the uncalibrated
+row-wise global-local pseudo-count aggregation in \code{twin_bkp_posterior_rcpp()}.
 }
 \keyword{internal}

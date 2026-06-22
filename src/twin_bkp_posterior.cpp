@@ -99,15 +99,8 @@ Rcpp::List twin_bkp_posterior_rcpp(
   const std::size_t l = local_indices.ncol();
 
   NumericVector alpha0(t), beta0(t), alpha_n(t), beta_n(t);
-  NumericVector scale(t), m_kernel_vec(t), rho_vec(t);
-  NumericVector m_target_vec;
-  NumericVector m_shepard_vec;
-  const bool use_shepard = (ess == "shepard");
-
-  if (use_shepard) {
-    m_shepard_vec = Rcpp::as<Rcpp::NumericVector>(m_shepard);
-    m_target_vec = NumericVector(t);
-  }
+  (void) ess;
+  (void) m_shepard;
 
   NumericMatrix K, K_global, K_local;
   if (store_kernel) {
@@ -119,8 +112,6 @@ Rcpp::List twin_bkp_posterior_rcpp(
   for (std::size_t qi = 0; qi < t; qi++) {
     double success = 0.0;
     double failure = 0.0;
-    double m_kernel = 0.0;
-    double rho = 0.0;
     double sum_w = 0.0;
     double sum_w_prop = 0.0;
 
@@ -131,8 +122,6 @@ Rcpp::List twin_bkp_posterior_rcpp(
         global_kernel, d);
       success += w * y[j];
       failure += w * (m[j] - y[j]);
-      m_kernel += w * m[j];
-      rho = std::max(rho, w);
       sum_w += w;
       sum_w_prop += w * (y[j] / m[j]);
       if (store_kernel) K_global(qi, j) = w;
@@ -145,8 +134,6 @@ Rcpp::List twin_bkp_posterior_rcpp(
         local_kernel, d);
       success += w * y[j];
       failure += w * (m[j] - y[j]);
-      m_kernel += w * m[j];
-      rho = std::max(rho, w);
       sum_w += w;
       sum_w_prop += w * (y[j] / m[j]);
       if (store_kernel) K_local(qi, j) = w;
@@ -170,19 +157,8 @@ Rcpp::List twin_bkp_posterior_rcpp(
       beta0[qi]  = std::max(1e-2, r_adapt * (1.0 - p_adapt));
     }
 
-    double sc = 1.0;
-    double target = NA_REAL;
-    if (use_shepard) {
-      target = rho * m_shepard_vec[qi];
-      sc = (m_kernel > 0.0) ? target / m_kernel : 0.0;
-      m_target_vec[qi] = target;
-    }
-
-    scale[qi] = sc;
-    m_kernel_vec[qi] = m_kernel;
-    rho_vec[qi] = rho;
-    alpha_n[qi] = alpha0[qi] + sc * success;
-    beta_n[qi] = beta0[qi] + sc * failure;
+    alpha_n[qi] = alpha0[qi] + success;
+    beta_n[qi] = beta0[qi] + failure;
 
     if (store_kernel) {
       for (std::size_t j = 0; j < n; j++) {
@@ -191,26 +167,15 @@ Rcpp::List twin_bkp_posterior_rcpp(
     }
   }
 
-  Rcpp::RObject m_shepard_out = use_shepard ? Rcpp::wrap(m_shepard_vec) : R_NilValue;
-  Rcpp::RObject m_target_out = use_shepard ? Rcpp::wrap(m_target_vec) : R_NilValue;
   Rcpp::RObject K_out = store_kernel ? Rcpp::wrap(K) : R_NilValue;
   Rcpp::RObject K_global_out = store_kernel ? Rcpp::wrap(K_global) : R_NilValue;
   Rcpp::RObject K_local_out = store_kernel ? Rcpp::wrap(K_local) : R_NilValue;
-
-  List ess_info = List::create(
-    _["scale"] = scale,
-    _["m_kernel"] = m_kernel_vec,
-    _["rho"] = rho_vec,
-    _["m_shepard"] = m_shepard_out,
-    _["m_target"] = m_target_out
-  );
 
   return List::create(
     _["alpha0"] = alpha0,
     _["beta0"] = beta0,
     _["alpha_n"] = alpha_n,
     _["beta_n"] = beta_n,
-    _["ess_info"] = ess_info,
     _["K"] = K_out,
     _["K_global"] = K_global_out,
     _["K_local"] = K_local_out
