@@ -218,7 +218,7 @@ test_that("fit_TwinBKP validates hyperparameter and twinning controls", {
 
   expect_error(
     fit_TwinBKP(X, y, m, l = n),
-    "'l' cannot exceed the number of non-global training points."
+    "'l' must be a nonnegative integer."
   )
 
 })
