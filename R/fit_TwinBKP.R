@@ -38,9 +38,10 @@
 #'   Larger values may improve the selected global subset at additional
 #'   computational cost. Default is \code{5}.
 #' @param store_kernel Logical. If \code{TRUE}, store dense diagnostic kernel
-#'   matrices \code{K}, \code{K_global}, and \code{K_local}. The default
-#'   \code{FALSE} avoids \eqn{n \times n} kernel storage and preserves the
-#'   stated TwinBKP memory complexity.
+#'   matrices \code{K}, \code{K_global}, and \code{K_local}. This option is
+#'   intended for testing and diagnostics only. The default \code{FALSE}
+#'   avoids dense \eqn{n \times n} kernel storage and preserves the scalable
+#'   memory behavior of TwinBKP.
 #'
 #' @return A list of class \code{"TwinBKP"} containing the fitted TwinBKP model,
 #'   including:
@@ -66,7 +67,8 @@
 #'   \item{\code{alpha_n}, \code{beta_n}}{TwinBKP posterior Beta shape parameters
 #'     at the training locations.}
 #'   \item{\code{K}, \code{K_global}, \code{K_local}}{Combined, global, and local
-#'     kernel-weight matrices used for the training update.}
+#'     kernel-weight matrices used for diagnostic checks when
+#'     \code{store_kernel = TRUE}; otherwise \code{NULL}.}
 #'   \item{\code{global_indices}, \code{local_indices}}{Selected global subset and
 #'     training-location-specific local subsets, stored as 1-based indices.}
 #'   \item{\code{twin_info}, \code{twin_data}}{Diagnostics from the C++ Twinning
@@ -79,14 +81,16 @@
 #'   distribution and the empirical response surface. The low-level Twinning
 #'   compression parameter, starting indices, and kd-tree leaf size are set
 #'   internally from \code{g} and \code{twins}. Local neighbours are selected
-#'   using a kd-tree over non-global training points via \pkg{nanoflann}. By
-#'   default, posterior pseudo-counts are aggregated row-wise and dense
+#'   using a kd-tree over non-global training points via \pkg{nanoflann}.
+#'   By default, posterior pseudo-counts are aggregated row-wise and dense
 #'   \eqn{n \times n} kernel matrices are not stored. Fitting posterior
 #'   aggregation is \eqn{O(n(g + l))}. Prediction at \eqn{t} new input
-#'   points is \eqn{O(t(\log n + g + l))} for fixed input dimension. ESS
-#'   calibration is currently available for full BKP and DKP models. TwinBKP
-#'   keeps the uncalibrated posterior update to preserve the intended scalable
-#'   global-local approximation.
+#'   points is \eqn{O(t(\log n + g + l))} for fixed input dimension.
+#'   When \code{store_kernel = TRUE}, dense diagnostic matrices are additionally
+#'   stored and the memory cost increases to \eqn{O(n^2)} for training-data
+#'   posterior aggregation. ESS calibration is currently available for full BKP
+#'   and DKP models. TwinBKP keeps the uncalibrated posterior update to preserve
+#'   the intended scalable global-local approximation.
 #'
 #' @seealso \code{\link{fit_BKP}} for the full BKP model,
 #'   \code{\link{fit_DKP}} for multinomial responses, \code{\link{predict.BKP}},
@@ -305,6 +309,19 @@ fit_TwinBKP <- function(
 
   if (!is.logical(store_kernel) || length(store_kernel) != 1) {
     stop("'store_kernel' must be a single logical value.")
+  }
+
+  if (isTRUE(store_kernel)) {
+    bytes_est <- 3 * n^2 * 8
+    if (bytes_est > 1e9) {
+      warning(
+        sprintf(
+          "store_kernel = TRUE will allocate approximately %.2f GB for dense diagnostic kernel matrices.",
+          bytes_est / 1024^3
+        ),
+        call. = FALSE
+      )
+    }
   }
 
 

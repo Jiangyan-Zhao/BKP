@@ -326,6 +326,9 @@ test_that("fit_TwinBKP stores dense diagnostic kernels only on request", {
   expect_equal(model$K, model$K_global + model$K_local)
   expect_equal(model$alpha_n, model$alpha0 + as.vector(model$K %*% model$y))
   expect_equal(model$beta_n, model$beta0 + as.vector(model$K %*% (model$m - model$y)))
+  expect_equal(dim(model$K), c(nrow(X), nrow(X)))
+  expect_equal(dim(model$K_global), c(nrow(X), nrow(X)))
+  expect_equal(dim(model$K_local), c(nrow(X), nrow(X)))
 })
 
 
