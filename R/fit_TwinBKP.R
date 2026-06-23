@@ -43,36 +43,58 @@
 #'   avoids dense \eqn{n \times n} kernel storage and preserves the scalable
 #'   memory behavior of TwinBKP.
 #'
-#' @return A list of class \code{"TwinBKP"} containing the fitted TwinBKP model,
-#'   including:
+#' @return A list of class \code{"TwinBKP"} containing the fitted TwinBKP model.
+#'   The object includes the following components:
 #' \describe{
 #'   \item{\code{theta_opt}}{Alias for the optimized or user-specified global
-#'     kernel lengthscale \code{theta_g}.}
-#'   \item{\code{theta_g}}{Global kernel lengthscale parameter(s).}
-#'   \item{\code{theta_l}}{Local kernel range parameter.}
+#'     kernel lengthscale \code{theta_g}, retained for consistency with
+#'     \code{\link{fit_BKP}}.}
+#'   \item{\code{theta_g}}{Global kernel lengthscale parameter(s). A scalar is
+#'     used when \code{isotropic = TRUE}; a vector is used when
+#'     \code{isotropic = FALSE}.}
+#'   \item{\code{theta_l}}{Local kernel range parameter used for the
+#'     nearest-neighbour local component.}
 #'   \item{\code{kernel}}{Alias for \code{global_kernel}, retained for naming
 #'     consistency with \code{\link{fit_BKP}}.}
-#'   \item{\code{global_kernel}, \code{local_kernel}}{Kernel functions used by
-#'     the global and local components.}
-#'   \item{\code{isotropic}}{Logical flag indicating whether the global component
-#'     uses a shared lengthscale.}
-#'   \item{\code{loss}, \code{loss_min}}{Loss function and minimum loss value for
-#'     global lengthscale tuning.}
-#'   \item{\code{X}, \code{Xnorm}, \code{Xbounds}}{Original inputs, normalized
-#'     inputs, and normalization bounds.}
-#'   \item{\code{y}, \code{m}}{Observed success counts and binomial trial counts.}
-#'   \item{\code{prior}, \code{r0}, \code{p0}}{Prior specification.}
-#'   \item{\code{alpha0}, \code{beta0}}{Prior Beta shape parameters at the
-#'     training locations.}
-#'   \item{\code{alpha_n}, \code{beta_n}}{TwinBKP posterior Beta shape parameters
-#'     at the training locations.}
-#'   \item{\code{K}, \code{K_global}, \code{K_local}}{Combined, global, and local
-#'     kernel-weight matrices used for diagnostic checks when
-#'     \code{store_kernel = TRUE}; otherwise \code{NULL}.}
-#'   \item{\code{global_indices}, \code{local_indices}}{Selected global subset and
-#'     training-location-specific local subsets, stored as 1-based indices.}
-#'   \item{\code{twin_info}, \code{twin_data}}{Diagnostics from the C++ Twinning
-#'     routine and the augmented data used for global subset selection.}
+#'   \item{\code{global_kernel}}{Kernel function used for the global subset
+#'     contribution.}
+#'   \item{\code{local_kernel}}{Kernel function used for the local-neighbour
+#'     contribution.}
+#'   \item{\code{isotropic}}{Logical flag indicating whether the global kernel
+#'     uses one shared lengthscale across dimensions.}
+#'   \item{\code{loss}}{Loss function used for global lengthscale tuning.}
+#'   \item{\code{loss_min}}{Minimum loss value obtained on the selected global
+#'     subset.}
+#'
+#'   \item{\code{X}}{Original training input matrix.}
+#'   \item{\code{Xnorm}}{Training input matrix normalized to \eqn{[0,1]^d}.}
+#'   \item{\code{Xbounds}}{Input bounds used for normalization.}
+#'   \item{\code{y}}{Observed binomial success counts, stored as a one-column
+#'     matrix.}
+#'   \item{\code{m}}{Observed binomial trial sizes, stored as a one-column
+#'     matrix.}
+#'
+#'   \item{\code{prior}}{Prior specification used in the TwinBKP posterior
+#'     update.}
+#'   \item{\code{r0}}{Prior precision parameter.}
+#'   \item{\code{p0}}{Prior mean used when \code{prior = "fixed"}.}
+#'   \item{\code{alpha0}, \code{beta0}}{Prior Beta shape parameters evaluated at
+#'     the training locations.}
+#'   \item{\code{alpha_n}, \code{beta_n}}{Posterior Beta shape parameters
+#'     evaluated at the training locations.}
+#'
+#'   \item{\code{global_indices}}{One-based indices of the selected global
+#'     subset.}
+#'
+#'   \item{\code{control}}{A list of fitting controls and realized Twinning
+#'     settings, including \code{g_target}, \code{g}, \code{l}, \code{r},
+#'     \code{twins}, \code{u1}, \code{leaf_size}, and \code{store_kernel}.}
+#'
+#'   \item{\code{diagnostics}}{A list of diagnostic objects. It contains
+#'     \code{twin_info} from the C++ Twinning routine and, when
+#'     \code{store_kernel = TRUE}, dense matrices \code{K}, \code{K_global},
+#'     and \code{K_local}. When \code{store_kernel = FALSE}, these kernel
+#'     matrices are \code{NULL}.}
 #' }
 #'
 #' @details The global subset is selected using \code{twin_select_global_rcpp()}.
@@ -462,24 +484,56 @@ fit_TwinBKP <- function(
   )
 
   # ---- Construct and return the fitted model ----
+  # ---- Construct and return the fitted model ----
   TwinBKP_model <- list(
-    theta_opt = theta_g, theta_g = theta_g, theta_l = theta_l,
-    kernel = global_kernel, global_kernel = global_kernel, local_kernel = local_kernel,
-    isotropic = isotropic, loss = loss, loss_min = loss_min,
-    X = X, Xnorm = Xnorm, Xbounds = Xbounds, y = matrix(y, ncol = 1), m = matrix(m, ncol = 1),
-    prior = prior, r0 = r0, p0 = p0, alpha0 = posterior$alpha0, beta0 = posterior$beta0,
-    alpha_n = posterior$alpha_n, beta_n = posterior$beta_n,
-    K = posterior$K, K_global = posterior$K_global, K_local = posterior$K_local,
-    twin_data = twin_data, twin_info = twin_info,
-    global_indices = g_indices, local_indices = local_indices,
-    g_target = g, g = g_actual, r = r, l = l, twins = twins, u1 = u1,
-    leaf_size = leaf_size, store_kernel = store_kernel,
-    complexity = list(
-      global_selection = "Twinning global subset selection using kd-tree nearest-neighbour search",
-      global_tuning = "O(T_g g^2), where T_g is the number of global-subset loss evaluations",
-      training_posterior = "O(n(g + l)) row-wise pseudo-count aggregation",
-      prediction = "O(t(log n + g + l)) for fixed input dimension",
-      memory = "O(n + n l + g) by default, excluding input storage; dense kernels are stored only when store_kernel = TRUE"
+    # Kernel and tuning information
+    theta_opt = theta_g,
+    theta_g = theta_g,
+    theta_l = theta_l,
+    kernel = global_kernel,
+    global_kernel = global_kernel,
+    local_kernel = local_kernel,
+    isotropic = isotropic,
+    loss = loss,
+    loss_min = loss_min,
+
+    # Training data and normalization
+    X = X,
+    Xnorm = Xnorm,
+    Xbounds = Xbounds,
+    y = matrix(y, ncol = 1),
+    m = matrix(m, ncol = 1),
+
+    # Prior and posterior parameters
+    prior = prior,
+    r0 = r0,
+    p0 = p0,
+    alpha0 = posterior$alpha0,
+    beta0 = posterior$beta0,
+    alpha_n = posterior$alpha_n,
+    beta_n = posterior$beta_n,
+
+    # Selected global subset
+    global_indices = g_indices,
+
+    # Fitting controls
+    control = list(
+      g_target = g,
+      g = g_actual,
+      l = l,
+      r = r,
+      twins = twins,
+      u1 = u1,
+      leaf_size = leaf_size,
+      store_kernel = store_kernel
+    ),
+
+    # Diagnostic objects
+    diagnostics = list(
+      twin_info = twin_info,
+      K = posterior$K,
+      K_global = posterior$K_global,
+      K_local = posterior$K_local
     )
   )
 

@@ -270,14 +270,14 @@ test_that("fit_TwinBKP returns an object with expected structure and content", {
   expect_equal(model$leaf_size, 8L)
   expect_equal(model$X, X)
   expect_equal(dim(model$Xnorm), dim(X))
-  expect_null(model$K)
-  expect_null(model$K_global)
-  expect_null(model$K_local)
-  expect_false(model$store_kernel)
+  expect_null(model$diagnostics$K)
+  expect_null(model$diagnostics$K_global)
+  expect_null(model$diagnostics$K_local)
+  expect_false(model$control$store_kernel)
   expect_true(all(is.finite(model$alpha_n)))
   expect_true(all(is.finite(model$beta_n)))
   expect_equal(nrow(model$local_indices), nrow(model$X))
-  expect_equal(ncol(model$local_indices), model$l)
+  expect_equal(ncol(model$local_indices), model$control$l)
   expect_false(any(model$local_indices %in% model$global_indices))
 })
 
@@ -320,15 +320,15 @@ test_that("fit_TwinBKP stores dense diagnostic kernels only on request", {
     g = 8, twins = 2, store_kernel = TRUE
   )
 
-  expect_true(is.matrix(model$K))
-  expect_true(is.matrix(model$K_global))
-  expect_true(is.matrix(model$K_local))
-  expect_equal(model$K, model$K_global + model$K_local)
-  expect_equal(model$alpha_n, model$alpha0 + as.vector(model$K %*% model$y))
-  expect_equal(model$beta_n, model$beta0 + as.vector(model$K %*% (model$m - model$y)))
-  expect_equal(dim(model$K), c(nrow(X), nrow(X)))
-  expect_equal(dim(model$K_global), c(nrow(X), nrow(X)))
-  expect_equal(dim(model$K_local), c(nrow(X), nrow(X)))
+  expect_true(is.matrix(model$diagnostics$K))
+  expect_true(is.matrix(model$diagnostics$K_global))
+  expect_true(is.matrix(model$diagnostics$K_local))
+  expect_equal(model$diagnostics$K, model$diagnostics$K_global + model$diagnostics$K_local)
+  expect_equal(model$alpha_n, model$alpha0 + as.vector(model$diagnostics$K %*% model$y))
+  expect_equal(model$beta_n, model$beta0 + as.vector(model$diagnostics$K %*% (model$m - model$y)))
+  expect_equal(dim(model$diagnostics$K), c(nrow(X), nrow(X)))
+  expect_equal(dim(model$diagnostics$K_global), c(nrow(X), nrow(X)))
+  expect_equal(dim(model$diagnostics$K_local), c(nrow(X), nrow(X)))
 })
 
 
@@ -377,13 +377,13 @@ test_that("fit_TwinBKP posterior matches the combined global-local kernel update
     p0 = model$p0,
     y = model$y,
     m = model$m,
-    K = model$K
+    K = model$diagnostics$K
   )
 
   expect_equal(model$alpha0, prior_par$alpha0)
   expect_equal(model$beta0, prior_par$beta0)
-  expect_equal(model$alpha_n, prior_par$alpha0 + as.vector(model$K %*% model$y))
-  expect_equal(model$beta_n, prior_par$beta0 + as.vector(model$K %*% (model$m - model$y)))
+  expect_equal(model$alpha_n, prior_par$alpha0 + as.vector(model$diagnostics$K %*% model$y))
+  expect_equal(model$beta_n, prior_par$beta0 + as.vector(model$diagnostics$K %*% (model$m - model$y)))
 })
 
 
