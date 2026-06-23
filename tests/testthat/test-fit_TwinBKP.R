@@ -247,9 +247,7 @@ test_that("fit_TwinBKP returns an object with expected structure and content", {
     "isotropic", "loss", "loss_min",
     "X", "Xnorm", "Xbounds", "y", "m", "prior", "r0", "p0",
     "alpha0", "beta0", "alpha_n", "beta_n",
-    "K", "K_global", "K_local", "twin_data", "twin_info",
-    "global_indices", "local_indices", "g_target", "g", "r", "l", "twins", "u1",
-    "leaf_size", "store_kernel", "complexity"
+    "global_indices", "control", "diagnostics"
   )
 
   expect_true(all(expected_names %in% names(model)))
@@ -262,12 +260,12 @@ test_that("fit_TwinBKP returns an object with expected structure and content", {
   expect_equal(model$local_kernel, "wendland")
   expect_equal(model$loss, "brier")
   expect_equal(model$prior, "noninformative")
-  expect_equal(model$twins, 2L)
-  expect_true(is.integer(model$u1))
-  expect_equal(length(model$u1), 2L)
-  expect_true(is.numeric(model$r) || is.integer(model$r))
-  expect_true(model$r >= 2L)
-  expect_equal(model$leaf_size, 8L)
+  expect_equal(model$control$twins, 2L)
+  expect_true(is.integer(model$control$u1))
+  expect_equal(length(model$control$u1), 2L)
+  expect_true(is.numeric(model$control$r) || is.integer(model$control$r))
+  expect_true(model$control$r >= 2L)
+  expect_equal(model$control$leaf_size, 8L)
   expect_equal(model$X, X)
   expect_equal(dim(model$Xnorm), dim(X))
   expect_null(model$diagnostics$K)
@@ -276,13 +274,21 @@ test_that("fit_TwinBKP returns an object with expected structure and content", {
   expect_false(model$control$store_kernel)
   expect_true(all(is.finite(model$alpha_n)))
   expect_true(all(is.finite(model$beta_n)))
-  expect_equal(nrow(model$local_indices), nrow(model$X))
-  expect_equal(ncol(model$local_indices), model$control$l)
-  expect_false(any(model$local_indices %in% model$global_indices))
+
+  local_indices <- twin_local_indices_rcpp(
+    Xtrain_norm = model$Xnorm,
+    Xquery_norm = model$Xnorm,
+    g_indices = model$global_indices,
+    l = model$control$l,
+    leaf_size = model$control$leaf_size
+  )
+  expect_equal(nrow(local_indices), nrow(model$X))
+  expect_equal(ncol(local_indices), model$control$l)
+  expect_false(any(local_indices %in% model$global_indices))
 })
 
 
-test_that("fit_TwinBKP uses fixed augmented Twinning data", {
+test_that("fit_TwinBKP returns compact nested control and diagnostics", {
   set.seed(123)
 
   n <- 20
@@ -298,11 +304,20 @@ test_that("fit_TwinBKP uses fixed augmented Twinning data", {
     twins = 2
   )
 
-  expect_equal(ncol(model$twin_data), ncol(model$Xnorm) + 1L)
-  expect_equal(
-    model$twin_data[, ncol(model$twin_data)],
-    as.numeric(y) / as.numeric(m)
-  )
+  expect_s3_class(model, "TwinBKP")
+  expect_true(is.list(model$control))
+  expect_true(is.list(model$diagnostics))
+  expect_true(all(c(
+    "g_target", "g", "l", "r", "twins", "u1", "leaf_size", "store_kernel"
+  ) %in% names(model$control)))
+  expect_true(all(c(
+    "twin_info", "K", "K_global", "K_local"
+  ) %in% names(model$diagnostics)))
+  expect_null(model[["local_indices"]])
+  expect_null(model[["twin_data"]])
+  expect_null(model[["complexity"]])
+  expect_true(is.list(model$diagnostics$twin_info))
+  expect_equal(model$global_indices, model$diagnostics$twin_info$g_indices)
 })
 
 
@@ -452,10 +467,10 @@ test_that("fit_TwinBKP is reproducible with a fixed random seed", {
     twins = 3
   )
 
-  expect_equal(model1$u1, model2$u1)
+  expect_equal(model1$control$u1, model2$control$u1)
   expect_equal(model1$global_indices, model2$global_indices)
   expect_equal(model1$theta_l, model2$theta_l)
-  expect_equal(model1$K, model2$K)
+  expect_equal(model1$diagnostics$K, model2$diagnostics$K)
 })
 
 

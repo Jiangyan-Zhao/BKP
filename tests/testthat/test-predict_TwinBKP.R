@@ -11,7 +11,6 @@ test_that("predict.TwinBKP supports training, new-point, and count predictions",
   pred <- predict(model)
 
   expect_s3_class(pred, "predict_TwinBKP")
-  expect_s3_class(pred, "predict_BKP")
   expect_equal(pred$alpha_n, model$alpha_n)
   expect_equal(pred$beta_n, model$beta_n)
   expect_true(all(pred$mean >= 0 & pred$mean <= 1))
