@@ -12,6 +12,8 @@
 \alias{print.simulate_DKP}
 \alias{print.TwinBKP}
 \alias{print.predict_TwinBKP}
+\alias{print.summary_TwinBKP}
+\alias{print.simulate_TwinBKP}
 \title{Print Methods for BKP and DKP Objects}
 \usage{
 \method{print}{BKP}(x, ...)
@@ -33,6 +35,10 @@
 \method{print}{TwinBKP}(x, ...)
 
 \method{print}{predict_TwinBKP}(x, ...)
+
+\method{print}{summary_TwinBKP}(x, ...)
+
+\method{print}{simulate_TwinBKP}(x, ...)
 }
 \arguments{
 \item{x}{An object of class \code{"BKP"} or \code{"DKP"}, or a derived object

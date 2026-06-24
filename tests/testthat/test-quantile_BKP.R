@@ -71,9 +71,9 @@ test_that("quantile.BKP handles input validation correctly", {
 
   # Test for invalid probs values
   expect_error(quantile(mock_model, probs = c(0.5, 1.1)),
-               "'probs' must be a numeric vector with all values in \\[0, 1\\].")
+               "'probs' must be a finite numeric vector with all values in \\[0, 1\\].")
   expect_error(quantile(mock_model, probs = -0.1),
-               "'probs' must be a numeric vector with all values in \\[0, 1\\].")
+               "'probs' must be a finite numeric vector with all values in \\[0, 1\\].")
   expect_error(quantile(mock_model, probs = "a"),
-               "'probs' must be a numeric vector with all values in \\[0, 1\\].")
+               "'probs' must be a finite numeric vector with all values in \\[0, 1\\].")
 })

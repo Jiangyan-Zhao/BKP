@@ -1,16 +1,14 @@
 # This test file validates the functionality of the `print` S3 method for
 # BKP objects and their related output classes (summary, predict, simulate).
-# It ensures that these methods run without errors.
+# It captures console output so that print methods do not pollute test output.
 
-test_that("print.BKP methods run without errors", {
-  # Set a seed for reproducibility
+test_that("print.BKP methods run without errors and produce expected output", {
   set.seed(123)
 
   # -------------------------------------------------------------------------
   # Setup: Create a BKP model and related objects
   # -------------------------------------------------------------------------
 
-  # Define true success probability function
   true_pi_fun <- function(x) {
     (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
   }
@@ -22,30 +20,41 @@ test_that("print.BKP methods run without errors", {
   m <- sample(100, n, replace = TRUE)
   y <- rbinom(n, size = m, prob = true_pi)
 
-  # Fit BKP model
-  model <- fit_BKP(X, y, m, Xbounds = Xbounds, prior = "noninformative")
+  model <- fit_BKP(
+    X, y, m,
+    Xbounds = Xbounds,
+    prior = "noninformative"
+  )
 
-  # Generate summary, predict, and simulate objects
   summary_model <- summary(model)
   predict_model <- predict(model)
   simulate_model <- simulate(model)
 
   # -------------------------------------------------------------------------
-  # Test Cases: Verify print methods
+  # Test Cases: Verify print methods while capturing console output
   # -------------------------------------------------------------------------
 
-  # Test print.BKP
-  expect_no_error(print(model))
+  expect_output(
+    print(model),
+    "Beta Kernel Process"
+  )
 
-  # Test print.summary_BKP
-  expect_no_error(print(summary_model))
+  expect_output(
+    print(summary_model),
+    "Beta Kernel Process"
+  )
 
-  # Test print.predict_BKP
-  expect_no_error(print(predict_model))
+  expect_output(
+    print(predict_model),
+    "Prediction results"
+  )
 
-  # Test print.simulate_BKP
-  expect_no_error(print(simulate_model))
+  expect_output(
+    print(simulate_model),
+    "Simulation results"
+  )
 })
+
 
 test_that("print.BKP handles new-data and high-dimensional branches", {
   set.seed(100)
@@ -53,10 +62,35 @@ test_that("print.BKP handles new-data and high-dimensional branches", {
   X <- matrix(runif(36), ncol = 3)
   m <- rep(1, nrow(X))
   y <- rbinom(nrow(X), size = 1, prob = 0.5)
-  model <- fit_BKP(X, y, m, prior = "fixed", r0 = 5, p0 = 0.5, theta = c(0.3, 0.4, 0.5), isotropic = FALSE)
 
-  expect_no_error(print(model))
-  expect_no_error(print(summary(model)))
-  expect_no_error(print(predict(model, Xnew = X[1:5, , drop = FALSE], threshold = 0.4)))
-  expect_no_error(print(simulate(model, Xnew = X[1:5, , drop = FALSE], nsim = 5, threshold = 0.4)))
+  model <- fit_BKP(
+    X, y, m,
+    prior = "fixed",
+    r0 = 5,
+    p0 = 0.5,
+    theta = c(0.3, 0.4, 0.5),
+    isotropic = FALSE
+  )
+
+  Xnew <- X[1:5, , drop = FALSE]
+
+  expect_output(
+    print(model),
+    "Beta Kernel Process"
+  )
+
+  expect_output(
+    print(summary(model)),
+    "Beta Kernel Process"
+  )
+
+  expect_output(
+    print(predict(model, Xnew = Xnew, threshold = 0.4)),
+    "Prediction results"
+  )
+
+  expect_output(
+    print(simulate(model, Xnew = Xnew, nsim = 5, threshold = 0.4)),
+    "Simulation results"
+  )
 })

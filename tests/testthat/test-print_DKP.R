@@ -1,20 +1,18 @@
 # This test file validates the functionality of the `print` S3 method for
 # DKP objects and their related output classes (summary, predict, simulate).
-# It ensures that these methods run without errors.
+# It captures console output so that print methods do not pollute test output.
 
-test_that("print.DKP methods run without errors", {
-  # Set a seed for reproducibility
+test_that("print.DKP methods run without errors and produce expected output", {
   set.seed(123)
 
   # -------------------------------------------------------------------------
   # Setup: Create a DKP model and related objects
   # -------------------------------------------------------------------------
 
-  # Define true class probability function (3-class)
   true_pi_fun <- function(X) {
-    p1 <- 1/(1+exp(-3*X))
+    p1 <- 1 / (1 + exp(-3 * X))
     p2 <- (1 + exp(-X^2) * cos(10 * (1 - exp(-X)) / (1 + exp(-X)))) / 2
-    return(matrix(c(p1/2, p2/2, 1 - (p1+p2)/2), nrow = length(p1)))
+    matrix(c(p1 / 2, p2 / 2, 1 - (p1 + p2) / 2), nrow = length(p1))
   }
 
   n <- 30
@@ -22,40 +20,56 @@ test_that("print.DKP methods run without errors", {
   X <- matrix(runif(n, Xbounds[1], Xbounds[2]), ncol = 1)
   true_pi <- true_pi_fun(X)
   m <- sample(150, n, replace = TRUE)
-  Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 
-  # Fit DKP model
-  model <- fit_DKP(X, Y, Xbounds = Xbounds, prior = "noninformative")
+  Y <- t(sapply(seq_len(n), function(i) {
+    rmultinom(1, size = m[i], prob = true_pi[i, ])
+  }))
 
-  # Generate summary, predict, and simulate objects
+  model <- fit_DKP(
+    X, Y,
+    Xbounds = Xbounds,
+    prior = "noninformative"
+  )
+
   summary_model <- summary(model)
   predict_model <- predict(model)
   simulate_model <- simulate(model)
 
   # -------------------------------------------------------------------------
-  # Test Cases: Verify print methods
+  # Test Cases: Verify print methods while capturing console output
   # -------------------------------------------------------------------------
 
-  # Test print.DKP
-  expect_no_error(print(model))
+  expect_output(
+    print(model),
+    "Dirichlet Kernel Process"
+  )
 
-  # Test print.summary_DKP
-  expect_no_error(print(summary_model))
+  expect_output(
+    print(summary_model),
+    "Dirichlet Kernel Process"
+  )
 
-  # Test print.predict_DKP
-  expect_no_error(print(predict_model))
+  expect_output(
+    print(predict_model),
+    "Prediction results"
+  )
 
-  # Test print.simulate_DKP
-  expect_no_error(print(simulate_model))
+  expect_output(
+    print(simulate_model),
+    "Simulation results"
+  )
 })
+
 
 test_that("print.DKP handles new-data, multi-class and high-dimensional branches", {
   set.seed(100)
 
   X <- matrix(runif(45), ncol = 3)
   Y <- matrix(0, nrow(X), 4)
+
   cls <- sample(1:4, nrow(X), replace = TRUE)
   Y[cbind(seq_len(nrow(X)), cls)] <- 1
+
   model <- fit_DKP(
     X, Y,
     prior = "fixed",
@@ -65,8 +79,25 @@ test_that("print.DKP handles new-data, multi-class and high-dimensional branches
     isotropic = FALSE
   )
 
-  expect_no_error(print(model))
-  expect_no_error(print(summary(model)))
-  expect_no_error(print(predict(model, Xnew = X[1:5, , drop = FALSE])))
-  expect_no_error(print(simulate(model, Xnew = X[1:5, , drop = FALSE], nsim = 5)))
+  Xnew <- X[1:5, , drop = FALSE]
+
+  expect_output(
+    print(model),
+    "Dirichlet Kernel Process"
+  )
+
+  expect_output(
+    print(summary(model)),
+    "Dirichlet Kernel Process"
+  )
+
+  expect_output(
+    print(predict(model, Xnew = Xnew)),
+    "Prediction results"
+  )
+
+  expect_output(
+    print(simulate(model, Xnew = Xnew, nsim = 5)),
+    "Simulation results"
+  )
 })

@@ -58,8 +58,9 @@
 
 quantile.BKP <- function(x, probs = c(0.025, 0.5, 0.975), ...) {
   # arguments checking
-  if (!is.numeric(probs) || any(probs < 0 | probs > 1)) {
-    stop("'probs' must be a numeric vector with all values in [0, 1].")
+  if (!is.numeric(probs) || anyNA(probs) || any(!is.finite(probs)) ||
+      any(probs < 0 | probs > 1)) {
+    stop("'probs' must be a finite numeric vector with all values in [0, 1].")
   }
 
   # Extract posterior beta parameters

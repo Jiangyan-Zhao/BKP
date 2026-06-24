@@ -15,5 +15,5 @@ test_that("summary.TwinBKP returns expected fields and posterior summaries", {
   pred <- predict(model)
   expect_equal(s$post_mean, pred$mean)
   expect_equal(s$post_var, pred$variance)
-  expect_silent(print(s))
+  expect_output(print(s), "Twin Beta Kernel Process")
 })
