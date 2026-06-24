@@ -453,9 +453,7 @@ plot.TwinBKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL,
 }
 
 
-#' Internal 2D plotting helper for TwinBKP
-#'
-#' @keywords internal
+#' @noRd
 .twin_2D_plot_fun <- function(var, title, data, X = NULL, y = NULL,
                               X_global = NULL, dims = NULL, ...) {
 
