@@ -24,4 +24,9 @@ test_that("TwinBKP print methods produce expected output", {
     print(simulate(model, nsim = 2, seed = 1)),
     "TwinBKP Posterior Probability Simulations"
   )
+
+  expect_output(
+    print(simulate(model, nsim = 2, seed = 1, threshold = 0.5)),
+    "TwinBKP Binary Classifications"
+  )
 })

@@ -175,4 +175,4 @@ predict(model2, Xnew = Xnew)
 \code{\link{plot.TwinBKP}} for visualization, and
 \code{\link{simulate.BKP}} for posterior simulation from full BKP objects.
 }
-\keyword{BKP}
+\keyword{TwinBKP}

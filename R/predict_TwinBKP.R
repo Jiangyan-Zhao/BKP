@@ -85,7 +85,7 @@
 #' \code{\link{plot.TwinBKP}} for visualization, and
 #' \code{\link{simulate.BKP}} for posterior simulation from full BKP objects.
 #'
-#' @keywords BKP
+#' @keywords TwinBKP
 #'
 #' @examples
 #' #-------------------------- 1D Example ---------------------------

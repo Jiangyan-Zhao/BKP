@@ -90,10 +90,7 @@ print.predict_TwinBKP <- function(x, ...) {
   ci_low <- round((1 - x$CI_level)/2 * 100, 1)
   ci_high <- round((1 + x$CI_level)/2 * 100, 1)
 
-  names(pred_summary)[3:4] <- c(
-    paste0(ci_low, "%"),
-    paste0(ci_high, "%")
-  )
+  names(pred_summary)[3:4] <- paste0(c(ci_low, ci_high), "% quantile")
 
   if (!is.null(x$class)) {
     pred_summary$class <- head(x$class, k)
@@ -160,10 +157,12 @@ print.simulate_TwinBKP <- function(x, ...) {
     cat("Total number of simulation points:", n, "\n")
     X_disp <- x$Xnew
   }
+
   cat("Number of posterior draws (nsim):", nsim, "\n")
 
   d <- ncol(X_disp)
   k <- min(6, n)
+
   if (n > k) {
     if (is.null(x$Xnew)) {
       cat("\nPreview of simulations for training data (first", k, "of", n, "points):\n")
@@ -179,6 +178,7 @@ print.simulate_TwinBKP <- function(x, ...) {
   }
 
   X_preview <- head(X_disp, k)
+
   if (d == 1) {
     X_preview <- data.frame(x = round(X_preview[, 1], 4))
   } else if (d == 2) {
@@ -193,6 +193,7 @@ print.simulate_TwinBKP <- function(x, ...) {
   }
 
   samples_preview <- head(x$samples, k)
+
   if (nsim <= 3) {
     samples_preview <- as.data.frame(round(samples_preview, 4))
   } else {
@@ -207,11 +208,36 @@ print.simulate_TwinBKP <- function(x, ...) {
 
   cat("\n--- TwinBKP Posterior Probability Simulations ---\n")
   print(cbind(X_preview, samples_preview), row.names = FALSE)
+
   if (n > k) cat(" ...\n")
 
   if (!is.null(x$class)) {
-    cat(paste0("\nBinary class labels available (threshold = ", x$threshold, ").\n"))
+    class_mat <- as.matrix(x$class)
+
+    if (is.null(colnames(class_mat))) {
+      colnames(class_mat) <- paste0("sim", seq_len(ncol(class_mat)))
+    }
+
+    class_preview <- class_mat[seq_len(k), , drop = FALSE]
+
+    if (nsim <= 3) {
+      class_preview <- as.data.frame(class_preview)
+    } else {
+      class_preview <- cbind(
+        class_preview[, 1:2, drop = FALSE],
+        "..." = rep("...", k),
+        class_preview[, nsim, drop = FALSE]
+      )
+      colnames(class_preview)[c(1, 2, ncol(class_preview))] <-
+        c("sim1", "sim2", paste0("sim", nsim))
+    }
+
+    cat(paste0("\n--- TwinBKP Binary Classifications (threshold = ", x$threshold, ") ---\n"))
+    print(cbind(X_preview, class_preview), row.names = FALSE)
+
+    if (n > k) cat(" ...\n")
   }
 
   invisible(x)
 }
+
