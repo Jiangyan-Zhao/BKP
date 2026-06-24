@@ -11,6 +11,11 @@ test_that("TwinBKP print methods produce expected output", {
   )
 
   expect_output(
+    print(summary(model)),
+    "Twin Beta Kernel Process"
+  )
+
+  expect_output(
     print(predict(model)),
     "TwinBKP prediction"
   )
