@@ -78,9 +78,9 @@ global subset on the normalized input scale.}
 shared lengthscale across dimensions. If \code{FALSE}, use separate
 per-dimension lengthscales.}
 
-\item{n_threads}{Number of OpenMP threads used for multi-start
-optimization. Default is \code{1}. This argument only affects
-hyperparameter optimization when \code{theta = NULL}.}
+\item{n_threads}{Number of OpenMP threads used for global-subset
+hyperparameter optimization when \code{theta_g = NULL}. Default is
+\code{1}.}
 
 \item{g}{Target global subset size. If \code{NULL}, the default is
 \eqn{\min\{n-1, 50d, \max(\lfloor\sqrt n\rfloor, 10d)\}}.}
@@ -226,7 +226,7 @@ true_pi <- true_pi_fun(X)
 m <- sample(100, n, replace = TRUE)
 y <- rbinom(n, size = m, prob = true_pi)
 
-# Fit BKP model
+# Fit TwinBKP model
 model2 <- fit_TwinBKP(X, y, m, Xbounds=Xbounds)
 
 }

@@ -22,6 +22,9 @@
 #'   optimization of the global kernel lengthscale parameters. If \code{NULL},
 #'   the default from \code{\link{fit_BKP}} is used on the selected global
 #'   subset.
+#' @param n_threads Number of OpenMP threads used for global-subset
+#'   hyperparameter optimization when \code{theta_g = NULL}. Default is
+#'   \code{1}.
 #' @param theta_g Optional. A positive scalar or numeric vector specifying the
 #'   global kernel lengthscale parameter(s). If \code{NULL} (default), the global
 #'   lengthscale is optimized by fitting a BKP model on the selected global
@@ -174,7 +177,7 @@
 #' m <- sample(100, n, replace = TRUE)
 #' y <- rbinom(n, size = m, prob = true_pi)
 #'
-#' # Fit BKP model
+#' # Fit TwinBKP model
 #' model2 <- fit_TwinBKP(X, y, m, Xbounds=Xbounds)
 #'
 #' @export
@@ -275,8 +278,9 @@ fit_TwinBKP <- function(
 
   # ---- hyperparameters checks ----
   if (!is.null(n_multi_start)) {
-    if (!is.numeric(n_multi_start) || length(n_multi_start) != 1  ||
-        is.na(n_multi_start) || !is.finite(n_multi_start) || n_multi_start <= 0) {
+    if (!is.numeric(n_multi_start) || length(n_multi_start) != 1 ||
+        is.na(n_multi_start) || !is.finite(n_multi_start) ||
+        n_multi_start <= 0 || n_multi_start != floor(n_multi_start)) {
       stop("'n_multi_start' must be a positive integer.")
     }
     n_multi_start <- as.integer(n_multi_start)
@@ -483,7 +487,6 @@ fit_TwinBKP <- function(
     store_kernel = store_kernel
   )
 
-  # ---- Construct and return the fitted model ----
   # ---- Construct and return the fitted model ----
   TwinBKP_model <- list(
     # Kernel and tuning information
