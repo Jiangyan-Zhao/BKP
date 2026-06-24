@@ -16,10 +16,10 @@ fit_TwinBKP(
   local_kernel = c("wendland"),
   loss = c("brier", "log_loss"),
   n_multi_start = NULL,
-  theta_g = NULL,
-  theta_l = NULL,
   isotropic = TRUE,
   n_threads = 1,
+  theta_g = NULL,
+  theta_l = NULL,
   g = NULL,
   l = NULL,
   twins = 5,
@@ -65,6 +65,14 @@ optimization of the global kernel lengthscale parameters. If \code{NULL},
 the default from \code{\link{fit_BKP}} is used on the selected global
 subset.}
 
+\item{isotropic}{Logical. If \code{TRUE} (default), optimize/use a single
+shared lengthscale across dimensions. If \code{FALSE}, use separate
+per-dimension lengthscales.}
+
+\item{n_threads}{Number of OpenMP threads used for global-subset
+hyperparameter optimization when \code{theta_g = NULL}. Default is
+\code{1}.}
+
 \item{theta_g}{Optional. A positive scalar or numeric vector specifying the
 global kernel lengthscale parameter(s). If \code{NULL} (default), the global
 lengthscale is optimized by fitting a BKP model on the selected global
@@ -73,14 +81,6 @@ subset.}
 \item{theta_l}{Optional. A positive scalar specifying the local kernel range.
 If \code{NULL} (default), it is set to the empirical covering radius of the
 global subset on the normalized input scale.}
-
-\item{isotropic}{Logical. If \code{TRUE} (default), optimize/use a single
-shared lengthscale across dimensions. If \code{FALSE}, use separate
-per-dimension lengthscales.}
-
-\item{n_threads}{Number of OpenMP threads used for global-subset
-hyperparameter optimization when \code{theta_g = NULL}. Default is
-\code{1}.}
 
 \item{g}{Target global subset size. If \code{NULL}, the default is
 \eqn{\min\{n-1, 50d, \max(\lfloor\sqrt n\rfloor, 10d)\}}.}

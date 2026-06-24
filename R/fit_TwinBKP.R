@@ -187,10 +187,8 @@ fit_TwinBKP <- function(
     global_kernel = c("gaussian", "matern52", "matern32", "wendland"),
     local_kernel = c("wendland"),
     loss = c("brier", "log_loss"),
-    n_multi_start = NULL, theta_g = NULL, theta_l = NULL,
-    isotropic = TRUE, n_threads = 1,
-    g = NULL, l = NULL,
-    twins = 5,
+    n_multi_start = NULL, isotropic = TRUE, n_threads = 1,
+    theta_g = NULL, theta_l = NULL, g = NULL, l = NULL, twins = 5,
     store_kernel = FALSE
 ) {
   # ---- Argument checking ----
@@ -229,6 +227,7 @@ fit_TwinBKP <- function(
   global_kernel <- match.arg(global_kernel)
   local_kernel <- match.arg(local_kernel)
   loss <- match.arg(loss)
+
   # ---- Xbounds checks ----
   if (is.null(Xbounds)) {
     xmin <- min(X)
