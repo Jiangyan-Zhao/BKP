@@ -2,6 +2,66 @@
 #'
 #' @keywords BKP TwinBKP
 #'
+#' @examples
+#' # ============================================================== #
+#' # ======================= TwinBKP Examples ===================== #
+#' # ============================================================== #
+#'
+#' #-------------------------- 1D Example ---------------------------
+#' set.seed(123)
+#'
+#' # Define true success probability function
+#' true_pi_fun <- function(x) {
+#'   (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
+#' }
+#'
+#' n <- 1000
+#' Xbounds <- matrix(c(-2,2), nrow=1)
+#' X <- tgp::lhs(n = n, rect = Xbounds)
+#' true_pi <- true_pi_fun(X)
+#' m <- sample(100, n, replace = TRUE)
+#' y <- rbinom(n, size = m, prob = true_pi)
+#'
+#' # Fit TwinBKP model
+#' model1 <- fit_TwinBKP(X, y, m, Xbounds=Xbounds)
+#' print(model1)                    # fitted object
+#' print(summary(model1))           # summary
+#' print(predict(model1))           # predictions
+#' print(simulate(model1, nsim=3))  # posterior simulations
+#'
+#' #-------------------------- 2D Example ---------------------------
+#' set.seed(123)
+#'
+#' # Define 2D latent function and probability transformation
+#' true_pi_fun <- function(X) {
+#'   if(is.null(nrow(X))) X <- matrix(X, nrow=1)
+#'   m <- 8.6928
+#'   s <- 2.4269
+#'   x1 <- 4*X[,1]- 2
+#'   x2 <- 4*X[,2]- 2
+#'   a <- 1 + (x1 + x2 + 1)^2 *
+#'     (19- 14*x1 + 3*x1^2- 14*x2 + 6*x1*x2 + 3*x2^2)
+#'   b <- 30 + (2*x1- 3*x2)^2 *
+#'     (18- 32*x1 + 12*x1^2 + 48*x2- 36*x1*x2 + 27*x2^2)
+#'   f <- log(a*b)
+#'   f <- (f- m)/s
+#'   return(pnorm(f))  # Transform to probability
+#' }
+#'
+#' n <- 1000
+#' Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
+#' X <- tgp::lhs(n = n, rect = Xbounds)
+#' true_pi <- true_pi_fun(X)
+#' m <- sample(100, n, replace = TRUE)
+#' y <- rbinom(n, size = m, prob = true_pi)
+#'
+#' # Fit TwinBKP model
+#' model2 <- fit_TwinBKP(X, y, m, Xbounds=Xbounds)
+#' print(model2)                    # fitted object
+#' print(summary(model2))           # summary
+#' print(predict(model2))           # predictions
+#' print(simulate(model2, nsim=3))  # posterior simulations
+#'
 #' @export
 #' @method print TwinBKP
 print.TwinBKP <- function(x, ...) {

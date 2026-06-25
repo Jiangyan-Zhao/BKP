@@ -6,7 +6,7 @@
 \alias{parameter.BKP}
 \alias{parameter.DKP}
 \alias{parameter.TwinBKP}
-\title{Extract Model Parameters from a Fitted BKP or DKP Model}
+\title{Extract Model Parameters from a Fitted BKP, DKP, or TwinBKP Model}
 \usage{
 parameter(object, ...)
 
@@ -17,25 +17,32 @@ parameter(object, ...)
 \method{parameter}{TwinBKP}(object, ...)
 }
 \arguments{
-\item{object}{An object of class \code{BKP} or \code{DKP}, typically the
-result of a call to \code{\link{fit_BKP}} or \code{\link{fit_DKP}}.}
+\item{object}{An object of class \code{BKP}, \code{DKP}, or
+\code{TwinBKP}, typically returned by \code{\link{fit_BKP}},
+\code{\link{fit_DKP}}, or \code{\link{fit_TwinBKP}}.}
 
 \item{...}{Additional arguments (currently unused).}
 }
 \value{
-A named list containing:
+A named list containing model parameters. Common entries include:
 \itemize{
 \item \code{theta}: Estimated kernel hyperparameters.
 \item \code{alpha_n}: Posterior Dirichlet/Beta \eqn{\alpha} parameters.
-\item \code{beta_n}: (BKP only) Posterior Beta \eqn{\beta} parameters.
+\item \code{beta_n}: Posterior Beta \eqn{\beta} parameters, returned for
+BKP and TwinBKP objects.
 }
+For \code{TwinBKP} objects, the returned list also includes
+\code{theta_g}, \code{theta_l}, \code{global_kernel}, \code{local_kernel},
+\code{global_indices}, and \code{control}.
 }
 \description{
-Retrieve the key model parameters from a fitted \code{BKP} or
-\code{DKP} object. For a \code{BKP} model, this typically includes the
-optimized kernel hyperparameters and posterior Beta parameters. For a
-\code{DKP} model, this includes the kernel hyperparameters and posterior
-Dirichlet parameters.
+Retrieve key model parameters from a fitted \code{BKP},
+\code{DKP}, or \code{TwinBKP} object. For a \code{BKP} model, this
+includes the optimized kernel hyperparameters and posterior Beta
+parameters. For a \code{DKP} model, this includes the kernel
+hyperparameters and posterior Dirichlet parameters. For a
+\code{TwinBKP} model, this additionally includes the global and local
+kernel parameters, selected global subset, and approximation controls.
 }
 \examples{
 # -------------------------- BKP ---------------------------
@@ -81,7 +88,28 @@ Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 # Fit DKP model
 model <- fit_DKP(X, Y, Xbounds = Xbounds)
 
-# Extract posterior quantiles
+# Extract model parameters
+parameter(model)
+
+# -------------------------- TwinBKP ---------------------------
+set.seed(123)
+
+# Define true success probability function
+true_pi_fun <- function(x) {
+  (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
+}
+
+n <- 30
+Xbounds <- matrix(c(-2, 2), nrow = 1)
+X <- tgp::lhs(n = n, rect = Xbounds)
+true_pi <- true_pi_fun(X)
+m <- sample(100, n, replace = TRUE)
+y <- rbinom(n, size = m, prob = true_pi)
+
+# Fit TwinBKP model
+model <- fit_TwinBKP(X, y, m, Xbounds = Xbounds)
+
+# Extract posterior and kernel parameters
 parameter(model)
 
 }
@@ -90,8 +118,8 @@ Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
 Kernel Process Modeling}.  arXiv. \doi{10.48550/arXiv.2508.10447}
 }
 \seealso{
-\code{\link{fit_BKP}} for fitting BKP models, \code{\link{fit_DKP}}
-for fitting DKP models.
+\code{\link{fit_BKP}}, \code{\link{fit_DKP}}, and
+\code{\link{fit_TwinBKP}} for model fitting.
 }
 \keyword{BKP}
 \keyword{DKP}

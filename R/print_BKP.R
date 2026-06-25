@@ -1,38 +1,43 @@
 #' @name print
 #'
-#' @title Print Methods for BKP and DKP Objects
+#' @title Print Methods for BKP, DKP, and TwinBKP Objects
 #'
-#' @description Provides formatted console output for fitted BKP/DKP model
-#'   objects, their summaries, predictions, and simulations. The following
-#'   specialized methods are supported:
+#' @description Provides formatted console output for fitted BKP, DKP, and
+#'   TwinBKP model objects, their summaries, predictions, and simulations. The
+#'   following specialized methods are supported:
 #'   \itemize{
-#'     \item \code{print.BKP}, \code{print.DKP} – display fitted model objects.
-#'     \item \code{print.summary_BKP}, \code{print.summary_DKP} – display
-#'       model summaries.
-#'     \item \code{print.predict_BKP}, \code{print.predict_DKP} – display
-#'       posterior predictive results.
-#'     \item \code{print.simulate_BKP}, \code{print.simulate_DKP} – display
-#'       posterior simulations.
+#'     \item \code{print.BKP}, \code{print.DKP}, \code{print.TwinBKP} –
+#'       display fitted model objects.
+#'     \item \code{print.summary_BKP}, \code{print.summary_DKP},
+#'       \code{print.summary_TwinBKP} – display model summaries.
+#'     \item \code{print.predict_BKP}, \code{print.predict_DKP},
+#'       \code{print.predict_TwinBKP} – display posterior predictive results.
+#'     \item \code{print.simulate_BKP}, \code{print.simulate_DKP},
+#'       \code{print.simulate_TwinBKP} – display posterior simulations.
 #'   }
 #'
-#' @param x An object of class \code{"BKP"} or \code{"DKP"}, or a derived object
-#'   such as \code{summary}, \code{predict}, or \code{simulate}.
+#' @param x An object of class \code{"BKP"}, \code{"DKP"}, or
+#'   \code{"TwinBKP"}, or a derived object such as a summary, prediction, or
+#'   simulation object returned by the corresponding S3 methods.
 #' @param ... Additional arguments passed to the generic \code{print} method
 #'   (currently unused; included for S3 consistency).
 #'
 #' @return Invisibly returns the input object. Called for the side effect of
 #'   printing human-readable summaries to the console.
 #'
-#' @seealso \code{\link{fit_BKP}}, \code{\link{fit_DKP}} for model fitting;
-#'   \code{\link{summary.BKP}}, \code{\link{summary.DKP}} for model summaries;
-#'   \code{\link{predict.BKP}}, \code{\link{predict.DKP}} for posterior
-#'   prediction; \code{\link{simulate.BKP}}, \code{\link{simulate.DKP}} for
-#'   posterior simulations.
+#' @seealso \code{\link{fit_BKP}}, \code{\link{fit_DKP}}, and
+#'   \code{\link{fit_TwinBKP}} for model fitting;
+#'   \code{\link{summary.BKP}}, \code{\link{summary.DKP}}, and
+#'   \code{\link{summary.TwinBKP}} for model summaries;
+#'   \code{\link{predict.BKP}}, \code{\link{predict.DKP}}, and
+#'   \code{\link{predict.TwinBKP}} for posterior prediction;
+#'   \code{\link{simulate.BKP}}, \code{\link{simulate.DKP}}, and
+#'   \code{\link{simulate.TwinBKP}} for posterior simulations.
 #'
 #' @references Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
 #'   Kernel Process Modeling}. arXiv. \doi{10.48550/arXiv.2508.10447}
 #'
-#' @keywords BKP DKP
+#' @keywords BKP DKP TwinBKP
 #'
 #' @examples
 #' # ============================================================== #

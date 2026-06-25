@@ -1,26 +1,30 @@
 #' @name fitted
 #'
-#' @title Extract BKP or DKP Model Fitted Values
+#' @title Extract BKP, DKP, or TwinBKP Model Fitted Values
 #'
-#' @description Compute the posterior fitted values from a fitted \code{BKP} or
-#'   \code{DKP} object. For a \code{BKP} object, this returns the posterior mean
-#'   probability of the positive class. For a \code{DKP} object, this returns
-#'   the posterior mean probabilities for each class.
+#' @description Compute posterior fitted values from a fitted \code{BKP},
+#'   \code{DKP}, or \code{TwinBKP} object. For \code{BKP} and
+#'   \code{TwinBKP} objects, this returns the posterior mean probability of
+#'   the positive class. For a \code{DKP} object, this returns the posterior
+#'   mean probabilities for each class.
 #'
-#' @param object An object of class \code{BKP} or \code{DKP}, typically the
-#'   result of a call to \code{\link{fit_BKP}} or \code{\link{fit_DKP}}.
+#' @param object An object of class \code{BKP}, \code{DKP}, or
+#'   \code{TwinBKP}, typically returned by \code{\link{fit_BKP}},
+#'   \code{\link{fit_DKP}}, or \code{\link{fit_TwinBKP}}.
 #' @param ... Additional arguments (currently unused).
 #'
-#' @return A numeric vector (for \code{BKP}) or a numeric matrix (for
-#'   \code{DKP}) containing posterior mean estimates at the training inputs.
+#' @return A numeric vector for \code{BKP} and \code{TwinBKP}, or a numeric
+#'   matrix for \code{DKP}, containing posterior mean estimates at the
+#'   training inputs.
 #'
-#' @details For a \code{BKP} model, the fitted values correspond to the
-#'   posterior mean probability of the positive class, computed from the Beta
-#'   Kernel Process. For a \code{DKP} model, the fitted values correspond to the
-#'   posterior mean probabilities for each class, derived from the posterior
-#'   Dirichlet distribution of the class probabilities.
+#' @details For \code{BKP} and \code{TwinBKP} models, the fitted values
+#'   correspond to the posterior mean probability of the positive class,
+#'   computed from the corresponding Beta posterior. For a \code{DKP} model,
+#'   the fitted values correspond to the posterior mean probabilities for each
+#'   class, derived from the posterior Dirichlet distribution of the class
+#'   probabilities.
 #'
-#' @keywords BKP DKP
+#' @keywords BKP DKP TwinBKP
 #'
 #' @references Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
 #'   Kernel Process Modeling}.  arXiv. \doi{10.48550/arXiv.2508.10447}

@@ -108,9 +108,9 @@ test_that("quantile.DKP handles input validation correctly", {
   # because the function correctly throws an error.
   # We use a regex for a more robust check on the error message.
   expect_error(quantile(model, probs = c(0.5, 1.1)),
-               "'probs' must be a numeric vector with all values in \\[0, 1\\].")
+               "'probs' must be a finite numeric vector with all values in \\[0, 1\\].")
   expect_error(quantile(model, probs = -0.1),
-               "'probs' must be a numeric vector with all values in \\[0, 1\\].")
+               "'probs' must be a finite numeric vector with all values in \\[0, 1\\].")
   expect_error(quantile(model, probs = "a"),
-               "'probs' must be a numeric vector with all values in \\[0, 1\\].")
+               "'probs' must be a finite numeric vector with all values in \\[0, 1\\].")
 })

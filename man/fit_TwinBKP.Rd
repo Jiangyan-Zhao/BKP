@@ -243,7 +243,8 @@ Large-Scale Gaussian Process Modeling. \emph{Technometrics}, 66(2),
 }
 \seealso{
 \code{\link{fit_BKP}} for the full BKP model,
-\code{\link{fit_DKP}} for multinomial responses, \code{\link{predict.BKP}},
-\code{\link{plot.BKP}}, \code{\link{simulate.BKP}}, and
-\code{\link{summary.BKP}} for downstream workflows on fitted BKP objects.
+\code{\link{fit_DKP}} for multinomial responses, and
+\code{\link{predict.TwinBKP}}, \code{\link{plot.TwinBKP}},
+\code{\link{simulate.TwinBKP}}, and \code{\link{summary.TwinBKP}}
+for downstream workflows on fitted TwinBKP objects.
 }

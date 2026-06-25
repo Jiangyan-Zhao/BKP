@@ -118,9 +118,10 @@
 #'   the intended scalable global-local approximation.
 #'
 #' @seealso \code{\link{fit_BKP}} for the full BKP model,
-#'   \code{\link{fit_DKP}} for multinomial responses, \code{\link{predict.BKP}},
-#'   \code{\link{plot.BKP}}, \code{\link{simulate.BKP}}, and
-#'   \code{\link{summary.BKP}} for downstream workflows on fitted BKP objects.
+#'   \code{\link{fit_DKP}} for multinomial responses, and
+#'   \code{\link{predict.TwinBKP}}, \code{\link{plot.TwinBKP}},
+#'   \code{\link{simulate.TwinBKP}}, and \code{\link{summary.TwinBKP}}
+#'   for downstream workflows on fitted TwinBKP objects.
 #'
 #' @references Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
 #'   Kernel Process Modeling}. arXiv. \doi{10.48550/arXiv.2508.10447}

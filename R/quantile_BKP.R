@@ -1,35 +1,40 @@
 #' @name quantile
 #'
-#' @title Posterior Quantiles from a Fitted BKP or DKP Model
+#' @title Posterior Quantiles from a Fitted BKP, DKP, or TwinBKP Model
 #'
-#' @description Compute posterior quantiles from a fitted \code{BKP} or
-#'   \code{DKP} model. For a \code{BKP} object, this returns the posterior
-#'   quantiles of the positive class probability. For a \code{DKP} object, this
-#'   returns posterior quantiles for each class probability.
+#' @description Compute posterior quantiles from a fitted \code{BKP},
+#'   \code{DKP}, or \code{TwinBKP} model. For \code{BKP} and
+#'   \code{TwinBKP} objects, this returns posterior quantiles of the positive
+#'   class probability. For a \code{DKP} object, this returns posterior
+#'   quantiles for each class probability.
 #'
-#' @param x An object of class \code{BKP} or \code{DKP}, typically the result of
-#'   a call to \code{\link{fit_BKP}} or \code{\link{fit_DKP}}.
+#' @param x An object of class \code{BKP}, \code{DKP}, or \code{TwinBKP},
+#'   typically returned by \code{\link{fit_BKP}}, \code{\link{fit_DKP}}, or
+#'   \code{\link{fit_TwinBKP}}.
 #' @param probs Numeric vector of probabilities specifying which posterior
 #'   quantiles to return. Defaults to \code{c(0.025, 0.5, 0.975)}.
 #' @param ... Additional arguments (currently unused).
 #'
-#' @return For \code{BKP}: a numeric vector (if \code{length(probs) = 1}) or a
-#'   numeric matrix (if \code{length(probs) > 1}) of posterior quantiles. Rows
-#'   correspond to observations, and columns correspond to the requested
+#' @return For \code{BKP} and \code{TwinBKP}: a numeric vector if
+#'   \code{length(probs) = 1}, or a numeric matrix if
+#'   \code{length(probs) > 1}, of posterior quantiles. Rows correspond to
+#'   observations, and columns correspond to the requested probabilities.
+#'
+#'   For \code{DKP}: a numeric matrix if \code{length(probs) = 1}, or a 3D
+#'   array if \code{length(probs) > 1}, of posterior quantiles. Dimensions
+#'   correspond to observations \eqn{\times} classes \eqn{\times}
 #'   probabilities.
 #'
-#'   For \code{DKP}: a numeric matrix (if \code{length(probs) = 1}) or a 3D
-#'   array (if \code{length(probs) > 1}) of posterior quantiles. Dimensions
-#'   correspond to observations × classes × probabilities.
+#' @details For \code{BKP} and \code{TwinBKP} models, posterior quantiles are
+#'   computed from the corresponding Beta posterior for the positive class
+#'   probability. For a \code{DKP} model, marginal posterior quantiles for each
+#'   class are computed from the exact Beta marginal distributions of the
+#'   posterior Dirichlet distribution.
 #'
-#' @details For a \code{BKP} model, posterior quantiles are computed from the
-#'   Beta Kernel Process for the positive class probability. For a \code{DKP}
-#'   model, marginal posterior quantiles for each class are computed from
-#'   the exact Beta marginal distributions of the posterior Dirichlet distribution.
+#' @seealso \code{\link{fit_BKP}}, \code{\link{fit_DKP}}, and
+#'   \code{\link{fit_TwinBKP}} for model fitting.
 #'
-#' @seealso \code{\link{fit_BKP}}, \code{\link{fit_DKP}} for model fitting.
-#'
-#' @keywords BKP DKP
+#' @keywords BKP DKP TwinBKP
 #'
 #' @examples
 #' # -------------------------- BKP ---------------------------

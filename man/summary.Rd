@@ -6,7 +6,7 @@
 \alias{summary.BKP}
 \alias{summary.DKP}
 \alias{summary.TwinBKP}
-\title{Summary of a Fitted BKP or DKP Model}
+\title{Summary of a Fitted BKP, DKP, or TwinBKP Model}
 \usage{
 \method{summary}{BKP}(object, ...)
 
@@ -15,40 +15,29 @@
 \method{summary}{TwinBKP}(object, ...)
 }
 \arguments{
-\item{object}{An object of class \code{"BKP"} (from \code{\link{fit_BKP}}) or
-\code{"DKP"} (from \code{\link{fit_DKP}}).}
+\item{object}{An object of class \code{"BKP"}, \code{"DKP"}, or
+\code{"TwinBKP"}, typically returned by \code{\link{fit_BKP}},
+\code{\link{fit_DKP}}, or \code{\link{fit_TwinBKP}}.}
 
 \item{...}{Additional arguments passed to the generic \code{summary} method
 (currently not used).}
 }
 \value{
-A list containing key summaries of the fitted model:
-\describe{
-\item{\code{n_obs}}{Number of training observations.}
-\item{\code{input_dim}}{Input dimensionality (number of columns in X).}
-\item{\code{kernel}}{Kernel type used in the model.}
-\item{\code{isotropic}}{Logical flag indicating whether a shared lengthscale was used.}
-\item{\code{theta_opt}}{Estimated kernel hyperparameters.}
-\item{\code{loss}}{Loss function type used in the model.}
-\item{\code{loss_min}}{Minimum value of the loss function achieved.}
-\item{\code{prior}}{Prior type used (e.g., "noninformative", "fixed", "adaptive").}
-\item{\code{r0}}{Prior precision parameter.}
-\item{\code{p0}}{Prior mean parameter.}
-\item{\code{post_mean}}{Posterior mean estimates.
-For BKP: posterior mean success probabilities at training points.
-For DKP: posterior mean class probabilities (\eqn{n_\text{obs} \times q}).}
-\item{\code{post_var}}{Posterior variance estimates.
-For BKP: variance of success probabilities.
-For DKP: variance for each class probability.}
-\item{\code{n_class}}{(Only for DKP) Number of classes in the response.}
-}
+A list containing model configuration, prior information, kernel
+hyperparameters, and posterior summaries at the training inputs. For
+\code{BKP} and \code{TwinBKP}, posterior summaries are returned as vectors
+of success-probability means and variances. For \code{DKP}, posterior
+summaries are returned as matrices over classes. For \code{TwinBKP}, the
+list additionally includes global-local approximation fields such as
+\code{global_kernel}, \code{local_kernel}, \code{theta_g}, \code{theta_l},
+\code{global_size}, \code{local_size}, and \code{twins}.
 }
 \description{
 Provides a structured summary of a fitted Beta Kernel Process
-(BKP) or Dirichlet Kernel Process (DKP) model. This function reports the
-model configuration, prior specification, kernel settings, and key
-posterior quantities, giving users a concise overview of the fitting
-results.
+(BKP), Dirichlet Kernel Process (DKP), or TwinBKP model. This function
+reports the model configuration, prior specification, kernel settings,
+approximation settings when applicable, and key posterior quantities,
+giving users a concise overview of the fitting results.
 }
 \examples{
 # ============================================================== #
@@ -165,13 +154,68 @@ Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 model2 <- fit_DKP(X, Y, Xbounds = Xbounds)
 summary(model2)
 
+# ============================================================== #
+# ======================= TwinBKP Examples ===================== #
+# ============================================================== #
+
+#-------------------------- 1D Example ---------------------------
+set.seed(123)
+
+# Define true success probability function
+true_pi_fun <- function(x) {
+  (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
+}
+
+n <- 1000
+Xbounds <- matrix(c(-2,2), nrow=1)
+X <- tgp::lhs(n = n, rect = Xbounds)
+true_pi <- true_pi_fun(X)
+m <- sample(100, n, replace = TRUE)
+y <- rbinom(n, size = m, prob = true_pi)
+
+# Fit TwinBKP model
+model1 <- fit_TwinBKP(X, y, m, Xbounds=Xbounds)
+summary(model1)
+
+
+#-------------------------- 2D Example ---------------------------
+set.seed(123)
+
+# Define 2D latent function and probability transformation
+true_pi_fun <- function(X) {
+  if(is.null(nrow(X))) X <- matrix(X, nrow=1)
+  m <- 8.6928
+  s <- 2.4269
+  x1 <- 4*X[,1]- 2
+  x2 <- 4*X[,2]- 2
+  a <- 1 + (x1 + x2 + 1)^2 *
+    (19- 14*x1 + 3*x1^2- 14*x2 + 6*x1*x2 + 3*x2^2)
+  b <- 30 + (2*x1- 3*x2)^2 *
+    (18- 32*x1 + 12*x1^2 + 48*x2- 36*x1*x2 + 27*x2^2)
+  f <- log(a*b)
+  f <- (f- m)/s
+  return(pnorm(f))  # Transform to probability
+}
+
+n <- 1000
+Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
+X <- tgp::lhs(n = n, rect = Xbounds)
+true_pi <- true_pi_fun(X)
+m <- sample(100, n, replace = TRUE)
+y <- rbinom(n, size = m, prob = true_pi)
+
+# Fit TwinBKP model
+model2 <- fit_TwinBKP(X, y, m, Xbounds=Xbounds)
+summary(model2)
+
 }
 \references{
 Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
 Kernel Process Modeling}. arXiv. \doi{10.48550/arXiv.2508.10447}
 }
 \seealso{
-\code{\link{fit_BKP}}, \code{\link{fit_DKP}} for model fitting.
+\code{\link{fit_BKP}}, \code{\link{fit_DKP}}, and
+\code{\link{fit_TwinBKP}} for model fitting.
 }
 \keyword{BKP}
 \keyword{DKP}

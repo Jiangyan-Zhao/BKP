@@ -1,6 +1,6 @@
 # BKP 0.3.0
 
-- Added `fit_TwinBKP()` and `predict.TwinBKP()` for scalable Twin Beta Kernel Process modeling.
+- Added `fit_TwinBKP()` with full S3 support for scalable Twin Beta Kernel Process modeling.
 - Implemented Twinning-based global subset selection and kd-tree local-neighbour search.
 
 # BKP 0.2.4 (2026-06-16)

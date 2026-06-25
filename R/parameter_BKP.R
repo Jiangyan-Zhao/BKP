@@ -1,28 +1,35 @@
 #' @name parameter
 #'
-#' @title Extract Model Parameters from a Fitted BKP or DKP Model
+#' @title Extract Model Parameters from a Fitted BKP, DKP, or TwinBKP Model
 #'
-#' @description Retrieve the key model parameters from a fitted \code{BKP} or
-#'   \code{DKP} object. For a \code{BKP} model, this typically includes the
-#'   optimized kernel hyperparameters and posterior Beta parameters. For a
-#'   \code{DKP} model, this includes the kernel hyperparameters and posterior
-#'   Dirichlet parameters.
+#' @description Retrieve key model parameters from a fitted \code{BKP},
+#'   \code{DKP}, or \code{TwinBKP} object. For a \code{BKP} model, this
+#'   includes the optimized kernel hyperparameters and posterior Beta
+#'   parameters. For a \code{DKP} model, this includes the kernel
+#'   hyperparameters and posterior Dirichlet parameters. For a
+#'   \code{TwinBKP} model, this additionally includes the global and local
+#'   kernel parameters, selected global subset, and approximation controls.
 #'
-#' @param object An object of class \code{BKP} or \code{DKP}, typically the
-#'   result of a call to \code{\link{fit_BKP}} or \code{\link{fit_DKP}}.
+#' @param object An object of class \code{BKP}, \code{DKP}, or
+#'   \code{TwinBKP}, typically returned by \code{\link{fit_BKP}},
+#'   \code{\link{fit_DKP}}, or \code{\link{fit_TwinBKP}}.
 #' @param ... Additional arguments (currently unused).
 #'
-#' @return A named list containing:
+#' @return A named list containing model parameters. Common entries include:
 #' \itemize{
 #'   \item \code{theta}: Estimated kernel hyperparameters.
 #'   \item \code{alpha_n}: Posterior Dirichlet/Beta \eqn{\alpha} parameters.
-#'   \item \code{beta_n}: (BKP only) Posterior Beta \eqn{\beta} parameters.
+#'   \item \code{beta_n}: Posterior Beta \eqn{\beta} parameters, returned for
+#'     BKP and TwinBKP objects.
 #' }
+#' For \code{TwinBKP} objects, the returned list also includes
+#' \code{theta_g}, \code{theta_l}, \code{global_kernel}, \code{local_kernel},
+#' \code{global_indices}, and \code{control}.
 #'
-#' @keywords BKP DKP
+#' @keywords BKP DKP TwinBKP
 #'
-#' @seealso \code{\link{fit_BKP}} for fitting BKP models, \code{\link{fit_DKP}}
-#'   for fitting DKP models.
+#' @seealso \code{\link{fit_BKP}}, \code{\link{fit_DKP}}, and
+#'   \code{\link{fit_TwinBKP}} for model fitting.
 #'
 #' @references Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
 #'   Kernel Process Modeling}.  arXiv. \doi{10.48550/arXiv.2508.10447}

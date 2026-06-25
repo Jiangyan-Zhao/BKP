@@ -91,7 +91,7 @@ The plotting behavior depends on the dimensionality of the input covariates:
 
 \item \strong{2D inputs:}
 \itemize{
-\item For both BKP, DKP, and TwinBKP models, the function generates contour plots over a 2D prediction grid.
+\item For BKP, DKP, and TwinBKP models, the function generates contour plots over a 2D prediction grid.
 \item Users can choose to plot only the predictive mean surface (\code{only_mean = TRUE}) or a set of four summary plots (\code{only_mean = FALSE}):
 \enumerate{
 \item Predictive mean

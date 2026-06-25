@@ -25,7 +25,7 @@
 #' # Fit DKP model
 #' model <- fit_DKP(X, Y, Xbounds = Xbounds)
 #'
-#' # Extract posterior quantiles
+#' # Extract model parameters
 #' parameter(model)
 #'
 #' @export

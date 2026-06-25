@@ -62,20 +62,36 @@
 #'   Rasmussen, C. E., & Williams, C. K. I. (2006). \emph{Gaussian
 #'   Processes for Machine Learning}. MIT Press.
 #'
+#'   Wendland, H. (1995). Piecewise polynomial, positive definite and compactly
+#'   supported radial functions of minimal degree. \emph{Advances in
+#'   Computational Mathematics}, 4(1), 389--396.
+#'
 #' @examples
-#' # Basic usage with default Xprime = X
+#' set.seed(123)
 #' X <- matrix(runif(20), ncol = 2)
-#' K1 <- kernel_matrix(X, theta = 0.2, kernel = "gaussian")
 #'
-#' # Anisotropic lengthscales with Matérn 5/2
-#' K2 <- kernel_matrix(X, theta = c(0.1, 0.3), kernel = "matern52", isotropic = FALSE)
+#' # Compute kernel matrices for all implemented kernels
+#' kernels <- c("gaussian", "matern52", "matern32", "wendland")
+#' K_list <- lapply(kernels, function(k) {
+#'   kernel_matrix(X, theta = 0.2, kernel = k)
+#' })
+#' names(K_list) <- kernels
 #'
-#' # Isotropic Matérn 3/2
-#' K3 <- kernel_matrix(X, theta = 1, kernel = "matern32")
+#' # Inspect the Gaussian and Wendland kernel matrices
+#' K_list$gaussian
+#' K_list$wendland
+#'
+#' # Anisotropic lengthscales
+#' K_aniso <- kernel_matrix(
+#'   X,
+#'   theta = c(0.1, 0.3),
+#'   kernel = "matern52",
+#'   isotropic = FALSE
+#' )
 #'
 #' # Use Xprime different from X
 #' Xprime <- matrix(runif(10), ncol = 2)
-#' K4 <- kernel_matrix(X, Xprime, theta = 0.2, kernel = "gaussian")
+#' K_cross <- kernel_matrix(X, Xprime, theta = 0.2, kernel = "gaussian")
 #'
 #' @export
 
