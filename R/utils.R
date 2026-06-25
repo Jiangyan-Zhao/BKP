@@ -14,6 +14,8 @@
 #'   to overlay.
 #' @param y Optional binary response vector corresponding to \code{X}. Points
 #'   with \code{y == 1} and \code{y != 1} are drawn with different symbols.
+#' @param X_global Optional numeric matrix of selected global subset locations
+#'   to overlay, used by \code{plot.TwinBKP()}.
 #' @param dims Optional integer vector of length two indicating the original
 #'   input dimensions being visualized. Used only for axis labels.
 #' @param ... Additional arguments reserved for future use.
@@ -22,7 +24,8 @@
 #'
 #' @keywords internal
 
-my_2D_plot_fun <- function(var, title, data, X = NULL, y = NULL, dims = NULL, ...) {
+my_2D_plot_fun <- function(var, title, data, X = NULL, y = NULL,
+                           X_global = NULL, dims = NULL, ...) {
   levelplot(
     as.formula(paste(var, "~ x1 * x2")),
     data = data,
@@ -43,6 +46,17 @@ my_2D_plot_fun <- function(var, title, data, X = NULL, y = NULL, dims = NULL, ..
           X[, 1], X[, 2],
           pch = ifelse(y == 1, 16, 4),
           col = "red", lwd = 2, cex = 1.2
+        )
+      }
+      if (!is.null(X_global)) {
+        lattice::panel.points(
+          X_global[, 1],
+          X_global[, 2],
+          pch = 21,
+          col = "black",
+          fill = "white",
+          lwd = 1,
+          cex = 0.9
         )
       }
     }
@@ -128,6 +142,8 @@ my_2D_plot_fun_class <- function(var, title, data, X, Y, classification = TRUE, 
 #'   to overlay.
 #' @param y Optional binary response vector corresponding to \code{X}. Points
 #'   with \code{y == 1} and \code{y != 1} are drawn with different symbols.
+#' @param X_global Optional numeric matrix of selected global subset locations
+#'   to overlay, used by \code{plot.TwinBKP()}.
 #' @param dims Optional integer vector of length two indicating the original
 #'   input dimensions being visualized. Used only for axis labels.
 #' @param ... Additional arguments reserved for future use.
@@ -136,7 +152,8 @@ my_2D_plot_fun_class <- function(var, title, data, X, Y, classification = TRUE, 
 #'
 #' @keywords internal
 
-my_2D_plot_fun_ggplot <- function(var, title, data, X = NULL, y = NULL, dims = NULL, ...) {
+my_2D_plot_fun_ggplot <- function(var, title, data, X = NULL, y = NULL,
+                                  X_global = NULL, dims = NULL, ...) {
   # Validate inputs to ensure 'var' is a valid column string
   if (!is.character(var) || length(var) != 1) {
     stop("`var` must be a single character string (a column name).")
@@ -200,6 +217,25 @@ my_2D_plot_fun_ggplot <- function(var, title, data, X = NULL, y = NULL, dims = N
       aes(x = .data$x1, y = .data$x2, shape = .data$cls),
       color = "red", size = 2, inherit.aes = FALSE
     ) + scale_shape_manual(values = c("0" = 4, "1" = 16), guide = "none")
+  }
+
+  if (!is.null(X_global)) {
+    global_df <- data.frame(
+      x1 = X_global[, 1],
+      x2 = X_global[, 2]
+    )
+
+    p <- p +
+      geom_point(
+        data = global_df,
+        aes(x = .data$x1, y = .data$x2),
+        inherit.aes = FALSE,
+        shape = 21,
+        fill = "white",
+        color = "black",
+        size = 1.8,
+        stroke = 0.8
+      )
   }
 
   p

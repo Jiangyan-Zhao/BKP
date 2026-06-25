@@ -248,14 +248,14 @@ true_pi_fun <- function(x) {
   (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
 }
 
-n <- 30
+n <- 1000
 Xbounds <- matrix(c(-2,2), nrow=1)
 X <- tgp::lhs(n = n, rect = Xbounds)
 true_pi <- true_pi_fun(X)
 m <- sample(100, n, replace = TRUE)
 y <- rbinom(n, size = m, prob = true_pi)
 
-# Fit BKP model
+# Fit TwinBKP model
 model1 <- fit_TwinBKP(X, y, m, Xbounds=Xbounds)
 
 # Plot results
@@ -281,14 +281,14 @@ true_pi_fun <- function(X) {
   return(pnorm(f))  # Transform to probability
 }
 
-n <- 100
+n <- 1000
 Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
 X <- tgp::lhs(n = n, rect = Xbounds)
 true_pi <- true_pi_fun(X)
 m <- sample(100, n, replace = TRUE)
 y <- rbinom(n, size = m, prob = true_pi)
 
-# Fit BKP model
+# Fit TwinBKP model
 model2 <- fit_TwinBKP(X, y, m, Xbounds=Xbounds)
 
 # Plot results

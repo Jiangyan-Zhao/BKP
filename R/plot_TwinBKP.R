@@ -48,7 +48,7 @@
 #'   return(pnorm(f))  # Transform to probability
 #' }
 #'
-#' n <- 100
+#' n <- 1000
 #' Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
 #' X <- tgp::lhs(n = n, rect = Xbounds)
 #' true_pi <- true_pi_fun(X)
@@ -370,37 +370,17 @@ plot.TwinBKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL,
 
   make_plot <- function(var, title, overlay_obs = FALSE) {
     if (engine == "ggplot") {
-      p <- my_2D_plot_fun_ggplot(
+      my_2D_plot_fun_ggplot(
         var = var,
         title = title,
         data = df,
         X = if (overlay_obs) X_sub else NULL,
         y = if (overlay_obs) y else NULL,
+        X_global = X_global_plot,
         dims = dims
       )
-
-      if (!is.null(X_global_plot)) {
-        global_df <- data.frame(
-          x1 = X_global_plot[, 1],
-          x2 = X_global_plot[, 2]
-        )
-
-        p <- p +
-          geom_point(
-            data = global_df,
-            aes(x = .data$x1, y = .data$x2),
-            inherit.aes = FALSE,
-            shape = 21,
-            fill = "white",
-            color = "black",
-            size = 1.8,
-            stroke = 0.8
-          )
-      }
-
-      p
     } else {
-      .twin_2D_plot_fun(
+      my_2D_plot_fun(
         var = var,
         title = title,
         data = df,
@@ -454,51 +434,4 @@ plot.TwinBKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL,
   }
 
   invisible(NULL)
-}
-
-
-#' @noRd
-.twin_2D_plot_fun <- function(var, title, data, X = NULL, y = NULL,
-                              X_global = NULL, dims = NULL, ...) {
-
-  lattice::levelplot(
-    as.formula(paste(var, "~ x1 * x2")),
-    data = data,
-    col.regions = grDevices::hcl.colors(100, palette = "plasma"),
-    main = title,
-    xlab = ifelse(is.null(dims), "x1", paste0("x", dims[1])),
-    ylab = ifelse(is.null(dims), "x2", paste0("x", dims[2])),
-    contour = TRUE,
-    colorkey = TRUE,
-    cuts = 15,
-    pretty = TRUE,
-    scales = list(draw = TRUE, tck = c(1, 0)),
-    panel = function(...) {
-      lattice::panel.levelplot(...)
-      lattice::panel.contourplot(..., col = "black", lwd = 0.5)
-
-      if (!is.null(X) && !is.null(y)) {
-        lattice::panel.points(
-          X[, 1],
-          X[, 2],
-          pch = ifelse(y == 1, 16, 4),
-          col = "red",
-          lwd = 2,
-          cex = 1.2
-        )
-      }
-
-      if (!is.null(X_global)) {
-        lattice::panel.points(
-          X_global[, 1],
-          X_global[, 2],
-          pch = 21,
-          col = "black",
-          fill = "white",
-          lwd = 1,
-          cex = 0.9
-        )
-      }
-    }
-  )
 }

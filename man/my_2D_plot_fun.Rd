@@ -4,7 +4,16 @@
 \alias{my_2D_plot_fun}
 \title{Create a 2D lattice contour plot for BKP posterior summaries}
 \usage{
-my_2D_plot_fun(var, title, data, X = NULL, y = NULL, dims = NULL, ...)
+my_2D_plot_fun(
+  var,
+  title,
+  data,
+  X = NULL,
+  y = NULL,
+  X_global = NULL,
+  dims = NULL,
+  ...
+)
 }
 \arguments{
 \item{var}{Character string giving the name of the column in \code{data} to
@@ -20,6 +29,9 @@ to overlay.}
 
 \item{y}{Optional binary response vector corresponding to \code{X}. Points
 with \code{y == 1} and \code{y != 1} are drawn with different symbols.}
+
+\item{X_global}{Optional numeric matrix of selected global subset locations
+to overlay, used by \code{plot.TwinBKP()}.}
 
 \item{dims}{Optional integer vector of length two indicating the original
 input dimensions being visualized. Used only for axis labels.}
