@@ -1,15 +1,16 @@
 #' @name plot
 #'
-#' @title Plot Fitted BKP or DKP Models
+#' @title Plot Fitted BKP, DKP, or TwinBKP Models
 #'
-#' @description Visualizes fitted \code{BKP} (binary) or \code{DKP}
-#'   (multi-class) models according to the input dimensionality. For 1D inputs,
+#' @description Visualizes fitted \code{BKP}, \code{DKP}, or \code{TwinBKP} models
+#'   according to the input dimensionality. For 1D inputs,
 #'   it shows predicted class probabilities with credible intervals and observed
 #'   data. For 2D inputs, it generates contour plots of posterior summaries. For
 #'   higher-dimensional inputs, users must specify which dimensions to plot.
 #'
-#' @param x An object of class \code{"BKP"} or \code{"DKP"}, typically returned
-#'   by \code{\link{fit_BKP}} or \code{\link{fit_DKP}}.
+#' @param x An object of class \code{"BKP"}, \code{"DKP"}, or
+#'   \code{"TwinBKP"}, typically returned by \code{\link{fit_BKP}},
+#'   \code{\link{fit_DKP}}, or \code{\link{fit_TwinBKP}}.
 #' @param only_mean Logical. If \code{TRUE}, only the predicted mean surface is
 #'   plotted for 2D inputs (applies to both BKP and DKP models for mean
 #'   visualization). Default is \code{FALSE}.
@@ -25,6 +26,9 @@
 #'   uses the package's original base/lattice plotting implementation,
 #'   whereas \code{"ggplot"} uses \pkg{ggplot2}-based graphics when
 #'   available. This argument applies to both 1D and 2D plots.
+#' @param show_global Logical. For \code{TwinBKP} objects only. If
+#'   \code{TRUE}, highlights the selected global subset used by the
+#'   twinning-based approximation. Default is \code{TRUE}.
 #' @param ... Additional arguments passed to internal plotting routines
 #'   (currently unused).
 #'
@@ -63,6 +67,9 @@
 #'       \item Users must specify which dimensions to visualize via the \code{dims} argument (length 1 or 2).
 #'     }
 #' }
+#'
+#' For \code{TwinBKP} objects, the plotting behavior is analogous to
+#' \code{BKP}, with optional highlighting of the selected global subset.
 #'
 #' @seealso \code{\link{fit_BKP}} and \code{\link{fit_DKP}} for fitting BKP and
 #'   DKP models, respectively; \code{\link{predict.BKP}} and

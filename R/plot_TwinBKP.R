@@ -1,61 +1,65 @@
-#' Plot a Fitted TwinBKP Model
-#'
-#' @description
-#' Visualizes a fitted Twin Beta Kernel Process (TwinBKP) model according to
-#' the selected input dimensionality. For one-dimensional displays, the method
-#' plots the posterior mean curve with credible intervals and observed
-#' proportions. For two-dimensional displays, it generates contour or raster
-#' plots of posterior summaries over a prediction grid. For inputs with more
-#' than two dimensions, the displayed dimensions must be specified by
-#' \code{dims}; all non-displayed dimensions are fixed at their training-data
-#' medians.
-#'
-#' @param x A fitted object of class \code{"TwinBKP"}, typically returned by
-#'   \code{\link{fit_TwinBKP}}.
-#' @param only_mean Logical. If \code{TRUE}, only the predictive mean surface is
-#'   plotted for two-dimensional displays. If \code{FALSE}, the predictive mean,
-#'   upper credible bound, predictive variance, and lower credible bound are
-#'   displayed. Default is \code{FALSE}.
-#' @param n_grid Positive integer specifying the number of grid points per
-#'   displayed dimension. Default is \code{80}.
-#' @param dims Integer vector specifying which input dimensions to display.
-#'   Must have length 1 or 2. If \code{NULL}, all dimensions are used when the
-#'   model input dimension is at most two; otherwise an error is returned.
-#' @param engine Character string specifying the plotting backend. Either
-#'   \code{"base"} or \code{"ggplot"}. The default \code{"base"} uses the
-#'   package's original base/lattice-style graphics; \code{"ggplot"} uses
-#'   \pkg{ggplot2}-based graphics.
-#' @param show_global Logical. If \code{TRUE}, highlights the selected global
-#'   subset used by the TwinBKP approximation. Default is \code{TRUE}.
-#' @param ... Additional arguments passed to \code{\link{predict.TwinBKP}}.
-#'
-#' @return Invisibly returns \code{NULL}. The function is called for its side
-#'   effect of producing plots.
-#'
-#' @seealso \code{\link{fit_TwinBKP}}, \code{\link{predict.TwinBKP}},
-#'   \code{\link{plot.BKP}}
+#' @rdname plot
 #'
 #' @keywords TwinBKP
 #'
 #' @examples
+#' # ============================================================== #
+#' # ======================= TwinBKP Examples ===================== #
+#' # ============================================================== #
+#'
+#' #-------------------------- 1D Example ---------------------------
 #' set.seed(123)
-#' n <- 60
-#' X <- matrix(seq(0, 1, length.out = n), ncol = 1)
-#' true_pi <- plogis(8 * (X[, 1] - 0.5))
-#' m <- rep(20, n)
+#'
+#' # Define true success probability function
+#' true_pi_fun <- function(x) {
+#'   (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
+#' }
+#'
+#' n <- 1000
+#' Xbounds <- matrix(c(-2,2), nrow=1)
+#' X <- tgp::lhs(n = n, rect = Xbounds)
+#' true_pi <- true_pi_fun(X)
+#' m <- sample(100, n, replace = TRUE)
 #' y <- rbinom(n, size = m, prob = true_pi)
 #'
-#' fit <- fit_TwinBKP(
-#'   X, y, m,
-#'   Xbounds = matrix(c(0, 1), nrow = 1),
-#'   theta_g = 0.25,
-#'   theta_l = 0.30,
-#'   g = 20,
-#'   l = 8,
-#'   twins = 1
-#' )
+#' # Fit TwinBKP model
+#' model1 <- fit_TwinBKP(X, y, m, Xbounds=Xbounds)
 #'
-#' plot(fit)
+#' # Plot results
+#' plot(model1)
+#'
+#'
+#' #-------------------------- 2D Example ---------------------------
+#' set.seed(123)
+#'
+#' # Define 2D latent function and probability transformation
+#' true_pi_fun <- function(X) {
+#'   if(is.null(nrow(X))) X <- matrix(X, nrow=1)
+#'   m <- 8.6928
+#'   s <- 2.4269
+#'   x1 <- 4*X[,1]- 2
+#'   x2 <- 4*X[,2]- 2
+#'   a <- 1 + (x1 + x2 + 1)^2 *
+#'     (19- 14*x1 + 3*x1^2- 14*x2 + 6*x1*x2 + 3*x2^2)
+#'   b <- 30 + (2*x1- 3*x2)^2 *
+#'     (18- 32*x1 + 12*x1^2 + 48*x2- 36*x1*x2 + 27*x2^2)
+#'   f <- log(a*b)
+#'   f <- (f- m)/s
+#'   return(pnorm(f))  # Transform to probability
+#' }
+#'
+#' n <- 100
+#' Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
+#' X <- tgp::lhs(n = n, rect = Xbounds)
+#' true_pi <- true_pi_fun(X)
+#' m <- sample(100, n, replace = TRUE)
+#' y <- rbinom(n, size = m, prob = true_pi)
+#'
+#' # Fit TwinBKP model
+#' model2 <- fit_TwinBKP(X, y, m, Xbounds=Xbounds)
+#'
+#' # Plot results
+#' plot(model2)
 #'
 #' @export
 #' @method plot TwinBKP
