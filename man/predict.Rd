@@ -280,8 +280,7 @@ predict(model2, Xnew)
 }
 \references{
 Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
-Kernel Process Modeling}.  arXiv.
-https://doi.org/10.48550/arXiv.2508.10447.
+Kernel Process Modeling}. arXiv. \doi{10.48550/arXiv.2508.10447}
 }
 \seealso{
 \code{\link{fit_BKP}} and \code{\link{fit_DKP}} for model fitting;

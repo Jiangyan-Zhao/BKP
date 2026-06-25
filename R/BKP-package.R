@@ -41,8 +41,7 @@
 #' }
 #'
 #' @references Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
-#'   Kernel Process Modeling}.  arXiv.
-#'   https://doi.org/10.48550/arXiv.2508.10447.
+#'   Kernel Process Modeling}.  arXiv. \doi{10.48550/arXiv.2508.10447}
 #'
 #'   Rolland P, Kavis A, Singla A, Cevher V (2019). \emph{Efficient learning of
 #'   smooth probability functions from Bernoulli tests with guarantees}. In

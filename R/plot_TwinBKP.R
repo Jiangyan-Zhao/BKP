@@ -35,7 +35,7 @@
 #' @seealso \code{\link{fit_TwinBKP}}, \code{\link{predict.TwinBKP}},
 #'   \code{\link{plot.BKP}}
 #'
-#' @keywords BKP TwinBKP
+#' @keywords TwinBKP
 #'
 #' @examples
 #' set.seed(123)

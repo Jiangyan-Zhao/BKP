@@ -79,5 +79,4 @@ plot(fit)
 \code{\link{fit_TwinBKP}}, \code{\link{predict.TwinBKP}},
 \code{\link{plot.BKP}}
 }
-\keyword{BKP}
 \keyword{TwinBKP}

@@ -123,7 +123,7 @@
 #'   \code{\link{summary.BKP}} for downstream workflows on fitted BKP objects.
 #'
 #' @references Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
-#'   Kernel Process Modeling}. arXiv.
+#'   Kernel Process Modeling}. arXiv. \doi{10.48550/arXiv.2508.10447}
 #'
 #' Vakayil A, Joseph VR (2022). Data Twinning. \emph{Statistical Analysis and
 #'   Data Mining: The ASA Data Science Journal}, 15(5), 598--610.
