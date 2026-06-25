@@ -12,8 +12,8 @@
 #'   \code{"TwinBKP"}, typically returned by \code{\link{fit_BKP}},
 #'   \code{\link{fit_DKP}}, or \code{\link{fit_TwinBKP}}.
 #' @param only_mean Logical. If \code{TRUE}, only the predicted mean surface is
-#'   plotted for 2D inputs (applies to both BKP and DKP models for mean
-#'   visualization). Default is \code{FALSE}.
+#'   plotted for 2D inputs. This applies to BKP, DKP, and TwinBKP models.
+#'   Default is \code{FALSE}.
 #' @param n_grid Positive integer specifying the number of grid points per
 #'   dimension for constructing the prediction grid. Larger values produce
 #'   smoother and more detailed surfaces, but increase computation time. Default
@@ -49,7 +49,7 @@
 #'
 #'   \item \strong{2D inputs:}
 #'     \itemize{
-#'       \item For both BKP and DKP models, the function generates contour plots over a 2D prediction grid.
+#'       \item For both BKP, DKP, and TwinBKP models, the function generates contour plots over a 2D prediction grid.
 #'       \item Users can choose to plot only the predictive mean surface (\code{only_mean = TRUE}) or a set of four summary plots (\code{only_mean = FALSE}):
 #'         \enumerate{
 #'           \item Predictive mean
@@ -71,16 +71,15 @@
 #' For \code{TwinBKP} objects, the plotting behavior is analogous to
 #' \code{BKP}, with optional highlighting of the selected global subset.
 #'
-#' @seealso \code{\link{fit_BKP}} and \code{\link{fit_DKP}} for fitting BKP and
-#'   DKP models, respectively; \code{\link{predict.BKP}} and
-#'   \code{\link{predict.DKP}} for generating predictions from fitted BKP and
-#'   DKP models.
-
+#' @seealso \code{\link{fit_BKP}}, \code{\link{fit_DKP}}, and
+#'   \code{\link{fit_TwinBKP}} for model fitting; \code{\link{predict.BKP}},
+#'   \code{\link{predict.DKP}}, and \code{\link{predict.TwinBKP}} for
+#'   generating predictions from fitted models.
 #'
 #' @references Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
 #'   Kernel Process Modeling}. arXiv. \doi{10.48550/arXiv.2508.10447}
 #'
-#' @keywords BKP DKP
+#' @keywords BKP DKP TwinBKP
 #'
 #' @examples
 #' # ============================================================== #

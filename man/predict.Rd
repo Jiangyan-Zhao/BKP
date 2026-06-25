@@ -50,21 +50,21 @@ training data.}
 posterior intervals (default \code{0.95} for 95\% credible interval).}
 
 \item{threshold}{Numeric between 0 and 1 specifying the classification
-threshold for binary predictions based on posterior mean (used only for
-BKP; default is \code{0.5}).}
+threshold for binary predictions based on posterior mean, used for
+BKP and TwinBKP models. Default is \code{0.5}.}
 
 \item{type}{Character string specifying the prediction target. The default
 \code{"probability"} returns posterior summaries for latent success
-probabilities (BKP) or latent class probabilities (DKP). The option
-\code{"count"} returns posterior predictive summaries for future counts
-under the Beta-Binomial distribution (BKP) or marginal Beta-Binomial
-distributions for each multinomial class (DKP).}
+probabilities (BKP and TwinBKP) or latent class probabilities (DKP). The
+option \code{"count"} returns posterior predictive summaries for future
+counts under the Beta-Binomial distribution (BKP and TwinBKP) or marginal
+Beta-Binomial distributions for each multinomial class (DKP).}
 
 \item{Mnew}{Positive integer trial size used when \code{type = "count"}. It
 can be either a scalar, applied to all prediction points, or a vector with
 the same length as the number of prediction points. If \code{Xnew = NULL}
-and \code{Mnew = NULL}, the training trial sizes \code{object$m} (BKP) or
-\code{rowSums(object$Y)} (DKP) are used.}
+and \code{Mnew = NULL}, the training trial sizes \code{object$m} (BKP and
+TwinBKP) or \code{rowSums(object$Y)} (DKP) are used.}
 
 \item{...}{Additional arguments passed to generic \code{predict} methods
 (currently not used; included for S3 method consistency).}

@@ -1,8 +1,8 @@
 test_that("plot.TwinBKP supports 1D base plots", {
   model <- make_twinbkp_model_1d()$model
 
-  expect_silent(plot(model, n_grid = 10, engine = "base"))
-  expect_silent(plot(model, n_grid = 10, engine = "base", show_global = FALSE))
+  expect_no_error(plot(model, n_grid = 10, engine = "base"))
+  expect_no_error(plot(model, n_grid = 10, engine = "base", show_global = FALSE))
 })
 
 test_that("plot.TwinBKP supports 2D base and ggplot plots and validates dims", {
