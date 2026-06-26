@@ -1,0 +1,1 @@
+test_that("simulate.TwinDKP returns valid simulations", { s <- simulate(make_twindkp_model_1d()$model, nsim = 2, seed = 1); expect_s3_class(s, "simulate_TwinDKP"); expect_equal(dim(s$samples), c(40, 3, 2)) })
