@@ -1,0 +1,1 @@
+test_that("TwinDKP print methods run", { fit <- make_twindkp_model_1d()$model; expect_output(print(fit), "TwinDKP"); expect_output(print(summary(fit)), "TwinDKP"); expect_output(print(predict(fit)), "TwinDKP") })
