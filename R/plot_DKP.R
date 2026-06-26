@@ -236,7 +236,7 @@ plot.DKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL,
       do.call(grid.arrange, c(plot_list, ncol = 2))
     } else {
       old_par <- par(mfrow = c(2, 2))
-      on.exit(par(old_par), add = TRUE)  # Restore par on exit
+      # on.exit(par(old_par), add = TRUE)  # Restore par on exit
 
       class_Y <- if (is_classification) max.col(Y) else NULL
 

@@ -133,6 +133,10 @@
 #'   Large-Scale Gaussian Process Modeling. \emph{Technometrics}, 66(2),
 #'   295--305.
 #'
+#' Blanco JL, PK Rai (2014). nanoflann: a C++ header-only fork of FLANN,
+#'   a library for nearest neighbor (NN) with kd-trees.
+#'   \url{https://github.com/jlblancoc/nanoflann}
+#'
 #' @examples
 #' #-------------------------- 1D Example ---------------------------
 #' set.seed(123)

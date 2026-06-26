@@ -240,6 +240,10 @@ Data Mining: The ASA Data Science Journal}, 15(5), 598--610.
 Vakayil A, Joseph VR (2024). A Global-Local Approximation Framework for
 Large-Scale Gaussian Process Modeling. \emph{Technometrics}, 66(2),
 295--305.
+
+Blanco JL, PK Rai (2014). nanoflann: a C++ header-only fork of FLANN,
+a library for nearest neighbor (NN) with kd-trees.
+\url{https://github.com/jlblancoc/nanoflann}
 }
 \seealso{
 \code{\link{fit_BKP}} for the full BKP model,
