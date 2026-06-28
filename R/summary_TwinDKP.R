@@ -24,7 +24,8 @@ summary.TwinDKP <- function(object, ...) {
     global_target = object$control$g_target,
     local_size = object$control$l,
     twins = object$control$twins,
-    post_mean = prob)
+    post_mean = prob
+  )
   class(out) <- "summary_TwinDKP"
   out
 }
