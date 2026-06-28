@@ -26,9 +26,8 @@
 #'   }
 #'   \item{\code{\link{predict.BKP}}, \code{\link{predict.DKP}}, \code{\link{predict.TwinBKP}}, \code{\link{predict.TwinDKP}}}{
 #'     Perform posterior inference at new input locations, including posterior
-#'     means, variances, and credible intervals. For single-trial binary or
-#'     categorical responses, predicted class labels are returned where
-#'     applicable.
+#'     means, variances, and credible intervals. Decision labels, when needed,
+#'     can be obtained from posterior means or method-specific outputs.
 #'   }
 #'   \item{\code{\link{simulate.BKP}}, \code{\link{simulate.DKP}}, \code{\link{simulate.TwinBKP}}, \code{\link{simulate.TwinDKP}}}{
 #'     Generate posterior draws of latent success probabilities or class

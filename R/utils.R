@@ -85,13 +85,16 @@ my_2D_plot_fun <- function(var, title, data, X = NULL, y = NULL,
 #'   probability or uncertainty surface.
 #' @param dims Optional integer vector of length two indicating the original
 #'   input dimensions being visualized. Used only for axis labels.
+#' @param X_global Optional numeric matrix of selected global subset locations
+#'   to overlay, used by Twin plotting methods.
 #' @param ... Additional arguments reserved for future use.
 #'
 #' @return A \code{trellis} object produced by \code{lattice::levelplot()}.
 #'
 #' @keywords internal
 
-my_2D_plot_fun_class <- function(var, title, data, X, Y, classification = TRUE, dims = NULL, ...) {
+my_2D_plot_fun_class <- function(var, title, data, X, Y, classification = TRUE,
+                                 dims = NULL, X_global = NULL, ...) {
   class_Y <- max.col(Y)
 
   if(classification){
@@ -121,6 +124,17 @@ my_2D_plot_fun_class <- function(var, title, data, X, Y, classification = TRUE, 
       panel.contourplot(..., col = "black", lwd = 0.5)
       panel.points(X[, 1], X[, 2], pch = class_Y, col = "black",
                    fill = cols[class_Y], lwd = 1.5, cex = 1.2)
+      if (!is.null(X_global)) {
+        lattice::panel.points(
+          X_global[, 1],
+          X_global[, 2],
+          pch = 21,
+          col = "black",
+          fill = "white",
+          lwd = 1,
+          cex = 0.9
+        )
+      }
     }
   )
 }
@@ -264,6 +278,8 @@ my_2D_plot_fun_ggplot <- function(var, title, data, X = NULL, y = NULL,
 #'   probability or uncertainty surface.
 #' @param dims Optional integer vector of length two indicating the original
 #'   input dimensions being visualized. Used only for axis labels.
+#' @param X_global Optional numeric matrix of selected global subset locations
+#'   to overlay, used by Twin plotting methods.
 #' @param ... Additional arguments reserved for future use.
 #'
 #' @return A \code{ggplot} object.
@@ -271,7 +287,8 @@ my_2D_plot_fun_ggplot <- function(var, title, data, X = NULL, y = NULL,
 #' @keywords internal
 
 my_2D_plot_fun_class_ggplot <- function(var, title, data, X, Y,
-                                        classification = TRUE, dims = NULL, ...) {
+                                        classification = TRUE, dims = NULL,
+                                        X_global = NULL, ...) {
   # Validate that var is a single character string
   if (!is.character(var) || length(var) != 1) {
     stop("`var` must be a single character string (a column name).")
@@ -341,6 +358,25 @@ my_2D_plot_fun_class_ggplot <- function(var, title, data, X, Y,
       legend.background = element_blank(),
       legend.key = element_blank()
     )
+
+  if (!is.null(X_global)) {
+    global_df <- data.frame(
+      x1 = X_global[, 1],
+      x2 = X_global[, 2]
+    )
+
+    p <- p +
+      geom_point(
+        data = global_df,
+        aes(x = .data$x1, y = .data$x2),
+        inherit.aes = FALSE,
+        shape = 21,
+        fill = "white",
+        color = "black",
+        size = 1.8,
+        stroke = 0.8
+      )
+  }
 
   p
 }

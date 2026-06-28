@@ -12,6 +12,7 @@ my_2D_plot_fun_class_ggplot(
   Y,
   classification = TRUE,
   dims = NULL,
+  X_global = NULL,
   ...
 )
 }
@@ -38,6 +39,9 @@ probability or uncertainty surface.}
 
 \item{dims}{Optional integer vector of length two indicating the original
 input dimensions being visualized. Used only for axis labels.}
+
+\item{X_global}{Optional numeric matrix of selected global subset locations
+to overlay, used by Twin plotting methods.}
 
 \item{...}{Additional arguments reserved for future use.}
 }

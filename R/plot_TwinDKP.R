@@ -412,7 +412,15 @@ plot.TwinDKP <- function(
     )
 
     if (engine == "ggplot") {
-      p1 <- my_2D_plot_fun_class_ggplot("class", "Predicted Classes", df, X_sub, Y, dims = dims)
+      p1 <- my_2D_plot_fun_class_ggplot(
+        "class",
+        "Predicted Classes",
+        df,
+        X_sub,
+        Y,
+        dims = dims,
+        X_global = if (has_global) X_global_sub else NULL
+      )
       p2 <- my_2D_plot_fun_class_ggplot(
         "max_prob",
         "Maximum Predicted Probability",
@@ -420,10 +428,19 @@ plot.TwinDKP <- function(
         X_sub,
         Y,
         classification = FALSE,
-        dims = dims
+        dims = dims,
+        X_global = if (has_global) X_global_sub else NULL
       )
     } else {
-      p1 <- my_2D_plot_fun_class("class", "Predicted Classes", df, X_sub, Y, dims = dims)
+      p1 <- my_2D_plot_fun_class(
+        "class",
+        "Predicted Classes",
+        df,
+        X_sub,
+        Y,
+        dims = dims,
+        X_global = if (has_global) X_global_sub else NULL
+      )
       p2 <- my_2D_plot_fun_class(
         "max_prob",
         "Maximum Predicted Probability",
@@ -431,7 +448,8 @@ plot.TwinDKP <- function(
         X_sub,
         Y,
         classification = FALSE,
-        dims = dims
+        dims = dims,
+        X_global = if (has_global) X_global_sub else NULL
       )
     }
     grid.arrange(p1, p2, ncol = 2)
@@ -448,22 +466,82 @@ plot.TwinDKP <- function(
 
       if (only_mean) {
         p1 <- if (engine == "ggplot") {
-          my_2D_plot_fun_ggplot("Mean", "TwinDKP Predictive Mean", df, dims = dims)
+          my_2D_plot_fun_ggplot(
+            "Mean",
+            "TwinDKP Predictive Mean",
+            df,
+            dims = dims,
+            X_global = if (has_global) X_global_sub else NULL
+          )
         } else {
-          my_2D_plot_fun("Mean", "TwinDKP Predictive Mean", df, dims = dims)
+          my_2D_plot_fun(
+            "Mean",
+            "TwinDKP Predictive Mean",
+            df,
+            dims = dims,
+            X_global = if (has_global) X_global_sub else NULL
+          )
         }
         print(p1)
       } else {
         if (engine == "ggplot") {
-          p1 <- my_2D_plot_fun_ggplot("Mean", "TwinDKP Predictive Mean", df, dims = dims)
-          p2 <- my_2D_plot_fun_ggplot("Upper", paste0(prediction$CI_level * 100, "% CI Upper"), df, dims = dims)
-          p3 <- my_2D_plot_fun_ggplot("Variance", "TwinDKP Predictive Variance", df, dims = dims)
-          p4 <- my_2D_plot_fun_ggplot("Lower", paste0(prediction$CI_level * 100, "% CI Lower"), df, dims = dims)
+          p1 <- my_2D_plot_fun_ggplot(
+            "Mean",
+            "TwinDKP Predictive Mean",
+            df,
+            dims = dims,
+            X_global = if (has_global) X_global_sub else NULL
+          )
+          p2 <- my_2D_plot_fun_ggplot(
+            "Upper",
+            paste0(prediction$CI_level * 100, "% CI Upper"),
+            df,
+            dims = dims,
+            X_global = if (has_global) X_global_sub else NULL
+          )
+          p3 <- my_2D_plot_fun_ggplot(
+            "Variance",
+            "TwinDKP Predictive Variance",
+            df,
+            dims = dims,
+            X_global = if (has_global) X_global_sub else NULL
+          )
+          p4 <- my_2D_plot_fun_ggplot(
+            "Lower",
+            paste0(prediction$CI_level * 100, "% CI Lower"),
+            df,
+            dims = dims,
+            X_global = if (has_global) X_global_sub else NULL
+          )
         } else {
-          p1 <- my_2D_plot_fun("Mean", "TwinDKP Predictive Mean", df, dims = dims)
-          p2 <- my_2D_plot_fun("Upper", paste0(prediction$CI_level * 100, "% CI Upper"), df, dims = dims)
-          p3 <- my_2D_plot_fun("Variance", "TwinDKP Predictive Variance", df, dims = dims)
-          p4 <- my_2D_plot_fun("Lower", paste0(prediction$CI_level * 100, "% CI Lower"), df, dims = dims)
+          p1 <- my_2D_plot_fun(
+            "Mean",
+            "TwinDKP Predictive Mean",
+            df,
+            dims = dims,
+            X_global = if (has_global) X_global_sub else NULL
+          )
+          p2 <- my_2D_plot_fun(
+            "Upper",
+            paste0(prediction$CI_level * 100, "% CI Upper"),
+            df,
+            dims = dims,
+            X_global = if (has_global) X_global_sub else NULL
+          )
+          p3 <- my_2D_plot_fun(
+            "Variance",
+            "TwinDKP Predictive Variance",
+            df,
+            dims = dims,
+            X_global = if (has_global) X_global_sub else NULL
+          )
+          p4 <- my_2D_plot_fun(
+            "Lower",
+            paste0(prediction$CI_level * 100, "% CI Lower"),
+            df,
+            dims = dims,
+            X_global = if (has_global) X_global_sub else NULL
+          )
         }
 
         grid.arrange(
