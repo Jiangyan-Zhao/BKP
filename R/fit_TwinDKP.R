@@ -295,20 +295,20 @@ fit_TwinDKP <- function(
   )
 
   # ---- Compute posterior parameters ----
-  posterior <- .twindkp_compute_posterior(
+  posterior <- twin_dkp_posterior_rcpp(
     Xquery_norm = Xnorm,
     Xtrain_norm = Xnorm,
     Y = Y,
-    g_indices = g_indices,
+    g_indices = as.integer(g_indices),
     local_indices = local_indices,
-    theta_g = theta_g,
-    theta_l = theta_l,
+    theta_g = as.numeric(theta_g),
+    theta_l = as.numeric(theta_l),
     global_kernel = global_kernel,
     local_kernel = local_kernel,
-    isotropic = isotropic,
+    isotropic = isTRUE(isotropic),
     prior = prior,
     r0 = r0,
-    p0 = p0,
+    p0 = as.numeric(p0),
     store_kernel = store_kernel
   )
 
@@ -357,26 +357,4 @@ fit_TwinDKP <- function(
   )
   class(out) <- "TwinDKP"
   out
-}
-
-.twindkp_compute_posterior <- function(Xquery_norm, Xtrain_norm, Y, g_indices,
-                                       local_indices, theta_g, theta_l,
-                                       global_kernel, local_kernel, isotropic,
-                                       prior, r0, p0, store_kernel = FALSE) {
-  twin_dkp_posterior_rcpp(
-    Xquery_norm = Xquery_norm,
-    Xtrain_norm = Xtrain_norm,
-    Y = Y,
-    g_indices = as.integer(g_indices),
-    local_indices = local_indices,
-    theta_g = as.numeric(theta_g),
-    theta_l = as.numeric(theta_l),
-    global_kernel = global_kernel,
-    local_kernel = local_kernel,
-    isotropic = isTRUE(isotropic),
-    prior = prior,
-    r0 = r0,
-    p0 = as.numeric(p0),
-    store_kernel = store_kernel
-  )
 }
