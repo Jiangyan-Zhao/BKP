@@ -53,8 +53,8 @@ default bounds \eqn{[0,1]^d} are applied.}
 \code{"gaussian"} (default), \code{"matern52"}, \code{"matern32"}, or
 \code{"wendland"}.}
 
-\item{local_kernel}{Kernel function for the local component. The current
-default is \code{"wendland"}, corresponding to the compactly supported
+\item{local_kernel}{Kernel function for the local component. Currently only
+\code{"wendland"} is supported, corresponding to the compactly supported
 local kernel used by the TwinBKP approximation.}
 
 \item{loss}{Loss function for kernel hyperparameter tuning: \code{"brier"}

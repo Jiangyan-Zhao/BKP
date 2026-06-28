@@ -15,8 +15,8 @@
 #' @param global_kernel Kernel function for the global component:
 #'   \code{"gaussian"} (default), \code{"matern52"}, \code{"matern32"}, or
 #'   \code{"wendland"}.
-#' @param local_kernel Kernel function for the local component. The current
-#'   default is \code{"wendland"}, corresponding to the compactly supported
+#' @param local_kernel Kernel function for the local component. Currently only
+#'   \code{"wendland"} is supported, corresponding to the compactly supported
 #'   local kernel used by the TwinBKP approximation.
 #' @param n_multi_start Number of initial points used in multi-start
 #'   optimization of the global kernel lengthscale parameters. If \code{NULL},

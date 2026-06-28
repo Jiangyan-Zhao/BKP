@@ -81,11 +81,11 @@ If \code{NULL} (default), it is set to the empirical covering radius of the
 global subset on the normalized input scale.}
 
 \item{g}{Target global subset size. If \code{NULL}, the default is
-\eqn{\min{n-1, 50d, \max(\lfloor\sqrt n\rfloor, 10d)}}.}
+\eqn{\min\{n-1, 50d, \max(\lfloor\sqrt n\rfloor, 10d)\}}.}
 
 \item{l}{Number of local non-global neighbours used at each training
 location. If \code{NULL}, the default is
-\eqn{\min{n-|G|, \max(25, 3d)}} after the global subset has been
+\eqn{\min\{n-|G|, \max(25, 3d)\}} after the global subset has been
 selected.}
 
 \item{twins}{Number of Twinning runs used to identify the global subset.
@@ -153,11 +153,6 @@ settings, including \code{g_target}, \code{g}, \code{l}, \code{r},
 \code{store_kernel = TRUE}, dense matrices \code{K}, \code{K_global},
 and \code{K_local}. When \code{store_kernel = FALSE}, these kernel
 matrices are \code{NULL}.}
-
-\item{\code{ess}}{The effective-sample-size calibration mode. TwinDKP
-currently stores \code{"none"}.}
-\item{\code{ess_info}}{Effective-sample-size diagnostic information.
-Currently \code{NULL} for TwinDKP.}
 }
 }
 \description{
@@ -167,8 +162,8 @@ global-local approximation to \code{\link{fit_DKP}}. It first selects a
 global representative subset using the Twinning algorithm on an augmented
 representation of the normalized inputs and empirical class-probability
 vectors. It then combines a smooth global kernel contribution from the
-selected global subset with a local nearest-neighbour contribution from
-non-global training points.
+selected global subset with a compactly supported local contribution from
+nearest non-global neighbours.
 }
 \details{
 The global subset is selected using

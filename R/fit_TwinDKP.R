@@ -8,8 +8,8 @@
 #'   global representative subset using the Twinning algorithm on an augmented
 #'   representation of the normalized inputs and empirical class-probability
 #'   vectors. It then combines a smooth global kernel contribution from the
-#'   selected global subset with a local nearest-neighbour contribution from
-#'   non-global training points.
+#'   selected global subset with a compactly supported local contribution from
+#'   nearest non-global neighbours.
 #'
 #' @inheritParams fit_DKP
 #'
@@ -27,10 +27,10 @@
 #'   If \code{NULL} (default), it is set to the empirical covering radius of the
 #'   global subset on the normalized input scale.
 #' @param g Target global subset size. If \code{NULL}, the default is
-#'   \eqn{\min{n-1, 50d, \max(\lfloor\sqrt n\rfloor, 10d)}}.
+#'   \eqn{\min\{n-1, 50d, \max(\lfloor\sqrt n\rfloor, 10d)\}}.
 #' @param l Number of local non-global neighbours used at each training
 #'   location. If \code{NULL}, the default is
-#'   \eqn{\min{n-|G|, \max(25, 3d)}} after the global subset has been
+#'   \eqn{\min\{n-|G|, \max(25, 3d)\}} after the global subset has been
 #'   selected.
 #' @param twins Number of Twinning runs used to identify the global subset.
 #'   Larger values may improve the selected global subset at additional
@@ -95,11 +95,6 @@
 #'     \code{store_kernel = TRUE}, dense matrices \code{K}, \code{K_global},
 #'     and \code{K_local}. When \code{store_kernel = FALSE}, these kernel
 #'     matrices are \code{NULL}.}
-#'
-#'   \item{\code{ess}}{The effective-sample-size calibration mode. TwinDKP
-#'     currently stores \code{"none"}.}
-#'   \item{\code{ess_info}}{Effective-sample-size diagnostic information.
-#'     Currently \code{NULL} for TwinDKP.}
 #' }
 #'
 #' @details The global subset is selected using
@@ -493,6 +488,7 @@ fit_TwinDKP <- function(
 
   # ---- Construct and return fitted model ----
   out <- list(
+    # Kernel and tuning information
     theta_opt = theta_g,
     theta_g = theta_g,
     theta_l = theta_l,
@@ -502,17 +498,25 @@ fit_TwinDKP <- function(
     isotropic = isotropic,
     loss = loss,
     loss_min = loss_min,
+
+    # Training data and normalization
     X = X,
     Xnorm = Xnorm,
     Xbounds = Xbounds,
     Y = Y,
+
+    # Prior and posterior parameters
     prior = prior,
     r0 = r0,
     p0 = p0,
     alpha0 = posterior$alpha0,
     alpha_n = posterior$alpha_n,
     prob = posterior$prob,
+
+    # Selected global subset
     global_indices = g_indices,
+
+    # Fitting controls
     control = list(
       g_target = g,
       g = g_actual,
@@ -525,14 +529,14 @@ fit_TwinDKP <- function(
       n_threads = n_threads,
       store_kernel = store_kernel
     ),
+
+    # Diagnostic objects
     diagnostics = list(
       twin_info = twin_info,
       K = posterior$K,
       K_global = posterior$K_global,
       K_local = posterior$K_local
-    ),
-    ess = "none",
-    ess_info = NULL
+    )
   )
   class(out) <- "TwinDKP"
   out
