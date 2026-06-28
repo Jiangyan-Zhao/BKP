@@ -103,6 +103,17 @@ locally smoothing observed counts to estimate latent Dirichlet parameters.
 The model constructs flexible latent probability surfaces by updating
 Dirichlet priors using kernel-weighted observations.
 }
+\details{
+Inputs are normalized to \eqn{[0,1]^d} using \code{Xbounds}. For a
+training or prediction location, DKP evaluates kernel weights between that
+location and the training inputs, then updates Dirichlet prior
+concentration parameters with kernel-weighted multinomial counts. When
+\code{theta = NULL}, kernel lengthscale parameters are selected by
+leave-one-out cross-validation using the specified loss function. If
+\code{ess = "shepard"}, only the kernel-weighted class-count contribution
+is rescaled to match the local effective-sample-size target; the prior
+parameters are not rescaled.
+}
 \examples{
 #-------------------------- 1D Example ---------------------------
 set.seed(123)
@@ -167,8 +178,9 @@ Kernel Process Modeling}.  arXiv. \doi{10.48550/arXiv.2508.10447}
 }
 \seealso{
 \code{\link{fit_BKP}} for modeling binomial responses via the Beta
-Kernel Process. \code{\link{predict.DKP}}, \code{\link{plot.DKP}},
-\code{\link{simulate.DKP}} for prediction, visualization, and posterior
-simulation from a fitted DKP model. \code{\link{summary.DKP}},
-\code{\link{print.DKP}} for inspecting model summaries.
+Kernel Process, and \code{\link{fit_TwinDKP}} for the scalable global-local
+TwinDKP approximation. \code{\link{predict.DKP}},
+\code{\link{plot.DKP}}, \code{\link{simulate.DKP}}, and
+\code{\link{summary.DKP}} for prediction, visualization, posterior
+simulation, and summarization of a fitted DKP model.
 }

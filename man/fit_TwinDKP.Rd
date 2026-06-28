@@ -59,17 +59,17 @@ local kernel used by the TwinDKP approximation.}
 (default) or \code{"log_loss"}.}
 
 \item{n_multi_start}{Number of initial points used in multi-start
-optimization of the kernel lengthscale parameters. If \code{NULL},
-the default is \eqn{10p}, where \eqn{p = 1} for isotropic kernels and
-\eqn{p = d} for anisotropic kernels.}
+optimization of the global kernel lengthscale parameters. If \code{NULL},
+the default from \code{\link{fit_DKP}} is used on the selected global
+subset.}
 
 \item{isotropic}{Logical. If \code{TRUE} (default), optimize/use a single
 shared lengthscale across dimensions. If \code{FALSE}, use separate
 per-dimension lengthscales.}
 
-\item{n_threads}{Number of OpenMP threads used for multi-start
-optimization. Default is \code{1}. This argument only affects
-hyperparameter optimization when \code{theta = NULL}.}
+\item{n_threads}{Number of OpenMP threads used for global-subset
+hyperparameter optimization when \code{theta_g = NULL}. Default is
+\code{1}.}
 
 \item{theta_g}{Optional. A positive scalar or numeric vector specifying the
 global kernel lengthscale parameter(s). If \code{NULL} (default), the global

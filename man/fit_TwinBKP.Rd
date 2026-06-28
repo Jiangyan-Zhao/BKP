@@ -145,7 +145,8 @@ subset.}
 
 \item{\code{control}}{A list of fitting controls and realized Twinning
 settings, including \code{g_target}, \code{g}, \code{l}, \code{r},
-\code{twins}, \code{u1}, \code{leaf_size}, and \code{store_kernel}.}
+\code{twins}, \code{u1}, \code{leaf_size}, \code{n_multi_start},
+\code{n_threads}, and \code{store_kernel}.}
 
 \item{\code{diagnostics}}{A list of diagnostic objects. It contains
 \code{twin_info} from the C++ Twinning routine and, when

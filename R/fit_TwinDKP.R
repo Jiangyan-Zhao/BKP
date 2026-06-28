@@ -19,6 +19,13 @@
 #' @param local_kernel Kernel function for the local component. Currently only
 #'   \code{"wendland"} is supported, corresponding to the compactly supported
 #'   local kernel used by the TwinDKP approximation.
+#' @param n_multi_start Number of initial points used in multi-start
+#'   optimization of the global kernel lengthscale parameters. If \code{NULL},
+#'   the default from \code{\link{fit_DKP}} is used on the selected global
+#'   subset.
+#' @param n_threads Number of OpenMP threads used for global-subset
+#'   hyperparameter optimization when \code{theta_g = NULL}. Default is
+#'   \code{1}.
 #' @param theta_g Optional. A positive scalar or numeric vector specifying the
 #'   global kernel lengthscale parameter(s). If \code{NULL} (default), the global
 #'   lengthscale is optimized by fitting a DKP model on the selected global

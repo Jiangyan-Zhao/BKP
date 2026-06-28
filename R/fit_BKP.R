@@ -74,8 +74,18 @@
 #'   \item{\code{beta_n}}{Posterior shape parameter \eqn{\beta_n(\mathbf{x})}.}
 #' }
 #'
+#' @details Inputs are normalized to \eqn{[0,1]^d} using \code{Xbounds}. For a
+#'   training or prediction location, BKP evaluates kernel weights between that
+#'   location and the training inputs, then updates Beta prior parameters with
+#'   kernel-weighted binomial counts. When \code{theta = NULL}, kernel
+#'   lengthscale parameters are selected by leave-one-out cross-validation using
+#'   the specified loss function. If \code{ess = "shepard"}, only the
+#'   kernel-weighted data contribution is rescaled to match the local
+#'   effective-sample-size target; the prior parameters are not rescaled.
+#'
 #' @seealso \code{\link{fit_DKP}} for modeling multinomial responses via the
-#'   Dirichlet Kernel Process. \code{\link{predict.BKP}},
+#'   Dirichlet Kernel Process, and \code{\link{fit_TwinBKP}} for the scalable
+#'   global-local TwinBKP approximation. \code{\link{predict.BKP}},
 #'   \code{\link{plot.BKP}}, \code{\link{simulate.BKP}}, and
 #'   \code{\link{summary.BKP}} for prediction, visualization, posterior
 #'   simulation, and summarization of a fitted BKP model.
