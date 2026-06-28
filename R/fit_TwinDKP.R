@@ -1,29 +1,208 @@
-#' Fit a Twin Dirichlet Kernel Process Model
+#' @name fit_TwinDKP
 #'
-#' Fits a scalable global-local approximation to [fit_DKP()] for categorical or
-#' multinomial count responses.
+#' @title Fit a Twin Dirichlet Kernel Process Model
+#'
+#' @description Fits a Twin Dirichlet Kernel Process (TwinDKP) model for
+#'   categorical or multinomial count response data. TwinDKP is a scalable
+#'   global-local approximation to \code{\link{fit_DKP}}. It first selects a
+#'   global representative subset using the Twinning algorithm on an augmented
+#'   representation of the normalized inputs and empirical class-probability
+#'   vectors. It then combines a smooth global kernel contribution from the
+#'   selected global subset with a local nearest-neighbour contribution from
+#'   non-global training points.
 #'
 #' @inheritParams fit_DKP
-#' @param theta_g Optional positive global kernel lengthscale(s).
-#' @param theta_l Optional positive local kernel range.
-#' @param global_kernel,local_kernel Kernel functions for global and local components.
-#' @param g Target global subset size.
-#' @param l Number of local non-global neighbours.
-#' @param n_multi_start Optional number of multi-start initial points for global DKP hyperparameter tuning.
-#' @param n_threads Number of threads used for global DKP hyperparameter tuning.
-#' @param twins Number of Twinning runs.
-#' @param store_kernel Store dense diagnostic kernels.
 #'
-#' @return A `TwinDKP` object.
+#' @param global_kernel Kernel function for the global component:
+#'   \code{"gaussian"} (default), \code{"matern52"}, \code{"matern32"}, or
+#'   \code{"wendland"}.
+#' @param local_kernel Kernel function for the local component. Currently only
+#'   \code{"wendland"} is supported, corresponding to the compactly supported
+#'   local kernel used by the TwinDKP approximation.
+#' @param theta_g Optional. A positive scalar or numeric vector specifying the
+#'   global kernel lengthscale parameter(s). If \code{NULL} (default), the global
+#'   lengthscale is optimized by fitting a DKP model on the selected global
+#'   subset.
+#' @param theta_l Optional. A positive scalar specifying the local kernel range.
+#'   If \code{NULL} (default), it is set to the empirical covering radius of the
+#'   global subset on the normalized input scale.
+#' @param g Target global subset size. If \code{NULL}, the default is
+#'   \eqn{\min{n-1, 50d, \max(\lfloor\sqrt n\rfloor, 10d)}}.
+#' @param l Number of local non-global neighbours used at each training
+#'   location. If \code{NULL}, the default is
+#'   \eqn{\min{n-|G|, \max(25, 3d)}} after the global subset has been
+#'   selected.
+#' @param twins Number of Twinning runs used to identify the global subset.
+#'   Larger values may improve the selected global subset at additional
+#'   computational cost. Default is \code{5}.
+#' @param store_kernel Logical. If \code{TRUE}, store dense diagnostic kernel
+#'   matrices \code{K}, \code{K_global}, and \code{K_local}. This option is
+#'   intended for testing and diagnostics only. The default \code{FALSE}
+#'   avoids dense \eqn{n \times n} kernel storage and preserves the scalable
+#'   memory behavior of TwinDKP.
+#'
+#' @return A list of class \code{"TwinDKP"} containing the fitted TwinDKP model.
+#'   The object includes the following components:
+#' \describe{
+#'   \item{\code{theta_opt}}{Alias for the optimized or user-specified global
+#'     kernel lengthscale \code{theta_g}, retained for consistency with
+#'     \code{\link{fit_DKP}}.}
+#'   \item{\code{theta_g}}{Global kernel lengthscale parameter(s). A scalar is
+#'     used when \code{isotropic = TRUE}; a vector is used when
+#'     \code{isotropic = FALSE}.}
+#'   \item{\code{theta_l}}{Local kernel range parameter used for the
+#'     nearest-neighbour local component.}
+#'   \item{\code{kernel}}{Alias for \code{global_kernel}, retained for naming
+#'     consistency with \code{\link{fit_DKP}}.}
+#'   \item{\code{global_kernel}}{Kernel function used for the global subset
+#'     contribution.}
+#'   \item{\code{local_kernel}}{Kernel function used for the local-neighbour
+#'     contribution.}
+#'   \item{\code{isotropic}}{Logical flag indicating whether the global kernel
+#'     uses one shared lengthscale across dimensions.}
+#'   \item{\code{loss}}{Loss function used for global lengthscale tuning.}
+#'   \item{\code{loss_min}}{Minimum loss value obtained on the selected global
+#'     subset.}
+#'
+#'   \item{\code{X}}{Original training input matrix.}
+#'   \item{\code{Xnorm}}{Training input matrix normalized to \eqn{[0,1]^d}.}
+#'   \item{\code{Xbounds}}{Input bounds used for normalization.}
+#'   \item{\code{Y}}{Observed multinomial count matrix. Each row corresponds to
+#'     one training input and each column corresponds to one class.}
+#'
+#'   \item{\code{prior}}{Prior specification used in the TwinDKP posterior
+#'     update.}
+#'   \item{\code{r0}}{Prior precision parameter.}
+#'   \item{\code{p0}}{Prior class-probability vector used when
+#'     \code{prior = "fixed"}.}
+#'   \item{\code{alpha0}}{Prior Dirichlet concentration parameters evaluated at
+#'     the training locations.}
+#'   \item{\code{alpha_n}}{Posterior Dirichlet concentration parameters
+#'     evaluated at the training locations.}
+#'   \item{\code{prob}}{Posterior mean class-probability matrix, computed as
+#'     normalized rows of \code{alpha_n}.}
+#'
+#'   \item{\code{global_indices}}{One-based indices of the selected global
+#'     subset.}
+#'
+#'   \item{\code{control}}{A list of fitting controls and realized Twinning
+#'     settings, including \code{g_target}, \code{g}, \code{l}, \code{r},
+#'     \code{twins}, \code{u1}, \code{leaf_size}, \code{n_multi_start},
+#'     \code{n_threads}, and \code{store_kernel}.}
+#'
+#'   \item{\code{diagnostics}}{A list of diagnostic objects. It contains
+#'     \code{twin_info} from the C++ Twinning routine and, when
+#'     \code{store_kernel = TRUE}, dense matrices \code{K}, \code{K_global},
+#'     and \code{K_local}. When \code{store_kernel = FALSE}, these kernel
+#'     matrices are \code{NULL}.}
+#'
+#'   \item{\code{ess}}{The effective-sample-size calibration mode. TwinDKP
+#'     currently stores \code{"none"}.}
+#'   \item{\code{ess_info}}{Effective-sample-size diagnostic information.
+#'     Currently \code{NULL} for TwinDKP.}
+#' }
+#'
+#' @details The global subset is selected using
+#'   \code{twin_select_global_rcpp()}. For DKP, the augmented Twinning data is
+#'   fixed as \code{cbind(Xnorm, Y / rowSums(Y))}, so the global subset is
+#'   selected to represent both the normalized input distribution and the
+#'   empirical class-probability surface. The low-level Twinning compression
+#'   parameter, starting indices, and kd-tree leaf size are set internally from
+#'   \code{g} and \code{twins}. Local neighbours are selected using a kd-tree
+#'   over non-global training points via \pkg{nanoflann}.
+#'
+#'   Given a prediction location, TwinDKP restricts the Dirichlet posterior
+#'   pseudo-count aggregation to the union of the global subset and a local set
+#'   of nearest non-global neighbours. The global contribution uses
+#'   \code{global_kernel} and \code{theta_g}; the local contribution uses
+#'   \code{local_kernel} and \code{theta_l}. By default, posterior pseudo-counts
+#'   are aggregated row-wise and dense \eqn{n \times n} kernel matrices are not
+#'   stored. Fitting posterior aggregation is \eqn{O(n(g + l))}. Prediction at
+#'   \eqn{t} new input points is \eqn{O(t(\log n + g + l))} for fixed input
+#'   dimension. When \code{store_kernel = TRUE}, dense diagnostic matrices are
+#'   additionally stored and the memory cost increases to \eqn{O(n^2)} for
+#'   training-data posterior aggregation.
+#'
+#'   ESS calibration is currently available for full BKP and DKP models. TwinDKP
+#'   keeps the uncalibrated posterior update to preserve the intended scalable
+#'   global-local approximation.
+#'
+#' @seealso \code{\link{fit_DKP}} for the full DKP model,
+#'   \code{\link{fit_TwinBKP}} for the binomial TwinBKP analogue, and
+#'   \code{\link{predict.TwinDKP}}, \code{\link{plot.TwinDKP}},
+#'   \code{\link{simulate.TwinDKP}}, and \code{\link{summary.TwinDKP}} for
+#'   downstream workflows on fitted TwinDKP objects.
+#'
+#' @references Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
+#'   Kernel Process Modeling}. arXiv. \doi{10.48550/arXiv.2508.10447}
+#'
+#' Vakayil A, Joseph VR (2022). Data Twinning. \emph{Statistical Analysis and
+#'   Data Mining: The ASA Data Science Journal}, 15(5), 598--610.
+#'
+#' Vakayil A, Joseph VR (2024). A Global-Local Approximation Framework for
+#'   Large-Scale Gaussian Process Modeling. \emph{Technometrics}, 66(2),
+#'   295--305.
+#'
+#' Blanco JL, PK Rai (2014). nanoflann: a C++ header-only fork of FLANN,
+#'   a library for nearest neighbor (NN) with kd-trees.
+#'   \url{https://github.com/jlblancoc/nanoflann}
 #'
 #' @examples
-#' set.seed(2026)
-#' X <- matrix(seq(0, 1, length.out = 20), ncol = 1)
-#' P <- cbind(1 - X[, 1], rep(0.3, 20), X[, 1] + 0.1)
-#' P <- P / rowSums(P)
-#' Y <- t(vapply(seq_len(20), function(i) as.numeric(rmultinom(1, 8, P[i, ])), numeric(3)))
-#' fit_TwinDKP(X, Y, prior = "fixed", p0 = rep(1/3, 3), theta_g = 0.4,
-#'             theta_l = 0.3, g = 6, l = 4, twins = 1)
+#' #-------------------------- 1D Example ---------------------------
+#' set.seed(123)
+#'
+#' # Define true class probability function (3-class)
+#' true_pi_fun <- function(X) {
+#'   p1 <- 1/(1+exp(-3*X))
+#'   p2 <- (1 + exp(-X^2) * cos(10 * (1 - exp(-X)) / (1 + exp(-X)))) / 2
+#'   return(matrix(c(p1/2, p2/2, 1 - (p1+p2)/2), nrow = length(p1)))
+#' }
+#'
+#' n <- 1000
+#' Xbounds <- matrix(c(-2, 2), nrow = 1)
+#' X <- tgp::lhs(n = n, rect = Xbounds)
+#' true_pi <- true_pi_fun(X)
+#' m <- sample(150, n, replace = TRUE)
+#'
+#' # Generate multinomial responses
+#' Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
+#'
+#' # Fit TwinDKP model
+#' model1 <- fit_TwinDKP(X, Y, Xbounds = Xbounds)
+#' print(model1)
+#'
+#'
+#' #-------------------------- 2D Example ---------------------------
+#' set.seed(123)
+#'
+#' # Define latent function and transform to 3-class probabilities
+#' true_pi_fun <- function(X) {
+#'   if (is.null(nrow(X))) X <- matrix(X, nrow = 1)
+#'   m <- 8.6928; s <- 2.4269
+#'   x1 <- 4 * X[,1] - 2
+#'   x2 <- 4 * X[,2] - 2
+#'   a <- 1 + (x1 + x2 + 1)^2 *
+#'     (19 - 14*x1 + 3*x1^2 - 14*x2 + 6*x1*x2 + 3*x2^2)
+#'   b <- 30 + (2*x1 - 3*x2)^2 *
+#'     (18 - 32*x1 + 12*x1^2 + 48*x2 - 36*x1*x2 + 27*x2^2)
+#'   f <- (log(a*b)- m)/s
+#'   p1 <- pnorm(f) # Transform to probability
+#'   p2 <- sin(pi * X[,1]) * sin(pi * X[,2])
+#'   return(matrix(c(p1/2, p2/2, 1 - (p1+p2)/2), nrow = length(p1)))
+#' }
+#'
+#' n <- 1000
+#' Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
+#' X <- tgp::lhs(n = n, rect = Xbounds)
+#' true_pi <- true_pi_fun(X)
+#' m <- sample(150, n, replace = TRUE)
+#'
+#' # Generate multinomial responses
+#' Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
+#'
+#' # Fit TwinDKP model
+#' model2 <- fit_TwinDKP(X, Y, Xbounds = Xbounds)
+#' print(model2)
 #'
 #' @export
 fit_TwinDKP <- function(
@@ -31,7 +210,7 @@ fit_TwinDKP <- function(
     prior = c("noninformative", "fixed", "adaptive"),
     r0 = 2, p0 = NULL,
     global_kernel = c("gaussian", "matern52", "matern32", "wendland"),
-    local_kernel = c("wendland", "gaussian", "matern52", "matern32"),
+    local_kernel = c("wendland"),
     loss = c("brier", "log_loss"),
     n_multi_start = NULL,
     isotropic = TRUE,

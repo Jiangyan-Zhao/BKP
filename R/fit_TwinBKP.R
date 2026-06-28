@@ -532,6 +532,8 @@ fit_TwinBKP <- function(
       twins = twins,
       u1 = u1,
       leaf_size = leaf_size,
+      n_multi_start = n_multi_start,
+      n_threads = n_threads,
       store_kernel = store_kernel
     ),
 
