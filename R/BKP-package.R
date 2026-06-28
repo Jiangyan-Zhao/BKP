@@ -8,14 +8,14 @@
 #'   nonparametric modeling of binary/binomial and categorical/multinomial
 #'   response data using the Beta Kernel Process (BKP), the Dirichlet Kernel
 #'   Process (DKP), and scalable twinning-based approximations such as
-#'   TwinBKP. These methods estimate latent probability surfaces through
+#'   TwinBKP and TwinDKP. These methods estimate latent probability surfaces through
 #'   localized kernel smoothing with conjugate posterior updates.
 #'
 #'   The package offers functionality for model fitting, posterior inference
 #'   with uncertainty quantification, simulation of posterior draws, and
 #'   visualization in one- and two-dimensional input spaces. It also supports
 #'   flexible prior specification, kernel selection, hyperparameter tuning, and
-#'   global-local approximation for scalable BKP modeling.
+#'   global-local approximation for scalable BKP and DKP modeling.
 #'
 #' @section Main Functions: Core functionality is organized as follows:
 #' \describe{
@@ -34,20 +34,20 @@
 #'     Generate posterior draws of latent success probabilities or class
 #'     probability vectors from fitted models.
 #'   }
-#'   \item{\code{\link{plot.BKP}}, \code{\link{plot.DKP}}, \code{\link{plot.TwinBKP}}}{
+#'   \item{\code{\link{plot.BKP}}, \code{\link{plot.DKP}}, \code{\link{plot.TwinBKP}}, \code{\link{plot.TwinDKP}}}{
 #'     Visualize model predictions and associated uncertainty in one- and
 #'     two-dimensional input spaces. For inputs with more than two dimensions,
 #'     users can select one or two dimensions to display via the \code{dims}
-#'     argument. TwinBKP plots can optionally highlight the selected global
+#'     argument. TwinBKP and TwinDKP plots can optionally highlight the selected global
 #'     subset.
 #'   }
-#'   \item{\code{\link{summary.BKP}}, \code{\link{summary.DKP}}, \code{\link{summary.TwinBKP}},
-#'         \code{\link{print.BKP}}, \code{\link{print.DKP}}, \code{\link{print.TwinBKP}}}{
+#'   \item{\code{\link{summary.BKP}}, \code{\link{summary.DKP}}, \code{\link{summary.TwinBKP}}, \code{\link{summary.TwinDKP}},
+#'         \code{\link{print.BKP}}, \code{\link{print.DKP}}, \code{\link{print.TwinBKP}}, \code{\link{print.TwinDKP}}}{
 #'     Summarize or print fitted model objects and associated results.
 #'   }
-#'   \item{\code{\link{fitted.BKP}}, \code{\link{fitted.DKP}}, \code{\link{fitted.TwinBKP}},
+#'   \item{\code{\link{fitted.BKP}}, \code{\link{fitted.DKP}}, \code{\link{fitted.TwinBKP}}, \code{\link{fitted.TwinDKP}},
 #'         \code{\link{parameter}}, \code{\link{quantile.BKP}},
-#'         \code{\link{quantile.DKP}}, \code{\link{quantile.TwinBKP}}}{
+#'         \code{\link{quantile.DKP}}, \code{\link{quantile.TwinBKP}}, \code{\link{quantile.TwinDKP}}}{
 #'     Extract fitted posterior means, model parameters, and posterior quantiles.
 #'   }
 #' }

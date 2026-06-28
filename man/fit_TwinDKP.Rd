@@ -11,17 +11,18 @@ fit_TwinDKP(
   prior = c("noninformative", "fixed", "adaptive"),
   r0 = 2,
   p0 = NULL,
-  theta_g = NULL,
-  theta_l = NULL,
   global_kernel = c("gaussian", "matern52", "matern32", "wendland"),
   local_kernel = c("wendland", "gaussian", "matern52", "matern32"),
-  isotropic = TRUE,
   loss = c("brier", "log_loss"),
+  n_multi_start = NULL,
+  isotropic = TRUE,
+  n_threads = 1,
+  theta_g = NULL,
+  theta_l = NULL,
   g = NULL,
   l = NULL,
-  twins = 1,
-  store_kernel = FALSE,
-  control = list()
+  twins = 5,
+  store_kernel = FALSE
 )
 }
 \arguments{
@@ -46,18 +47,22 @@ default bounds \eqn{[0,1]^d} are applied.}
 Defaults to the empirical class proportions \code{colMeans(Y / rowSums(Y))}.
 It must be a nonnegative finite numeric vector of length \eqn{q} and sum to 1.}
 
-\item{theta_g}{Optional positive global kernel lengthscale(s).}
-
-\item{theta_l}{Optional positive local kernel range.}
-
 \item{global_kernel, local_kernel}{Kernel functions for global and local components.}
+
+\item{loss}{Loss function for kernel hyperparameter tuning: \code{"brier"}
+(default) or \code{"log_loss"}.}
+
+\item{n_multi_start}{Optional number of multi-start initial points for global DKP hyperparameter tuning.}
 
 \item{isotropic}{Logical. If \code{TRUE} (default), optimize/use a single
 shared lengthscale across dimensions. If \code{FALSE}, use separate
 per-dimension lengthscales.}
 
-\item{loss}{Loss function for kernel hyperparameter tuning: \code{"brier"}
-(default) or \code{"log_loss"}.}
+\item{n_threads}{Number of threads used for global DKP hyperparameter tuning.}
+
+\item{theta_g}{Optional positive global kernel lengthscale(s).}
+
+\item{theta_l}{Optional positive local kernel range.}
 
 \item{g}{Target global subset size.}
 
@@ -66,8 +71,6 @@ per-dimension lengthscales.}
 \item{twins}{Number of Twinning runs.}
 
 \item{store_kernel}{Store dense diagnostic kernels.}
-
-\item{control}{Optional list with \code{n_multi_start} and \code{n_threads}.}
 }
 \value{
 A \code{TwinDKP} object.
