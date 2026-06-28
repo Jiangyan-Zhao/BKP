@@ -9,9 +9,10 @@
 #' @param global_kernel,local_kernel Kernel functions for global and local components.
 #' @param g Target global subset size.
 #' @param l Number of local non-global neighbours.
+#' @param n_multi_start Optional number of multi-start initial points for global DKP hyperparameter tuning.
+#' @param n_threads Number of threads used for global DKP hyperparameter tuning.
 #' @param twins Number of Twinning runs.
 #' @param store_kernel Store dense diagnostic kernels.
-#' @param control Optional list with `n_multi_start` and `n_threads`.
 #'
 #' @return A `TwinDKP` object.
 #'
@@ -29,17 +30,18 @@ fit_TwinDKP <- function(
     X, Y, Xbounds = NULL,
     prior = c("noninformative", "fixed", "adaptive"),
     r0 = 2, p0 = NULL,
-    theta_g = NULL,
-    theta_l = NULL,
     global_kernel = c("gaussian", "matern52", "matern32", "wendland"),
     local_kernel = c("wendland", "gaussian", "matern52", "matern32"),
-    isotropic = TRUE,
     loss = c("brier", "log_loss"),
+    n_multi_start = NULL,
+    isotropic = TRUE,
+    n_threads = 1,
+    theta_g = NULL,
+    theta_l = NULL,
     g = NULL,
     l = NULL,
-    twins = 1,
-    store_kernel = FALSE,
-    control = list()
+    twins = 5,
+    store_kernel = FALSE
 ) {
   # ---- Argument checking ----
   if (missing(X) || missing(Y)) {
@@ -86,10 +88,6 @@ fit_TwinDKP <- function(
   if (any(!is.finite(X)) || any(!is.finite(Y))) {
     stop("'X' and 'Y' must contain only finite values.")
   }
-  if ("ess" %in% names(control)) {
-    stop("TwinDKP does not support ESS calibration; use fit_DKP(ess = ...) for full DKP ESS support.")
-  }
-
   # ---- Prior, kernels, and loss ----
   prior <- match.arg(prior)
   global_kernel <- match.arg(global_kernel)
@@ -112,17 +110,18 @@ fit_TwinDKP <- function(
     stop("'isotropic' must be a single logical value.")
   }
 
-  n_multi_start <- control$n_multi_start
-  n_threads <- if (is.null(control$n_threads)) 1 else control$n_threads
-
-  if (!is.null(n_multi_start) &&
-      (!is.numeric(n_multi_start) || length(n_multi_start) != 1 ||
-       is.na(n_multi_start) || !is.finite(n_multi_start) ||
-       n_multi_start <= 0 || n_multi_start != floor(n_multi_start))) {
-    stop("'n_multi_start' must be a positive integer.")
+  if (!is.null(n_multi_start)) {
+    if (!is.numeric(n_multi_start) || length(n_multi_start) != 1 ||
+        is.na(n_multi_start) || !is.finite(n_multi_start) ||
+        n_multi_start <= 0 || n_multi_start != floor(n_multi_start)) {
+      stop("'n_multi_start' must be a positive integer.")
+    }
+    n_multi_start <- as.integer(n_multi_start)
   }
+
   if (!is.numeric(n_threads) || length(n_threads) != 1 ||
-      is.na(n_threads) || !is.finite(n_threads) || n_threads <= 0) {
+      is.na(n_threads) || !is.finite(n_threads) || n_threads <= 0 ||
+      n_threads != floor(n_threads)) {
     stop("'n_threads' must be a positive integer.")
   }
   if (!is.null(theta_g)) {
@@ -265,7 +264,7 @@ fit_TwinDKP <- function(
       n_multi_start = n_multi_start,
       theta = NULL,
       isotropic = isotropic,
-      n_threads = as.integer(n_threads),
+      n_threads = n_threads,
       ess = "none"
     )
     theta_g <- as.numeric(global_fit$theta_opt)
@@ -343,6 +342,8 @@ fit_TwinDKP <- function(
       twins = twins,
       u1 = u1,
       leaf_size = leaf_size,
+      n_multi_start = n_multi_start,
+      n_threads = n_threads,
       store_kernel = store_kernel
     ),
     diagnostics = list(

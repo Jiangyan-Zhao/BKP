@@ -13,7 +13,20 @@ test_that("fit_TwinDKP validates inputs", {
   badY <- fx$Y
   badY[1, 1] <- -1
   expect_error(fit_TwinDKP(fx$X, badY, theta_g = .4, theta_l = .3, g = 10, l = 5), "nonnegative")
-  expect_error(fit_TwinDKP(fx$X, fx$Y, theta_g = .4, theta_l = .3, g = 10, l = 5, control = list(ess = "shepard")), "does not support ESS")
+  expect_error(
+    fit_TwinDKP(
+      fx$X, fx$Y, theta_g = .4, theta_l = .3, g = 10, l = 5,
+      n_multi_start = 0
+    ),
+    "n_multi_start"
+  )
+  expect_error(
+    fit_TwinDKP(
+      fx$X, fx$Y, theta_g = .4, theta_l = .3, g = 10, l = 5,
+      n_threads = 0
+    ),
+    "n_threads"
+  )
 })
 
 .twindkp_dense_reference <- function(Xquery_norm, Xtrain_norm, Y, g_indices, local_indices,
@@ -78,8 +91,22 @@ test_that("fit_TwinDKP supports priors, anisotropy, l=0, diagnostics, and optimi
   expect_null(fit_nodiag$diagnostics$K_global)
   expect_null(fit_nodiag$diagnostics$K_local)
 
-  smoke <- fit_TwinDKP(fx$X[1:12,, drop = FALSE], fx$Y[1:12, ], prior = "fixed", p0 = c(0, 0.5, 0.5), theta_g = NULL, theta_l = .3, g = 5, l = 2, twins = 1, control = list(n_multi_start = 1, n_threads = 1))
+  smoke <- fit_TwinDKP(
+    fx$X[1:12, , drop = FALSE],
+    fx$Y[1:12, ],
+    prior = "fixed",
+    p0 = c(0, 0.5, 0.5),
+    theta_g = NULL,
+    theta_l = .3,
+    g = 5,
+    l = 2,
+    twins = 1,
+    n_multi_start = 1,
+    n_threads = 1
+  )
   expect_s3_class(smoke, "TwinDKP")
+  expect_equal(smoke$control$n_multi_start, 1L)
+  expect_equal(smoke$control$n_threads, 1L)
 })
 
 test_that("fit_TwinDKP validates fixed p0 consistently", {
