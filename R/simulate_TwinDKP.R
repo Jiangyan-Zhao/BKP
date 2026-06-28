@@ -35,13 +35,22 @@ simulate.TwinDKP <- function(object, nsim = 1, seed = NULL,
     paste0("Class", seq_len(q)),
     paste0("sim", seq_len(nsim))
   )
+  class_pred <- NULL
+  if (all(rowSums(object$Y) == 1)) {
+    class_pred <- matrix(NA_integer_, nrow = n_new, ncol = nsim)
+    for (i in seq_len(nsim)) {
+      class_pred[, i] <- max.col(samples[, , i])
+    }
+  }
+
   out <- list(
     samples = samples,
     mean = alpha_n / rowSums(alpha_n),
-    class = apply(samples, 3, max.col),
+    class = class_pred,
     X = object$X,
     Xnew = Xnew,
-    ess = "none"
+    ess = "none",
+    ess_info = NULL
   )
   class(out) <- "simulate_TwinDKP"
   out
