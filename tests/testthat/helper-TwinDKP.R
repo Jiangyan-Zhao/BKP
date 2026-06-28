@@ -6,7 +6,8 @@ make_twindkp_data <- function() {
   eta2 <- 0.2 + X[, 1]
   eta3 <- -0.5 + 1.5 * X[, 1]
   E <- cbind(eta1, eta2, eta3)
-  P <- exp(E); P <- P / rowSums(P)
+  P <- exp(E)
+  P <- P / rowSums(P)
   m <- rep(12, n)
   Y <- t(vapply(seq_len(n), function(i) as.numeric(rmultinom(1, size = m[i], prob = P[i, ])), numeric(3)))
   list(X = X, Y = Y)

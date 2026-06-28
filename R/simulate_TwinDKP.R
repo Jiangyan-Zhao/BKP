@@ -28,7 +28,7 @@ simulate.TwinDKP <- function(object, nsim = 1, seed = NULL,
   q <- ncol(alpha_n)
   samples <- array(0, c(n_new, q, as.integer(nsim)))
   for (i in seq_len(n_new)) {
-    samples[i,,] <- t(rdirichlet(as.integer(nsim), alpha_n[i, ]))
+    samples[i, , ] <- t(rdirichlet(as.integer(nsim), alpha_n[i, ]))
   }
   dimnames(samples) <- list(
     paste0("x", seq_len(n_new)),
@@ -41,7 +41,8 @@ simulate.TwinDKP <- function(object, nsim = 1, seed = NULL,
     class = apply(samples, 3, max.col),
     X = object$X,
     Xnew = Xnew,
-    ess = "none")
+    ess = "none"
+  )
   class(out) <- "simulate_TwinDKP"
   out
 }
