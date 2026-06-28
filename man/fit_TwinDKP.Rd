@@ -25,28 +25,56 @@ fit_TwinDKP(
 )
 }
 \arguments{
-\item{X}{Numeric input matrix or data frame.}
-\item{Y}{Numeric matrix of observed multinomial counts, with dimension \eqn{n \times q}.}
-\item{Xbounds}{Optional normalization bounds with one row per input dimension.}
-\item{prior}{Prior specification: \code{"noninformative"}, \code{"fixed"}, or \code{"adaptive"}.}
-\item{r0}{Positive prior precision parameter.}
-\item{p0}{Prior mean vector used when \code{prior = "fixed"}.}
+\item{X}{A numeric input matrix of size \eqn{n \times d}, where each row
+corresponds to a covariate vector.}
+
+\item{Y}{Numeric matrix of observed multinomial counts, with dimension
+\eqn{n \times q}.}
+
+\item{Xbounds}{Optional \eqn{d \times 2} matrix specifying the lower and
+upper bounds of each input dimension. Used to normalize inputs to
+\eqn{[0,1]^d}. If \code{NULL}, inputs are assumed to be pre-normalized, and
+default bounds \eqn{[0,1]^d} are applied.}
+
+\item{prior}{Type of prior: \code{"noninformative"} (default),
+\code{"fixed"}, or \code{"adaptive"}.}
+
+\item{r0}{Global prior precision (used when \code{prior = "fixed"} or
+\code{"adaptive"}).}
+
+\item{p0}{Global prior mean vector used only when \code{prior = "fixed"}.
+Defaults to the empirical class proportions \code{colMeans(Y / rowSums(Y))}.
+It must be a nonnegative finite numeric vector of length \eqn{q} and sum to 1.}
+
 \item{theta_g}{Optional positive global kernel lengthscale(s).}
+
 \item{theta_l}{Optional positive local kernel range.}
+
 \item{global_kernel, local_kernel}{Kernel functions for global and local components.}
-\item{isotropic}{Logical; whether the global kernel uses a shared lengthscale.}
-\item{loss}{Loss function used when tuning \code{theta_g}.}
+
+\item{isotropic}{Logical. If \code{TRUE} (default), optimize/use a single
+shared lengthscale across dimensions. If \code{FALSE}, use separate
+per-dimension lengthscales.}
+
+\item{loss}{Loss function for kernel hyperparameter tuning: \code{"brier"}
+(default) or \code{"log_loss"}.}
+
 \item{g}{Target global subset size.}
+
 \item{l}{Number of local non-global neighbours.}
+
 \item{twins}{Number of Twinning runs.}
-\item{store_kernel}{Logical; store dense diagnostic kernels.}
-\item{control}{Optional list with \code{n_multi_start} and \code{n_threads}. ESS calibration is not supported by TwinDKP.}
-}
-\description{
-Fits a scalable global-local approximation to \code{\link[=fit_DKP]{fit_DKP()}} for categorical or multinomial count responses.
+
+\item{store_kernel}{Store dense diagnostic kernels.}
+
+\item{control}{Optional list with \code{n_multi_start} and \code{n_threads}.}
 }
 \value{
 A \code{TwinDKP} object.
+}
+\description{
+Fits a scalable global-local approximation to \code{\link[=fit_DKP]{fit_DKP()}} for categorical or
+multinomial count responses.
 }
 \examples{
 set.seed(2026)
@@ -56,4 +84,5 @@ P <- P / rowSums(P)
 Y <- t(vapply(seq_len(20), function(i) as.numeric(rmultinom(1, 8, P[i, ])), numeric(3)))
 fit_TwinDKP(X, Y, prior = "fixed", p0 = rep(1/3, 3), theta_g = 0.4,
             theta_l = 0.3, g = 6, l = 4, twins = 1)
+
 }

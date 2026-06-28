@@ -204,7 +204,7 @@ fit_DKP <- function(
   if (prior == "fixed") {
     if (is.null(p0) || !is.numeric(p0) || length(p0) != q ||
         anyNA(p0) || any(!is.finite(p0)) ||
-        any(p0 <= 0) || abs(sum(p0) - 1) > 1e-10) {
+        any(p0 < 0) || abs(sum(p0) - 1) > 1e-10) {
       stop("For fixed prior in DKP, 'p0' must be a nonnegative finite numeric vector of length equal to the number of classes and sum to 1.")
     }
   }

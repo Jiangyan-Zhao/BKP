@@ -20,18 +20,18 @@ global-local approximation for scalable BKP modeling.
 \section{Main Functions}{
  Core functionality is organized as follows:
 \describe{
-\item{\code{\link{fit_BKP}}, \code{\link{fit_DKP}}, \code{\link{fit_TwinBKP}}}{
-Fit BKP, DKP, or TwinBKP models to binomial or multinomial response data.
-TwinBKP provides a scalable global-local approximation to BKP using a
-twinning-selected global subset and local nearest-neighbour updates.
+\item{\code{\link{fit_BKP}}, \code{\link{fit_DKP}}, \code{\link{fit_TwinBKP}}, \code{\link{fit_TwinDKP}}}{
+Fit BKP, DKP, TwinBKP, or TwinDKP models to binomial or multinomial response data.
+TwinBKP and TwinDKP provide scalable global-local approximations using
+twinning-selected global subsets and local nearest-neighbour updates.
 }
-\item{\code{\link{predict.BKP}}, \code{\link{predict.DKP}}, \code{\link{predict.TwinBKP}}}{
+\item{\code{\link{predict.BKP}}, \code{\link{predict.DKP}}, \code{\link{predict.TwinBKP}}, \code{\link{predict.TwinDKP}}}{
 Perform posterior inference at new input locations, including posterior
 means, variances, and credible intervals. For single-trial binary or
 categorical responses, predicted class labels are returned where
 applicable.
 }
-\item{\code{\link{simulate.BKP}}, \code{\link{simulate.DKP}}, \code{\link{simulate.TwinBKP}}}{
+\item{\code{\link{simulate.BKP}}, \code{\link{simulate.DKP}}, \code{\link{simulate.TwinBKP}}, \code{\link{simulate.TwinDKP}}}{
 Generate posterior draws of latent success probabilities or class
 probability vectors from fitted models.
 }

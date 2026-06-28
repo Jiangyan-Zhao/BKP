@@ -12,7 +12,9 @@
 #' @param twins Number of Twinning runs.
 #' @param store_kernel Store dense diagnostic kernels.
 #' @param control Optional list with `n_multi_start` and `n_threads`.
+#'
 #' @return A `TwinDKP` object.
+#'
 #' @examples
 #' set.seed(2026)
 #' X <- matrix(seq(0, 1, length.out = 20), ncol = 1)
@@ -21,6 +23,7 @@
 #' Y <- t(vapply(seq_len(20), function(i) as.numeric(rmultinom(1, 8, P[i, ])), numeric(3)))
 #' fit_TwinDKP(X, Y, prior = "fixed", p0 = rep(1/3, 3), theta_g = 0.4,
 #'             theta_l = 0.3, g = 6, l = 4, twins = 1)
+#'
 #' @export
 fit_TwinDKP <- function(
     X, Y, Xbounds = NULL,
@@ -111,17 +114,20 @@ fit_TwinDKP <- function(
 }
 
 .twindkp_compute_posterior <- function(Xquery_norm, Xtrain_norm, Y, g_indices, local_indices, theta_g, theta_l, global_kernel, local_kernel, isotropic, prior, r0, p0, store_kernel = FALSE) {
-  t <- nrow(Xquery_norm); n <- nrow(Xtrain_norm); q <- ncol(Y)
-  Kg <- kernel_matrix(Xquery_norm, Xtrain_norm[g_indices,,drop=FALSE], theta_g, global_kernel, isotropic)
-  Kfull_g <- matrix(0, t, n); Kfull_g[, g_indices] <- Kg
-  Kfull_l <- matrix(0, t, n)
-  if (ncol(local_indices) > 0L) for (i in seq_len(t)) {
-    idx <- local_indices[i, ]; idx <- idx[idx > 0]
-    if (length(idx)) Kfull_l[i, idx] <- kernel_matrix(Xquery_norm[i,,drop=FALSE], Xtrain_norm[idx,,drop=FALSE], theta_l, local_kernel, TRUE)
-  }
-  K <- Kfull_g + Kfull_l
-  alpha0 <- get_prior(prior = prior, model = "DKP", r0 = r0, p0 = p0, Y = Y, K = K)
-  alpha_n <- alpha0 + K %*% Y
-  prob <- alpha_n / rowSums(alpha_n)
-  list(alpha0 = alpha0, alpha_n = alpha_n, prob = prob, K = if (store_kernel) K else NULL, K_global = if (store_kernel) Kfull_g else NULL, K_local = if (store_kernel) Kfull_l else NULL)
+  twin_dkp_posterior_rcpp(
+    Xquery_norm = Xquery_norm,
+    Xtrain_norm = Xtrain_norm,
+    Y = Y,
+    g_indices = as.integer(g_indices),
+    local_indices = local_indices,
+    theta_g = as.numeric(theta_g),
+    theta_l = as.numeric(theta_l),
+    global_kernel = global_kernel,
+    local_kernel = local_kernel,
+    isotropic = isTRUE(isotropic),
+    prior = prior,
+    r0 = r0,
+    p0 = as.numeric(p0),
+    store_kernel = store_kernel
+  )
 }

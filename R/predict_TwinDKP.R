@@ -3,7 +3,7 @@
 #' @export
 #' @method predict TwinDKP
 predict.TwinDKP <- function(object, Xnew = NULL, CI_level = 0.95,
-                            type = c("probability", "class", "count"),
+                            type = c("probability", "count"),
                             Mnew = NULL, ...) {
   d <- ncol(object$X); type <- match.arg(type)
   if (!is.null(Xnew)) {
@@ -24,17 +24,43 @@ predict.TwinDKP <- function(object, Xnew = NULL, CI_level = 0.95,
     local_indices <- twin_local_indices_rcpp(object$Xnorm, Xnew_norm, object$global_indices, object$control$l, if (is.null(object$control$leaf_size)) 8L else object$control$leaf_size)
     alpha_n <- .twindkp_compute_posterior(Xnew_norm, object$Xnorm, object$Y, object$global_indices, local_indices, object$theta_g, object$theta_l, object$global_kernel, object$local_kernel, object$isotropic, object$prior, object$r0, object$p0, FALSE)$alpha_n
   }
-  alpha_n <- as.matrix(alpha_n); A <- rowSums(alpha_n); Amat <- matrix(A, nrow(alpha_n), ncol(alpha_n)); beta_n <- Amat - alpha_n
+  alpha_n <- as.matrix(alpha_n)
+  if (anyNA(alpha_n) || any(!is.finite(alpha_n)) || any(alpha_n <= 0)) {
+    stop("Posterior concentration parameters 'alpha_n' must be positive and finite.")
+  }
+  A <- rowSums(alpha_n)
+  if (anyNA(A) || any(!is.finite(A)) || any(A <= 0)) {
+    stop("Posterior concentration row sums must be positive and finite.")
+  }
+  Amat <- matrix(A, nrow(alpha_n), ncol(alpha_n)); beta_n <- Amat - alpha_n
   prob_mean <- alpha_n / Amat; prob_var <- prob_mean * (1 - prob_mean) / (Amat + 1)
   class_names <- paste0("class", seq_len(ncol(alpha_n)))
-  if (type == "class") return(structure(max.col(prob_mean), class = "predict_TwinDKP_class"))
-  if (type == "probability") { pred_mean <- prob_mean; pred_var <- prob_var; pred_lower <- qbeta((1 - CI_level) / 2, alpha_n, beta_n); pred_upper <- qbeta((1 + CI_level) / 2, alpha_n, beta_n) } else {
+  if (type == "probability") {
+    pred_mean <- prob_mean
+    pred_var <- prob_var
+    pred_lower <- qbeta((1 - CI_level) / 2, alpha_n, beta_n)
+    pred_upper <- qbeta((1 + CI_level) / 2, alpha_n, beta_n)
+  } else {
     Mmat <- matrix(Mnew, nrow(alpha_n), ncol(alpha_n)); pred_mean <- Mmat * prob_mean; pred_var <- Mmat * (Amat + Mmat) * prob_var
     pred_lower <- matrix(qbetabinom_rcpp((1 - CI_level) / 2, as.vector(Mmat), as.vector(alpha_n), as.vector(beta_n)), nrow(alpha_n), ncol(alpha_n))
     pred_upper <- matrix(qbetabinom_rcpp((1 + CI_level) / 2, as.vector(Mmat), as.vector(alpha_n), as.vector(beta_n)), nrow(alpha_n), ncol(alpha_n))
   }
   colnames(pred_mean) <- colnames(pred_var) <- colnames(pred_lower) <- colnames(pred_upper) <- class_names
-  out <- list(X = object$X, Xnew = Xnew, alpha_n = alpha_n, mean = pred_mean, variance = pred_var, lower = pred_lower, upper = pred_upper, CI_level = CI_level, type = type, class = max.col(prob_mean), ess = "none")
+  out <- list(
+    X = object$X,
+    Xnew = Xnew,
+    alpha_n = alpha_n,
+    mean = pred_mean,
+    variance = pred_var,
+    lower = pred_lower,
+    upper = pred_upper,
+    CI_level = CI_level,
+    type = type,
+    class = max.col(prob_mean),
+    ess = "none"
+  )
+
   if (type == "count") out$Mnew <- Mnew
-  class(out) <- "predict_TwinDKP"; out
+  class(out) <- "predict_TwinDKP"
+  out
 }
