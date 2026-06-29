@@ -40,8 +40,8 @@
 #'   \item{\code{prior}}{Type of prior used.}
 #'   \item{\code{r0}}{Prior precision parameter.}
 #'   \item{\code{p0}}{Prior mean (for fixed priors).}
-#'   \item{\code{alpha0}}{Prior Dirichlet parameters at each input location (scalar or matrix).}
-#'   \item{\code{alpha_n}}{Posterior Dirichlet parameters after kernel smoothing.}
+#'   \item{\code{alpha0}}{Prior Dirichlet concentration parameters evaluated at the training locations.}
+#'   \item{\code{alpha_n}}{Posterior Dirichlet concentration parameters evaluated at the training locations.}
 #' }
 #'
 #' @details Inputs are normalized to \eqn{[0,1]^d} using \code{Xbounds}. For a
@@ -53,6 +53,10 @@
 #'   \code{ess = "shepard"}, only the kernel-weighted class-count contribution
 #'   is rescaled to match the local effective-sample-size target; the prior
 #'   parameters are not rescaled.
+#'
+#'   The returned object stores posterior parameters evaluated at the training
+#'   inputs; posterior inference at new inputs is performed by the corresponding
+#'   \code{predict()} method.
 #'
 #' @seealso \code{\link{fit_BKP}} for modeling binomial responses via the Beta
 #'   Kernel Process, and \code{\link{fit_TwinDKP}} for the scalable global-local

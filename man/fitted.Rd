@@ -7,7 +7,7 @@
 \alias{fitted.DKP}
 \alias{fitted.TwinBKP}
 \alias{fitted.TwinDKP}
-\title{Extract BKP, DKP, or TwinBKP Model Fitted Values}
+\title{Extract Fitted Posterior Means from BKP Model Objects}
 \usage{
 \method{fitted}{BKP}(object, ...)
 
@@ -18,34 +18,38 @@
 \method{fitted}{TwinDKP}(object, ...)
 }
 \arguments{
-\item{object}{An object of class \code{BKP}, \code{DKP}, or
-\code{TwinBKP}, typically returned by \code{\link{fit_BKP}},
-\code{\link{fit_DKP}}, or \code{\link{fit_TwinBKP}}.}
+\item{object}{A fitted model object of class \code{BKP}, \code{DKP},
+\code{TwinBKP}, or \code{TwinDKP}, typically returned by
+\code{\link{fit_BKP}}, \code{\link{fit_DKP}},
+\code{\link{fit_TwinBKP}}, or \code{\link{fit_TwinDKP}}.}
 
-\item{...}{Additional arguments (currently unused).}
+\item{...}{Additional arguments. Currently unused.}
 }
 \value{
-A numeric vector for \code{BKP} and \code{TwinBKP}, or a numeric
-matrix for \code{DKP}, containing posterior mean estimates at the
-training inputs.
+For \code{BKP} and \code{TwinBKP} objects, a numeric vector
+containing posterior mean success probabilities at the training inputs.
+For \code{DKP} and \code{TwinDKP} objects, a numeric matrix containing
+posterior mean class probabilities at the training inputs, with one row per
+training input and one column per class.
 }
 \description{
-Compute posterior fitted values from a fitted \code{BKP},
-\code{DKP}, or \code{TwinBKP} object. For \code{BKP} and
-\code{TwinBKP} objects, this returns the posterior mean probability of
-the positive class. For a \code{DKP} object, this returns the posterior
-mean probabilities for each class.
+Extract posterior fitted values from fitted \code{BKP},
+\code{DKP}, \code{TwinBKP}, or \code{TwinDKP} model objects. For
+\code{BKP} and \code{TwinBKP} objects, this returns the posterior mean
+success probability at each training input. For \code{DKP} and
+\code{TwinDKP} objects, this returns the posterior mean class-probability
+vector at each training input.
 }
 \details{
-For \code{BKP} and \code{TwinBKP} models, the fitted values
-correspond to the posterior mean probability of the positive class,
-computed from the corresponding Beta posterior. For a \code{DKP} model,
-the fitted values correspond to the posterior mean probabilities for each
-class, derived from the posterior Dirichlet distribution of the class
-probabilities.
+The \code{fitted()} method extracts posterior means already stored
+in the fitted model object. For \code{BKP} and \code{TwinBKP}, the fitted
+value at a training input is computed from the corresponding Beta posterior
+shape parameters. For \code{DKP} and \code{TwinDKP}, fitted values are
+obtained by normalizing the corresponding Dirichlet posterior concentration
+parameters across classes.
 }
 \examples{
-# -------------------------- BKP ---------------------------
+# -------------------------- BKP and TwinBKP ---------------------------
 set.seed(123)
 
 # Define true success probability function
@@ -66,9 +70,22 @@ model <- fit_BKP(X, y, m, Xbounds = Xbounds)
 # Extract fitted values
 fitted(model)
 
-# -------------------------- DKP ---------------------------
-set.seed(123)
+\dontrun{
+# Larger TwinBKP example
+n <- 1000
+X <- tgp::lhs(n = n, rect = Xbounds)
+true_pi <- true_pi_fun(X)
+m <- sample(100, n, replace = TRUE)
+y <- rbinom(n, size = m, prob = true_pi)
 
+# Fit TwinBKP model
+model <- fit_TwinBKP(X, y, m, Xbounds = Xbounds)
+
+# Extract fitted values
+fitted(model)
+}
+
+# -------------------------- DKP and TwinDKP ---------------------------
 # Define true class probability function (3-class)
 true_pi_fun <- function(X) {
   p1 <- 1/(1+exp(-3*X))
@@ -91,31 +108,32 @@ model <- fit_DKP(X, Y, Xbounds = Xbounds)
 # Extract fitted values
 fitted(model)
 
-# -------------------------- TwinBKP ---------------------------
-set.seed(123)
-
-# Define true success probability function
-true_pi_fun <- function(x) {
-  (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
-}
-
+\dontrun{
+# Larger TwinDKP example
 n <- 1000
-Xbounds <- matrix(c(-2, 2), nrow = 1)
 X <- tgp::lhs(n = n, rect = Xbounds)
 true_pi <- true_pi_fun(X)
-m <- sample(100, n, replace = TRUE)
-y <- rbinom(n, size = m, prob = true_pi)
+m <- sample(150, n, replace = TRUE)
 
-# Fit TwinBKP model
-model <- fit_TwinBKP(X, y, m, Xbounds = Xbounds)
+# Generate multinomial responses
+Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
+
+# Fit TwinDKP model
+model <- fit_TwinDKP(X, Y, Xbounds = Xbounds)
 
 # Extract fitted values
 fitted(model)
+}
 
 }
 \references{
 Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
-Kernel Process Modeling}.  arXiv. \doi{10.48550/arXiv.2508.10447}
+Kernel Process Modeling}.  arXiv. \doi{10.48550/arXiv.2508.10447}.
+}
+\seealso{
+\code{\link{fit_BKP}}, \code{\link{fit_DKP}},
+\code{\link{fit_TwinBKP}}, and \code{\link{fit_TwinDKP}} for model
+fitting; \code{\link{predict}} for posterior prediction at new input locations.
 }
 \keyword{BKP}
 \keyword{DKP}

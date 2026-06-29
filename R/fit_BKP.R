@@ -83,6 +83,10 @@
 #'   kernel-weighted data contribution is rescaled to match the local
 #'   effective-sample-size target; the prior parameters are not rescaled.
 #'
+#'   The returned object stores posterior parameters evaluated at the training
+#'   inputs; posterior inference at new inputs is performed by the corresponding
+#'   \code{predict()} method.
+#'
 #' @seealso \code{\link{fit_DKP}} for modeling multinomial responses via the
 #'   Dirichlet Kernel Process, and \code{\link{fit_TwinBKP}} for the scalable
 #'   global-local TwinBKP approximation. \code{\link{predict.BKP}},

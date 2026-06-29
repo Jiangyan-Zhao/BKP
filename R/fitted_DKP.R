@@ -2,9 +2,7 @@
 #' @keywords DKP
 #'
 #' @examples
-#' # -------------------------- DKP ---------------------------
-#' set.seed(123)
-#'
+#' # -------------------------- DKP and TwinDKP ---------------------------
 #' # Define true class probability function (3-class)
 #' true_pi_fun <- function(X) {
 #'   p1 <- 1/(1+exp(-3*X))
@@ -26,6 +24,23 @@
 #'
 #' # Extract fitted values
 #' fitted(model)
+#'
+#' \dontrun{
+#' # Larger TwinDKP example
+#' n <- 1000
+#' X <- tgp::lhs(n = n, rect = Xbounds)
+#' true_pi <- true_pi_fun(X)
+#' m <- sample(150, n, replace = TRUE)
+#'
+#' # Generate multinomial responses
+#' Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
+#'
+#' # Fit TwinDKP model
+#' model <- fit_TwinDKP(X, Y, Xbounds = Xbounds)
+#'
+#' # Extract fitted values
+#' fitted(model)
+#' }
 #'
 #' @export
 #' @method fitted DKP

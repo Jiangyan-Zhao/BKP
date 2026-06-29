@@ -118,6 +118,10 @@ lengthscale parameters are selected by leave-one-out cross-validation using
 the specified loss function. If \code{ess = "shepard"}, only the
 kernel-weighted data contribution is rescaled to match the local
 effective-sample-size target; the prior parameters are not rescaled.
+
+The returned object stores posterior parameters evaluated at the training
+inputs; posterior inference at new inputs is performed by the corresponding
+\code{predict()} method.
 }
 \examples{
 #-------------------------- 1D Example ---------------------------
