@@ -404,5 +404,4 @@ plot.DKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL,
   }
 
   return(invisible(NULL))
-  # par(old_par)
 }

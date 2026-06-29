@@ -15,8 +15,8 @@
 #'   \code{\link{fit_BKP}}, \code{\link{fit_DKP}},
 #'   \code{\link{fit_TwinBKP}}, or \code{\link{fit_TwinDKP}}.
 #' @param only_mean Logical. If \code{TRUE}, only the predicted mean surface is
-#'   plotted for 2D inputs. This applies to BKP, DKP, and TwinBKP models.
-#'   Default is \code{FALSE}.
+#'   plotted for 2D inputs. This applies to BKP, DKP, TwinBKP, and TwinDKP
+#'   models. Default is \code{FALSE}.
 #' @param n_grid Positive integer specifying the number of grid points per
 #'   dimension for constructing the prediction grid. Larger values produce
 #'   smoother and more detailed surfaces, but increase computation time. Default
@@ -51,7 +51,7 @@
 #'
 #'   \item \strong{2D inputs:}
 #'     \itemize{
-#'       \item For BKP, DKP, and TwinBKP models, the function generates contour plots over a 2D prediction grid.
+#'       \item For BKP, DKP, TwinBKP, and TwinDKP models, the function generates contour plots over a 2D prediction grid.
 #'       \item Users can choose to plot only the predictive mean surface (\code{only_mean = TRUE}) or a set of four summary plots (\code{only_mean = FALSE}):
 #'         \enumerate{
 #'           \item Predictive mean
@@ -70,8 +70,9 @@
 #'     }
 #' }
 #'
-#' For \code{TwinBKP} objects, the plotting behavior is analogous to
-#' \code{BKP}, with optional highlighting of the selected global subset.
+#' For \code{TwinBKP} and \code{TwinDKP} objects, the plotting behavior is
+#' analogous to their full-model counterparts, with optional highlighting of
+#' the selected global subset.
 #'
 #' @seealso \code{\link{fit_BKP}}, \code{\link{fit_DKP}},
 #'   \code{\link{fit_TwinBKP}}, and \code{\link{fit_TwinDKP}} for model fitting;
@@ -103,7 +104,7 @@
 #' y <- rbinom(n, size = m, prob = true_pi)
 #'
 #' # Fit BKP model
-#' model1 <- fit_BKP(X, y, m, Xbounds=Xbounds)
+#' model1 <- fit_BKP(X, y, m, Xbounds = Xbounds)
 #'
 #' # Plot results
 #' plot(model1)
@@ -117,7 +118,7 @@
 #' y <- rbinom(n, size = m, prob = true_pi)
 #'
 #' # Fit TwinBKP model
-#' model1 <- fit_TwinBKP(X, y, m, Xbounds=Xbounds)
+#' model1 <- fit_TwinBKP(X, y, m, Xbounds = Xbounds)
 #'
 #' # Plot results
 #' plot(model1)
@@ -148,7 +149,7 @@
 #' y <- rbinom(n, size = m, prob = true_pi)
 #'
 #' # Fit BKP model
-#' model2 <- fit_BKP(X, y, m, Xbounds=Xbounds)
+#' model2 <- fit_BKP(X, y, m, Xbounds = Xbounds)
 #'
 #' # Plot results
 #' plot(model2)
@@ -162,7 +163,7 @@
 #' y <- rbinom(n, size = m, prob = true_pi)
 #'
 #' # Fit TwinBKP model
-#' model2 <- fit_TwinBKP(X, y, m, Xbounds=Xbounds)
+#' model2 <- fit_TwinBKP(X, y, m, Xbounds = Xbounds)
 #'
 #' # Plot results
 #' plot(model2)
@@ -421,4 +422,6 @@ plot.BKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL,
       }
     }
   }
+
+  return(invisible(NULL))
 }
