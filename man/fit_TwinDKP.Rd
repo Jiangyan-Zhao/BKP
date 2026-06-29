@@ -31,8 +31,9 @@ each row is an input or covariate vector.}
 
 \item{Y}{A numeric matrix or data frame of observed multinomial counts, with
 dimension \eqn{n \times q}. Each row corresponds to one input location and
-each column corresponds to one class. Entries must be nonnegative, and row
-sums represent the multinomial trial sizes.}
+each column corresponds to one class. Entries must be nonnegative,
+and each row must have a positive row sum.
+Row sums represent the multinomial trial sizes.}
 
 \item{Xbounds}{Optional \eqn{d \times 2} numeric matrix giving the lower and
 upper bounds of each input dimension. When supplied, \code{X} is normalized

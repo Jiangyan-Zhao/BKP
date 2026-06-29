@@ -92,7 +92,8 @@ test_that("fit_BKP handles input validation correctly", {
   # Test for NA values
   X_na <- X_test
   X_na[1, 1] <- NA
-  expect_error(fit_BKP(X = X_na, y = y_test, m = m_test), "Missing values are not allowed in 'X', 'y', or 'm'.")
+  expect_error(fit_BKP(X = X_na, y = y_test, m = m_test),
+               "Missing values are not allowed in 'X', 'y', or 'm'.")
 
   # Test Xbounds validation
   expect_error(fit_BKP(X = X_test, y = y_test, m = m_test, Xbounds = 1), "'Xbounds' must be a numeric matrix.")
@@ -112,8 +113,9 @@ test_that("fit_BKP returns a BKP object with correct structure and content", {
   expect_s3_class(model, "BKP")
   expect_true(is.list(model))
   expect_equal(names(model), c(
-    "theta_opt", "kernel", "isotropic", "loss", "loss_min", "ess", "ess_info",
-    "X", "Xnorm", "Xbounds", "y", "m", "prior", "r0", "p0", "alpha0", "beta0", "alpha_n", "beta_n"
+    "theta_opt", "kernel", "isotropic", "loss", "loss_min",
+    "X", "Xnorm", "Xbounds", "y", "m", "prior", "r0", "p0", "alpha0", "beta0",
+    "alpha_n", "beta_n", "ess", "ess_info"
   ))
 
   # Check content

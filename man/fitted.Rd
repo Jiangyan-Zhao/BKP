@@ -7,7 +7,7 @@
 \alias{fitted.DKP}
 \alias{fitted.TwinBKP}
 \alias{fitted.TwinDKP}
-\title{Extract Fitted Posterior Means from BKP Model Objects}
+\title{Extract Fitted Posterior Means from BKP Package Model Objects}
 \usage{
 \method{fitted}{BKP}(object, ...)
 

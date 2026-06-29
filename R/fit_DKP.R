@@ -10,8 +10,9 @@
 #' @inheritParams fit_BKP
 #' @param Y A numeric matrix or data frame of observed multinomial counts, with
 #'   dimension \eqn{n \times q}. Each row corresponds to one input location and
-#'   each column corresponds to one class. Entries must be nonnegative, and row
-#'   sums represent the multinomial trial sizes.
+#'   each column corresponds to one class. Entries must be nonnegative,
+#'   and each row must have a positive row sum.
+#'   Row sums represent the multinomial trial sizes.
 #' @param p0 Prior class-probability vector used when \code{prior = "fixed"}.
 #'   It must be a nonnegative finite numeric vector of length \eqn{q} and sum to
 #'   one. The default is the empirical class-proportion vector
@@ -130,8 +131,6 @@
 #'
 #'
 #' #-------------------------- 2D Example ---------------------------
-#' set.seed(123)
-#'
 #' # Define latent function and transform to 3-class probabilities
 #' true_pi_fun <- function(X) {
 #'   if (is.null(nrow(X))) X <- matrix(X, nrow = 1)

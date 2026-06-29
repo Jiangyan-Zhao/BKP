@@ -142,20 +142,18 @@
 #' }
 #'
 #' n <- 30
-#' Xbounds <- matrix(c(-2,2), nrow=1)
+#' Xbounds <- matrix(c(-2,2), nrow = 1)
 #' X <- tgp::lhs(n = n, rect = Xbounds)
 #' true_pi <- true_pi_fun(X)
 #' m <- sample(100, n, replace = TRUE)
 #' y <- rbinom(n, size = m, prob = true_pi)
 #'
 #' # Fit BKP model
-#' model1 <- fit_BKP(X, y, m, Xbounds=Xbounds)
+#' model1 <- fit_BKP(X, y, m, Xbounds = Xbounds)
 #' print(model1)
 #'
 #'
 #' #-------------------------- 2D Example ---------------------------
-#' set.seed(123)
-#'
 #' # Define 2D latent function and probability transformation
 #' true_pi_fun <- function(X) {
 #'   if(is.null(nrow(X))) X <- matrix(X, nrow=1)
@@ -180,7 +178,7 @@
 #' y <- rbinom(n, size = m, prob = true_pi)
 #'
 #' # Fit BKP model
-#' model2 <- fit_BKP(X, y, m, Xbounds=Xbounds)
+#' model2 <- fit_BKP(X, y, m, Xbounds = Xbounds)
 #' print(model2)
 #'
 #' @export

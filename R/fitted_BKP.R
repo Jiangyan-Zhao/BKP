@@ -1,6 +1,6 @@
 #' @name fitted
 #'
-#' @title Extract Fitted Posterior Means from BKP Model Objects
+#' @title Extract Fitted Posterior Means from BKP Package Model Objects
 #'
 #' @description Extract posterior fitted values from fitted \code{BKP},
 #'   \code{DKP}, \code{TwinBKP}, or \code{TwinDKP} model objects. For
