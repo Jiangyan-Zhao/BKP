@@ -7,7 +7,7 @@
 \alias{parameter.DKP}
 \alias{parameter.TwinBKP}
 \alias{parameter.TwinDKP}
-\title{Extract Model Parameters from a Fitted BKP, DKP, or TwinBKP Model}
+\title{Extract Model Parameters from Fitted BKP Package Models}
 \usage{
 parameter(object, ...)
 
@@ -20,35 +20,38 @@ parameter(object, ...)
 \method{parameter}{TwinDKP}(object, ...)
 }
 \arguments{
-\item{object}{An object of class \code{BKP}, \code{DKP}, or
-\code{TwinBKP}, typically returned by \code{\link{fit_BKP}},
-\code{\link{fit_DKP}}, or \code{\link{fit_TwinBKP}}.}
+\item{object}{A fitted model object of class \code{BKP}, \code{DKP},
+\code{TwinBKP}, or \code{TwinDKP}, typically returned by
+\code{\link{fit_BKP}}, \code{\link{fit_DKP}},
+\code{\link{fit_TwinBKP}}, or \code{\link{fit_TwinDKP}}.}
 
-\item{...}{Additional arguments (currently unused).}
+\item{...}{Additional arguments. Currently unused.}
 }
 \value{
-A named list containing model parameters. Common entries include:
+A named list containing fitted model parameters. Common entries are:
 \itemize{
-\item \code{theta}: Estimated kernel hyperparameters.
-\item \code{alpha_n}: Posterior Dirichlet/Beta \eqn{\alpha} parameters.
-\item \code{beta_n}: Posterior Beta \eqn{\beta} parameters, returned for
-BKP and TwinBKP objects.
+\item \code{theta}: Fitted kernel lengthscale parameter(s). For TwinBKP and
+TwinDKP, this is an alias for the global lengthscale \code{theta_g}.
+\item \code{alpha_n}: Posterior Beta \eqn{\alpha} shape parameters for BKP
+and TwinBKP, or posterior Dirichlet concentration parameters for DKP and
+TwinDKP.
+\item \code{beta_n}: Posterior Beta \eqn{\beta} shape parameters, returned
+for \code{BKP} and \code{TwinBKP} objects.
 }
-For \code{TwinBKP} objects, the returned list also includes
+For \code{TwinBKP} and \code{TwinDKP} objects, the returned list also includes
 \code{theta_g}, \code{theta_l}, \code{global_kernel}, \code{local_kernel},
 \code{global_indices}, and \code{control}.
 }
 \description{
-Retrieve key model parameters from a fitted \code{BKP},
-\code{DKP}, or \code{TwinBKP} object. For a \code{BKP} model, this
-includes the optimized kernel hyperparameters and posterior Beta
-parameters. For a \code{DKP} model, this includes the kernel
-hyperparameters and posterior Dirichlet parameters. For a
-\code{TwinBKP} model, this additionally includes the global and local
-kernel parameters, selected global subset, and approximation controls.
+Extract key fitted parameters from \code{BKP}, \code{DKP},
+\code{TwinBKP}, and \code{TwinDKP} model objects. For full BKP and DKP
+models, this includes the fitted kernel lengthscale parameter(s) and
+posterior shape or concentration parameters. For TwinBKP and TwinDKP models,
+the returned list also includes global-local approximation parameters,
+selected global subset indices, and fitting controls.
 }
 \examples{
-# -------------------------- BKP ---------------------------
+# -------------------------- BKP and TwinBKP ---------------------------
 set.seed(123)
 
 # Define true success probability function
@@ -66,12 +69,25 @@ y <- rbinom(n, size = m, prob = true_pi)
 # Fit BKP model
 model <- fit_BKP(X, y, m, Xbounds = Xbounds)
 
-# Extract posterior and kernel parameters
+# Extract posterior parameters
 parameter(model)
 
-# -------------------------- DKP ---------------------------
-set.seed(123)
+\dontrun{
+# Larger TwinBKP example
+n <- 1000
+X <- tgp::lhs(n = n, rect = Xbounds)
+true_pi <- true_pi_fun(X)
+m <- sample(100, n, replace = TRUE)
+y <- rbinom(n, size = m, prob = true_pi)
 
+# Fit TwinBKP model
+model <- fit_TwinBKP(X, y, m, Xbounds = Xbounds)
+
+# Extract posterior and kernel parameters
+parameter(model)
+}
+
+# -------------------------- DKP  and TwinDKP---------------------------
 # Define true class probability function (3-class)
 true_pi_fun <- function(X) {
   p1 <- 1/(1+exp(-3*X))
@@ -94,35 +110,32 @@ model <- fit_DKP(X, Y, Xbounds = Xbounds)
 # Extract model parameters
 parameter(model)
 
-# -------------------------- TwinBKP ---------------------------
-set.seed(123)
-
-# Define true success probability function
-true_pi_fun <- function(x) {
-  (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
-}
-
-n <- 30
-Xbounds <- matrix(c(-2, 2), nrow = 1)
+\dontrun{
+# Larger TwinDKP example
+n <- 1000
 X <- tgp::lhs(n = n, rect = Xbounds)
 true_pi <- true_pi_fun(X)
-m <- sample(100, n, replace = TRUE)
-y <- rbinom(n, size = m, prob = true_pi)
+m <- sample(150, n, replace = TRUE)
 
-# Fit TwinBKP model
-model <- fit_TwinBKP(X, y, m, Xbounds = Xbounds)
+# Generate multinomial responses
+Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
+
+# Fit TwinDKP model
+model <- fit_TwinDKP(X, Y, Xbounds = Xbounds)
 
 # Extract posterior and kernel parameters
 parameter(model)
+}
 
 }
 \references{
 Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
-Kernel Process Modeling}.  arXiv. \doi{10.48550/arXiv.2508.10447}
+Kernel Process Modeling}. arXiv. \url{doi:10.48550/arXiv.2508.10447}.
 }
 \seealso{
-\code{\link{fit_BKP}}, \code{\link{fit_DKP}}, and
-\code{\link{fit_TwinBKP}} for model fitting.
+\code{\link{fit_BKP}}, \code{\link{fit_DKP}},
+\code{\link{fit_TwinBKP}}, and \code{\link{fit_TwinDKP}} for model fitting;
+\code{\link{fitted}} for posterior mean extraction.
 }
 \keyword{BKP}
 \keyword{DKP}
