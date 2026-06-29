@@ -19,7 +19,7 @@
 \alias{print.predict_TwinDKP}
 \alias{print.summary_TwinDKP}
 \alias{print.simulate_TwinDKP}
-\title{Print Methods for BKP, DKP, and TwinBKP Objects}
+\title{Print Methods for BKP Package Objects}
 \usage{
 \method{print}{BKP}(x, ...)
 
@@ -54,8 +54,8 @@
 \method{print}{simulate_TwinDKP}(x, ...)
 }
 \arguments{
-\item{x}{An object of class \code{"BKP"}, \code{"DKP"}, or
-\code{"TwinBKP"}, or a derived object such as a summary, prediction, or
+\item{x}{An object of class \code{"BKP"}, \code{"DKP"}, \code{"TwinBKP"},
+or \code{"TwinDKP"}, or a derived object such as a summary, prediction, or
 simulation object returned by the corresponding S3 methods.}
 
 \item{...}{Additional arguments passed to the generic \code{print} method
@@ -66,26 +66,26 @@ Invisibly returns the input object. Called for the side effect of
 printing human-readable summaries to the console.
 }
 \description{
-Provides formatted console output for fitted BKP, DKP, and
-TwinBKP model objects, their summaries, predictions, and simulations. The
-following specialized methods are supported:
+Provides formatted console output for fitted \code{BKP},
+\code{DKP}, \code{TwinBKP}, and \code{TwinDKP} model objects, their
+summaries, predictions, and simulations. The following specialized methods
+are supported:
 \itemize{
-\item \code{print.BKP}, \code{print.DKP}, \code{print.TwinBKP} –
-display fitted model objects.
+\item \code{print.BKP}, \code{print.DKP}, \code{print.TwinBKP}, and
+\code{print.TwinDKP} display fitted model objects.
 \item \code{print.summary_BKP}, \code{print.summary_DKP},
-\code{print.summary_TwinBKP} – display model summaries.
+\code{print.summary_TwinBKP}, and \code{print.summary_TwinDKP}
+display model summaries.
 \item \code{print.predict_BKP}, \code{print.predict_DKP},
-\code{print.predict_TwinBKP} – display posterior predictive results.
+\code{print.predict_TwinBKP}, and \code{print.predict_TwinDKP}
+display posterior predictive results.
 \item \code{print.simulate_BKP}, \code{print.simulate_DKP},
-\code{print.simulate_TwinBKP} – display posterior simulations.
+\code{print.simulate_TwinBKP}, and \code{print.simulate_TwinDKP}
+display posterior simulations.
 }
 }
 \examples{
-# ============================================================== #
-# ========================= BKP Examples ======================= #
-# ============================================================== #
-
-#-------------------------- 1D Example ---------------------------
+#-------------------------- BKP and TwinBKP ---------------------------
 set.seed(123)
 
 # Define true success probability function
@@ -101,52 +101,29 @@ m <- sample(100, n, replace = TRUE)
 y <- rbinom(n, size = m, prob = true_pi)
 
 # Fit BKP model
-model1 <- fit_BKP(X, y, m, Xbounds=Xbounds)
-print(model1)                    # fitted object
-print(summary(model1))           # summary
-print(predict(model1))           # predictions
-print(simulate(model1, nsim=3))  # posterior simulations
+model <- fit_BKP(X, y, m, Xbounds=Xbounds)
+print(model)                    # fitted object
+print(summary(model))           # summary
+print(predict(model))           # predictions
+print(simulate(model, nsim=3))  # posterior simulations
 
-#-------------------------- 2D Example ---------------------------
-set.seed(123)
-
-# Define 2D latent function and probability transformation
-true_pi_fun <- function(X) {
-  if(is.null(nrow(X))) X <- matrix(X, nrow=1)
-  m <- 8.6928
-  s <- 2.4269
-  x1 <- 4*X[,1]- 2
-  x2 <- 4*X[,2]- 2
-  a <- 1 + (x1 + x2 + 1)^2 *
-    (19- 14*x1 + 3*x1^2- 14*x2 + 6*x1*x2 + 3*x2^2)
-  b <- 30 + (2*x1- 3*x2)^2 *
-    (18- 32*x1 + 12*x1^2 + 48*x2- 36*x1*x2 + 27*x2^2)
-  f <- log(a*b)
-  f <- (f- m)/s
-  return(pnorm(f))  # Transform to probability
-}
-
-n <- 100
-Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
+\dontrun{
+# Larger TwinBKP example
+n <- 1000
 X <- tgp::lhs(n = n, rect = Xbounds)
 true_pi <- true_pi_fun(X)
 m <- sample(100, n, replace = TRUE)
 y <- rbinom(n, size = m, prob = true_pi)
 
-# Fit BKP model
-model2 <- fit_BKP(X, y, m, Xbounds=Xbounds)
-print(model2)                    # fitted object
-print(summary(model2))           # summary
-print(predict(model2))           # predictions
-print(simulate(model2, nsim=3))  # posterior simulations
+# Fit TwinBKP model
+model <- fit_TwinBKP(X, y, m, Xbounds=Xbounds)
+print(model)                    # fitted object
+print(summary(model))           # summary
+print(predict(model))           # predictions
+print(simulate(model, nsim=3))  # posterior simulations
+}
 
-# ============================================================== #
-# ========================= DKP Examples ======================= #
-# ============================================================== #
-
-#-------------------------- 1D Example ---------------------------
-set.seed(123)
-
+#-------------------------- DKP and TwinDKP ---------------------------
 # Define true class probability function (3-class)
 true_pi_fun <- function(X) {
   p1 <- 1/(1+exp(-3*X))
@@ -164,34 +141,15 @@ m <- sample(150, n, replace = TRUE)
 Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 
 # Fit DKP model
-model1 <- fit_DKP(X, Y, Xbounds = Xbounds)
-print(model1)                    # fitted object
-print(summary(model1))           # summary
-print(predict(model1))           # predictions
-print(simulate(model1, nsim=3))  # posterior simulations
+model <- fit_DKP(X, Y, Xbounds = Xbounds)
+print(model)                    # fitted object
+print(summary(model))           # summary
+print(predict(model))           # predictions
+print(simulate(model, nsim=3))  # posterior simulations
 
-
-#-------------------------- 2D Example ---------------------------
-set.seed(123)
-
-# Define latent function and transform to 3-class probabilities
-true_pi_fun <- function(X) {
-  if (is.null(nrow(X))) X <- matrix(X, nrow = 1)
-  m <- 8.6928; s <- 2.4269
-  x1 <- 4 * X[,1] - 2
-  x2 <- 4 * X[,2] - 2
-  a <- 1 + (x1 + x2 + 1)^2 *
-    (19 - 14*x1 + 3*x1^2 - 14*x2 + 6*x1*x2 + 3*x2^2)
-  b <- 30 + (2*x1 - 3*x2)^2 *
-    (18 - 32*x1 + 12*x1^2 + 48*x2 - 36*x1*x2 + 27*x2^2)
-  f <- (log(a*b)- m)/s
-  p1 <- pnorm(f) # Transform to probability
-  p2 <- sin(pi * X[,1]) * sin(pi * X[,2])
-  return(matrix(c(p1/2, p2/2, 1 - (p1+p2)/2), nrow = length(p1)))
-}
-
-n <- 100
-Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
+\dontrun{
+# Larger TwinDKP example
+n <- 1000
 X <- tgp::lhs(n = n, rect = Xbounds)
 true_pi <- true_pi_fun(X)
 m <- sample(150, n, replace = TRUE)
@@ -199,86 +157,29 @@ m <- sample(150, n, replace = TRUE)
 # Generate multinomial responses
 Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 
-# Fit DKP model
-model2 <- fit_DKP(X, Y, Xbounds = Xbounds)
-print(model2)                    # fitted object
-print(summary(model2))           # summary
-print(predict(model2))           # predictions
-print(simulate(model2, nsim=3))  # posterior simulations
-
-# ============================================================== #
-# ======================= TwinBKP Examples ===================== #
-# ============================================================== #
-
-#-------------------------- 1D Example ---------------------------
-set.seed(123)
-
-# Define true success probability function
-true_pi_fun <- function(x) {
-  (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
+# Fit TwinDKP model
+model <- fit_TwinDKP(X, Y, Xbounds = Xbounds)
+print(model)                    # fitted object
+print(summary(model))           # summary
+print(predict(model))           # predictions
+print(simulate(model, nsim=3))  # posterior simulations
 }
-
-n <- 1000
-Xbounds <- matrix(c(-2,2), nrow=1)
-X <- tgp::lhs(n = n, rect = Xbounds)
-true_pi <- true_pi_fun(X)
-m <- sample(100, n, replace = TRUE)
-y <- rbinom(n, size = m, prob = true_pi)
-
-# Fit TwinBKP model
-model1 <- fit_TwinBKP(X, y, m, Xbounds=Xbounds)
-print(model1)                    # fitted object
-print(summary(model1))           # summary
-print(predict(model1))           # predictions
-print(simulate(model1, nsim=3))  # posterior simulations
-
-#-------------------------- 2D Example ---------------------------
-set.seed(123)
-
-# Define 2D latent function and probability transformation
-true_pi_fun <- function(X) {
-  if(is.null(nrow(X))) X <- matrix(X, nrow=1)
-  m <- 8.6928
-  s <- 2.4269
-  x1 <- 4*X[,1]- 2
-  x2 <- 4*X[,2]- 2
-  a <- 1 + (x1 + x2 + 1)^2 *
-    (19- 14*x1 + 3*x1^2- 14*x2 + 6*x1*x2 + 3*x2^2)
-  b <- 30 + (2*x1- 3*x2)^2 *
-    (18- 32*x1 + 12*x1^2 + 48*x2- 36*x1*x2 + 27*x2^2)
-  f <- log(a*b)
-  f <- (f- m)/s
-  return(pnorm(f))  # Transform to probability
-}
-
-n <- 1000
-Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
-X <- tgp::lhs(n = n, rect = Xbounds)
-true_pi <- true_pi_fun(X)
-m <- sample(100, n, replace = TRUE)
-y <- rbinom(n, size = m, prob = true_pi)
-
-# Fit TwinBKP model
-model2 <- fit_TwinBKP(X, y, m, Xbounds=Xbounds)
-print(model2)                    # fitted object
-print(summary(model2))           # summary
-print(predict(model2))           # predictions
-print(simulate(model2, nsim=3))  # posterior simulations
 
 }
 \references{
 Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
-Kernel Process Modeling}. arXiv. \doi{10.48550/arXiv.2508.10447}
+Kernel Process Modeling}. arXiv. \url{doi:10.48550/arXiv.2508.10447}.
 }
 \seealso{
-\code{\link{fit_BKP}}, \code{\link{fit_DKP}}, and
-\code{\link{fit_TwinBKP}} for model fitting;
-\code{\link{summary.BKP}}, \code{\link{summary.DKP}}, and
-\code{\link{summary.TwinBKP}} for model summaries;
-\code{\link{predict.BKP}}, \code{\link{predict.DKP}}, and
-\code{\link{predict.TwinBKP}} for posterior prediction;
-\code{\link{simulate.BKP}}, \code{\link{simulate.DKP}}, and
-\code{\link{simulate.TwinBKP}} for posterior simulations.
+\code{\link{fit_BKP}}, \code{\link{fit_DKP}},
+\code{\link{fit_TwinBKP}}, and \code{\link{fit_TwinDKP}} for model fitting;
+\code{\link{summary.BKP}}, \code{\link{summary.DKP}},
+\code{\link{summary.TwinBKP}}, and \code{\link{summary.TwinDKP}} for model
+summaries; \code{\link{predict.BKP}}, \code{\link{predict.DKP}},
+\code{\link{predict.TwinBKP}}, and \code{\link{predict.TwinDKP}} for
+posterior prediction; \code{\link{simulate.BKP}},
+\code{\link{simulate.DKP}}, \code{\link{simulate.TwinBKP}}, and
+\code{\link{simulate.TwinDKP}} for posterior simulations.
 }
 \keyword{BKP}
 \keyword{DKP}

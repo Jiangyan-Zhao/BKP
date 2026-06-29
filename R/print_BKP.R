@@ -1,23 +1,27 @@
 #' @name print
 #'
-#' @title Print Methods for BKP, DKP, and TwinBKP Objects
+#' @title Print Methods for BKP Package Objects
 #'
-#' @description Provides formatted console output for fitted BKP, DKP, and
-#'   TwinBKP model objects, their summaries, predictions, and simulations. The
-#'   following specialized methods are supported:
+#' @description Provides formatted console output for fitted \code{BKP},
+#'   \code{DKP}, \code{TwinBKP}, and \code{TwinDKP} model objects, their
+#'   summaries, predictions, and simulations. The following specialized methods
+#'   are supported:
 #'   \itemize{
-#'     \item \code{print.BKP}, \code{print.DKP}, \code{print.TwinBKP} –
-#'       display fitted model objects.
+#'     \item \code{print.BKP}, \code{print.DKP}, \code{print.TwinBKP}, and
+#'       \code{print.TwinDKP} display fitted model objects.
 #'     \item \code{print.summary_BKP}, \code{print.summary_DKP},
-#'       \code{print.summary_TwinBKP} – display model summaries.
+#'       \code{print.summary_TwinBKP}, and \code{print.summary_TwinDKP}
+#'       display model summaries.
 #'     \item \code{print.predict_BKP}, \code{print.predict_DKP},
-#'       \code{print.predict_TwinBKP} – display posterior predictive results.
+#'       \code{print.predict_TwinBKP}, and \code{print.predict_TwinDKP}
+#'       display posterior predictive results.
 #'     \item \code{print.simulate_BKP}, \code{print.simulate_DKP},
-#'       \code{print.simulate_TwinBKP} – display posterior simulations.
+#'       \code{print.simulate_TwinBKP}, and \code{print.simulate_TwinDKP}
+#'       display posterior simulations.
 #'   }
 #'
-#' @param x An object of class \code{"BKP"}, \code{"DKP"}, or
-#'   \code{"TwinBKP"}, or a derived object such as a summary, prediction, or
+#' @param x An object of class \code{"BKP"}, \code{"DKP"}, \code{"TwinBKP"},
+#'   or \code{"TwinDKP"}, or a derived object such as a summary, prediction, or
 #'   simulation object returned by the corresponding S3 methods.
 #' @param ... Additional arguments passed to the generic \code{print} method
 #'   (currently unused; included for S3 consistency).
@@ -25,26 +29,23 @@
 #' @return Invisibly returns the input object. Called for the side effect of
 #'   printing human-readable summaries to the console.
 #'
-#' @seealso \code{\link{fit_BKP}}, \code{\link{fit_DKP}}, and
-#'   \code{\link{fit_TwinBKP}} for model fitting;
-#'   \code{\link{summary.BKP}}, \code{\link{summary.DKP}}, and
-#'   \code{\link{summary.TwinBKP}} for model summaries;
-#'   \code{\link{predict.BKP}}, \code{\link{predict.DKP}}, and
-#'   \code{\link{predict.TwinBKP}} for posterior prediction;
-#'   \code{\link{simulate.BKP}}, \code{\link{simulate.DKP}}, and
-#'   \code{\link{simulate.TwinBKP}} for posterior simulations.
+#' @seealso \code{\link{fit_BKP}}, \code{\link{fit_DKP}},
+#'   \code{\link{fit_TwinBKP}}, and \code{\link{fit_TwinDKP}} for model fitting;
+#'   \code{\link{summary.BKP}}, \code{\link{summary.DKP}},
+#'   \code{\link{summary.TwinBKP}}, and \code{\link{summary.TwinDKP}} for model
+#'   summaries; \code{\link{predict.BKP}}, \code{\link{predict.DKP}},
+#'   \code{\link{predict.TwinBKP}}, and \code{\link{predict.TwinDKP}} for
+#'   posterior prediction; \code{\link{simulate.BKP}},
+#'   \code{\link{simulate.DKP}}, \code{\link{simulate.TwinBKP}}, and
+#'   \code{\link{simulate.TwinDKP}} for posterior simulations.
 #'
 #' @references Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
-#'   Kernel Process Modeling}. arXiv. \doi{10.48550/arXiv.2508.10447}
+#'   Kernel Process Modeling}. arXiv. <doi:10.48550/arXiv.2508.10447>.
 #'
-#' @keywords BKP DKP TwinBKP
+#' @keywords BKP
 #'
 #' @examples
-#' # ============================================================== #
-#' # ========================= BKP Examples ======================= #
-#' # ============================================================== #
-#'
-#' #-------------------------- 1D Example ---------------------------
+#' #-------------------------- BKP and TwinBKP ---------------------------
 #' set.seed(123)
 #'
 #' # Define true success probability function
@@ -60,44 +61,27 @@
 #' y <- rbinom(n, size = m, prob = true_pi)
 #'
 #' # Fit BKP model
-#' model1 <- fit_BKP(X, y, m, Xbounds=Xbounds)
-#' print(model1)                    # fitted object
-#' print(summary(model1))           # summary
-#' print(predict(model1))           # predictions
-#' print(simulate(model1, nsim=3))  # posterior simulations
+#' model <- fit_BKP(X, y, m, Xbounds=Xbounds)
+#' print(model)                    # fitted object
+#' print(summary(model))           # summary
+#' print(predict(model))           # predictions
+#' print(simulate(model, nsim=3))  # posterior simulations
 #'
-#' #-------------------------- 2D Example ---------------------------
-#' set.seed(123)
-#'
-#' # Define 2D latent function and probability transformation
-#' true_pi_fun <- function(X) {
-#'   if(is.null(nrow(X))) X <- matrix(X, nrow=1)
-#'   m <- 8.6928
-#'   s <- 2.4269
-#'   x1 <- 4*X[,1]- 2
-#'   x2 <- 4*X[,2]- 2
-#'   a <- 1 + (x1 + x2 + 1)^2 *
-#'     (19- 14*x1 + 3*x1^2- 14*x2 + 6*x1*x2 + 3*x2^2)
-#'   b <- 30 + (2*x1- 3*x2)^2 *
-#'     (18- 32*x1 + 12*x1^2 + 48*x2- 36*x1*x2 + 27*x2^2)
-#'   f <- log(a*b)
-#'   f <- (f- m)/s
-#'   return(pnorm(f))  # Transform to probability
-#' }
-#'
-#' n <- 100
-#' Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
+#' \dontrun{
+#' # Larger TwinBKP example
+#' n <- 1000
 #' X <- tgp::lhs(n = n, rect = Xbounds)
 #' true_pi <- true_pi_fun(X)
 #' m <- sample(100, n, replace = TRUE)
 #' y <- rbinom(n, size = m, prob = true_pi)
 #'
-#' # Fit BKP model
-#' model2 <- fit_BKP(X, y, m, Xbounds=Xbounds)
-#' print(model2)                    # fitted object
-#' print(summary(model2))           # summary
-#' print(predict(model2))           # predictions
-#' print(simulate(model2, nsim=3))  # posterior simulations
+#' # Fit TwinBKP model
+#' model <- fit_TwinBKP(X, y, m, Xbounds=Xbounds)
+#' print(model)                    # fitted object
+#' print(summary(model))           # summary
+#' print(predict(model))           # predictions
+#' print(simulate(model, nsim=3))  # posterior simulations
+#' }
 #'
 #' @export
 #' @method print BKP
