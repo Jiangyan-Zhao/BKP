@@ -7,7 +7,7 @@
 \alias{predict.DKP}
 \alias{predict.TwinBKP}
 \alias{predict.TwinDKP}
-\title{Posterior Prediction for BKP, DKP, or TwinBKP Models}
+\title{Posterior Prediction for BKP Package Model Objects}
 \usage{
 \method{predict}{BKP}(
   object,
@@ -48,9 +48,10 @@
 )
 }
 \arguments{
-\item{object}{An object of class \code{"BKP"}, \code{"DKP"}, or
-\code{"TwinBKP"}, typically returned by \code{\link{fit_BKP}},
-\code{\link{fit_DKP}}, or \code{\link{fit_TwinBKP}}.}
+\item{object}{A fitted model object of class \code{"BKP"}, \code{"DKP"},
+\code{"TwinBKP"}, or \code{"TwinDKP"}, typically returned by
+\code{\link{fit_BKP}}, \code{\link{fit_DKP}},
+\code{\link{fit_TwinBKP}}, or \code{\link{fit_TwinDKP}}.}
 
 \item{Xnew}{A numeric vector or matrix of new input locations at which to
 generate predictions. If \code{NULL}, predictions are returned for the
@@ -149,21 +150,17 @@ when \code{type = "count"}.}
 }
 }
 \description{
-Generates posterior summaries from fitted Beta Kernel Process
-(BKP), Dirichlet Kernel Process (DKP), or TwinBKP models at training or
+Generate posterior summaries from fitted \code{BKP},
+\code{DKP}, \code{TwinBKP}, and \code{TwinDKP} model objects at training or
 new input locations. For BKP and TwinBKP models, summaries can be returned
 either for the latent success probability or for a future success count
-under the Beta-Binomial posterior predictive distribution. For DKP models,
-summaries can be returned either for the latent class probability vector or
-for future class counts using marginal Beta-Binomial posterior predictive
-distributions.
+under the Beta-Binomial posterior predictive distribution. For DKP and
+TwinDKP models, summaries can be returned either for the latent class
+probability vector or for future class counts using marginal Beta-Binomial
+posterior predictive distributions.
 }
 \examples{
-# ============================================================== #
-# ========================= BKP Examples ======================= #
-# ============================================================== #
-
-#-------------------------- 1D Example ---------------------------
+#-------------------------- BKP and TwinBKP ---------------------------
 set.seed(123)
 
 # Define true success probability function
@@ -179,64 +176,41 @@ m <- sample(100, n, replace = TRUE)
 y <- rbinom(n, size = m, prob = true_pi)
 
 # Fit BKP model
-model1 <- fit_BKP(X, y, m, Xbounds=Xbounds)
+model <- fit_BKP(X, y, m, Xbounds=Xbounds)
 
 # Prediction on training data
-predict(model1)
+predict(model)
 
 # Prediction on new data
 Xnew <- matrix(seq(-2, 2, length = 10), ncol=1) #new data points
-predict(model1, Xnew = Xnew)
+predict(model, Xnew = Xnew)
 
 # Posterior predictive summaries for future success counts
 Mnew <- sample(100, nrow(Xnew), replace = TRUE)
-predict(model1, Xnew = Xnew, type = "count", Mnew = Mnew)
+predict(model, Xnew = Xnew, type = "count", Mnew = Mnew)
 
-#-------------------------- 2D Example ---------------------------
-set.seed(123)
-
-# Define 2D latent function and probability transformation
-true_pi_fun <- function(X) {
-  if(is.null(nrow(X))) X <- matrix(X, nrow=1)
-  m <- 8.6928
-  s <- 2.4269
-  x1 <- 4*X[,1]- 2
-  x2 <- 4*X[,2]- 2
-  a <- 1 + (x1 + x2 + 1)^2 *
-    (19- 14*x1 + 3*x1^2- 14*x2 + 6*x1*x2 + 3*x2^2)
-  b <- 30 + (2*x1- 3*x2)^2 *
-    (18- 32*x1 + 12*x1^2 + 48*x2- 36*x1*x2 + 27*x2^2)
-  f <- log(a*b)
-  f <- (f- m)/s
-  return(pnorm(f))  # Transform to probability
-}
-
-n <- 100
-Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
+\dontrun{
+# Larger TwinBKP example
+n <- 1000
 X <- tgp::lhs(n = n, rect = Xbounds)
 true_pi <- true_pi_fun(X)
 m <- sample(100, n, replace = TRUE)
 y <- rbinom(n, size = m, prob = true_pi)
 
-# Fit BKP model
-model2 <- fit_BKP(X, y, m, Xbounds=Xbounds)
+# Fit TwinBKP model
+model <- fit_TwinBKP(X, y, m, Xbounds=Xbounds)
 
 # Prediction on training data
-predict(model2)
+predict(model)
 
 # Prediction on new data
-x1 <- seq(Xbounds[1,1], Xbounds[1,2], length.out = 10)
-x2 <- seq(Xbounds[2,1], Xbounds[2,2], length.out = 10)
-Xnew <- expand.grid(x1 = x1, x2 = x2)
-predict(model2, Xnew = Xnew)
+predict(model, Xnew = Xnew)
 
-# ============================================================== #
-# ========================= DKP Examples ======================= #
-# ============================================================== #
+# Posterior predictive summaries for future success counts
+predict(model, Xnew = Xnew, type = "count", Mnew = Mnew)
+}
 
-#-------------------------- 1D Example ---------------------------
-set.seed(123)
-
+#-------------------------- DKP and TwinDKP ---------------------------
 # Define true class probability function (3-class)
 true_pi_fun <- function(X) {
   p1 <- 1/(1+exp(-3*X))
@@ -254,37 +228,18 @@ m <- sample(150, n, replace = TRUE)
 Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 
 # Fit DKP model
-model1 <- fit_DKP(X, Y, Xbounds = Xbounds)
+model <- fit_DKP(X, Y, Xbounds = Xbounds)
 
 # Prediction on training data
-predict(model1)
+predict(model)
 
 # Prediction on new data
 Xnew = matrix(seq(-2, 2, length = 10), ncol=1) #new data points
-predict(model1, Xnew)
+predict(model, Xnew)
 
-
-#-------------------------- 2D Example ---------------------------
-set.seed(123)
-
-# Define latent function and transform to 3-class probabilities
-true_pi_fun <- function(X) {
-  if (is.null(nrow(X))) X <- matrix(X, nrow = 1)
-  m <- 8.6928; s <- 2.4269
-  x1 <- 4 * X[,1] - 2
-  x2 <- 4 * X[,2] - 2
-  a <- 1 + (x1 + x2 + 1)^2 *
-    (19 - 14*x1 + 3*x1^2 - 14*x2 + 6*x1*x2 + 3*x2^2)
-  b <- 30 + (2*x1 - 3*x2)^2 *
-    (18 - 32*x1 + 12*x1^2 + 48*x2 - 36*x1*x2 + 27*x2^2)
-  f <- (log(a*b)- m)/s
-  p1 <- pnorm(f) # Transform to probability
-  p2 <- sin(pi * X[,1]) * sin(pi * X[,2])
-  return(matrix(c(p1/2, p2/2, 1 - (p1+p2)/2), nrow = length(p1)))
-}
-
-n <- 100
-Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
+\dontrun{
+# Larger TwinDKP example
+n <- 1000
 X <- tgp::lhs(n = n, rect = Xbounds)
 true_pi <- true_pi_fun(X)
 m <- sample(150, n, replace = TRUE)
@@ -292,98 +247,26 @@ m <- sample(150, n, replace = TRUE)
 # Generate multinomial responses
 Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 
-# Fit DKP model
-model2 <- fit_DKP(X, Y, Xbounds = Xbounds)
+# Fit TwinDKP model
+model <- fit_TwinDKP(X, Y, Xbounds = Xbounds)
 
 # Prediction on training data
-predict(model2)
+predict(model)
 
 # Prediction on new data
-x1 <- seq(Xbounds[1,1], Xbounds[1,2], length.out = 10)
-x2 <- seq(Xbounds[2,1], Xbounds[2,2], length.out = 10)
-Xnew <- expand.grid(x1 = x1, x2 = x2)
-predict(model2, Xnew)
-
-# ============================================================== #
-# ======================= TwinBKP Examples ===================== #
-# ============================================================== #
-
-#-------------------------- 1D Example ---------------------------
-set.seed(123)
-
-# Define true success probability function
-true_pi_fun <- function(x) {
-  (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
+predict(model, Xnew)
 }
-
-n <- 1000
-Xbounds <- matrix(c(-2, 2), nrow = 1)
-X <- tgp::lhs(n = n, rect = Xbounds)
-true_pi <- true_pi_fun(X)
-m <- sample(100, n, replace = TRUE)
-y <- rbinom(n, size = m, prob = true_pi)
-
-# Fit TwinBKP model
-model1 <- fit_TwinBKP(X, y, m, Xbounds = Xbounds)
-
-# Prediction on training data
-predict(model1)
-
-# Prediction on new data
-Xnew <- matrix(seq(-2, 2, length = 10), ncol=1) #new data points
-predict(model1, Xnew = Xnew)
-
-# Posterior predictive summaries for future success counts
-Mnew <- sample(100, nrow(Xnew), replace = TRUE)
-predict(model1, Xnew = Xnew, type = "count", Mnew = Mnew)
-
-#-------------------------- 2D Example ---------------------------
-set.seed(123)
-
-# Define 2D latent function and probability transformation
-true_pi_fun <- function(X) {
-  if(is.null(nrow(X))) X <- matrix(X, nrow=1)
-  m <- 8.6928
-  s <- 2.4269
-  x1 <- 4*X[,1]- 2
-  x2 <- 4*X[,2]- 2
-  a <- 1 + (x1 + x2 + 1)^2 *
-    (19- 14*x1 + 3*x1^2- 14*x2 + 6*x1*x2 + 3*x2^2)
-  b <- 30 + (2*x1- 3*x2)^2 *
-    (18- 32*x1 + 12*x1^2 + 48*x2- 36*x1*x2 + 27*x2^2)
-  f <- log(a*b)
-  f <- (f- m)/s
-  return(pnorm(f))  # Transform to probability
-}
-
-n <- 1000
-Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
-X <- tgp::lhs(n = n, rect = Xbounds)
-true_pi <- true_pi_fun(X)
-m <- sample(100, n, replace = TRUE)
-y <- rbinom(n, size = m, prob = true_pi)
-
-# Fit TwinBKP model
-model2 <- fit_TwinBKP(X, y, m, Xbounds=Xbounds)
-
-# Prediction on training data
-predict(model2)
-
-# Prediction on new data
-x1 <- seq(Xbounds[1,1], Xbounds[1,2], length.out = 10)
-x2 <- seq(Xbounds[2,1], Xbounds[2,2], length.out = 10)
-Xnew <- expand.grid(x1 = x1, x2 = x2)
-predict(model2, Xnew = Xnew)
 
 }
 \references{
 Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
-Kernel Process Modeling}. arXiv. \doi{10.48550/arXiv.2508.10447}
+Kernel Process Modeling}. arXiv. \url{doi:10.48550/arXiv.2508.10447}.
 }
 \seealso{
-\code{\link{fit_BKP}}, \code{\link{fit_DKP}}, and
-\code{\link{fit_TwinBKP}} for model fitting; \code{\link{plot.BKP}},
-\code{\link{plot.DKP}}, and \code{\link{plot.TwinBKP}} for visualization.
+\code{\link{fit_BKP}}, \code{\link{fit_DKP}},
+\code{\link{fit_TwinBKP}}, and \code{\link{fit_TwinDKP}} for model fitting;
+\code{\link{plot.BKP}}, \code{\link{plot.DKP}},
+\code{\link{plot.TwinBKP}}, and \code{\link{plot.TwinDKP}} for visualization.
 }
 \keyword{BKP}
 \keyword{DKP}

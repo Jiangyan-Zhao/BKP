@@ -2,78 +2,6 @@
 #'
 #' @keywords TwinBKP
 #'
-#' @examples
-#' # ============================================================== #
-#' # ======================= TwinBKP Examples ===================== #
-#' # ============================================================== #
-#'
-#' #-------------------------- 1D Example ---------------------------
-#' set.seed(123)
-#'
-#' # Define true success probability function
-#' true_pi_fun <- function(x) {
-#'   (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
-#' }
-#'
-#' n <- 1000
-#' Xbounds <- matrix(c(-2, 2), nrow = 1)
-#' X <- tgp::lhs(n = n, rect = Xbounds)
-#' true_pi <- true_pi_fun(X)
-#' m <- sample(100, n, replace = TRUE)
-#' y <- rbinom(n, size = m, prob = true_pi)
-#'
-#' # Fit TwinBKP model
-#' model1 <- fit_TwinBKP(X, y, m, Xbounds = Xbounds)
-#'
-#' # Prediction on training data
-#' predict(model1)
-#'
-#' # Prediction on new data
-#' Xnew <- matrix(seq(-2, 2, length = 10), ncol=1) #new data points
-#' predict(model1, Xnew = Xnew)
-#'
-#' # Posterior predictive summaries for future success counts
-#' Mnew <- sample(100, nrow(Xnew), replace = TRUE)
-#' predict(model1, Xnew = Xnew, type = "count", Mnew = Mnew)
-#'
-#' #-------------------------- 2D Example ---------------------------
-#' set.seed(123)
-#'
-#' # Define 2D latent function and probability transformation
-#' true_pi_fun <- function(X) {
-#'   if(is.null(nrow(X))) X <- matrix(X, nrow=1)
-#'   m <- 8.6928
-#'   s <- 2.4269
-#'   x1 <- 4*X[,1]- 2
-#'   x2 <- 4*X[,2]- 2
-#'   a <- 1 + (x1 + x2 + 1)^2 *
-#'     (19- 14*x1 + 3*x1^2- 14*x2 + 6*x1*x2 + 3*x2^2)
-#'   b <- 30 + (2*x1- 3*x2)^2 *
-#'     (18- 32*x1 + 12*x1^2 + 48*x2- 36*x1*x2 + 27*x2^2)
-#'   f <- log(a*b)
-#'   f <- (f- m)/s
-#'   return(pnorm(f))  # Transform to probability
-#' }
-#'
-#' n <- 1000
-#' Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
-#' X <- tgp::lhs(n = n, rect = Xbounds)
-#' true_pi <- true_pi_fun(X)
-#' m <- sample(100, n, replace = TRUE)
-#' y <- rbinom(n, size = m, prob = true_pi)
-#'
-#' # Fit TwinBKP model
-#' model2 <- fit_TwinBKP(X, y, m, Xbounds=Xbounds)
-#'
-#' # Prediction on training data
-#' predict(model2)
-#'
-#' # Prediction on new data
-#' x1 <- seq(Xbounds[1,1], Xbounds[1,2], length.out = 10)
-#' x2 <- seq(Xbounds[2,1], Xbounds[2,2], length.out = 10)
-#' Xnew <- expand.grid(x1 = x1, x2 = x2)
-#' predict(model2, Xnew = Xnew)
-#'
 #' @export
 #' @method predict TwinBKP
 predict.TwinBKP <- function(object, Xnew = NULL, CI_level = 0.95,
@@ -97,22 +25,32 @@ predict.TwinBKP <- function(object, Xnew = NULL, CI_level = 0.95,
     if (!is.numeric(Xnew)) {
       stop("'Xnew' must be numeric.")
     }
-
+    if (nrow(Xnew) < 1L || ncol(Xnew) < 1L) {
+      stop("'Xnew' must have at least one row and one column.")
+    }
     if (ncol(Xnew) != d) {
       stop("The number of columns in 'Xnew' must match the original input dimension.")
+    }
+    if (anyNA(Xnew) || any(!is.finite(Xnew))) {
+      stop("'Xnew' must contain only finite values with no NA, NaN, or Inf.")
     }
   }
   n_pred <- if (is.null(Xnew)) nrow(X) else nrow(Xnew)
 
-  if (!is.numeric(CI_level) || length(CI_level) != 1 || CI_level <= 0 || CI_level >= 1) {
-    stop("'CI_level' must be a single numeric value strictly between 0 and 1.")
+  if (!is.numeric(CI_level) || length(CI_level) != 1L ||
+      is.na(CI_level) || !is.finite(CI_level) ||
+      CI_level <= 0 || CI_level >= 1) {
+    stop("'CI_level' must be a single finite numeric value strictly between 0 and 1.")
   }
 
-  if (!is.numeric(threshold) || length(threshold) != 1 || threshold <= 0 || threshold >= 1) {
-    stop("'threshold' must be a single numeric value strictly between 0 and 1.")
+  if (!is.numeric(threshold) || length(threshold) != 1L ||
+      is.na(threshold) || !is.finite(threshold) ||
+      threshold <= 0 || threshold >= 1) {
+    stop("'threshold' must be a single finite numeric value strictly between 0 and 1.")
   }
 
   type <- match.arg(type)
+
   if (type == "count") {
     if (is.null(Mnew)) {
       if (is.null(Xnew)) {

@@ -1,19 +1,20 @@
 #' @name predict
 #'
-#' @title Posterior Prediction for BKP, DKP, or TwinBKP Models
+#' @title Posterior Prediction for BKP Package Model Objects
 #'
-#' @description Generates posterior summaries from fitted Beta Kernel Process
-#'   (BKP), Dirichlet Kernel Process (DKP), or TwinBKP models at training or
+#' @description Generate posterior summaries from fitted \code{BKP},
+#'   \code{DKP}, \code{TwinBKP}, and \code{TwinDKP} model objects at training or
 #'   new input locations. For BKP and TwinBKP models, summaries can be returned
 #'   either for the latent success probability or for a future success count
-#'   under the Beta-Binomial posterior predictive distribution. For DKP models,
-#'   summaries can be returned either for the latent class probability vector or
-#'   for future class counts using marginal Beta-Binomial posterior predictive
-#'   distributions.
+#'   under the Beta-Binomial posterior predictive distribution. For DKP and
+#'   TwinDKP models, summaries can be returned either for the latent class
+#'   probability vector or for future class counts using marginal Beta-Binomial
+#'   posterior predictive distributions.
 #'
-#' @param object An object of class \code{"BKP"}, \code{"DKP"}, or
-#'   \code{"TwinBKP"}, typically returned by \code{\link{fit_BKP}},
-#'   \code{\link{fit_DKP}}, or \code{\link{fit_TwinBKP}}.
+#' @param object A fitted model object of class \code{"BKP"}, \code{"DKP"},
+#'   \code{"TwinBKP"}, or \code{"TwinDKP"}, typically returned by
+#'   \code{\link{fit_BKP}}, \code{\link{fit_DKP}},
+#'   \code{\link{fit_TwinBKP}}, or \code{\link{fit_TwinDKP}}.
 #' @param Xnew A numeric vector or matrix of new input locations at which to
 #'   generate predictions. If \code{NULL}, predictions are returned for the
 #'   training data.
@@ -104,21 +105,18 @@
 #'     when \code{type = "count"}.}
 #' }
 #'
-#' @seealso \code{\link{fit_BKP}}, \code{\link{fit_DKP}}, and
-#'   \code{\link{fit_TwinBKP}} for model fitting; \code{\link{plot.BKP}},
-#'   \code{\link{plot.DKP}}, and \code{\link{plot.TwinBKP}} for visualization.
+#' @seealso \code{\link{fit_BKP}}, \code{\link{fit_DKP}},
+#'   \code{\link{fit_TwinBKP}}, and \code{\link{fit_TwinDKP}} for model fitting;
+#'   \code{\link{plot.BKP}}, \code{\link{plot.DKP}},
+#'   \code{\link{plot.TwinBKP}}, and \code{\link{plot.TwinDKP}} for visualization.
 #'
 #' @references Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
-#'   Kernel Process Modeling}. arXiv. \doi{10.48550/arXiv.2508.10447}
+#'   Kernel Process Modeling}. arXiv. <doi:10.48550/arXiv.2508.10447>.
 #'
-#' @keywords BKP DKP TwinBKP
+#' @keywords BKP
 #'
 #' @examples
-#' # ============================================================== #
-#' # ========================= BKP Examples ======================= #
-#' # ============================================================== #
-#'
-#' #-------------------------- 1D Example ---------------------------
+#' #-------------------------- BKP and TwinBKP ---------------------------
 #' set.seed(123)
 #'
 #' # Define true success probability function
@@ -134,56 +132,39 @@
 #' y <- rbinom(n, size = m, prob = true_pi)
 #'
 #' # Fit BKP model
-#' model1 <- fit_BKP(X, y, m, Xbounds=Xbounds)
+#' model <- fit_BKP(X, y, m, Xbounds=Xbounds)
 #'
 #' # Prediction on training data
-#' predict(model1)
+#' predict(model)
 #'
 #' # Prediction on new data
 #' Xnew <- matrix(seq(-2, 2, length = 10), ncol=1) #new data points
-#' predict(model1, Xnew = Xnew)
+#' predict(model, Xnew = Xnew)
 #'
 #' # Posterior predictive summaries for future success counts
 #' Mnew <- sample(100, nrow(Xnew), replace = TRUE)
-#' predict(model1, Xnew = Xnew, type = "count", Mnew = Mnew)
+#' predict(model, Xnew = Xnew, type = "count", Mnew = Mnew)
 #'
-#' #-------------------------- 2D Example ---------------------------
-#' set.seed(123)
-#'
-#' # Define 2D latent function and probability transformation
-#' true_pi_fun <- function(X) {
-#'   if(is.null(nrow(X))) X <- matrix(X, nrow=1)
-#'   m <- 8.6928
-#'   s <- 2.4269
-#'   x1 <- 4*X[,1]- 2
-#'   x2 <- 4*X[,2]- 2
-#'   a <- 1 + (x1 + x2 + 1)^2 *
-#'     (19- 14*x1 + 3*x1^2- 14*x2 + 6*x1*x2 + 3*x2^2)
-#'   b <- 30 + (2*x1- 3*x2)^2 *
-#'     (18- 32*x1 + 12*x1^2 + 48*x2- 36*x1*x2 + 27*x2^2)
-#'   f <- log(a*b)
-#'   f <- (f- m)/s
-#'   return(pnorm(f))  # Transform to probability
-#' }
-#'
-#' n <- 100
-#' Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
+#' \dontrun{
+#' # Larger TwinBKP example
+#' n <- 1000
 #' X <- tgp::lhs(n = n, rect = Xbounds)
 #' true_pi <- true_pi_fun(X)
 #' m <- sample(100, n, replace = TRUE)
 #' y <- rbinom(n, size = m, prob = true_pi)
 #'
-#' # Fit BKP model
-#' model2 <- fit_BKP(X, y, m, Xbounds=Xbounds)
+#' # Fit TwinBKP model
+#' model <- fit_TwinBKP(X, y, m, Xbounds=Xbounds)
 #'
 #' # Prediction on training data
-#' predict(model2)
+#' predict(model)
 #'
 #' # Prediction on new data
-#' x1 <- seq(Xbounds[1,1], Xbounds[1,2], length.out = 10)
-#' x2 <- seq(Xbounds[2,1], Xbounds[2,2], length.out = 10)
-#' Xnew <- expand.grid(x1 = x1, x2 = x2)
-#' predict(model2, Xnew = Xnew)
+#' predict(model, Xnew = Xnew)
+#'
+#' # Posterior predictive summaries for future success counts
+#' predict(model, Xnew = Xnew, type = "count", Mnew = Mnew)
+#' }
 #'
 #' @export
 #' @method predict BKP
@@ -210,23 +191,33 @@ predict.BKP <- function(object, Xnew = NULL, CI_level = 0.95, threshold = 0.5,
     if (!is.numeric(Xnew)) {
       stop("'Xnew' must be numeric.")
     }
-
+    if (nrow(Xnew) < 1L || ncol(Xnew) < 1L) {
+      stop("'Xnew' must have at least one row and one column.")
+    }
     if (ncol(Xnew) != d) {
       stop("The number of columns in 'Xnew' must match the original input dimension.")
+    }
+    if (anyNA(Xnew) || any(!is.finite(Xnew))) {
+      stop("'Xnew' must contain only finite values with no NA, NaN, or Inf.")
     }
   }
   n_pred <- if (is.null(Xnew)) nrow(X) else nrow(Xnew)
 
   # ---- Check scalar probability arguments ----
-  if (!is.numeric(CI_level) || length(CI_level) != 1 || CI_level <= 0 || CI_level >= 1) {
-    stop("'CI_level' must be a single numeric value strictly between 0 and 1.")
+  if (!is.numeric(CI_level) || length(CI_level) != 1L ||
+      is.na(CI_level) || !is.finite(CI_level) ||
+      CI_level <= 0 || CI_level >= 1) {
+    stop("'CI_level' must be a single finite numeric value strictly between 0 and 1.")
   }
 
-  if (!is.numeric(threshold) || length(threshold) != 1 || threshold <= 0 || threshold >= 1) {
-    stop("'threshold' must be a single numeric value strictly between 0 and 1.")
+  if (!is.numeric(threshold) || length(threshold) != 1L ||
+      is.na(threshold) || !is.finite(threshold) ||
+      threshold <= 0 || threshold >= 1) {
+    stop("'threshold' must be a single finite numeric value strictly between 0 and 1.")
   }
 
   type <- match.arg(type)
+
   # ---- Check Mnew for count prediction ----
   if (type == "count") {
     if (is.null(Mnew)) {

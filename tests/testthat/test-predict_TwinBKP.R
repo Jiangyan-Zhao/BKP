@@ -63,10 +63,10 @@ test_that("predict.TwinBKP validates inputs", {
                "The number of columns in 'Xnew' must match the original input dimension.")
 
   expect_error(predict(model, CI_level = 1),
-               "'CI_level' must be a single numeric value strictly between 0 and 1.")
+               "'CI_level' must be a single finite numeric value strictly between 0 and 1.")
 
   expect_error(predict(model, threshold = 1),
-               "'threshold' must be a single numeric value strictly between 0 and 1.")
+               "'threshold' must be a single finite numeric value strictly between 0 and 1.")
 
   expect_error(predict(model, Xnew = Xnew, type = "count"),
                "When type = 'count' and Xnew is provided, 'Mnew' must also be provided.")

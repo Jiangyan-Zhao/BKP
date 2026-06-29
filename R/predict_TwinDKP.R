@@ -24,6 +24,9 @@ predict.TwinDKP <- function(object, Xnew = NULL, CI_level = 0.95,
     if (!is.numeric(Xnew)) {
       stop("'Xnew' must be numeric.")
     }
+    if (nrow(Xnew) < 1L || ncol(Xnew) < 1L) {
+      stop("'Xnew' must have at least one row and one column.")
+    }
     if (ncol(Xnew) != d) {
       stop("The number of columns in 'Xnew' must match the original input dimension.")
     }
@@ -34,9 +37,10 @@ predict.TwinDKP <- function(object, Xnew = NULL, CI_level = 0.95,
 
   n_pred <- if (is.null(Xnew)) nrow(X) else nrow(Xnew)
 
-  if (!is.numeric(CI_level) || length(CI_level) != 1 ||
+  if (!is.numeric(CI_level) || length(CI_level) != 1L ||
+      is.na(CI_level) || !is.finite(CI_level) ||
       CI_level <= 0 || CI_level >= 1) {
-    stop("'CI_level' must be a single numeric value strictly between 0 and 1.")
+    stop("'CI_level' must be a single finite numeric value strictly between 0 and 1.")
   }
 
   # ---- Check Mnew for count prediction ----
@@ -154,7 +158,7 @@ predict.TwinDKP <- function(object, Xnew = NULL, CI_level = 0.95,
   colnames(pred_lower) <- class_names
   colnames(pred_upper) <- class_names
 
-  out <- list(
+  prediction <- list(
     X = object$X,
     Xnew = Xnew,
     alpha_n = alpha_n,
@@ -163,14 +167,17 @@ predict.TwinDKP <- function(object, Xnew = NULL, CI_level = 0.95,
     lower = pred_lower,
     upper = pred_upper,
     CI_level = CI_level,
-    type = type,
-    ess = "none",
-    ess_info = NULL
+    type = type
   )
 
   if (type == "count") {
-    out$Mnew <- Mnew
+    prediction$Mnew <- Mnew
   }
-  class(out) <- "predict_TwinDKP"
-  out
+
+  if (type == "probability" && all(rowSums(object$Y) == 1)) {
+    prediction$class <- max.col(pred_mean)
+  }
+
+  class(prediction) <- "predict_TwinDKP"
+  return(prediction)
 }

@@ -92,8 +92,8 @@ test_that("test-predict_BKP validation and classification branches", {
 
   expect_error(predict(model, Xnew = matrix(letters[1:4], ncol = 2)), "'Xnew' must be numeric.")
   expect_error(predict(model, Xnew = matrix(runif(3), ncol = 3)), "The number of columns in 'Xnew' must match the original input dimension.")
-  expect_error(predict(model, CI_level = 1), "'CI_level' must be a single numeric value strictly between 0 and 1.")
-  expect_error(predict(model, threshold = 0), "'threshold' must be a single numeric value strictly between 0 and 1.")
+  expect_error(predict(model, CI_level = 1), "'CI_level' must be a single finite numeric value strictly between 0 and 1.")
+  expect_error(predict(model, threshold = 0), "'threshold' must be a single finite numeric value strictly between 0 and 1.")
 
   m2 <- rep(2, nrow(X))
   y2 <- rbinom(nrow(X), m2, 0.5)

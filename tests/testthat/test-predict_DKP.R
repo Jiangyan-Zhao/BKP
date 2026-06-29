@@ -106,7 +106,7 @@ test_that("test-predict_DKP validation and class output branches", {
 
   expect_error(predict(model, Xnew = matrix(letters[1:4], ncol = 2)), "'Xnew' must be numeric.")
   expect_error(predict(model, Xnew = matrix(runif(3), ncol = 3)), "The number of columns in 'Xnew' must match the original input dimension.")
-  expect_error(predict(model, CI_level = 0), "'CI_level' must be a single numeric value strictly between 0 and 1.")
+  expect_error(predict(model, CI_level = 0), "'CI_level' must be a single finite numeric value strictly between 0 and 1.")
 
   Y_count <- matrix(sample(0:2, nrow(X) * 3, replace = TRUE), ncol = 3)
   Y_count[rowSums(Y_count) == 0, 1] <- 1

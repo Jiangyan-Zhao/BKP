@@ -4,7 +4,6 @@
 #'
 #' @examples
 #' #-------------------------- DKP and TwinDKP ---------------------------
-#'
 #' #-------------------------- 1D Example ---------------------------
 #' # Define true class probability function (3-class)
 #' true_pi_fun <- function(X) {
