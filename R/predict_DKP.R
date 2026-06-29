@@ -27,8 +27,12 @@
 #' predict(model)
 #'
 #' # Prediction on new data
-#' Xnew = matrix(seq(-2, 2, length = 10), ncol=1) #new data points
+#' Xnew = matrix(seq(-2, 2, length = 10), ncol = 1) #new data points
 #' predict(model, Xnew)
+#'
+#' # Posterior predictive summaries for future success counts
+#' Mnew <- sample(100, nrow(Xnew), replace = TRUE)
+#' predict(model, Xnew = Xnew, type = "count", Mnew = Mnew)
 #'
 #' \dontrun{
 #' # Larger TwinDKP example
@@ -48,6 +52,10 @@
 #'
 #' # Prediction on new data
 #' predict(model, Xnew)
+#'
+#' # Posterior predictive summaries for future success counts
+#' Mnew <- sample(100, nrow(Xnew), replace = TRUE)
+#' predict(model, Xnew = Xnew, type = "count", Mnew = Mnew)
 #' }
 #'
 #' @export

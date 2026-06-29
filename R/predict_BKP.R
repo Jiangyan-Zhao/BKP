@@ -40,69 +40,98 @@
 #' @return A list containing posterior or posterior predictive summaries:
 #' \describe{
 #'   \item{\code{X}}{The original training input locations.}
-#'   \item{\code{Xnew}}{The new input locations for prediction. If \code{NULL},
-#'     predictions are returned at the training input locations.}
-#'   \item{\code{alpha_n}, \code{beta_n}}{Posterior shape parameters:
+#'   \item{\code{Xnew}}{The input locations at which predictions are returned.
+#'     If \code{Xnew = NULL}, predictions are returned at the training input
+#'     locations.}
+#'   \item{\code{alpha_n}}{Posterior shape or concentration parameters:
 #'     \itemize{
-#'       \item BKP and TwinBKP: Vectors \code{alpha_n} and \code{beta_n} of Beta posterior
-#'       shape parameters.
-#'       \item DKP: Matrix \code{alpha_n} of Dirichlet posterior concentration
-#'       parameters, with rows corresponding to input locations and columns to
-#'       classes.
+#'       \item For \code{BKP} and \code{TwinBKP}, a vector of posterior Beta
+#'       \eqn{\alpha} shape parameters.
+#'       \item For \code{DKP} and \code{TwinDKP}, a matrix of posterior
+#'       Dirichlet concentration parameters, with rows corresponding to
+#'       prediction locations and columns corresponding to classes.
 #'     }}
+#'   \item{\code{beta_n}}{Posterior Beta \eqn{\beta} shape parameters, returned
+#'     for \code{BKP} and \code{TwinBKP} objects.}
 #'   \item{\code{mean}}{Mean of the prediction target:
 #'     \itemize{
-#'       \item BKP and TwinBKP with \code{type = "probability"}: posterior mean of the latent
-#'       success probability.
-#'       \item BKP and TwinBKP with \code{type = "count"}: posterior predictive mean of the
-#'       future success count.
-#'       \item DKP with \code{type = "probability"}: matrix of posterior mean class probabilities.
-#'       \item DKP with \code{type = "count"}: matrix of posterior predictive mean class counts.
+#'       \item For \code{BKP} and \code{TwinBKP} with
+#'       \code{type = "probability"}, the posterior mean of the latent success
+#'       probability.
+#'       \item For \code{BKP} and \code{TwinBKP} with \code{type = "count"},
+#'       the posterior predictive mean of a future success count.
+#'       \item For \code{DKP} and \code{TwinDKP} with
+#'       \code{type = "probability"}, a matrix of posterior mean class
+#'       probabilities.
+#'       \item For \code{DKP} and \code{TwinDKP} with \code{type = "count"},
+#'       a matrix of marginal posterior predictive mean class counts.
 #'     }}
 #'   \item{\code{variance}}{Variance of the prediction target:
 #'     \itemize{
-#'       \item BKP and TwinBKP with \code{type = "probability"}: posterior variance of the
-#'       latent success probability.
-#'       \item BKP and TwinBKP with \code{type = "count"}: posterior predictive variance of
-#'       the future success count.
-#'       \item DKP with \code{type = "probability"}: matrix of posterior variances for class probabilities.
-#'       \item DKP with \code{type = "count"}: matrix of posterior predictive variances for class counts.
+#'       \item For \code{BKP} and \code{TwinBKP} with
+#'       \code{type = "probability"}, the posterior variance of the latent
+#'       success probability.
+#'       \item For \code{BKP} and \code{TwinBKP} with \code{type = "count"},
+#'       the posterior predictive variance of a future success count.
+#'       \item For \code{DKP} and \code{TwinDKP} with
+#'       \code{type = "probability"}, a matrix of marginal posterior variances
+#'       for class probabilities.
+#'       \item For \code{DKP} and \code{TwinDKP} with \code{type = "count"},
+#'       a matrix of marginal posterior predictive variances for class counts.
 #'     }}
-#'   \item{\code{lower}}{Lower bound of the credible interval:
+#'   \item{\code{lower}}{Lower bound of the credible or predictive interval:
 #'     \itemize{
-#'       \item BKP and TwinBKP with \code{type = "probability"}: lower Beta posterior
-#'       quantile for the latent success probability.
-#'       \item BKP and TwinBKP with \code{type = "count"}: lower Beta-Binomial posterior
-#'       predictive quantile for the future success count.
-#'       \item DKP with \code{type = "probability"}: matrix of lower posterior quantiles for class probabilities.
-#'       \item DKP with \code{type = "count"}: matrix of lower posterior predictive quantiles for class counts.
+#'       \item For \code{BKP} and \code{TwinBKP} with
+#'       \code{type = "probability"}, the lower Beta posterior quantile for
+#'       the latent success probability.
+#'       \item For \code{BKP} and \code{TwinBKP} with \code{type = "count"},
+#'       the lower Beta-Binomial posterior predictive quantile for a future
+#'       success count.
+#'       \item For \code{DKP} and \code{TwinDKP} with
+#'       \code{type = "probability"}, a matrix of lower marginal posterior
+#'       quantiles for class probabilities.
+#'       \item For \code{DKP} and \code{TwinDKP} with \code{type = "count"},
+#'       a matrix of lower marginal Beta-Binomial posterior predictive quantiles
+#'       for class counts.
 #'     }}
-#'   \item{\code{upper}}{Upper bound of the credible interval:
+#'   \item{\code{upper}}{Upper bound of the credible or predictive interval:
 #'     \itemize{
-#'       \item BKP and TwinBKP with \code{type = "probability"}: upper Beta posterior
-#'       quantile for the latent success probability.
-#'       \item BKP and TwinBKP with \code{type = "count"}: upper Beta-Binomial posterior
-#'       predictive quantile for the future success count.
-#'       \item DKP with \code{type = "probability"}: matrix of upper posterior quantiles for class probabilities.
-#'       \item DKP with \code{type = "count"}: matrix of upper posterior predictive quantiles for class counts.
+#'       \item For \code{BKP} and \code{TwinBKP} with
+#'       \code{type = "probability"}, the upper Beta posterior quantile for
+#'       the latent success probability.
+#'       \item For \code{BKP} and \code{TwinBKP} with \code{type = "count"},
+#'       the upper Beta-Binomial posterior predictive quantile for a future
+#'       success count.
+#'       \item For \code{DKP} and \code{TwinDKP} with
+#'       \code{type = "probability"}, a matrix of upper marginal posterior
+#'       quantiles for class probabilities.
+#'       \item For \code{DKP} and \code{TwinDKP} with \code{type = "count"},
+#'       a matrix of upper marginal Beta-Binomial posterior predictive quantiles
+#'       for class counts.
 #'     }}
-#'   \item{\code{class}}{Predicted label, where applicable:
+#'   \item{\code{class}}{Predicted class label, returned only when applicable:
 #'     \itemize{
-#'       \item BKP and TwinBKP: binary class label based on posterior mean and
-#'       \code{threshold}, only for binary data with \code{m = 1} and
+#'       \item For \code{BKP} and \code{TwinBKP}, a binary class label based on
+#'       the posterior mean and \code{threshold}, returned only for binary
+#'       classification data with \code{m = 1} and
 #'       \code{type = "probability"}.
-#'       \item DKP: predicted class label with the highest posterior mean
-#'       probability.
+#'       \item For \code{DKP} and \code{TwinDKP}, the class with the largest
+#'       posterior mean probability, returned only for one-hot classification
+#'       data and \code{type = "probability"}.
 #'     }}
+#'   \item{\code{threshold}}{The classification threshold, returned for
+#'     \code{BKP} and \code{TwinBKP} classification predictions.}
 #'   \item{\code{CI_level}}{The specified credible interval level.}
-#'   \item{\code{type}}{The prediction target used.}
-#'   \item{\code{ess}}{Effective-sample-size calibration method inherited from
-#'     the fitted model, returned for BKP and DKP objects when available.}
-#'   \item{\code{ess_info}}{ESS diagnostics for BKP and DKP predictions when
-#'     available. TwinBKP uses the uncalibrated global-local posterior update and
-#'     does not return ESS diagnostics.}
+#'   \item{\code{type}}{The prediction target, either \code{"probability"} or
+#'     \code{"count"}.}
 #'   \item{\code{Mnew}}{The trial sizes used for count prediction, returned only
 #'     when \code{type = "count"}.}
+#'   \item{\code{ess}}{Effective-sample-size calibration method inherited from
+#'     the fitted model, returned for \code{BKP} and \code{DKP} objects.}
+#'   \item{\code{ess_info}}{ESS diagnostics for \code{BKP} and \code{DKP}
+#'     predictions when available. \code{TwinBKP} and \code{TwinDKP} use
+#'     uncalibrated global-local posterior updates and do not return ESS
+#'     diagnostics.}
 #' }
 #'
 #' @seealso \code{\link{fit_BKP}}, \code{\link{fit_DKP}},
@@ -132,13 +161,13 @@
 #' y <- rbinom(n, size = m, prob = true_pi)
 #'
 #' # Fit BKP model
-#' model <- fit_BKP(X, y, m, Xbounds=Xbounds)
+#' model <- fit_BKP(X, y, m, Xbounds = Xbounds)
 #'
 #' # Prediction on training data
 #' predict(model)
 #'
 #' # Prediction on new data
-#' Xnew <- matrix(seq(-2, 2, length = 10), ncol=1) #new data points
+#' Xnew <- matrix(seq(-2, 2, length = 10), ncol = 1) #new data points
 #' predict(model, Xnew = Xnew)
 #'
 #' # Posterior predictive summaries for future success counts
@@ -154,7 +183,7 @@
 #' y <- rbinom(n, size = m, prob = true_pi)
 #'
 #' # Fit TwinBKP model
-#' model <- fit_TwinBKP(X, y, m, Xbounds=Xbounds)
+#' model <- fit_TwinBKP(X, y, m, Xbounds = Xbounds)
 #'
 #' # Prediction on training data
 #' predict(model)
