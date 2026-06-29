@@ -275,6 +275,10 @@ arma::mat kernel_matrix_arma(
     K = (q_w * dist + 1.0) % arma::pow(one_minus, q_w);
   }
 
+  if (symmetric) {
+    K.diag().ones();
+  }
+
   return K;
 }
 

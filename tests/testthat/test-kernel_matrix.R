@@ -128,3 +128,59 @@ test_that("kernel_matrix low-memory engine supports all kernels and lengthscales
     expect_equal(dim(K_aniso), c(nrow(X), nrow(Xprime)))
   }
 })
+
+test_that("kernel_matrix returns exact unit diagonal for symmetric kernels", {
+  set.seed(1)
+  X <- matrix(runif(30), ncol = 3)
+  kernels <- c("gaussian", "matern52", "matern32", "wendland")
+
+  for (k in kernels) {
+    K <- kernel_matrix(X, theta = 0.3, kernel = k)
+    expect_equal(diag(K), rep(1, nrow(X)), tolerance = 0)
+    expect_equal(K, t(K), tolerance = 1e-12)
+  }
+})
+
+test_that("kernel_matrix returns correct cross-kernel dimensions", {
+  X <- matrix(runif(20), ncol = 2)
+  Xprime <- matrix(runif(12), ncol = 2)
+
+  K <- kernel_matrix(X, Xprime, theta = 0.2, kernel = "gaussian")
+  expect_equal(dim(K), c(nrow(X), nrow(Xprime)))
+})
+
+test_that("kernel_matrix anisotropic scalar theta broadcasts correctly", {
+  set.seed(2)
+  X <- matrix(runif(20), ncol = 2)
+
+  K1 <- kernel_matrix(X, theta = 0.2, isotropic = FALSE)
+  K2 <- kernel_matrix(X, theta = rep(0.2, ncol(X)), isotropic = FALSE)
+
+  expect_equal(K1, K2, tolerance = 1e-12)
+})
+
+test_that("kernel_matrix rejects empty inputs", {
+  expect_error(
+    kernel_matrix(matrix(numeric(0), nrow = 0, ncol = 2)),
+    "at least one row and one column"
+  )
+
+  X <- matrix(runif(4), ncol = 2)
+  Xprime_empty <- matrix(numeric(0), nrow = 0, ncol = 2)
+
+  expect_error(
+    kernel_matrix(X, Xprime_empty),
+    "at least one row and one column"
+  )
+})
+
+test_that("kernel_matrix rejects invalid theta values", {
+  X <- matrix(runif(10), ncol = 2)
+
+  expect_error(kernel_matrix(X, theta = 0), "theta")
+  expect_error(kernel_matrix(X, theta = NA_real_), "theta")
+  expect_error(
+    kernel_matrix(X, theta = c(0.1, 0.2, 0.3), isotropic = FALSE),
+    "theta"
+  )
+})

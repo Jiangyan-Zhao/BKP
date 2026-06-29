@@ -16,7 +16,7 @@
 #'   can be a scalar (broadcasted) or a vector of length \code{d} for
 #'   per-dimension scaling.
 #' @param kernel A character string specifying the kernel function. Must be one
-#'   of \code{"gaussian"}, \code{"matern32"}, \code{"matern52"}, or
+#'   of \code{"gaussian"}, \code{"matern52"}, \code{"matern32"}, or
 #'   \code{"wendland"}.
 #' @param isotropic Logical. If \code{TRUE} (default), use a single shared
 #'   lengthscale across dimensions. If \code{FALSE}, use per-dimension
@@ -26,38 +26,49 @@
 #'   \eqn{K_{ij}} gives the kernel similarity between input \eqn{X_i} and
 #'   \eqn{X'_j}.
 #'
-#' @details Let \eqn{\mathbf{x}} and \eqn{\mathbf{x}'} denote two input points.
-#'   The scaled distance is defined as
+#' @details Let \eqn{\mathbf{x}} and \eqn{\mathbf{x}^{\prime}} denote two input
+#'   points. The scaled Euclidean distance is
 #'   \deqn{
-#'      r = \left\| \frac{\mathbf{x} - \mathbf{x}'}{\boldsymbol{\theta}} \right\|_2.
+#'     h(\mathbf{x}, \mathbf{x}^{\prime}; \boldsymbol{\theta}) =
+#'     \left\|
+#'       \frac{\mathbf{x} - \mathbf{x}^{\prime}}{\boldsymbol{\theta}}
+#'     \right\|_2.
 #'   }
+#'   For isotropic kernels, \eqn{\boldsymbol{\theta}} is a scalar shared by all
+#'   input dimensions. For anisotropic kernels, \eqn{\boldsymbol{\theta}} is a
+#'   vector of dimension-specific lengthscales.
 #'
-#'   The available kernels are defined as:
+#'   The available kernels are
 #'   \itemize{
-#'      \item \strong{Gaussian:}
-#'      \deqn{
-#'        k(\mathbf{x}, \mathbf{x}') = \exp(-r^2)
-#'      }
-#'      \item \strong{Matérn 5/2:}
-#'      \deqn{
-#'        k(\mathbf{x}, \mathbf{x}') = \left(1 + \sqrt{5} r + \frac{5}{3} r^2 \right) \exp(-\sqrt{5} r)
-#'      }
-#'      \item \strong{Matérn 3/2:}
-#'      \deqn{
-#'        k(\mathbf{x}, \mathbf{x}') = \left(1 + \sqrt{3} r \right) \exp(-\sqrt{3} r)
-#'      }
-#'      \item \strong{Wendland:}
-#'      \deqn{
-#'        k(\mathbf{x}, \mathbf{x}') = (\zeta r + 1)\max(0,1-r)^\zeta,
-#'        \quad \zeta = \lfloor d/2 \rfloor + 3
-#'      }
+#'     \item \strong{Gaussian:}
+#'     \deqn{
+#'       k(\mathbf{x}, \mathbf{x}^{\prime}) = \exp(-h^2).
+#'     }
+#'     \item \strong{Matérn 5/2:}
+#'     \deqn{
+#'       k(\mathbf{x}, \mathbf{x}^{\prime}) =
+#'       \left(1 + \sqrt{5}h + \frac{5}{3}h^2\right)
+#'       \exp(-\sqrt{5}h).
+#'     }
+#'     \item \strong{Matérn 3/2:}
+#'     \deqn{
+#'       k(\mathbf{x}, \mathbf{x}^{\prime}) =
+#'       \left(1 + \sqrt{3}h\right)\exp(-\sqrt{3}h).
+#'     }
+#'     \item \strong{Wendland:}
+#'     \deqn{
+#'       k(\mathbf{x}, \mathbf{x}^{\prime}) =
+#'       (\zeta h + 1)\max(0, 1 - h)^{\zeta},
+#'       \qquad \zeta = \lfloor d/2 \rfloor + 3.
+#'     }
 #'   }
 #'
-#'   The function performs consistency checks on input dimensions and
-#'   automatically broadcasts \code{theta} when it is a scalar.
+#'   The returned matrix has one row for each row of \code{X} and one column for
+#'   each row of \code{Xprime}. If \code{Xprime = NULL}, the function returns the
+#'   symmetric kernel matrix for \code{X}.
 #'
 #' @references Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
-#'   Kernel Process Modeling}.  arXiv. \doi{10.48550/arXiv.2508.10447}
+#'   Kernel Process Modeling}. arXiv. <doi:10.48550/arXiv.2508.10447>.
 #'
 #'   Rasmussen, C. E., & Williams, C. K. I. (2006). \emph{Gaussian
 #'   Processes for Machine Learning}. MIT Press.
@@ -68,6 +79,7 @@
 #'
 #' @examples
 #' set.seed(123)
+#'
 #' X <- matrix(runif(20), ncol = 2)
 #'
 #' # Compute kernel matrices for all implemented kernels
@@ -77,9 +89,9 @@
 #' })
 #' names(K_list) <- kernels
 #'
-#' # Inspect the Gaussian and Wendland kernel matrices
-#' K_list$gaussian
-#' K_list$wendland
+#' # Inspect part of the Gaussian and Wendland kernel matrices
+#' K_list$gaussian[1:3, 1:3]
+#' K_list$wendland[1:3, 1:3]
 #'
 #' # Anisotropic lengthscales
 #' K_aniso <- kernel_matrix(
@@ -89,9 +101,10 @@
 #'   isotropic = FALSE
 #' )
 #'
-#' # Use Xprime different from X
+#' # Cross-kernel matrix between two input sets
 #' Xprime <- matrix(runif(10), ncol = 2)
 #' K_cross <- kernel_matrix(X, Xprime, theta = 0.2, kernel = "gaussian")
+#' dim(K_cross)
 #'
 #' @export
 
@@ -119,6 +132,15 @@ kernel_matrix <- function(X, Xprime = NULL, theta = 0.1,
   # Convert vector -> matrix (n x 1)
   if (is.vector(X)) X <- matrix(X, ncol = 1)
   if (!is.null(Xprime) && is.vector(Xprime)) Xprime <- matrix(Xprime, ncol = 1)
+
+  # Empty input checks
+  if (nrow(X) < 1L || ncol(X) < 1L) {
+    stop("'X' must have at least one row and one column.")
+  }
+
+  if (!is.null(Xprime) && (nrow(Xprime) < 1L || ncol(Xprime) < 1L)) {
+    stop("'Xprime' must have at least one row and one column.")
+  }
 
   # Dimension checks
   if (!is.null(Xprime) && ncol(X) != ncol(Xprime)) {

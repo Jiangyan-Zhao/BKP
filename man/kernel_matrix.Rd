@@ -27,7 +27,7 @@ can be a scalar (broadcasted) or a vector of length \code{d} for
 per-dimension scaling.}
 
 \item{kernel}{A character string specifying the kernel function. Must be one
-of \code{"gaussian"}, \code{"matern32"}, \code{"matern52"}, or
+of \code{"gaussian"}, \code{"matern52"}, \code{"matern32"}, or
 \code{"wendland"}.}
 
 \item{isotropic}{Logical. If \code{TRUE} (default), use a single shared
@@ -46,38 +46,50 @@ lengthscales. Available kernels include the Gaussian, Matérn 5/2,
 Matérn 3/2, and Wendland compactly supported kernel.
 }
 \details{
-Let \eqn{\mathbf{x}} and \eqn{\mathbf{x}'} denote two input points.
-The scaled distance is defined as
+Let \eqn{\mathbf{x}} and \eqn{\mathbf{x}^{\prime}} denote two input
+points. The scaled Euclidean distance is
 \deqn{
-     r = \left\| \frac{\mathbf{x} - \mathbf{x}'}{\boldsymbol{\theta}} \right\|_2.
+    h(\mathbf{x}, \mathbf{x}^{\prime}; \boldsymbol{\theta}) =
+    \left\|
+      \frac{\mathbf{x} - \mathbf{x}^{\prime}}{\boldsymbol{\theta}}
+    \right\|_2.
   }
+For isotropic kernels, \eqn{\boldsymbol{\theta}} is a scalar shared by all
+input dimensions. For anisotropic kernels, \eqn{\boldsymbol{\theta}} is a
+vector of dimension-specific lengthscales.
 
-The available kernels are defined as:
+The available kernels are
 \itemize{
 \item \strong{Gaussian:}
 \deqn{
-       k(\mathbf{x}, \mathbf{x}') = \exp(-r^2)
-     }
+      k(\mathbf{x}, \mathbf{x}^{\prime}) = \exp(-h^2).
+    }
 \item \strong{Matérn 5/2:}
 \deqn{
-       k(\mathbf{x}, \mathbf{x}') = \left(1 + \sqrt{5} r + \frac{5}{3} r^2 \right) \exp(-\sqrt{5} r)
-     }
+      k(\mathbf{x}, \mathbf{x}^{\prime}) =
+      \left(1 + \sqrt{5}h + \frac{5}{3}h^2\right)
+      \exp(-\sqrt{5}h).
+    }
 \item \strong{Matérn 3/2:}
 \deqn{
-       k(\mathbf{x}, \mathbf{x}') = \left(1 + \sqrt{3} r \right) \exp(-\sqrt{3} r)
-     }
+      k(\mathbf{x}, \mathbf{x}^{\prime}) =
+      \left(1 + \sqrt{3}h\right)\exp(-\sqrt{3}h).
+    }
 \item \strong{Wendland:}
 \deqn{
-       k(\mathbf{x}, \mathbf{x}') = (\zeta r + 1)\max(0,1-r)^\zeta,
-       \quad \zeta = \lfloor d/2 \rfloor + 3
-     }
+      k(\mathbf{x}, \mathbf{x}^{\prime}) =
+      (\zeta h + 1)\max(0, 1 - h)^{\zeta},
+      \qquad \zeta = \lfloor d/2 \rfloor + 3.
+    }
 }
 
-The function performs consistency checks on input dimensions and
-automatically broadcasts \code{theta} when it is a scalar.
+The returned matrix has one row for each row of \code{X} and one column for
+each row of \code{Xprime}. If \code{Xprime = NULL}, the function returns the
+symmetric kernel matrix for \code{X}.
 }
 \examples{
 set.seed(123)
+
 X <- matrix(runif(20), ncol = 2)
 
 # Compute kernel matrices for all implemented kernels
@@ -87,9 +99,9 @@ K_list <- lapply(kernels, function(k) {
 })
 names(K_list) <- kernels
 
-# Inspect the Gaussian and Wendland kernel matrices
-K_list$gaussian
-K_list$wendland
+# Inspect part of the Gaussian and Wendland kernel matrices
+K_list$gaussian[1:3, 1:3]
+K_list$wendland[1:3, 1:3]
 
 # Anisotropic lengthscales
 K_aniso <- kernel_matrix(
@@ -99,14 +111,15 @@ K_aniso <- kernel_matrix(
   isotropic = FALSE
 )
 
-# Use Xprime different from X
+# Cross-kernel matrix between two input sets
 Xprime <- matrix(runif(10), ncol = 2)
 K_cross <- kernel_matrix(X, Xprime, theta = 0.2, kernel = "gaussian")
+dim(K_cross)
 
 }
 \references{
 Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
-Kernel Process Modeling}.  arXiv. \doi{10.48550/arXiv.2508.10447}
+Kernel Process Modeling}. arXiv. \url{doi:10.48550/arXiv.2508.10447}.
 
 Rasmussen, C. E., & Williams, C. K. I. (2006). \emph{Gaussian
 Processes for Machine Learning}. MIT Press.
