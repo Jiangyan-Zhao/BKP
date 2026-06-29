@@ -123,8 +123,10 @@ Kernel Process Modeling}. arXiv. \url{doi:10.48550/arXiv.2508.10447}.
 
 Rasmussen, C. E., & Williams, C. K. I. (2006). \emph{Gaussian
 Processes for Machine Learning}. MIT Press.
+\url{https://gaussianprocess.org/gpml/}.
 
 Wendland, H. (1995). Piecewise polynomial, positive definite and compactly
 supported radial functions of minimal degree. \emph{Advances in
 Computational Mathematics}, 4(1), 389--396.
+\url{doi:10.1007/BF02123482}.
 }

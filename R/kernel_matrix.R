@@ -72,10 +72,12 @@
 #'
 #'   Rasmussen, C. E., & Williams, C. K. I. (2006). \emph{Gaussian
 #'   Processes for Machine Learning}. MIT Press.
+#'   \url{https://gaussianprocess.org/gpml/}.
 #'
 #'   Wendland, H. (1995). Piecewise polynomial, positive definite and compactly
 #'   supported radial functions of minimal degree. \emph{Advances in
 #'   Computational Mathematics}, 4(1), 389--396.
+#'   <doi:10.1007/BF02123482>.
 #'
 #' @examples
 #' set.seed(123)

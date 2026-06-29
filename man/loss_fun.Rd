@@ -2,7 +2,7 @@
 % Please edit documentation in R/loss_fun.R
 \name{loss_fun}
 \alias{loss_fun}
-\title{Loss Function for BKP and DKP Models}
+\title{Leave-One-Out Loss for BKP and DKP Models}
 \usage{
 loss_fun(
   gamma,
@@ -67,36 +67,60 @@ Use \code{"shepard"} to apply the same data-precision rescaling as in
 model fitting, with the Shepard target computed in leave-one-out form.}
 }
 \value{
-A single numeric value representing the total loss (to be minimized).
-The value corresponds to either the Brier score (squared error) or the
-log-loss (cross-entropy).
+A single numeric value giving the average leave-one-out loss to be
+minimized. For BKP, the Brier score and log-loss are averaged over
+observations. For DKP, class-wise losses are summed within each observation
+and then averaged over observations.
 }
 \description{
-Computes the loss for fitting BKP (binary) or DKP (multi-class)
-models. Supports Brier score (mean squared error) and log-loss
-(cross-entropy) under different prior specifications.
+Computes the leave-one-out cross-validation loss used for
+kernel hyperparameter tuning in BKP and DKP models. The input
+\code{gamma} represents log10-transformed kernel lengthscale parameters,
+with \code{theta = 10^gamma}. The function supports Brier score and
+log-loss under noninformative, fixed, and adaptive prior specifications.
+}
+\details{
+The kernel lengthscale parameter is represented on the log10 scale:
+\code{theta = 10^gamma}. The function first computes the kernel matrix
+using \code{\link{kernel_matrix}} and then sets its diagonal entries to
+zero, so that each fitted value is computed with the corresponding
+observation excluded. This implements leave-one-out cross-validation
+without repeatedly refitting the model.
+
+For \code{model = "BKP"}, the loss compares the leave-one-out posterior
+mean success probability with the empirical proportion \code{y / m}. For
+\code{model = "DKP"}, the loss compares the leave-one-out posterior mean
+class-probability vector with the empirical class-proportion vector
+\code{Y / rowSums(Y)}.
+
+If \code{ess = "shepard"}, the same data-precision rescaling used in model
+fitting is applied in leave-one-out form. This option requires unique
+training input locations on the normalized input scale.
 }
 \examples{
 # -------------------------- BKP ---------------------------
 set.seed(123)
+
 n <- 10
 Xnorm <- matrix(runif(2 * n), ncol = 2)
 m <- rep(10, n)
-y <- rbinom(n, size = m, prob = runif(n))
-loss_fun(gamma = 0, Xnorm = Xnorm, y = y, m = m, model = "BKP")
+pi_true <- runif(n)
+y <- rbinom(n, size = m, prob = pi_true)
+loss_bkp <- loss_fun(gamma = log10(0.2), Xnorm = Xnorm, y = y, m = m)
 
 # -------------------------- DKP ---------------------------
-set.seed(123)
 n <- 10
 q <- 3
 Xnorm <- matrix(runif(2 * n), ncol = 2)
+m <- rep(10, n)
+p0 <- rep(1 / q, q)
 Y <- matrix(rmultinom(n, size = 10, prob = rep(1/q, q)), nrow = n, byrow = TRUE)
-loss_fun(gamma = 0, Xnorm = Xnorm, Y = Y, model = "DKP")
+loss_dkp <- loss_fun(gamma = log10(0.2), Xnorm = Xnorm, Y = Y, model = "DKP")
 
 }
 \references{
 Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
-Kernel Process Modeling}.  arXiv. \doi{10.48550/arXiv.2508.10447}
+Kernel Process Modeling}.  arXiv. \url{doi:10.48550/arXiv.2508.10447}.
 }
 \seealso{
 \code{\link{fit_BKP}} for fitting BKP models, \code{\link{fit_DKP}}
