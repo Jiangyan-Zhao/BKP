@@ -27,10 +27,10 @@ test_that("get_prior handles input validation correctly", {
 
   # Test for DKP fixed prior with p0 not summing to 1
   expect_error(get_prior(prior = "fixed", model = "DKP", r0 = 10, p0 = c(0.5, 0.6)),
-               "'p0' must sum to 1.")
+               "For fixed prior in DKP, 'p0' must be a nonnegative finite numeric vector of length equal to the number of classes and sum to 1.", fixed = TRUE)
 
   # Test for DKP adaptive prior with missing Y/K
-  expect_error(get_prior(prior = "adaptive", model = "DKP", r0 = 10, Y = matrix(1)),
+  expect_error(get_prior(prior = "adaptive", model = "DKP", r0 = 10, Y = matrix(1, nrow = 1, ncol = 2)),
                "'Y' and 'K' must be provided for adaptive prior in DKP.")
 })
 
@@ -84,7 +84,8 @@ test_that("get_prior works correctly for DKP model", {
 
   # Noninformative prior
   non_info_prior <- get_prior(prior = "noninformative", model = "DKP", Y = Y)
-  expect_equal(non_info_prior, matrix(1, nrow = 1, ncol = q))
+  expect_equal(dim(non_info_prior), c(n, q))
+  expect_equal(non_info_prior, matrix(1, nrow = n, ncol = q))
 
   # Fixed prior
   r0 <- 10
@@ -137,8 +138,8 @@ test_that("test-get_prior uncovered validation branches", {
   )
 
   expect_error(
-    get_prior(prior = "fixed", model = "DKP", p0 = c(0.3, 0.3), Y = matrix(1, ncol = 3)),
-    "length(p0) must match the number of classes.", fixed = TRUE
+    get_prior(prior = "fixed", model = "DKP", p0 = c(0.3, 0.3), Y = matrix(1, nrow = 1, ncol = 3)),
+    "For fixed prior in DKP, 'p0' must be a nonnegative finite numeric vector of length equal to the number of classes and sum to 1.", fixed = TRUE
   )
 
   expect_error(
@@ -148,9 +149,71 @@ test_that("test-get_prior uncovered validation branches", {
 
   expect_error(
     get_prior(prior = "adaptive", model = "DKP", Y = matrix(c(0, 0, 1, 0), ncol = 2), K = diag(2)),
-    "Each row of 'Y' must have a positive sum for adaptive prior."
+    "Each row of 'Y' must have a positive row sum."
   )
 
   alpha0_noninfo <- get_prior(prior = "noninformative", model = "DKP", p0 = c(0.4, 0.6))
   expect_equal(dim(alpha0_noninfo), c(1, 2))
+})
+
+test_that("get_prior infers output dimensions when K is NULL for nonadaptive priors", {
+  y <- c(1, 2, 0, 3)
+  m <- c(5, 5, 5, 5)
+
+  bkp_noninfo <- get_prior(prior = "noninformative", model = "BKP", y = y, m = m)
+  expect_equal(length(bkp_noninfo$alpha0), length(y))
+  expect_equal(length(bkp_noninfo$beta0), length(y))
+  expect_equal(bkp_noninfo$alpha0, rep(1, length(y)))
+  expect_equal(bkp_noninfo$beta0, rep(1, length(y)))
+
+  r0 <- 8
+  p0_bkp <- 0.25
+  bkp_fixed <- get_prior(prior = "fixed", model = "BKP", y = y, m = m, r0 = r0, p0 = p0_bkp)
+  expect_equal(length(bkp_fixed$alpha0), length(y))
+  expect_equal(length(bkp_fixed$beta0), length(y))
+  expect_equal(bkp_fixed$alpha0, rep(r0 * p0_bkp, length(y)))
+  expect_equal(bkp_fixed$beta0, rep(r0 * (1 - p0_bkp), length(y)))
+
+  Y <- matrix(c(2, 1, 0, 1, 3, 2, 1, 0, 4), nrow = 3, byrow = TRUE)
+  dkp_noninfo <- get_prior(prior = "noninformative", model = "DKP", Y = Y)
+  expect_equal(dim(dkp_noninfo), dim(Y))
+  expect_equal(dkp_noninfo, matrix(1, nrow = nrow(Y), ncol = ncol(Y)))
+
+  p0_dkp <- c(0.2, 0.3, 0.5)
+  r0 <- 10
+  dkp_fixed <- get_prior(prior = "fixed", model = "DKP", Y = Y, p0 = p0_dkp, r0 = r0)
+  expect_equal(dim(dkp_fixed), dim(Y))
+  expect_equal(dkp_fixed, matrix(rep(r0 * p0_dkp, each = nrow(Y)), nrow = nrow(Y)))
+
+  dkp_fixed_no_y <- get_prior(prior = "fixed", model = "DKP", p0 = p0_dkp, r0 = r0)
+  expect_equal(dim(dkp_fixed_no_y), c(1L, length(p0_dkp)))
+  expect_equal(dkp_fixed_no_y, matrix(r0 * p0_dkp, nrow = 1))
+})
+
+test_that("get_prior rejects invalid DKP class inputs", {
+  expect_error(
+    get_prior(prior = "fixed", model = "DKP", p0 = 1),
+    "For DKP, the number of classes must be at least two.",
+    fixed = TRUE
+  )
+
+  expect_error(
+    get_prior(prior = "noninformative", model = "DKP", Y = matrix(c(1, 0, 0, 0), nrow = 2, byrow = TRUE)),
+    "Each row of 'Y' must have a positive row sum.",
+    fixed = TRUE
+  )
+})
+
+test_that("get_prior adaptive priors still require K", {
+  expect_error(
+    get_prior(prior = "adaptive", model = "BKP", y = c(1, 0), m = c(2, 2)),
+    "For adaptive prior in BKP, 'y', 'm', and 'K' must be provided.",
+    fixed = TRUE
+  )
+
+  expect_error(
+    get_prior(prior = "adaptive", model = "DKP", Y = matrix(c(1, 0, 0, 1), nrow = 2, byrow = TRUE)),
+    "'Y' and 'K' must be provided for adaptive prior in DKP.",
+    fixed = TRUE
+  )
 })

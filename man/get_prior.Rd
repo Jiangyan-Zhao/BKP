@@ -2,7 +2,7 @@
 % Please edit documentation in R/get_prior.R
 \name{get_prior}
 \alias{get_prior}
-\title{Construct Prior Parameters for BKP/DKP Models}
+\title{Construct Prior Parameters for BKP and DKP Models}
 \usage{
 get_prior(
   prior = c("noninformative", "fixed", "adaptive"),
@@ -41,10 +41,13 @@ Each element of \code{y} must be between 0 and the corresponding element of
 only when \code{model = "DKP"}, where \code{n} is the number of
 observations and \code{q} the number of classes.}
 
-\item{K}{A precomputed kernel matrix, typically obtained from
-\code{\link{kernel_matrix}}. Can be rectangular (\code{m × n}), where
-\code{n} is the number of observed points and \code{m} the number of
-prediction locations.}
+\item{K}{Optional precomputed kernel matrix, typically obtained from
+\code{\link{kernel_matrix}}. For adaptive priors, \code{K} is required and
+must have one column per observed training input. The number of rows of
+\code{K} determines the number of locations at which prior parameters are
+evaluated. For noninformative and fixed priors, if \code{K = NULL}, the
+output length is inferred from \code{y}/\code{m} for BKP or from
+\code{Y} for DKP when available; otherwise a single prior row is returned.}
 }
 \value{
 \itemize{
@@ -60,44 +63,60 @@ parameters at each input location (\code{n × q}).
 }
 }
 \description{
-Computes prior parameters for the Beta Kernel Process (BKP, for
-binary outcomes) or Dirichlet Kernel Process (DKP, for multi-class
-outcomes). Supports \code{prior = "noninformative"}, \code{"fixed"}, and
-\code{"adaptive"} strategies.
+Construct prior shape parameters for Beta Kernel Process
+(BKP) and Dirichlet Kernel Process (DKP) models. The function supports
+\code{prior = "noninformative"}, \code{"fixed"}, and
+\code{"adaptive"} prior specifications.
 }
 \details{
-\itemize{
-\item \code{prior = "noninformative"}: flat prior; all parameters set to 1.
-\item \code{prior = "fixed"}:
-\itemize{
-\item BKP: uniform Beta prior \code{Beta(r0 * p0, r0 * (1 - p0))} across locations.
-\item DKP: all rows of \code{alpha0} set to \code{r0 * p0}.
-}
-\item \code{prior = "adaptive"}:
-\itemize{
-\item BKP: prior mean estimated at each location via kernel smoothing of observed
-proportions \code{y/m}, with precision \code{r0}.
-\item DKP: prior parameters computed by kernel-weighted smoothing of observed
-class frequencies in \code{Y}, scaled by \code{r0}.
-}
-}
+The noninformative prior sets all Beta or Dirichlet shape parameters to 1.
+
+The fixed prior uses a common prior distribution at every evaluated
+location. For BKP, this is a Beta prior with shape parameters
+\code{r0 * p0} and \code{r0 * (1 - p0)}. For DKP, this is a Dirichlet
+prior with concentration vector \code{r0 * p0}.
+
+The adaptive prior estimates location-specific prior means from the observed
+data. BKP uses kernel smoothing of the observed proportions \code{y / m},
+while DKP uses kernel smoothing of the row-normalized class counts in
+\code{Y}. In both cases, the adaptive prior precision is scaled by the
+local kernel mass.
 }
 \examples{
 # -------------------------- BKP ---------------------------
 set.seed(123)
+
 n <- 10
 X <- matrix(runif(n * 2), ncol = 2)
 y <- rbinom(n, size = 5, prob = 0.6)
 m <- rep(5, n)
-K <- kernel_matrix(X)
+K <- kernel_matrix(X, theta = 0.2, kernel = "gaussian")
+
+# Adaptive BKP prior evaluated at the rows of K
 prior_bkp <- get_prior(
-  model = "BKP", prior = "adaptive", r0 = 2, y = y, m = m, K = K
+  model = "BKP",
+  prior = "adaptive",
+  r0 = 2,
+  y = y,
+  m = m,
+  K = K
+)
+
+# Fixed BKP prior; with K = NULL, output length is inferred from y/m
+prior_bkp_fixed <- get_prior(
+  model = "BKP",
+  prior = "fixed",
+  r0 = 2,
+  p0 = 0.5,
+  y = y,
+  m = m
 )
 
 # -------------------------- DKP ---------------------------
-set.seed(123)
-n <- 15; q <- 3
+n <- 15
+q <- 3
 X <- matrix(runif(n * 2), ncol = 2)
+
 true_pi <- t(apply(X, 1, function(x) {
   raw <- c(
     exp(-sum((x - 0.2)^2)),
@@ -106,17 +125,35 @@ true_pi <- t(apply(X, 1, function(x) {
   )
   raw / sum(raw)
 }))
+
 m <- sample(10:20, n, replace = TRUE)
-Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
+Y <- t(sapply(seq_len(n), function(i) {
+  rmultinom(1, size = m[i], prob = true_pi[i, ])
+}))
 K <- kernel_matrix(X, theta = 0.2, kernel = "gaussian")
+
+# Adaptive DKP prior evaluated at the rows of K
 prior_dkp <- get_prior(
-  model = "DKP", prior = "adaptive", r0 = 2, Y = Y, K = K
+  model = "DKP",
+  prior = "adaptive",
+  r0 = 2,
+  Y = Y,
+  K = K
+)
+
+# Fixed DKP prior; with K = NULL, output rows are inferred from Y
+prior_dkp_fixed <- get_prior(
+  model = "DKP",
+  prior = "fixed",
+  r0 = 2,
+  p0 = rep(1 / q, q),
+  Y = Y
 )
 
 }
 \references{
 Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
-Kernel Process Modeling}. arXiv. \doi{10.48550/arXiv.2508.10447}
+Kernel Process Modeling}. arXiv.  \url{doi:10.48550/arXiv.2508.10447}.
 }
 \seealso{
 \code{\link{fit_BKP}} for fitting Beta Kernel Process models,
