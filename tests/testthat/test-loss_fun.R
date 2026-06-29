@@ -87,14 +87,14 @@ test_that("loss_fun additional validation and DKP anisotropic branch", {
   m <- rep(1, 4)
   Y <- cbind(y, 1 - y)
 
-  expect_error(loss_fun(gamma = "a", Xnorm = Xnorm, y = y, m = m, model = "BKP"), "'gamma' must be a numeric vector.")
-  expect_error(loss_fun(gamma = 0, Xnorm = c(1, 2), y = y, m = m, model = "BKP"), "'Xnorm' must be a numeric matrix with no NA.")
+  expect_error(loss_fun(gamma = "a", Xnorm = Xnorm, y = y, m = m, model = "BKP"), "'gamma' must be a finite numeric vector.")
+  expect_error(loss_fun(gamma = 0, Xnorm = c(1, 2), y = y, m = m, model = "BKP"), "'Xnorm' must be a numeric matrix with finite values and no NA values.")
   Xnorm_bad <- Xnorm
   Xnorm_bad[1, 1] <- NA
-  expect_error(loss_fun(gamma = 0, Xnorm = Xnorm_bad, y = y, m = m, model = "BKP"), "'Xnorm' must be a numeric matrix with no NA.")
+  expect_error(loss_fun(gamma = 0, Xnorm = Xnorm_bad, y = y, m = m, model = "BKP"), "'Xnorm' must be a numeric matrix with finite values and no NA values.")
 
-  expect_error(loss_fun(gamma = 0, Xnorm = Xnorm, y = y, m = m, model = "BKP", r0 = 0), "'r0' must be a positive scalar.")
-  expect_error(loss_fun(gamma = 0, Xnorm = Xnorm, y = y, m = m, model = "BKP", p0 = -1), "'p0' must be numeric and nonnegative.")
+  expect_error(loss_fun(gamma = 0, Xnorm = Xnorm, y = y, m = m, model = "BKP", r0 = 0), "'r0' must be a positive finite scalar.")
+  expect_error(loss_fun(gamma = 0, Xnorm = Xnorm, y = y, m = m, model = "BKP", p0 = -1), "'p0' must contain nonnegative finite numeric values.")
   expect_error(loss_fun(gamma = 0, Xnorm = Xnorm, y = y, m = m, model = "BKP", isotropic = c(TRUE, FALSE)), "'isotropic' must be a single logical value.")
 
   l_dkp <- loss_fun(gamma = c(-1, -1), Xnorm = Xnorm, Y = Y, model = "DKP", kernel = "matern52", isotropic = FALSE)
@@ -110,12 +110,12 @@ test_that("test-loss_fun uncovered DKP/BKP validation branches", {
 
   expect_error(loss_fun(gamma = 0, Xnorm = Xnorm, m = m, model = "BKP"), "'y' and 'm' must be provided for BKP model.")
   expect_error(loss_fun(gamma = 0, Xnorm = Xnorm, y = letters[1:nrow(Xnorm)], m = m, model = "BKP"), "'y' and 'm' must be numeric vectors.")
-  expect_error(loss_fun(gamma = 0, Xnorm = Xnorm, y = y, m = c(m, m), model = "BKP"), "'y' and 'm' must have the same length as number of rows in 'Xnorm'.")
-  expect_error(loss_fun(gamma = 0, Xnorm = Xnorm, y = y + 2, m = m, model = "BKP"), "'y' must be in \\[0,m\\] and 'm' > 0.")
+  expect_error(loss_fun(gamma = 0, Xnorm = Xnorm, y = y, m = c(m, m), model = "BKP"), "'y' and 'm' must have the same length as the number of rows in 'Xnorm'.")
+  expect_error(loss_fun(gamma = 0, Xnorm = Xnorm, y = y + 2, m = m, model = "BKP"), "'y' must be in \\[0, m\\] and 'm' must be positive.")
 
   expect_error(loss_fun(gamma = 0, Xnorm = Xnorm, model = "DKP"), "'Y' must be provided for DKP model.")
-  expect_error(loss_fun(gamma = 0, Xnorm = Xnorm, Y = matrix(-1, nrow(Xnorm), 2), model = "DKP"), "'Y' must be a numeric matrix with no NA and nonnegative entries.")
-  expect_error(loss_fun(gamma = 0, Xnorm = Xnorm, Y = Y[-1, , drop = FALSE], model = "DKP"), "Number of rows in 'Y' must match number of rows in 'Xnorm'.")
+  expect_error(loss_fun(gamma = 0, Xnorm = Xnorm, Y = matrix(-1, nrow(Xnorm), 2), model = "DKP"), "'Y' must contain nonnegative counts or frequencies.")
+  expect_error(loss_fun(gamma = 0, Xnorm = Xnorm, Y = Y[-1, , drop = FALSE], model = "DKP"), "Number of rows in 'Y' must match the number of rows in 'Xnorm'.")
 
   l_dkp_log <- loss_fun(gamma = c(-1, -1, -1), Xnorm = Xnorm, Y = Y, model = "DKP", loss = "log_loss", kernel = "matern32", isotropic = FALSE)
   expect_true(is.numeric(l_dkp_log) && length(l_dkp_log) == 1)
