@@ -15,7 +15,7 @@
 #'   Row sums represent the multinomial trial sizes.
 #' @param p0 Prior class-probability vector used when \code{prior = "fixed"}.
 #'   It must be a nonnegative finite numeric vector of length \eqn{q} and sum to
-#'   one. The default is the empirical class-proportion vector
+#'   one. If \code{NULL}, it is set to the empirical class-proportion vector
 #'   \code{colMeans(Y / rowSums(Y))}.
 #' @param ess Effective-sample-size calibration for the kernel-weighted
 #'   class-count contribution. Use \code{"none"} (default) for the standard DKP
@@ -164,7 +164,7 @@
 
 fit_DKP <- function(
     X, Y, Xbounds = NULL,
-    prior = c("noninformative", "fixed", "adaptive"), r0 = 2, p0 = colMeans(Y / rowSums(Y)),
+    prior = c("noninformative", "fixed", "adaptive"), r0 = 2, p0 = NULL,
     kernel = c("gaussian", "matern52", "matern32", "wendland"),
     loss = c("brier", "log_loss"),
     n_multi_start = NULL, theta = NULL,
@@ -186,6 +186,13 @@ fit_DKP <- function(
   }
   if (!is.numeric(as.matrix(Y))) {
     stop("'Y' must contain numeric values only.")
+  }
+  if (any(rowSums(Y) <= 0)) {
+    stop("Each row of 'Y' must have a positive row sum.")
+  }
+
+  if (is.null(p0)) {
+    p0 <- colMeans(sweep(Y, 1, rowSums(Y), "/"))
   }
 
   X <- as.matrix(X)

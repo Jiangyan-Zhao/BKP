@@ -10,7 +10,7 @@ fit_DKP(
   Xbounds = NULL,
   prior = c("noninformative", "fixed", "adaptive"),
   r0 = 2,
-  p0 = colMeans(Y/rowSums(Y)),
+  p0 = NULL,
   kernel = c("gaussian", "matern52", "matern32", "wendland"),
   loss = c("brier", "log_loss"),
   n_multi_start = NULL,
@@ -44,7 +44,7 @@ already normalized to \eqn{[0,1]^d}.}
 
 \item{p0}{Prior class-probability vector used when \code{prior = "fixed"}.
 It must be a nonnegative finite numeric vector of length \eqn{q} and sum to
-one. The default is the empirical class-proportion vector
+one. If \code{NULL}, it is set to the empirical class-proportion vector
 \code{colMeans(Y / rowSums(Y))}.}
 
 \item{kernel}{Kernel function used for local weighting. Options are
