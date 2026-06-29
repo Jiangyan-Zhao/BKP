@@ -25,10 +25,11 @@ loss_fun(
 
 \item{Xnorm}{A numeric matrix of normalized input features (\code{[0,1]^d}).}
 
-\item{y}{A numeric vector of observed successes (length \code{n}).}
+\item{y}{A numeric vector of observed success counts of length \code{n}.}
 
-\item{m}{A numeric vector of total binomial trials (length \code{n}),
-corresponding to each \code{y}.}
+\item{m}{A numeric vector of total binomial trial counts of length \code{n}.
+Each element of \code{y} must be between 0 and the corresponding element of
+\code{m}.}
 
 \item{Y}{A numeric matrix of observed class counts (\code{n × q}), required
 only when \code{model = "DKP"}, where \code{n} is the number of
@@ -37,25 +38,27 @@ observations and \code{q} the number of classes.}
 \item{model}{A character string specifying the model type: \code{"BKP"}
 (binary outcome) or \code{"DKP"} (multi-class outcome).}
 
-\item{prior}{Type of prior: \code{"noninformative"} (default),
-\code{"fixed"}, or \code{"adaptive"}.}
+\item{prior}{Type of prior specification. Options are
+\code{"noninformative"} (default), \code{"fixed"}, and
+\code{"adaptive"}.}
 
-\item{r0}{Global prior precision (used when \code{prior = "fixed"} or
-\code{"adaptive"}).}
+\item{r0}{Positive scalar prior precision used when \code{prior = "fixed"} or
+\code{prior = "adaptive"}. Default is \code{2}.}
 
 \item{p0}{For BKP, a scalar in \code{(0,1)} specifying the prior mean of
 success probability when \code{prior = "fixed"}. For DKP, a numeric vector
 of length equal to the number of classes specifying the global prior mean,
 which must sum to 1.}
 
-\item{loss}{Loss function for kernel hyperparameter tuning: \code{"brier"}
-(default) or \code{"log_loss"}.}
+\item{loss}{Leave-one-out loss used for kernel hyperparameter tuning. Options
+are \code{"brier"} (default) and \code{"log_loss"}.}
 
-\item{kernel}{Kernel function for local weighting: \code{"gaussian"}
-(default), \code{"matern52"}, \code{"matern32"}, or \code{"wendland"}.}
+\item{kernel}{Kernel function used for local weighting. Options are
+\code{"gaussian"} (default), \code{"matern52"}, \code{"matern32"}, and
+\code{"wendland"}.}
 
-\item{isotropic}{Logical. If \code{TRUE} (default), optimize/use a single
-shared lengthscale across dimensions. If \code{FALSE}, use separate
+\item{isotropic}{Logical. If \code{TRUE} (default), use a single shared
+lengthscale across input dimensions. If \code{FALSE}, use separate
 per-dimension lengthscales.}
 
 \item{ess}{Effective-sample-size calibration for leave-one-out data

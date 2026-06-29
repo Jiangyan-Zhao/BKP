@@ -61,11 +61,11 @@
 #' }
 #'
 #' @references Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
-#'   Kernel Process Modeling}.  arXiv. \doi{10.48550/arXiv.2508.10447}.
+#'   Kernel Process Modeling}.  arXiv. <doi:10.48550/arXiv.2508.10447>.
 #'
 #'   Vakayil A, Joseph VR (2024). \emph{A Global-Local Approximation Framework
 #'   for Large-Scale Gaussian Process Modeling}. Technometrics, 66(2), 295--305.
-#'   \doi{10.1080/00401706.2023.2296451}.
+#'   <doi:10.1080/00401706.2023.2296451>.
 #'
 #'   Rolland P, Kavis A, Immer A, Singla A, Cevher V (2019). \emph{Efficient learning of
 #'   smooth probability functions from Bernoulli tests with guarantees}. In
@@ -77,7 +77,7 @@
 #'   MacKenzie CA, Trafalis TB, Barker K (2014). \emph{A Bayesian Beta Kernel Model
 #'   for Binary Classification and Online Learning Problems}. Statistical
 #'   Analysis and Data Mining: The ASA Data Science Journal, 7(6), 434--449.
-#'   \doi{10.1002/sam.11241}.
+#'   <doi:10.1002/sam.11241>.
 #'
 #'   Goetschalckx R, Poupart P, Hoey J (2011). \emph{Continuous
 #'   Correlated Beta Processes}. In Proceedings of the Twenty-Second

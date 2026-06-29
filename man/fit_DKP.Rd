@@ -2,7 +2,7 @@
 % Please edit documentation in R/fit_DKP.R
 \name{fit_DKP}
 \alias{fit_DKP}
-\title{Fit a Dirichlet Kernel Process (DKP) Model}
+\title{Fit a Dirichlet Kernel Process Model}
 \usage{
 fit_DKP(
   X,
@@ -21,102 +21,144 @@ fit_DKP(
 )
 }
 \arguments{
-\item{X}{A numeric input matrix of size \eqn{n \times d}, where each row
-corresponds to a covariate vector.}
+\item{X}{A numeric input matrix or data frame of size \eqn{n \times d}, where
+each row is an input or covariate vector.}
 
-\item{Y}{Numeric matrix of observed multinomial counts, with dimension
-\eqn{n \times q}.}
+\item{Y}{A numeric matrix or data frame of observed multinomial counts, with
+dimension \eqn{n \times q}. Each row corresponds to one input location and
+each column corresponds to one class. Entries must be nonnegative, and row
+sums represent the multinomial trial sizes.}
 
-\item{Xbounds}{Optional \eqn{d \times 2} matrix specifying the lower and
-upper bounds of each input dimension. Used to normalize inputs to
-\eqn{[0,1]^d}. If \code{NULL}, inputs are assumed to be pre-normalized, and
-default bounds \eqn{[0,1]^d} are applied.}
+\item{Xbounds}{Optional \eqn{d \times 2} numeric matrix giving the lower and
+upper bounds of each input dimension. When supplied, \code{X} is normalized
+to \eqn{[0,1]^d} before fitting. If \code{NULL}, \code{X} is assumed to be
+already normalized to \eqn{[0,1]^d}.}
 
-\item{prior}{Type of prior: \code{"noninformative"} (default),
-\code{"fixed"}, or \code{"adaptive"}.}
+\item{prior}{Type of prior specification. Options are
+\code{"noninformative"} (default), \code{"fixed"}, and
+\code{"adaptive"}.}
 
-\item{r0}{Global prior precision (used when \code{prior = "fixed"} or
-\code{"adaptive"}).}
+\item{r0}{Positive scalar prior precision used when \code{prior = "fixed"} or
+\code{prior = "adaptive"}. Default is \code{2}.}
 
-\item{p0}{Global prior mean vector used only when \code{prior = "fixed"}.
-Defaults to the empirical class proportions \code{colMeans(Y / rowSums(Y))}.
-It must be a nonnegative finite numeric vector of length \eqn{q} and sum to 1.}
+\item{p0}{Prior class-probability vector used when \code{prior = "fixed"}.
+It must be a nonnegative finite numeric vector of length \eqn{q} and sum to
+one. The default is the empirical class-proportion vector
+\code{colMeans(Y / rowSums(Y))}.}
 
-\item{kernel}{Kernel function for local weighting: \code{"gaussian"}
-(default), \code{"matern52"}, \code{"matern32"}, or \code{"wendland"}.}
+\item{kernel}{Kernel function used for local weighting. Options are
+\code{"gaussian"} (default), \code{"matern52"}, \code{"matern32"}, and
+\code{"wendland"}.}
 
-\item{loss}{Loss function for kernel hyperparameter tuning: \code{"brier"}
-(default) or \code{"log_loss"}.}
+\item{loss}{Leave-one-out loss used for kernel hyperparameter tuning. Options
+are \code{"brier"} (default) and \code{"log_loss"}.}
 
 \item{n_multi_start}{Number of initial points used in multi-start
-optimization of the kernel lengthscale parameters. If \code{NULL},
-the default is \eqn{10p}, where \eqn{p = 1} for isotropic kernels and
-\eqn{p = d} for anisotropic kernels.}
+derivative-free optimization of the kernel lengthscale parameters. If
+\code{NULL}, the default is \eqn{10p}, where \eqn{p = 1} for isotropic
+kernels and \eqn{p = d} for anisotropic kernels.}
 
-\item{theta}{Optional. A positive scalar or numeric vector of length \code{d}
-specifying kernel lengthscale parameters directly. If \code{NULL}
-(default), lengthscales are optimized using multi-start derivative-free
-local optimization to minimize the specified loss.}
+\item{theta}{Optional positive kernel lengthscale parameter. When
+\code{isotropic = TRUE}, this must be a scalar. When
+\code{isotropic = FALSE}, this can be either a scalar, which is broadcast
+to all dimensions, or a numeric vector of length \code{d}. If \code{NULL},
+the lengthscale parameters are selected by minimizing the specified
+leave-one-out loss.}
 
-\item{isotropic}{Logical. If \code{TRUE} (default), optimize/use a single
-shared lengthscale across dimensions. If \code{FALSE}, use separate
+\item{isotropic}{Logical. If \code{TRUE} (default), use a single shared
+lengthscale across input dimensions. If \code{FALSE}, use separate
 per-dimension lengthscales.}
 
-\item{n_threads}{Number of OpenMP threads used for multi-start
-optimization. Default is \code{1}. This argument only affects
-hyperparameter optimization when \code{theta = NULL}.}
+\item{n_threads}{Number of OpenMP threads used for multi-start optimization.
+Default is \code{1}. This argument only affects fitting when
+\code{theta = NULL}.}
 
-\item{ess}{Effective-sample-size calibration for the DKP data contribution.
-Use \code{"none"} (default) for the ordinary DKP posterior update. Use
-\code{"shepard"} to rescale the kernel-weighted class-count contribution
-so that its effective trial size is
+\item{ess}{Effective-sample-size calibration for the kernel-weighted
+class-count contribution. Use \code{"none"} (default) for the standard DKP
+posterior update. Use \code{"shepard"} to rescale the kernel-weighted
+class-count contribution so that its effective trial size is
 \eqn{\rho(\mathbf{x}) m_S(\mathbf{x})}, where \eqn{m_S(\mathbf{x})} is a
-Shepard interpolation of row sums \code{rowSums(Y)} and
-\eqn{\rho(\mathbf{x}) = \max_i K(\mathbf{x}, \mathbf{x}_i)}. The class
-proportions are preserved while the data precision is calibrated.}
+Shepard interpolation of the observed row sums \code{rowSums(Y)} on the
+normalized input scale and
+\eqn{\rho(\mathbf{x}) = \max_i k(\mathbf{x}, \mathbf{x}_i)}. This
+calibration preserves the kernel-weighted empirical class proportions and
+changes only the data precision, not the prior parameters.}
 }
 \value{
-A list of class \code{"DKP"} representing the fitted DKP model, with
-the following components:
+A list of class \code{"DKP"} containing the fitted model, with the
+following components:
 \describe{
-\item{\code{theta_opt}}{Optimized kernel hyperparameters (lengthscales).}
-\item{\code{kernel}}{Kernel function used, as a string.}
-\item{\code{isotropic}}{Logical flag indicating whether a shared lengthscale (\code{TRUE}) or per-dimension lengthscales (\code{FALSE}) was used.}
+\item{\code{theta_opt}}{Optimized or user-specified kernel lengthscale
+parameter(s).}
+\item{\code{kernel}}{Kernel function used.}
+\item{\code{isotropic}}{Logical flag indicating whether a shared
+lengthscale or per-dimension lengthscales were used.}
 \item{\code{loss}}{Loss function used for hyperparameter tuning.}
-\item{\code{loss_min}}{Loss value at the selected or user-specified kernel parameters.}
-\item{\code{ess}}{Effective-sample-size calibration method used.}
-\item{\code{ess_info}}{ESS calibration diagnostics, including the scale factor and target/kernel trial sizes.}
-\item{\code{X}}{Original (unnormalized) input matrix of size \code{n × d}.}
-\item{\code{Xnorm}}{Normalized input matrix scaled to \eqn{[0,1]^d}.}
-\item{\code{Xbounds}}{Matrix specifying normalization bounds for each input dimension.}
-\item{\code{Y}}{Observed multinomial counts of size \code{n × q}.}
-\item{\code{prior}}{Type of prior used.}
+\item{\code{loss_min}}{Loss value at the selected or user-specified
+lengthscale parameter(s).}
+
+\item{\code{X}}{Original input matrix.}
+\item{\code{Xnorm}}{Input matrix normalized to \eqn{[0,1]^d}.}
+\item{\code{Xbounds}}{Normalization bounds for each input dimension.}
+\item{\code{Y}}{Observed multinomial count matrix.}
+
+\item{\code{prior}}{Prior specification used.}
 \item{\code{r0}}{Prior precision parameter.}
-\item{\code{p0}}{Prior mean (for fixed priors).}
-\item{\code{alpha0}}{Prior Dirichlet concentration parameters evaluated at the training locations.}
-\item{\code{alpha_n}}{Posterior Dirichlet concentration parameters evaluated at the training locations.}
+\item{\code{p0}}{Prior class-probability vector used when
+\code{prior = "fixed"}.}
+\item{\code{alpha0}}{Prior Dirichlet concentration parameters evaluated at
+the training inputs.}
+
+\item{\code{alpha_n}}{Posterior Dirichlet concentration parameters
+evaluated at the training inputs.}
+
+\item{\code{ess}}{Effective-sample-size calibration method used.}
+\item{\code{ess_info}}{ESS calibration diagnostics, or \code{NULL} when
+\code{ess = "none"}.}
 }
 }
 \description{
-Fits a DKP model for categorical or multinomial response data by
-locally smoothing observed counts to estimate latent Dirichlet parameters.
-The model constructs flexible latent probability surfaces by updating
-Dirichlet priors using kernel-weighted observations.
+Fit a Dirichlet Kernel Process (DKP) model for categorical or
+multinomial count response data. The model estimates covariate-dependent
+class-probability surfaces by combining kernel-based smoothing with
+conjugate Dirichlet posterior updates.
 }
 \details{
 Inputs are normalized to \eqn{[0,1]^d} using \code{Xbounds}. For a
-training or prediction location, DKP evaluates kernel weights between that
-location and the training inputs, then updates Dirichlet prior
-concentration parameters with kernel-weighted multinomial counts. When
-\code{theta = NULL}, kernel lengthscale parameters are selected by
-leave-one-out cross-validation using the specified loss function. If
-\code{ess = "shepard"}, only the kernel-weighted class-count contribution
-is rescaled to match the local effective-sample-size target; the prior
-parameters are not rescaled.
+location \eqn{\mathbf{x}}, DKP computes kernel weights
+\eqn{k(\mathbf{x}, \mathbf{x}_i)} between \eqn{\mathbf{x}} and the training
+inputs. These weights are used to update a local Dirichlet prior with
+kernel-weighted multinomial counts:
+\deqn{
+    \alpha_{n,s}(\mathbf{x}) =
+    \alpha_{0,s}(\mathbf{x}) +
+    \sum_i k(\mathbf{x}, \mathbf{x}_i) Y_{i,s},
+    \qquad s = 1,\ldots,q.
+  }
+Equivalently,
+\deqn{
+    \boldsymbol{\alpha}_n(\mathbf{x}) =
+    \boldsymbol{\alpha}_0(\mathbf{x}) +
+    \sum_i k(\mathbf{x}, \mathbf{x}_i) \mathbf{Y}_i.
+  }
+The posterior class-probability vector at \eqn{\mathbf{x}} follows a
+Dirichlet distribution with concentration vector
+\eqn{\boldsymbol{\alpha}_n(\mathbf{x})}.
 
-The returned object stores posterior parameters evaluated at the training
-inputs; posterior inference at new inputs is performed by the corresponding
-\code{predict()} method.
+If \code{theta = NULL}, the kernel lengthscale parameters are selected by
+leave-one-out cross-validation using the specified \code{loss}. Optimization
+is performed over log-transformed lengthscales using a multi-start
+derivative-free search. If \code{theta} is supplied, optimization is skipped
+and the model is fitted using the supplied lengthscale parameter.
+
+If \code{ess = "shepard"}, only the kernel-weighted class-count
+contribution is rescaled to match the local effective-sample-size target;
+the prior parameters are not rescaled. Shepard calibration requires unique
+training input locations on the normalized input scale.
+
+The returned object stores posterior Dirichlet concentration parameters
+evaluated at the training inputs. Posterior inference at new inputs is
+performed by \code{\link{predict.DKP}}.
 }
 \examples{
 #-------------------------- 1D Example ---------------------------
@@ -178,13 +220,12 @@ print(model2)
 }
 \references{
 Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
-Kernel Process Modeling}.  arXiv. \doi{10.48550/arXiv.2508.10447}
+Kernel Process Modeling}.  arXiv. \url{doi:10.48550/arXiv.2508.10447}.
 }
 \seealso{
-\code{\link{fit_BKP}} for modeling binomial responses via the Beta
-Kernel Process, and \code{\link{fit_TwinDKP}} for the scalable global-local
-TwinDKP approximation. \code{\link{predict.DKP}},
+\code{\link{fit_BKP}} for Beta Kernel Process modeling of binary or
+binomial responses; \code{\link{fit_TwinDKP}} for the scalable global-local
+TwinDKP approximation; \code{\link{predict.DKP}},
 \code{\link{plot.DKP}}, \code{\link{simulate.DKP}}, and
-\code{\link{summary.DKP}} for prediction, visualization, posterior
-simulation, and summarization of a fitted DKP model.
+\code{\link{summary.DKP}} for downstream methods.
 }

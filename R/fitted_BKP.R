@@ -35,7 +35,7 @@
 #' @keywords BKP
 #'
 #' @references Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
-#'   Kernel Process Modeling}.  arXiv. \doi{10.48550/arXiv.2508.10447}.
+#'   Kernel Process Modeling}.  arXiv. <doi:10.48550/arXiv.2508.10447>.
 #'
 #' @examples
 #' # -------------------------- BKP and TwinBKP ---------------------------

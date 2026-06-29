@@ -26,26 +26,30 @@ fit_TwinDKP(
 )
 }
 \arguments{
-\item{X}{A numeric input matrix of size \eqn{n \times d}, where each row
-corresponds to a covariate vector.}
+\item{X}{A numeric input matrix or data frame of size \eqn{n \times d}, where
+each row is an input or covariate vector.}
 
-\item{Y}{Numeric matrix of observed multinomial counts, with dimension
-\eqn{n \times q}.}
+\item{Y}{A numeric matrix or data frame of observed multinomial counts, with
+dimension \eqn{n \times q}. Each row corresponds to one input location and
+each column corresponds to one class. Entries must be nonnegative, and row
+sums represent the multinomial trial sizes.}
 
-\item{Xbounds}{Optional \eqn{d \times 2} matrix specifying the lower and
-upper bounds of each input dimension. Used to normalize inputs to
-\eqn{[0,1]^d}. If \code{NULL}, inputs are assumed to be pre-normalized, and
-default bounds \eqn{[0,1]^d} are applied.}
+\item{Xbounds}{Optional \eqn{d \times 2} numeric matrix giving the lower and
+upper bounds of each input dimension. When supplied, \code{X} is normalized
+to \eqn{[0,1]^d} before fitting. If \code{NULL}, \code{X} is assumed to be
+already normalized to \eqn{[0,1]^d}.}
 
-\item{prior}{Type of prior: \code{"noninformative"} (default),
-\code{"fixed"}, or \code{"adaptive"}.}
+\item{prior}{Type of prior specification. Options are
+\code{"noninformative"} (default), \code{"fixed"}, and
+\code{"adaptive"}.}
 
-\item{r0}{Global prior precision (used when \code{prior = "fixed"} or
-\code{"adaptive"}).}
+\item{r0}{Positive scalar prior precision used when \code{prior = "fixed"} or
+\code{prior = "adaptive"}. Default is \code{2}.}
 
-\item{p0}{Global prior mean vector used only when \code{prior = "fixed"}.
-Defaults to the empirical class proportions \code{colMeans(Y / rowSums(Y))}.
-It must be a nonnegative finite numeric vector of length \eqn{q} and sum to 1.}
+\item{p0}{Prior class-probability vector used when \code{prior = "fixed"}.
+It must be a nonnegative finite numeric vector of length \eqn{q} and sum to
+one. The default is the empirical class-proportion vector
+\code{colMeans(Y / rowSums(Y))}.}
 
 \item{global_kernel}{Kernel function for the global component:
 \code{"gaussian"} (default), \code{"matern52"}, \code{"matern32"}, or
@@ -55,16 +59,16 @@ It must be a nonnegative finite numeric vector of length \eqn{q} and sum to 1.}
 \code{"wendland"} is supported, corresponding to the compactly supported
 local kernel used by the TwinDKP approximation.}
 
-\item{loss}{Loss function for kernel hyperparameter tuning: \code{"brier"}
-(default) or \code{"log_loss"}.}
+\item{loss}{Leave-one-out loss used for kernel hyperparameter tuning. Options
+are \code{"brier"} (default) and \code{"log_loss"}.}
 
 \item{n_multi_start}{Number of initial points used in multi-start
 optimization of the global kernel lengthscale parameters. If \code{NULL},
 the default from \code{\link{fit_DKP}} is used on the selected global
 subset.}
 
-\item{isotropic}{Logical. If \code{TRUE} (default), optimize/use a single
-shared lengthscale across dimensions. If \code{FALSE}, use separate
+\item{isotropic}{Logical. If \code{TRUE} (default), use a single shared
+lengthscale across input dimensions. If \code{FALSE}, use separate
 per-dimension lengthscales.}
 
 \item{n_threads}{Number of OpenMP threads used for global-subset

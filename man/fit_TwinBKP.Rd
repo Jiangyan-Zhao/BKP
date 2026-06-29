@@ -27,27 +27,29 @@ fit_TwinBKP(
 )
 }
 \arguments{
-\item{X}{A numeric input matrix of size \eqn{n \times d}, where each row
-corresponds to a covariate vector.}
+\item{X}{A numeric input matrix or data frame of size \eqn{n \times d}, where
+each row is an input or covariate vector.}
 
-\item{y}{A numeric vector of observed successes (length \code{n}).}
+\item{y}{A numeric vector of observed success counts of length \code{n}.}
 
-\item{m}{A numeric vector of total binomial trials (length \code{n}),
-corresponding to each \code{y}.}
+\item{m}{A numeric vector of total binomial trial counts of length \code{n}.
+Each element of \code{y} must be between 0 and the corresponding element of
+\code{m}.}
 
-\item{Xbounds}{Optional \eqn{d \times 2} matrix specifying the lower and
-upper bounds of each input dimension. Used to normalize inputs to
-\eqn{[0,1]^d}. If \code{NULL}, inputs are assumed to be pre-normalized, and
-default bounds \eqn{[0,1]^d} are applied.}
+\item{Xbounds}{Optional \eqn{d \times 2} numeric matrix giving the lower and
+upper bounds of each input dimension. When supplied, \code{X} is normalized
+to \eqn{[0,1]^d} before fitting. If \code{NULL}, \code{X} is assumed to be
+already normalized to \eqn{[0,1]^d}.}
 
-\item{prior}{Type of prior: \code{"noninformative"} (default),
-\code{"fixed"}, or \code{"adaptive"}.}
+\item{prior}{Type of prior specification. Options are
+\code{"noninformative"} (default), \code{"fixed"}, and
+\code{"adaptive"}.}
 
-\item{r0}{Global prior precision (used when \code{prior = "fixed"} or
-\code{"adaptive"}).}
+\item{r0}{Positive scalar prior precision used when \code{prior = "fixed"} or
+\code{prior = "adaptive"}. Default is \code{2}.}
 
-\item{p0}{Global prior mean (used when \code{prior = "fixed"}). Default is
-\code{mean(y/m)}.}
+\item{p0}{Prior mean used when \code{prior = "fixed"}. It must be a scalar in
+\eqn{(0,1)}. The default is the empirical mean \code{mean(y / m)}.}
 
 \item{global_kernel}{Kernel function for the global component:
 \code{"gaussian"} (default), \code{"matern52"}, \code{"matern32"}, or
@@ -57,16 +59,16 @@ default bounds \eqn{[0,1]^d} are applied.}
 \code{"wendland"} is supported, corresponding to the compactly supported
 local kernel used by the TwinBKP approximation.}
 
-\item{loss}{Loss function for kernel hyperparameter tuning: \code{"brier"}
-(default) or \code{"log_loss"}.}
+\item{loss}{Leave-one-out loss used for kernel hyperparameter tuning. Options
+are \code{"brier"} (default) and \code{"log_loss"}.}
 
 \item{n_multi_start}{Number of initial points used in multi-start
 optimization of the global kernel lengthscale parameters. If \code{NULL},
 the default from \code{\link{fit_BKP}} is used on the selected global
 subset.}
 
-\item{isotropic}{Logical. If \code{TRUE} (default), optimize/use a single
-shared lengthscale across dimensions. If \code{FALSE}, use separate
+\item{isotropic}{Logical. If \code{TRUE} (default), use a single shared
+lengthscale across input dimensions. If \code{FALSE}, use separate
 per-dimension lengthscales.}
 
 \item{n_threads}{Number of OpenMP threads used for global-subset

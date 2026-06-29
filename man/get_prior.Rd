@@ -16,24 +16,26 @@ get_prior(
 )
 }
 \arguments{
-\item{prior}{Type of prior: \code{"noninformative"} (default),
-\code{"fixed"}, or \code{"adaptive"}.}
+\item{prior}{Type of prior specification. Options are
+\code{"noninformative"} (default), \code{"fixed"}, and
+\code{"adaptive"}.}
 
 \item{model}{A character string specifying the model type: \code{"BKP"}
 (binary outcome) or \code{"DKP"} (multi-class outcome).}
 
-\item{r0}{Global prior precision (used when \code{prior = "fixed"} or
-\code{"adaptive"}).}
+\item{r0}{Positive scalar prior precision used when \code{prior = "fixed"} or
+\code{prior = "adaptive"}. Default is \code{2}.}
 
 \item{p0}{For BKP, a scalar in \code{(0,1)} specifying the prior mean of
 success probability when \code{prior = "fixed"}. For DKP, a numeric vector
 of length equal to the number of classes specifying the global prior mean,
 which must sum to 1.}
 
-\item{y}{A numeric vector of observed successes (length \code{n}).}
+\item{y}{A numeric vector of observed success counts of length \code{n}.}
 
-\item{m}{A numeric vector of total binomial trials (length \code{n}),
-corresponding to each \code{y}.}
+\item{m}{A numeric vector of total binomial trial counts of length \code{n}.
+Each element of \code{y} must be between 0 and the corresponding element of
+\code{m}.}
 
 \item{Y}{A numeric matrix of observed class counts (\code{n × q}), required
 only when \code{model = "DKP"}, where \code{n} is the number of
