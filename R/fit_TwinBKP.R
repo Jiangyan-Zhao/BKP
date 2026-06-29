@@ -307,7 +307,8 @@ fit_TwinBKP <- function(
   }
 
   if (!is.numeric(n_threads) || length(n_threads) != 1 ||
-      is.na(n_threads) || !is.finite(n_threads) || n_threads <= 0) {
+      is.na(n_threads) || !is.finite(n_threads) || n_threads <= 0 ||
+      n_threads != floor(n_threads)) {
     stop("'n_threads' must be a positive integer.")
   }
   n_threads <- as.integer(n_threads)

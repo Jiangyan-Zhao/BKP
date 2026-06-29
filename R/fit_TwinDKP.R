@@ -306,6 +306,9 @@ fit_TwinDKP <- function(
       n_threads != floor(n_threads)) {
     stop("'n_threads' must be a positive integer.")
   }
+  n_threads <- as.integer(n_threads)
+
+
   if (!is.null(theta_g)) {
     if (!is.numeric(theta_g)) {
       stop("'theta_g' must be numeric.")
@@ -416,6 +419,9 @@ fit_TwinDKP <- function(
   }
   if (is.null(theta_l)) {
     theta_l <- as.numeric(twin_info$theta_l)
+  }
+  if (!is.finite(theta_l) || theta_l <= 0) {
+    stop("The local range 'theta_l' must be positive.")
   }
 
   non_global_n <- n - g_actual

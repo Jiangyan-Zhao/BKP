@@ -191,10 +191,6 @@ fit_DKP <- function(
     stop("Each row of 'Y' must have a positive row sum.")
   }
 
-  if (is.null(p0)) {
-    p0 <- colMeans(sweep(Y, 1, rowSums(Y), "/"))
-  }
-
   X <- as.matrix(X)
   Y <- as.matrix(Y)
 
@@ -205,10 +201,24 @@ fit_DKP <- function(
   if (nrow(Y) != n) {
     stop("Number of rows in 'Y' must match number of rows in 'X'.")
   }
-  if (any(Y < 0)) stop("'Y' must be nonnegative counts or frequencies.")
-  if (anyNA(X) || anyNA(Y)) stop("Missing values are not allowed in 'X' or 'Y'.")
+  if (q < 2) {
+    stop("'Y' must have at least two columns (multinomial outcomes).")
+  }
+  if (anyNA(X) || anyNA(Y)) {
+    stop("Missing values are not allowed in 'X' or 'Y'.")
+  }
+  if (any(!is.finite(X)) || any(!is.finite(Y))) {
+    stop("'X' and 'Y' must contain only finite values.")
+  }
+  if (any(Y < 0)) {
+    stop("'Y' must be nonnegative counts or frequencies.")
+  }
   if (any(rowSums(Y) <= 0)) {
     stop("Each row of 'Y' must have a positive row sum.")
+  }
+
+  if (is.null(p0)) {
+    p0 <- colMeans(sweep(Y, 1, rowSums(Y), "/"))
   }
 
   if (q < 2) {

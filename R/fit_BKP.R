@@ -218,6 +218,9 @@ fit_BKP <- function(
   if (any(m <= 0)) stop("'m' must be strictly positive.")
   if (any(y > m)) stop("Each element of 'y' must be less than or equal to corresponding element of 'm'.")
   if (anyNA(X) || anyNA(y) || anyNA(m)) stop("Missing values are not allowed in 'X', 'y', or 'm'.")
+  if (any(!is.finite(X)) || any(!is.finite(y)) || any(!is.finite(m))) {
+    stop("'X', 'y', and 'm' must contain only finite values.")
+  }
 
   # ---- prior, kernel, loss ----
   prior  <- match.arg(prior)
