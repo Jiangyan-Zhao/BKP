@@ -7,7 +7,7 @@
 \alias{plot.DKP}
 \alias{plot.TwinBKP}
 \alias{plot.TwinDKP}
-\title{Plot Fitted BKP, DKP, or TwinBKP Models}
+\title{Plot Fitted BKP Package Model Objects}
 \usage{
 \method{plot}{BKP}(
   x,
@@ -48,9 +48,10 @@
 )
 }
 \arguments{
-\item{x}{An object of class \code{"BKP"}, \code{"DKP"}, or
-\code{"TwinBKP"}, typically returned by \code{\link{fit_BKP}},
-\code{\link{fit_DKP}}, or \code{\link{fit_TwinBKP}}.}
+\item{x}{A fitted model object of class \code{"BKP"}, \code{"DKP"},
+\code{"TwinBKP"}, or \code{"TwinDKP"}, typically returned by
+\code{\link{fit_BKP}}, \code{\link{fit_DKP}},
+\code{\link{fit_TwinBKP}}, or \code{\link{fit_TwinDKP}}.}
 
 \item{only_mean}{Logical. If \code{TRUE}, only the predicted mean surface is
 plotted for 2D inputs. This applies to BKP, DKP, and TwinBKP models.
@@ -74,21 +75,22 @@ available. This argument applies to both 1D and 2D plots.}
 \item{...}{Additional arguments passed to internal plotting routines
 (currently unused).}
 
-\item{show_global}{Logical. For \code{TwinBKP} objects only. If
-\code{TRUE}, highlights the selected global subset used by the
+\item{show_global}{Logical. For \code{TwinBKP} and \code{TwinDKP} objects,
+if \code{TRUE}, highlight the selected global subset used by the
 twinning-based approximation. Default is \code{TRUE}.}
 }
 \value{
-This function is called for its side effects and does not return a
-value. It produces plots visualizing the predicted probabilities, credible
-intervals, and posterior summaries.
+Invisibly returns \code{NULL}. The function is called for its side
+effect of producing plots.
 }
 \description{
-Visualizes fitted \code{BKP}, \code{DKP}, or \code{TwinBKP} models
-according to the input dimensionality. For 1D inputs,
-it shows predicted class probabilities with credible intervals and observed
-data. For 2D inputs, it generates contour plots of posterior summaries. For
-higher-dimensional inputs, users must specify which dimensions to plot.
+Visualize fitted \code{BKP}, \code{DKP}, \code{TwinBKP}, and
+\code{TwinDKP} model objects according to the selected input dimension(s).
+For one-dimensional plots, the methods show posterior mean probability
+curves, credible intervals, and observed proportions or class frequencies.
+For two-dimensional plots, the methods generate posterior summary surfaces
+over a prediction grid. For higher-dimensional inputs, users must specify
+one or two dimensions through \code{dims}.
 }
 \details{
 The plotting behavior depends on the dimensionality of the input covariates:
@@ -126,9 +128,7 @@ For \code{TwinBKP} objects, the plotting behavior is analogous to
 \code{BKP}, with optional highlighting of the selected global subset.
 }
 \examples{
-# ============================================================== #
-# ========================= BKP Examples ======================= #
-# ============================================================== #
+#-------------------------- BKP and TwinBKP ---------------------------
 
 #-------------------------- 1D Example ---------------------------
 set.seed(123)
@@ -151,10 +151,22 @@ model1 <- fit_BKP(X, y, m, Xbounds=Xbounds)
 # Plot results
 plot(model1)
 
+\dontrun{
+# Larger TwinBKP example
+n <- 1000
+X <- tgp::lhs(n = n, rect = Xbounds)
+true_pi <- true_pi_fun(X)
+m <- sample(100, n, replace = TRUE)
+y <- rbinom(n, size = m, prob = true_pi)
+
+# Fit TwinBKP model
+model1 <- fit_TwinBKP(X, y, m, Xbounds=Xbounds)
+
+# Plot results
+plot(model1)
+}
 
 #-------------------------- 2D Example ---------------------------
-set.seed(123)
-
 # Define 2D latent function and probability transformation
 true_pi_fun <- function(X) {
   if(is.null(nrow(X))) X <- matrix(X, nrow=1)
@@ -184,13 +196,24 @@ model2 <- fit_BKP(X, y, m, Xbounds=Xbounds)
 # Plot results
 plot(model2)
 
-# ============================================================== #
-# ========================= DKP Examples ======================= #
-# ============================================================== #
+\dontrun{
+# Larger TwinBKP example
+n <- 1000
+X <- tgp::lhs(n = n, rect = Xbounds)
+true_pi <- true_pi_fun(X)
+m <- sample(100, n, replace = TRUE)
+y <- rbinom(n, size = m, prob = true_pi)
+
+# Fit TwinBKP model
+model2 <- fit_TwinBKP(X, y, m, Xbounds=Xbounds)
+
+# Plot results
+plot(model2)
+}
+
+#-------------------------- DKP and TwinDKP ---------------------------
 
 #-------------------------- 1D Example ---------------------------
-set.seed(123)
-
 # Define true class probability function (3-class)
 true_pi_fun <- function(X) {
   p1 <- 1/(1+exp(-3*X))
@@ -213,10 +236,24 @@ model1 <- fit_DKP(X, Y, Xbounds = Xbounds)
 # Plot results
 plot(model1)
 
+\dontrun{
+# Larger TwinDKP example
+n <- 1000
+X <- tgp::lhs(n = n, rect = Xbounds)
+true_pi <- true_pi_fun(X)
+m <- sample(150, n, replace = TRUE)
+
+# Generate multinomial responses
+Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
+
+# Fit TwinDKP model
+model1 <- fit_TwinDKP(X, Y, Xbounds = Xbounds)
+
+# Plot results
+plot(model1)
+}
 
 #-------------------------- 2D Example ---------------------------
-set.seed(123)
-
 # Define latent function and transform to 3-class probabilities
 true_pi_fun <- function(X) {
   if (is.null(nrow(X))) X <- matrix(X, nrow = 1)
@@ -248,73 +285,33 @@ model2 <- fit_DKP(X, Y, Xbounds = Xbounds)
 # Plot results
 plot(model2)
 
-# ============================================================== #
-# ======================= TwinBKP Examples ===================== #
-# ============================================================== #
-
-#-------------------------- 1D Example ---------------------------
-set.seed(123)
-
-# Define true success probability function
-true_pi_fun <- function(x) {
-  (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
-}
-
+\dontrun{
+# Larger TwinDKP example
 n <- 1000
-Xbounds <- matrix(c(-2,2), nrow=1)
 X <- tgp::lhs(n = n, rect = Xbounds)
 true_pi <- true_pi_fun(X)
-m <- sample(100, n, replace = TRUE)
-y <- rbinom(n, size = m, prob = true_pi)
+m <- sample(150, n, replace = TRUE)
 
-# Fit TwinBKP model
-model1 <- fit_TwinBKP(X, y, m, Xbounds=Xbounds)
+# Generate multinomial responses
+Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 
-# Plot results
-plot(model1)
-
-
-#-------------------------- 2D Example ---------------------------
-set.seed(123)
-
-# Define 2D latent function and probability transformation
-true_pi_fun <- function(X) {
-  if(is.null(nrow(X))) X <- matrix(X, nrow=1)
-  m <- 8.6928
-  s <- 2.4269
-  x1 <- 4*X[,1]- 2
-  x2 <- 4*X[,2]- 2
-  a <- 1 + (x1 + x2 + 1)^2 *
-    (19- 14*x1 + 3*x1^2- 14*x2 + 6*x1*x2 + 3*x2^2)
-  b <- 30 + (2*x1- 3*x2)^2 *
-    (18- 32*x1 + 12*x1^2 + 48*x2- 36*x1*x2 + 27*x2^2)
-  f <- log(a*b)
-  f <- (f- m)/s
-  return(pnorm(f))  # Transform to probability
-}
-
-n <- 1000
-Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
-X <- tgp::lhs(n = n, rect = Xbounds)
-true_pi <- true_pi_fun(X)
-m <- sample(100, n, replace = TRUE)
-y <- rbinom(n, size = m, prob = true_pi)
-
-# Fit TwinBKP model
-model2 <- fit_TwinBKP(X, y, m, Xbounds=Xbounds)
+# Fit TwinDKP model
+model2 <- fit_TwinDKP(X, Y, Xbounds = Xbounds)
 
 # Plot results
 plot(model2)
+}
 
 }
 \references{
 Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
-Kernel Process Modeling}. arXiv. \doi{10.48550/arXiv.2508.10447}
+Kernel Process Modeling}. arXiv. \url{doi:10.48550/arXiv.2508.10447}.
 }
 \seealso{
-\code{\link{fit_BKP}}, \code{\link{fit_DKP}}, and
-\code{\link{fit_TwinBKP}} for model fitting; \code{\link{predict.BKP}},
-\code{\link{predict.DKP}}, and \code{\link{predict.TwinBKP}} for
+\code{\link{fit_BKP}}, \code{\link{fit_DKP}},
+\code{\link{fit_TwinBKP}}, and \code{\link{fit_TwinDKP}} for model fitting;
+\code{\link{predict.BKP}}, \code{\link{predict.DKP}},
+\code{\link{predict.TwinBKP}}, and \code{\link{predict.TwinDKP}} for
 generating predictions from fitted models.
 }
 \keyword{BKP}

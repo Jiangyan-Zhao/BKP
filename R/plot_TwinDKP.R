@@ -14,10 +14,6 @@ plot.TwinDKP <- function(
     ...
 ) {
   # ---------------- Argument Checking ----------------
-  if (!inherits(x, "TwinDKP")) {
-    stop("'x' must be a fitted TwinDKP object.")
-  }
-
   if (!is.logical(only_mean) || length(only_mean) != 1) {
     stop("`only_mean` must be a single logical value (TRUE or FALSE).")
   }
@@ -270,7 +266,7 @@ plot.TwinDKP <- function(
       do.call(grid.arrange, c(plot_list, ncol = 2))
     } else {
       old_par <- par(mfrow = c(2, 2))
-      on.exit(par(old_par), add = TRUE)
+      # on.exit(par(old_par), add = TRUE)
 
       if (is_classification) {
         cols <- rainbow(q)
@@ -559,5 +555,5 @@ plot.TwinDKP <- function(
     }
   }
 
-  invisible(NULL)
+  return(invisible(NULL))
 }

@@ -3,13 +3,9 @@
 #' @keywords DKP
 #'
 #' @examples
-#' # ============================================================== #
-#' # ========================= DKP Examples ======================= #
-#' # ============================================================== #
+#' #-------------------------- DKP and TwinDKP ---------------------------
 #'
 #' #-------------------------- 1D Example ---------------------------
-#' set.seed(123)
-#'
 #' # Define true class probability function (3-class)
 #' true_pi_fun <- function(X) {
 #'   p1 <- 1/(1+exp(-3*X))
@@ -32,10 +28,24 @@
 #' # Plot results
 #' plot(model1)
 #'
+#' \dontrun{
+#' # Larger TwinDKP example
+#' n <- 1000
+#' X <- tgp::lhs(n = n, rect = Xbounds)
+#' true_pi <- true_pi_fun(X)
+#' m <- sample(150, n, replace = TRUE)
+#'
+#' # Generate multinomial responses
+#' Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
+#'
+#' # Fit TwinDKP model
+#' model1 <- fit_TwinDKP(X, Y, Xbounds = Xbounds)
+#'
+#' # Plot results
+#' plot(model1)
+#' }
 #'
 #' #-------------------------- 2D Example ---------------------------
-#' set.seed(123)
-#'
 #' # Define latent function and transform to 3-class probabilities
 #' true_pi_fun <- function(X) {
 #'   if (is.null(nrow(X))) X <- matrix(X, nrow = 1)
@@ -67,6 +77,23 @@
 #' # Plot results
 #' plot(model2)
 #'
+#' \dontrun{
+#' # Larger TwinDKP example
+#' n <- 1000
+#' X <- tgp::lhs(n = n, rect = Xbounds)
+#' true_pi <- true_pi_fun(X)
+#' m <- sample(150, n, replace = TRUE)
+#'
+#' # Generate multinomial responses
+#' Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
+#'
+#' # Fit TwinDKP model
+#' model2 <- fit_TwinDKP(X, Y, Xbounds = Xbounds)
+#'
+#' # Plot results
+#' plot(model2)
+#' }
+#'
 #' @export
 #' @method plot DKP
 
@@ -77,7 +104,9 @@ plot.DKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL,
     stop("`only_mean` must be a single logical value (TRUE or FALSE).")
   }
 
-  if (!is.numeric(n_grid) || length(n_grid) != 1 || n_grid <= 0) {
+  if (!is.numeric(n_grid) || length(n_grid) != 1L ||
+      is.na(n_grid) || !is.finite(n_grid) ||
+      n_grid <= 0 || n_grid != floor(n_grid)) {
     stop("'n_grid' must be a positive integer.")
   }
   n_grid <- as.integer(n_grid)
@@ -102,6 +131,8 @@ plot.DKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL,
     if (!is.numeric(dims) || any(dims != as.integer(dims))) {
       stop("`dims` must be an integer vector.")
     }
+    dims <- as.integer(dims)
+
     if (length(dims) < 1 || length(dims) > 2) {
       stop("`dims` must have length 1 or 2.")
     }
@@ -306,6 +337,7 @@ plot.DKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL,
         }
       }
     }
+    return(invisible(NULL))
   } else {
     #----- Plotting for 2-dimensional covariate data (d == 2) -----#
     # Generate 2D prediction grid
@@ -371,5 +403,6 @@ plot.DKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL,
     }
   }
 
+  return(invisible(NULL))
   # par(old_par)
 }

@@ -1,16 +1,19 @@
 #' @name plot
 #'
-#' @title Plot Fitted BKP, DKP, or TwinBKP Models
+#' @title Plot Fitted BKP Package Model Objects
 #'
-#' @description Visualizes fitted \code{BKP}, \code{DKP}, or \code{TwinBKP} models
-#'   according to the input dimensionality. For 1D inputs,
-#'   it shows predicted class probabilities with credible intervals and observed
-#'   data. For 2D inputs, it generates contour plots of posterior summaries. For
-#'   higher-dimensional inputs, users must specify which dimensions to plot.
+#' @description Visualize fitted \code{BKP}, \code{DKP}, \code{TwinBKP}, and
+#'   \code{TwinDKP} model objects according to the selected input dimension(s).
+#'   For one-dimensional plots, the methods show posterior mean probability
+#'   curves, credible intervals, and observed proportions or class frequencies.
+#'   For two-dimensional plots, the methods generate posterior summary surfaces
+#'   over a prediction grid. For higher-dimensional inputs, users must specify
+#'   one or two dimensions through \code{dims}.
 #'
-#' @param x An object of class \code{"BKP"}, \code{"DKP"}, or
-#'   \code{"TwinBKP"}, typically returned by \code{\link{fit_BKP}},
-#'   \code{\link{fit_DKP}}, or \code{\link{fit_TwinBKP}}.
+#' @param x A fitted model object of class \code{"BKP"}, \code{"DKP"},
+#'   \code{"TwinBKP"}, or \code{"TwinDKP"}, typically returned by
+#'   \code{\link{fit_BKP}}, \code{\link{fit_DKP}},
+#'   \code{\link{fit_TwinBKP}}, or \code{\link{fit_TwinDKP}}.
 #' @param only_mean Logical. If \code{TRUE}, only the predicted mean surface is
 #'   plotted for 2D inputs. This applies to BKP, DKP, and TwinBKP models.
 #'   Default is \code{FALSE}.
@@ -26,15 +29,14 @@
 #'   uses the package's original base/lattice plotting implementation,
 #'   whereas \code{"ggplot"} uses \pkg{ggplot2}-based graphics when
 #'   available. This argument applies to both 1D and 2D plots.
-#' @param show_global Logical. For \code{TwinBKP} objects only. If
-#'   \code{TRUE}, highlights the selected global subset used by the
+#' @param show_global Logical. For \code{TwinBKP} and \code{TwinDKP} objects,
+#'   if \code{TRUE}, highlight the selected global subset used by the
 #'   twinning-based approximation. Default is \code{TRUE}.
 #' @param ... Additional arguments passed to internal plotting routines
 #'   (currently unused).
 #'
-#' @return This function is called for its side effects and does not return a
-#'   value. It produces plots visualizing the predicted probabilities, credible
-#'   intervals, and posterior summaries.
+#' @return Invisibly returns \code{NULL}. The function is called for its side
+#'   effect of producing plots.
 #'
 #' @details
 #' The plotting behavior depends on the dimensionality of the input covariates:
@@ -71,20 +73,19 @@
 #' For \code{TwinBKP} objects, the plotting behavior is analogous to
 #' \code{BKP}, with optional highlighting of the selected global subset.
 #'
-#' @seealso \code{\link{fit_BKP}}, \code{\link{fit_DKP}}, and
-#'   \code{\link{fit_TwinBKP}} for model fitting; \code{\link{predict.BKP}},
-#'   \code{\link{predict.DKP}}, and \code{\link{predict.TwinBKP}} for
+#' @seealso \code{\link{fit_BKP}}, \code{\link{fit_DKP}},
+#'   \code{\link{fit_TwinBKP}}, and \code{\link{fit_TwinDKP}} for model fitting;
+#'   \code{\link{predict.BKP}}, \code{\link{predict.DKP}},
+#'   \code{\link{predict.TwinBKP}}, and \code{\link{predict.TwinDKP}} for
 #'   generating predictions from fitted models.
 #'
 #' @references Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
-#'   Kernel Process Modeling}. arXiv. \doi{10.48550/arXiv.2508.10447}
+#'   Kernel Process Modeling}. arXiv. <doi:10.48550/arXiv.2508.10447>.
 #'
-#' @keywords BKP DKP TwinBKP
+#' @keywords BKP
 #'
 #' @examples
-#' # ============================================================== #
-#' # ========================= BKP Examples ======================= #
-#' # ============================================================== #
+#' #-------------------------- BKP and TwinBKP ---------------------------
 #'
 #' #-------------------------- 1D Example ---------------------------
 #' set.seed(123)
@@ -107,10 +108,22 @@
 #' # Plot results
 #' plot(model1)
 #'
+#' \dontrun{
+#' # Larger TwinBKP example
+#' n <- 1000
+#' X <- tgp::lhs(n = n, rect = Xbounds)
+#' true_pi <- true_pi_fun(X)
+#' m <- sample(100, n, replace = TRUE)
+#' y <- rbinom(n, size = m, prob = true_pi)
+#'
+#' # Fit TwinBKP model
+#' model1 <- fit_TwinBKP(X, y, m, Xbounds=Xbounds)
+#'
+#' # Plot results
+#' plot(model1)
+#' }
 #'
 #' #-------------------------- 2D Example ---------------------------
-#' set.seed(123)
-#'
 #' # Define 2D latent function and probability transformation
 #' true_pi_fun <- function(X) {
 #'   if(is.null(nrow(X))) X <- matrix(X, nrow=1)
@@ -140,6 +153,21 @@
 #' # Plot results
 #' plot(model2)
 #'
+#' \dontrun{
+#' # Larger TwinBKP example
+#' n <- 1000
+#' X <- tgp::lhs(n = n, rect = Xbounds)
+#' true_pi <- true_pi_fun(X)
+#' m <- sample(100, n, replace = TRUE)
+#' y <- rbinom(n, size = m, prob = true_pi)
+#'
+#' # Fit TwinBKP model
+#' model2 <- fit_TwinBKP(X, y, m, Xbounds=Xbounds)
+#'
+#' # Plot results
+#' plot(model2)
+#' }
+#'
 #' @export
 #' @method plot BKP
 
@@ -150,7 +178,9 @@ plot.BKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL,
     stop("`only_mean` must be a single logical value (TRUE or FALSE).")
   }
 
-  if (!is.numeric(n_grid) || length(n_grid) != 1 || n_grid <= 0) {
+  if (!is.numeric(n_grid) || length(n_grid) != 1L ||
+      is.na(n_grid) || !is.finite(n_grid) ||
+      n_grid <= 0 || n_grid != floor(n_grid)) {
     stop("'n_grid' must be a positive integer.")
   }
   n_grid <- as.integer(n_grid)
@@ -175,6 +205,8 @@ plot.BKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL,
     if (!is.numeric(dims) || any(dims != as.integer(dims))) {
       stop("`dims` must be an integer vector.")
     }
+    dims <- as.integer(dims)
+
     if (length(dims) < 1 || length(dims) > 2) {
       stop("`dims` must have length 1 or 2.")
     }
@@ -316,6 +348,7 @@ plot.BKP <- function(x, only_mean = FALSE, n_grid = 80, dims = NULL,
       }
     }
 
+    return(invisible(NULL))
   } else {
     #----- Plotting for 2-dimensional covariate data (d == 2) -----#
     # Generate 2D prediction grid
