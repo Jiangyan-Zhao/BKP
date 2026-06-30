@@ -70,12 +70,11 @@ response is one-hot encoded.
 \item{\code{threshold}}{The binary classification threshold, returned for
 \code{BKP} and \code{TwinBKP} simulations when supplied.}
 \item{\code{ess}}{Effective-sample-size calibration method inherited from
-the fitted model. For \code{TwinBKP} and \code{TwinDKP}, this is
-\code{"none"}.}
+the fitted model, returned for \code{BKP} and \code{DKP} objects.}
+
 \item{\code{ess_info}}{ESS diagnostics for \code{BKP} and \code{DKP}
-simulations when available. \code{TwinBKP} and \code{TwinDKP} use
-uncalibrated global-local posterior updates and return
-\code{ess_info = NULL}.}
+simulations when available. \code{TwinBKP} and \code{TwinDKP} do not
+support ESS calibration and do not return this component.}
 }
 }
 \description{
