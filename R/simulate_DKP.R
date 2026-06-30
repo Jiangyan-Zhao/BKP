@@ -97,6 +97,7 @@ simulate.DKP <- function(object, nsim = 1, seed = NULL, Xnew = NULL, ...)
   if (!is.null(Xnew)) {
     prediction <- predict.DKP(object, Xnew = Xnew, type = "probability", ...)
     alpha_n <- prediction$alpha_n
+    Xnew <- prediction$Xnew
     Y <- object$Y
     q <- ncol(Y)
     ess_info <- prediction$ess_info

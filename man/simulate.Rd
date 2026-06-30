@@ -103,14 +103,14 @@ true_pi_fun <- function(x) {
 }
 
 n <- 30
-Xbounds <- matrix(c(-2,2), nrow=1)
+Xbounds <- matrix(c(-2,2), nrow = 1)
 X <- tgp::lhs(n = n, rect = Xbounds)
 true_pi <- true_pi_fun(X)
 m <- sample(100, n, replace = TRUE)
 y <- rbinom(n, size = m, prob = true_pi)
 
 # Fit BKP model
-model <- fit_BKP(X, y, m, Xbounds=Xbounds)
+model <- fit_BKP(X, y, m, Xbounds = Xbounds)
 
 # Simulate 5 posterior draws of success probabilities
 Xnew <- matrix(seq(-2, 2, length.out = 5), ncol = 1)
@@ -119,7 +119,7 @@ simulate(model, Xnew = Xnew, nsim = 5)
 # Simulate binary classifications (threshold = 0.5)
 simulate(model, Xnew = Xnew, nsim = 5, threshold = 0.5)
 
-#' \dontrun{
+\dontrun{
 # Larger TwinBKP example
 n <- 1000
 X <- tgp::lhs(n = n, rect = Xbounds)
@@ -128,7 +128,7 @@ m <- sample(100, n, replace = TRUE)
 y <- rbinom(n, size = m, prob = true_pi)
 
 # Fit TwinBKP model
-model <- fit_TwinBKP(X, y, m, Xbounds=Xbounds)
+model <- fit_TwinBKP(X, y, m, Xbounds = Xbounds)
 
 # Simulate 5 posterior draws of success probabilities
 simulate(model, Xnew = Xnew, nsim = 5)

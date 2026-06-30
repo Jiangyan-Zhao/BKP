@@ -100,8 +100,8 @@ test_that("simulate.BKP handles input validation correctly", {
   expect_error(simulate(model, nsim = 5.5), "`nsim` must be a positive integer.")
 
   # threshold must be a single numeric value in (0, 1)
-  expect_error(simulate(model, threshold = 1.1), "`threshold` must be a numeric value strictly between 0 and 1 (e.g., 0.5).", fixed = TRUE)
-  expect_error(simulate(model, threshold = c(0.1, 0.9)), "`threshold` must be a numeric value strictly between 0 and 1 (e.g., 0.5).", fixed = TRUE)
+  expect_error(simulate(model, threshold = 1.1), "'threshold' must be a single finite numeric value strictly between 0 and 1.", fixed = TRUE)
+  expect_error(simulate(model, threshold = c(0.1, 0.9)), "'threshold' must be a single finite numeric value strictly between 0 and 1.", fixed = TRUE)
 
   # Xnew must be a matrix
   expect_error(simulate(model, Xnew = "invalid"), "'Xnew' must be numeric.")

@@ -46,8 +46,10 @@ simulate.TwinBKP <- function(object, nsim = 1, seed = NULL,
   }
 
   if (!is.null(threshold)) {
-    if (!is.numeric(threshold) || length(threshold) != 1 || threshold <= 0 || threshold >= 1) {
-      stop("`threshold` must be a numeric value strictly between 0 and 1 (e.g., 0.5).")
+    if (!is.numeric(threshold) || length(threshold) != 1L ||
+        is.na(threshold) || !is.finite(threshold) ||
+        threshold <= 0 || threshold >= 1) {
+      stop("'threshold' must be a single finite numeric value strictly between 0 and 1.")
     }
   }
 
@@ -57,6 +59,7 @@ simulate.TwinBKP <- function(object, nsim = 1, seed = NULL,
     prediction <- predict.TwinBKP(object, Xnew = Xnew, type = "probability", ...)
     alpha_n <- prediction$alpha_n
     beta_n <- prediction$beta_n
+    Xnew <- prediction$Xnew
   } else {
     alpha_n <- object$alpha_n
     beta_n <- object$beta_n

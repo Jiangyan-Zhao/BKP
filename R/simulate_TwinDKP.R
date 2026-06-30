@@ -18,10 +18,12 @@ simulate.TwinDKP <- function(object, nsim = 1, seed = NULL,
     stop("`seed` must be a single integer or NULL.")
   }
 
-  alpha_n <- if (!is.null(Xnew)) {
-    predict.TwinDKP(object, Xnew = Xnew, type = "probability", ...)$alpha_n
+  if (!is.null(Xnew)) {
+    prediction <- predict.TwinDKP(object, Xnew = Xnew, type = "probability", ...)
+    alpha_n <- prediction$alpha_n
+    Xnew <- prediction$Xnew
   } else {
-    object$alpha_n
+    alpha_n <- object$alpha_n
   }
 
   n_new <- nrow(alpha_n)
@@ -48,9 +50,7 @@ simulate.TwinDKP <- function(object, nsim = 1, seed = NULL,
     mean = alpha_n / rowSums(alpha_n),
     class = class_pred,
     X = object$X,
-    Xnew = Xnew,
-    ess = "none",
-    ess_info = NULL
+    Xnew = Xnew
   )
   class(out) <- "simulate_TwinDKP"
   out
