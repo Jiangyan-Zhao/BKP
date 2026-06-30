@@ -83,13 +83,13 @@ test_that("posterior_summary returns expected summary matrix", {
   expect_equal(rownames(ps), c("Posterior means", "Posterior variances"))
 })
 
-test_that(".make_plot_grid fixes non-displayed dimensions at training medians", {
+test_that("make_plot_grid fixes non-displayed dimensions at training medians", {
   X <- matrix(c(1, 10, 100,
                 2, 20, 200,
                 3, 30, 300), ncol = 3, byrow = TRUE)
   grid <- expand.grid(x1 = c(0.1, 0.9), x3 = c(0.2, 0.8))
 
-  Xnew <- .make_plot_grid(X, dims = c(1, 3), grid = grid)
+  Xnew <- make_plot_grid(X, dims = c(1, 3), grid = grid)
 
   expect_equal(Xnew[, 2], rep(stats::median(X[, 2]), nrow(grid)))
   expect_equal(Xnew[, c(1, 3)], unname(as.matrix(grid)))
@@ -115,7 +115,7 @@ test_that("C++ Shepard interpolation matches reference R implementation", {
     }, numeric(1))
   }
 
-  expect_equal(.bkp_shepard_m(Xquery, Xtrain, m), ref(Xquery, Xtrain, m))
+  expect_equal(bkp_shepard_m(Xquery, Xtrain, m), ref(Xquery, Xtrain, m))
 })
 
 test_that("C++ leave-one-out Shepard interpolation matches reference R implementation", {
@@ -132,5 +132,5 @@ test_that("C++ leave-one-out Shepard interpolation matches reference R implement
     sum(w * m[idx]) / sum(w)
   }, numeric(1))
 
-  expect_equal(.bkp_shepard_m_loo(X, m), ref)
+  expect_equal(bkp_shepard_m_loo(X, m), ref)
 })
