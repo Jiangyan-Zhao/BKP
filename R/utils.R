@@ -680,6 +680,9 @@ posterior_summary <- function(mean_vals, var_vals) {
   if (nrow(K) != nrow(Xquery_norm) || ncol(K) != nrow(Xtrain_norm)) {
     stop("'K' must have dimensions nrow(Xquery_norm) by nrow(Xtrain_norm).", call. = FALSE)
   }
+  if (anyNA(m) || any(!is.finite(m)) || any(m <= 0)) {
+    stop("'m' must contain positive finite trial sizes.", call. = FALSE)
+  }
   if (length(m) != nrow(Xtrain_norm)) {
     stop("'m' must have the same length as the number of training locations.", call. = FALSE)
   }
@@ -721,9 +724,22 @@ posterior_summary <- function(mean_vals, var_vals) {
 #'
 #' @keywords internal
 .bkp_ess_none_info <- function(K, m) {
+  K <- as.matrix(K)
+  m <- as.numeric(m)
+
+  if (ncol(K) != length(m)) {
+    stop("'K' must have one column per training trial size.", call. = FALSE)
+  }
+  if (anyNA(K) || any(!is.finite(K))) {
+    stop("'K' must contain only finite values.", call. = FALSE)
+  }
+  if (anyNA(m) || any(!is.finite(m)) || any(m <= 0)) {
+    stop("'m' must contain positive finite trial sizes.", call. = FALSE)
+  }
+
   list(
     scale = rep(1, nrow(K)),
-    m_kernel = as.vector(K %*% as.numeric(m)),
+    m_kernel = as.vector(K %*% m),
     m_shepard = NULL,
     m_target = NULL,
     rho = apply(K, 1L, max)

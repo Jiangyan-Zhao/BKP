@@ -88,7 +88,7 @@ plot.TwinDKP <- function(
       ncol = 1
     )
 
-    Xnew_full <- .make_plot_grid(X, Xbounds, dims, Xnew)
+    Xnew_full <- .make_plot_grid(X, dims, Xnew)
     prediction <- predict.TwinDKP(x, Xnew = Xnew_full, ...)
 
     if (engine == "ggplot") {
@@ -394,7 +394,7 @@ plot.TwinDKP <- function(
   x2 <- seq(Xbounds[dims[2], 1], Xbounds[dims[2], 2], length.out = n_grid)
   grid <- expand.grid(x1 = x1, x2 = x2)
 
-  Xnew_full <- .make_plot_grid(X, Xbounds, dims, grid)
+  Xnew_full <- .make_plot_grid(X, dims, grid)
   prediction <- predict.TwinDKP(x, Xnew = Xnew_full, ...)
 
   if (is_classification) {
