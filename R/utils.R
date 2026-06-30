@@ -294,8 +294,15 @@ my_2D_plot_fun_class_ggplot <- function(var, title, data, X, Y,
     stop("`var` must be a single character string (a column name).")
   }
   # Ensure the variable exists in the dataset if not in classification mode
-  if (!classification && !var %in% names(data)) {
-    stop(sprintf("Column `%s` not found in `data`.", var))
+  if (classification) {
+    if (!"class" %in% names(data)) {
+      stop("Column `class` not found in `data` when classification = TRUE.")
+    }
+    data$class <- factor(data$class)
+  } else {
+    if (!var %in% names(data)) {
+      stop(sprintf("Column `%s` not found in `data`.", var))
+    }
   }
 
   # Identify the class with maximum probability for each observation
@@ -332,6 +339,7 @@ my_2D_plot_fun_class_ggplot <- function(var, title, data, X, Y,
   )
 
   # Overlay observed points with distinct shapes
+  n_class_obs <- length(unique(class_Y))
   p <- p + geom_point(
     data = obs_df,
     aes(x = .data$x1, y = .data$x2, shape = .data$class),
@@ -341,7 +349,7 @@ my_2D_plot_fun_class_ggplot <- function(var, title, data, X, Y,
     # Ensure axes fit tightly to the data grid as in base R
     scale_x_continuous(expand = c(0, 0)) +
     scale_y_continuous(expand = c(0, 0)) +
-    scale_shape_manual(values = seq(15, 15 + length(unique(class_Y))), guide = "none") +
+    scale_shape_manual(values = seq_len(n_class_obs) + 14L, guide = "none") +
     labs(
       title = title,
       x = if (is.null(dims)) "x1" else paste0("x", dims[1]),
@@ -388,13 +396,12 @@ my_2D_plot_fun_class_ggplot <- function(var, title, data, X, Y,
 #' in the plot are fixed at their training-data medians.
 #'
 #' @param X Training input matrix.
-#' @param Xbounds Matrix of input bounds.
 #' @param dims Integer vector of displayed dimensions.
 #' @param grid Matrix or data frame containing grid values for displayed dimensions.
 #' @return A numeric matrix with one row per grid point and one column per model input dimension.
 #'
 #' @keywords internal
-.make_plot_grid <- function(X, Xbounds, dims, grid) {
+.make_plot_grid <- function(X, dims, grid) {
   fixed <- apply(X, 2, stats::median)
   Xnew_full <- matrix(rep(fixed, each = nrow(grid)), nrow = nrow(grid))
   Xnew_full[, dims] <- as.matrix(grid)
@@ -578,6 +585,13 @@ posterior_summary <- function(mean_vals, var_vals) {
 #' @keywords internal
 
 .bkp_shepard_m <- function(Xquery_norm, Xtrain_norm, m, power = 2) {
+  if (anyNA(Xquery_norm) || anyNA(Xtrain_norm) ||
+      any(!is.finite(Xquery_norm)) || any(!is.finite(Xtrain_norm))) {
+    stop("'Xquery_norm' and 'Xtrain_norm' must contain only finite values.", call. = FALSE)
+  }
+  if (anyNA(m) || any(!is.finite(m)) || any(m <= 0)) {
+    stop("'m' must contain positive finite trial sizes.", call. = FALSE)
+  }
   Xquery_norm <- as.matrix(Xquery_norm)
   Xtrain_norm <- as.matrix(Xtrain_norm)
   m <- as.numeric(m)
@@ -610,6 +624,12 @@ posterior_summary <- function(mean_vals, var_vals) {
 #'
 #' @keywords internal
 .bkp_shepard_m_loo <- function(Xnorm, m, power = 2) {
+  if (anyNA(Xnorm) || any(!is.finite(Xnorm))) {
+    stop("'Xnorm' must contain only finite values.", call. = FALSE)
+  }
+  if (anyNA(m) || any(!is.finite(m)) || any(m <= 0)) {
+    stop("'m' must contain positive finite trial sizes.", call. = FALSE)
+  }
   Xnorm <- as.matrix(Xnorm)
   m <- as.numeric(m)
 
@@ -652,6 +672,21 @@ posterior_summary <- function(mean_vals, var_vals) {
 #' @keywords internal
 
 .bkp_ess_calibration <- function(Xquery_norm, Xtrain_norm, m, K) {
+  Xquery_norm <- as.matrix(Xquery_norm)
+  Xtrain_norm <- as.matrix(Xtrain_norm)
+  m <- as.numeric(m)
+  K <- as.matrix(K)
+
+  if (nrow(K) != nrow(Xquery_norm) || ncol(K) != nrow(Xtrain_norm)) {
+    stop("'K' must have dimensions nrow(Xquery_norm) by nrow(Xtrain_norm).", call. = FALSE)
+  }
+  if (length(m) != nrow(Xtrain_norm)) {
+    stop("'m' must have the same length as the number of training locations.", call. = FALSE)
+  }
+  if (anyNA(K) || any(!is.finite(K))) {
+    stop("'K' must contain only finite values.", call. = FALSE)
+  }
+
   .bkp_check_unique_locations(Xtrain_norm)
 
   m_kernel <- as.vector(K %*% as.numeric(m))

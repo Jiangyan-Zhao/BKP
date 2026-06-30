@@ -1,8 +1,3 @@
-test_that("summary.TwinDKP returns a summary object", {
-  expect_s3_class(summary(make_twindkp_model_1d()$model), "summary_TwinDKP")
-  }
-)
-
 test_that("summary.TwinDKP returns expected fields and posterior summaries", {
   fit <- make_twindkp_model_1d()
   model <- fit$model

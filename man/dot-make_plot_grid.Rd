@@ -4,12 +4,10 @@
 \alias{.make_plot_grid}
 \title{Construct a fixed-slice plotting grid}
 \usage{
-.make_plot_grid(X, Xbounds, dims, grid)
+.make_plot_grid(X, dims, grid)
 }
 \arguments{
 \item{X}{Training input matrix.}
-
-\item{Xbounds}{Matrix of input bounds.}
 
 \item{dims}{Integer vector of displayed dimensions.}
 
