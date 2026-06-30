@@ -25,7 +25,7 @@
 #' print(model)                    # fitted object
 #' print(summary(model))           # summary
 #' print(predict(model))           # predictions
-#' print(simulate(model, nsim=3))  # posterior simulations
+#' print(simulate(model, nsim = 3))  # posterior simulations
 #'
 #' \dontrun{
 #' # Larger TwinDKP example
@@ -42,7 +42,7 @@
 #' print(model)                    # fitted object
 #' print(summary(model))           # summary
 #' print(predict(model))           # predictions
-#' print(simulate(model, nsim=3))  # posterior simulations
+#' print(simulate(model, nsim = 3))  # posterior simulations
 #' }
 #'
 #' @export

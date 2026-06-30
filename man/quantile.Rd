@@ -7,7 +7,7 @@
 \alias{quantile.DKP}
 \alias{quantile.TwinBKP}
 \alias{quantile.TwinDKP}
-\title{Posterior Quantiles from a Fitted BKP, DKP, or TwinBKP Model}
+\title{Posterior Quantiles from Fitted BKP Package Models}
 \usage{
 \method{quantile}{BKP}(x, probs = c(0.025, 0.5, 0.975), ...)
 
@@ -18,9 +18,10 @@
 \method{quantile}{TwinDKP}(x, probs = c(0.025, 0.5, 0.975), ...)
 }
 \arguments{
-\item{x}{An object of class \code{BKP}, \code{DKP}, or \code{TwinBKP},
-typically returned by \code{\link{fit_BKP}}, \code{\link{fit_DKP}}, or
-\code{\link{fit_TwinBKP}}.}
+\item{x}{A fitted model object of class \code{"BKP"}, \code{"DKP"},
+\code{"TwinBKP"}, or \code{"TwinDKP"}, typically returned by
+\code{\link{fit_BKP}}, \code{\link{fit_DKP}},
+\code{\link{fit_TwinBKP}}, or \code{\link{fit_TwinDKP}}.}
 
 \item{probs}{Numeric vector of probabilities specifying which posterior
 quantiles to return. Defaults to \code{c(0.025, 0.5, 0.975)}.}
@@ -33,27 +34,29 @@ For \code{BKP} and \code{TwinBKP}: a numeric vector if
 \code{length(probs) > 1}, of posterior quantiles. Rows correspond to
 observations, and columns correspond to the requested probabilities.
 
-For \code{DKP}: a numeric matrix if \code{length(probs) = 1}, or a 3D
-array if \code{length(probs) > 1}, of posterior quantiles. Dimensions
-correspond to observations \eqn{\times} classes \eqn{\times}
-probabilities.
+For \code{DKP} and \code{TwinDKP}: a numeric matrix if
+\code{length(probs) = 1}, or a three-dimensional array if
+\code{length(probs) > 1}, of marginal posterior quantiles for class
+probabilities. Dimensions correspond to observations \eqn{\times} classes
+\eqn{\times} probabilities.
 }
 \description{
-Compute posterior quantiles from a fitted \code{BKP},
-\code{DKP}, or \code{TwinBKP} model. For \code{BKP} and
-\code{TwinBKP} objects, this returns posterior quantiles of the positive
-class probability. For a \code{DKP} object, this returns posterior
-quantiles for each class probability.
+Compute posterior quantiles from fitted \code{BKP},
+\code{DKP}, \code{TwinBKP}, and \code{TwinDKP} model objects. For
+\code{BKP} and \code{TwinBKP} objects, this returns posterior quantiles of
+the latent success probability. For \code{DKP} and \code{TwinDKP} objects,
+this returns marginal posterior quantiles for each class probability.
 }
 \details{
 For \code{BKP} and \code{TwinBKP} models, posterior quantiles are
-computed from the corresponding Beta posterior for the positive class
-probability. For a \code{DKP} model, marginal posterior quantiles for each
-class are computed from the exact Beta marginal distributions of the
-posterior Dirichlet distribution.
+computed from the corresponding Beta posterior for the latent success
+probability. For \code{DKP} and \code{TwinDKP} models, marginal posterior
+quantiles for each class probability are computed from the Beta marginal
+distributions of the posterior Dirichlet distribution. These are marginal
+class-wise quantiles, not joint Dirichlet credible regions.
 }
 \examples{
-# -------------------------- BKP ---------------------------
+# -------------------------- BKP and TwinBKP ---------------------------
 set.seed(123)
 
 # Define true success probability function
@@ -74,9 +77,22 @@ model <- fit_BKP(X, y, m, Xbounds = Xbounds)
 # Extract posterior quantiles
 quantile(model)
 
-# -------------------------- DKP ---------------------------
-set.seed(123)
+\dontrun{
+# Larger TwinBKP example
+n <- 1000
+X <- tgp::lhs(n = n, rect = Xbounds)
+true_pi <- true_pi_fun(X)
+m <- sample(100, n, replace = TRUE)
+y <- rbinom(n, size = m, prob = true_pi)
 
+# Fit TwinBKP model
+model <- fit_TwinBKP(X, y, m, Xbounds = Xbounds)
+
+# Extract posterior quantiles
+quantile(model)
+}
+
+# -------------------------- DKP  and TwinDKP---------------------------
 # Define true class probability function (3-class)
 true_pi_fun <- function(X) {
   p1 <- 1/(1+exp(-3*X))
@@ -99,31 +115,34 @@ model <- fit_DKP(X, Y, Xbounds = Xbounds)
 # Extract posterior quantiles
 quantile(model)
 
-# -------------------------- TwinBKP ---------------------------
-set.seed(123)
-
-# Define true success probability function
-true_pi_fun <- function(x) {
-  (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
-}
-
+\dontrun{
+# Larger TwinDKP example
 n <- 1000
-Xbounds <- matrix(c(-2, 2), nrow = 1)
 X <- tgp::lhs(n = n, rect = Xbounds)
 true_pi <- true_pi_fun(X)
 m <- sample(100, n, replace = TRUE)
-y <- rbinom(n, size = m, prob = true_pi)
 
-# Fit TwinBKP model
-model <- fit_TwinBKP(X, y, m, Xbounds = Xbounds)
+# Generate multinomial responses
+Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
+
+# Fit TwinDKP model
+model <- fit_TwinDKP(X, Y, Xbounds = Xbounds)
 
 # Extract posterior quantiles
 quantile(model)
+}
 
 }
+\references{
+Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
+Kernel Process Modeling}. arXiv. \url{doi:10.48550/arXiv.2508.10447}.
+}
 \seealso{
-\code{\link{fit_BKP}}, \code{\link{fit_DKP}}, and
-\code{\link{fit_TwinBKP}} for model fitting.
+\code{\link{fit_BKP}}, \code{\link{fit_DKP}},
+\code{\link{fit_TwinBKP}}, and \code{\link{fit_TwinDKP}} for model fitting;
+\code{\link{predict.BKP}}, \code{\link{predict.DKP}},
+\code{\link{predict.TwinBKP}}, and \code{\link{predict.TwinDKP}} for
+posterior prediction.
 }
 \keyword{BKP}
 \keyword{DKP}

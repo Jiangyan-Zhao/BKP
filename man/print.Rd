@@ -94,18 +94,18 @@ true_pi_fun <- function(x) {
 }
 
 n <- 30
-Xbounds <- matrix(c(-2,2), nrow=1)
+Xbounds <- matrix(c(-2,2), nrow = 1)
 X <- tgp::lhs(n = n, rect = Xbounds)
 true_pi <- true_pi_fun(X)
 m <- sample(100, n, replace = TRUE)
 y <- rbinom(n, size = m, prob = true_pi)
 
 # Fit BKP model
-model <- fit_BKP(X, y, m, Xbounds=Xbounds)
+model <- fit_BKP(X, y, m, Xbounds = Xbounds)
 print(model)                    # fitted object
 print(summary(model))           # summary
 print(predict(model))           # predictions
-print(simulate(model, nsim=3))  # posterior simulations
+print(simulate(model, nsim = 3))  # posterior simulations
 
 \dontrun{
 # Larger TwinBKP example
@@ -116,11 +116,11 @@ m <- sample(100, n, replace = TRUE)
 y <- rbinom(n, size = m, prob = true_pi)
 
 # Fit TwinBKP model
-model <- fit_TwinBKP(X, y, m, Xbounds=Xbounds)
+model <- fit_TwinBKP(X, y, m, Xbounds = Xbounds)
 print(model)                    # fitted object
 print(summary(model))           # summary
 print(predict(model))           # predictions
-print(simulate(model, nsim=3))  # posterior simulations
+print(simulate(model, nsim = 3))  # posterior simulations
 }
 
 #-------------------------- DKP and TwinDKP ---------------------------
@@ -145,7 +145,7 @@ model <- fit_DKP(X, Y, Xbounds = Xbounds)
 print(model)                    # fitted object
 print(summary(model))           # summary
 print(predict(model))           # predictions
-print(simulate(model, nsim=3))  # posterior simulations
+print(simulate(model, nsim = 3))  # posterior simulations
 
 \dontrun{
 # Larger TwinDKP example
@@ -162,7 +162,7 @@ model <- fit_TwinDKP(X, Y, Xbounds = Xbounds)
 print(model)                    # fitted object
 print(summary(model))           # summary
 print(predict(model))           # predictions
-print(simulate(model, nsim=3))  # posterior simulations
+print(simulate(model, nsim = 3))  # posterior simulations
 }
 
 }

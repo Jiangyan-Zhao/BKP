@@ -15,6 +15,12 @@ print.TwinDKP <- function(x, ...) {
   cat(sprintf("Loss function:              %s\n", x$loss))
   cat(sprintf("Loss minimum:               %.5f\n", x$loss_min))
   cat(sprintf("Prior:                      %s\n", x$prior))
+  if (x$prior == "fixed" || x$prior == "adaptive") {
+    cat(sprintf("r0:                         %.3f\n", x$r0))
+  }
+  if (x$prior == "fixed") {
+    cat("p0:                         ", paste(round(x$p0, 3), collapse = ", "), "\n")
+  }
   cat(sprintf(
     "Global subset size (g):     %d (target %d)\n",
     length(x$global_indices), x$control$g_target
