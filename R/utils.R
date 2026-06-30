@@ -401,7 +401,7 @@ my_2D_plot_fun_class_ggplot <- function(var, title, data, X, Y,
 #' @return A numeric matrix with one row per grid point and one column per model input dimension.
 #'
 #' @keywords internal
-.make_plot_grid <- function(X, dims, grid) {
+make_plot_grid <- function(X, dims, grid) {
   fixed <- apply(X, 2, stats::median)
   Xnew_full <- matrix(rep(fixed, each = nrow(grid)), nrow = nrow(grid))
   Xnew_full[, dims] <- as.matrix(grid)
@@ -466,7 +466,7 @@ posterior_summary <- function(mean_vals, var_vals) {
 #'
 #' @keywords internal
 
-.bkp_compute_posterior <- function(Xquery_norm, Xtrain_norm, y, m, theta,
+bkp_compute_posterior <- function(Xquery_norm, Xtrain_norm, y, m, theta,
                                    kernel, isotropic, prior, r0, p0,
                                    ess = "none") {
   K <- kernel_matrix(Xquery_norm, Xtrain_norm, theta = theta,
@@ -480,13 +480,13 @@ posterior_summary <- function(mean_vals, var_vals) {
   data_failure <- as.vector(K %*% (m - y))
 
   if (identical(ess, "shepard")) {
-    ess_info <- .bkp_ess_calibration(
+    ess_info <- bkp_ess_calibration(
       Xquery_norm = Xquery_norm, Xtrain_norm = Xtrain_norm, m = m, K = K
     )
     data_success <- ess_info$scale * data_success
     data_failure <- ess_info$scale * data_failure
   } else {
-    ess_info <- .bkp_ess_none_info(K, m)
+    ess_info <- bkp_ess_none_info(K, m)
   }
 
   list(
@@ -521,7 +521,7 @@ posterior_summary <- function(mean_vals, var_vals) {
 #'
 #' @keywords internal
 
-.dkp_compute_posterior <- function(Xquery_norm, Xtrain_norm, Y, theta,
+dkp_compute_posterior <- function(Xquery_norm, Xtrain_norm, Y, theta,
                                    kernel, isotropic, prior, r0, p0,
                                    ess = "none") {
   K <- kernel_matrix(Xquery_norm, Xtrain_norm, theta = theta,
@@ -532,10 +532,10 @@ posterior_summary <- function(mean_vals, var_vals) {
   data_counts <- as.matrix(K %*% Y)
   m <- rowSums(Y)
   if (identical(ess, "shepard")) {
-    ess_info <- .bkp_ess_calibration(Xquery_norm, Xtrain_norm, m, K)
+    ess_info <- bkp_ess_calibration(Xquery_norm, Xtrain_norm, m, K)
     data_counts <- sweep(data_counts, 1L, ess_info$scale, "*")
   } else {
-    ess_info <- .bkp_ess_none_info(K, m)
+    ess_info <- bkp_ess_none_info(K, m)
   }
 
   list(K = K, alpha0 = alpha0, alpha_n = alpha0 + data_counts, ess_info = ess_info)
@@ -554,7 +554,7 @@ posterior_summary <- function(mean_vals, var_vals) {
 #'
 #' @keywords internal
 
-.bkp_check_unique_locations <- function(Xnorm) {
+bkp_check_unique_locations <- function(Xnorm) {
   if (anyDuplicated(as.data.frame(Xnorm)) > 0L) {
     stop(
       paste0(
@@ -584,7 +584,7 @@ posterior_summary <- function(mean_vals, var_vals) {
 #'
 #' @keywords internal
 
-.bkp_shepard_m <- function(Xquery_norm, Xtrain_norm, m, power = 2) {
+bkp_shepard_m <- function(Xquery_norm, Xtrain_norm, m, power = 2) {
   if (anyNA(Xquery_norm) || anyNA(Xtrain_norm) ||
       any(!is.finite(Xquery_norm)) || any(!is.finite(Xtrain_norm))) {
     stop("'Xquery_norm' and 'Xtrain_norm' must contain only finite values.", call. = FALSE)
@@ -623,7 +623,7 @@ posterior_summary <- function(mean_vals, var_vals) {
 #' @return A numeric vector of leave-one-out interpolated trial sizes.
 #'
 #' @keywords internal
-.bkp_shepard_m_loo <- function(Xnorm, m, power = 2) {
+bkp_shepard_m_loo <- function(Xnorm, m, power = 2) {
   if (anyNA(Xnorm) || any(!is.finite(Xnorm))) {
     stop("'Xnorm' must contain only finite values.", call. = FALSE)
   }
@@ -633,7 +633,7 @@ posterior_summary <- function(mean_vals, var_vals) {
   Xnorm <- as.matrix(Xnorm)
   m <- as.numeric(m)
 
-  .bkp_check_unique_locations(Xnorm)
+  bkp_check_unique_locations(Xnorm)
 
   n <- nrow(Xnorm)
   if (n < 2L) {
@@ -671,7 +671,7 @@ posterior_summary <- function(mean_vals, var_vals) {
 #'
 #' @keywords internal
 
-.bkp_ess_calibration <- function(Xquery_norm, Xtrain_norm, m, K) {
+bkp_ess_calibration <- function(Xquery_norm, Xtrain_norm, m, K) {
   Xquery_norm <- as.matrix(Xquery_norm)
   Xtrain_norm <- as.matrix(Xtrain_norm)
   m <- as.numeric(m)
@@ -690,10 +690,10 @@ posterior_summary <- function(mean_vals, var_vals) {
     stop("'K' must contain only finite values.", call. = FALSE)
   }
 
-  .bkp_check_unique_locations(Xtrain_norm)
+  bkp_check_unique_locations(Xtrain_norm)
 
   m_kernel <- as.vector(K %*% as.numeric(m))
-  m_shepard <- .bkp_shepard_m(Xquery_norm, Xtrain_norm, m, power = 2)
+  m_shepard <- bkp_shepard_m(Xquery_norm, Xtrain_norm, m, power = 2)
   rho <- apply(K, 1L, max)
   m_target <- rho * m_shepard
 
@@ -723,7 +723,7 @@ posterior_summary <- function(mean_vals, var_vals) {
 #'   placeholder Shepard calibration fields.
 #'
 #' @keywords internal
-.bkp_ess_none_info <- function(K, m) {
+bkp_ess_none_info <- function(K, m) {
   K <- as.matrix(K)
   m <- as.numeric(m)
 

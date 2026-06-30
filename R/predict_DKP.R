@@ -156,7 +156,7 @@ predict.DKP <- function(object, Xnew = NULL, CI_level = 0.95,
     Xnew_norm <- sweep(Xnew, 2, Xbounds[, 1], "-")
     Xnew_norm <- sweep(Xnew_norm, 2, Xbounds[, 2] - Xbounds[, 1], "/")
 
-    posterior <- .dkp_compute_posterior(
+    posterior <- dkp_compute_posterior(
       Xquery_norm = Xnew_norm, Xtrain_norm = Xnorm, Y = Y, theta = theta,
       kernel = kernel, isotropic = isotropic, prior = prior, r0 = r0,
       p0 = p0, ess = ess

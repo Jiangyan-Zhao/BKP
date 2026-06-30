@@ -318,7 +318,7 @@ fit_DKP <- function(
   Xnorm <- sweep(Xnorm, 2, Xbounds[,2] - Xbounds[,1], "/")
 
   if (identical(ess, "shepard")) {
-    .bkp_check_unique_locations(Xnorm)
+    bkp_check_unique_locations(Xnorm)
   }
 
   m <- rowSums(Y)
@@ -346,7 +346,7 @@ fit_DKP <- function(
 
     max_iter <- min(500L, ceiling(100 * log1p(n_theta)))
 
-    m_shepard_loo <- if (identical(ess, "shepard")) .bkp_shepard_m_loo(Xnorm, m, power = 2) else NULL
+    m_shepard_loo <- if (identical(ess, "shepard")) bkp_shepard_m_loo(Xnorm, m, power = 2) else NULL
 
     opt_cpp <- optimize_dkp_theta_rcpp(
       Xnorm = Xnorm,
@@ -383,7 +383,7 @@ fit_DKP <- function(
   }
 
   # ---- Compute prior and posterior parameters ----
-  posterior <- .dkp_compute_posterior(
+  posterior <- dkp_compute_posterior(
     Xquery_norm = Xnorm, Xtrain_norm = Xnorm, Y = Y, theta = theta_opt,
     kernel = kernel, isotropic = isotropic, prior = prior, r0 = r0,
     p0 = p0, ess = ess

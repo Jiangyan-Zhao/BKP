@@ -152,7 +152,7 @@ loss_fun <- function(
   }
 
   if (identical(ess, "shepard")) {
-    .bkp_check_unique_locations(Xnorm)
+    bkp_check_unique_locations(Xnorm)
     if (nrow(Xnorm) < 2L) {
       stop("ESS calibration with ess = 'shepard' requires at least two input locations for leave-one-out calibration.")
     }
@@ -174,7 +174,7 @@ loss_fun <- function(
     if (identical(ess, "shepard")) {
       m_kernel <- as.vector(K %*% as.numeric(m))
       rho <- apply(K, 1L, max)
-      m_target <- rho * .bkp_shepard_m_loo(Xnorm, m, power = 2)
+      m_target <- rho * bkp_shepard_m_loo(Xnorm, m, power = 2)
       data_scale <- numeric(length(m_kernel))
       positive_kernel_mass <- m_kernel > 0
       data_scale[positive_kernel_mass] <- m_target[positive_kernel_mass] / m_kernel[positive_kernel_mass]
@@ -201,7 +201,7 @@ loss_fun <- function(
       m_dkp <- rowSums(Y)
       m_kernel <- as.vector(K %*% as.numeric(m_dkp))
       rho <- apply(K, 1L, max)
-      m_target <- rho * .bkp_shepard_m_loo(Xnorm, m_dkp, power = 2)
+      m_target <- rho * bkp_shepard_m_loo(Xnorm, m_dkp, power = 2)
       data_scale <- numeric(length(m_kernel))
       positive_kernel_mass <- m_kernel > 0
       data_scale[positive_kernel_mass] <- m_target[positive_kernel_mass] / m_kernel[positive_kernel_mass]
