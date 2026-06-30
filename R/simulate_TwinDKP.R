@@ -4,7 +4,7 @@
 #' @method simulate TwinDKP
 simulate.TwinDKP <- function(object, nsim = 1, seed = NULL,
                              Xnew = NULL, ...) {
-  if (!is.numeric(nsim) || length(nsim) != 1 ||
+  if (!is.numeric(nsim) || length(nsim) != 1L ||
       is.na(nsim) || !is.finite(nsim) ||
       nsim <= 0 || nsim != as.integer(nsim)) {
     stop("`nsim` must be a positive integer.")
@@ -12,7 +12,7 @@ simulate.TwinDKP <- function(object, nsim = 1, seed = NULL,
   nsim <- as.integer(nsim)
 
   if (!is.null(seed) &&
-      (!is.numeric(seed) || length(seed) != 1 ||
+      (!is.numeric(seed) || length(seed) != 1L ||
        is.na(seed) || !is.finite(seed) ||
        seed != as.integer(seed))) {
     stop("`seed` must be a single integer or NULL.")

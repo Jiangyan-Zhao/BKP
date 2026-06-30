@@ -7,7 +7,7 @@
 \alias{simulate.DKP}
 \alias{simulate.TwinBKP}
 \alias{simulate.TwinDKP}
-\title{Simulate from a Fitted BKP, DKP, or TwinBKP Model}
+\title{Simulate from Fitted BKP Package Models}
 \usage{
 \method{simulate}{BKP}(object, nsim = 1, seed = NULL, Xnew = NULL, threshold = NULL, ...)
 
@@ -18,84 +18,83 @@
 \method{simulate}{TwinDKP}(object, nsim = 1, seed = NULL, Xnew = NULL, ...)
 }
 \arguments{
-\item{object}{An object of class \code{"BKP"}, \code{"DKP"}, or
-\code{"TwinBKP"}, typically returned by \code{\link{fit_BKP}},
-\code{\link{fit_DKP}}, or \code{\link{fit_TwinBKP}}.}
+\item{object}{A fitted model object of class \code{"BKP"}, \code{"DKP"},
+\code{"TwinBKP"}, or \code{"TwinDKP"}, typically returned by
+\code{\link{fit_BKP}}, \code{\link{fit_DKP}},
+\code{\link{fit_TwinBKP}}, or \code{\link{fit_TwinDKP}}.}
 
-\item{nsim}{Number of posterior samples to generate (default = \code{1}).}
+\item{nsim}{Number of posterior samples to generate. The default is
+\code{1}.}
 
 \item{seed}{Optional integer seed for reproducibility.}
 
-\item{Xnew}{A numeric matrix or vector of new input locations at which
-simulations are generated.}
+\item{Xnew}{A numeric vector or matrix of new input locations at which
+posterior simulations are generated. If \code{NULL}, simulations are
+generated at the training input locations.}
 
 \item{threshold}{Classification threshold for binary decisions, used for
-BKP and TwinBKP models. When specified, posterior draws exceeding the
-threshold are classified as 1, and those below as 0. The default is
-\code{NULL}.}
+\code{BKP} and \code{TwinBKP} models. When specified, posterior draws
+exceeding the threshold are classified as 1, and those below or equal to
+the threshold are classified as 0. The default is \code{NULL}.}
 
-\item{...}{Additional arguments (currently unused).}
+\item{...}{Additional arguments passed to the corresponding \code{predict}
+method when \code{Xnew} is supplied.}
 }
 \value{
-A list with the following components:
+A list containing posterior simulations:
 \describe{
 \item{\code{samples}}{
-For \strong{BKP} and \strong{TwinBKP}: A numeric matrix of size
-\code{nrow(Xnew) × nsim}, where each column corresponds to one posterior
-draw of success probabilities.\cr
-For \strong{DKP}: A numeric array of dimension
-\code{nrow(Xnew) × q × nsim}, containing simulated class probabilities
-from Dirichlet posteriors, where \code{q} is the number of classes.
+For \code{BKP} and \code{TwinBKP}, a numeric matrix with one row per
+simulation location and one column per posterior draw. Each entry is a
+simulated latent success probability.\cr
+For \code{DKP} and \code{TwinDKP}, a numeric array with dimensions
+simulation locations \eqn{\times} classes \eqn{\times} posterior draws.
+Each slice contains simulated latent class probabilities from the
+posterior Dirichlet distribution.
 }
-
 \item{\code{mean}}{
-For \strong{BKP} and \strong{TwinBKP}: A numeric vector of posterior mean
-success probabilities at each input location.\cr
-For \strong{DKP}: A numeric matrix of dimension \code{nrow(Xnew) × q},
-containing posterior mean class probabilities.
+Posterior mean at the simulation locations. For \code{BKP} and
+\code{TwinBKP}, this is a numeric vector of success-probability means.
+For \code{DKP} and \code{TwinDKP}, this is a matrix of class-probability
+means.
 }
-
 \item{\code{class}}{
-For \strong{BKP} and \strong{TwinBKP}: An integer matrix of dimension
-\code{nrow(Xnew) × nsim}, indicating simulated binary class labels
-\code{0}/\code{1}, returned when \code{threshold} is specified.\cr
-For \strong{DKP}: An integer matrix of dimension
-\code{nrow(Xnew) × nsim}, where each entry corresponds to a MAP-predicted
-class label, returned only when training data is single-label.
+Simulated class labels when applicable. For \code{BKP} and
+\code{TwinBKP}, this is returned when \code{threshold} is supplied. For
+\code{DKP} and \code{TwinDKP}, this is returned when the training
+response is one-hot encoded.
 }
-
-\item{\code{X}}{The training input matrix used to fit the BKP, DKP, or
-TwinBKP model.}
-
-\item{\code{Xnew}}{The new input locations at which simulations are generated.}
-
-\item{\code{threshold}}{The classification threshold used for generating
-binary class labels (if provided).}
-
+\item{\code{X}}{The original training input locations.}
+\item{\code{Xnew}}{The new input locations used for simulation. If
+\code{NULL}, simulations are returned at the training input locations.}
+\item{\code{threshold}}{The binary classification threshold, returned for
+\code{BKP} and \code{TwinBKP} simulations when supplied.}
 \item{\code{ess}}{Effective-sample-size calibration method inherited from
-the fitted model, returned for BKP objects when available.}
-
-\item{\code{ess_info}}{ESS diagnostics for BKP simulations when available.
-TwinBKP uses the uncalibrated global-local posterior update and does not
-return ESS diagnostics.}
+the fitted model. For \code{TwinBKP} and \code{TwinDKP}, this is
+\code{"none"}.}
+\item{\code{ess_info}}{ESS diagnostics for \code{BKP} and \code{DKP}
+simulations when available. \code{TwinBKP} and \code{TwinDKP} use
+uncalibrated global-local posterior updates and return
+\code{ess_info = NULL}.}
 }
 }
 \description{
-Generates random draws from the posterior distribution of
-fitted BKP, DKP, or TwinBKP models at training or new input locations.
+Generate random posterior draws from fitted \code{BKP},
+\code{DKP}, \code{TwinBKP}, and \code{TwinDKP} model objects at training
+or new input locations.
 
-For BKP and TwinBKP models, posterior samples are generated from Beta
-distributions characterizing success probabilities. Optionally, binary
-class labels can be derived by applying a user-specified classification
-threshold.
+For \code{BKP} and \code{TwinBKP} models, posterior samples are generated
+from Beta distributions for latent success probabilities. Optionally,
+binary class labels can be derived by applying a user-specified
+classification threshold.
 
-For DKP models, posterior samples are generated from Dirichlet
-distributions characterizing class probabilities. If training responses are
-single-label (i.e., one-hot encoded), class labels may additionally be
-assigned using the maximum a posteriori (MAP) rule.
+For \code{DKP} and \code{TwinDKP} models, posterior samples are generated
+from Dirichlet distributions for latent class-probability vectors. If the
+training responses are single-label, that is, one-hot encoded, class labels
+are additionally assigned using the maximum posterior simulated probability.
 }
 \examples{
-## -------------------- BKP --------------------
+# -------------------------- BKP and TwinBKP ---------------------------
 set.seed(123)
 
 # Define true success probability function
@@ -120,9 +119,25 @@ simulate(model, Xnew = Xnew, nsim = 5)
 # Simulate binary classifications (threshold = 0.5)
 simulate(model, Xnew = Xnew, nsim = 5, threshold = 0.5)
 
-## -------------------- DKP --------------------
-set.seed(123)
+#' \dontrun{
+# Larger TwinBKP example
+n <- 1000
+X <- tgp::lhs(n = n, rect = Xbounds)
+true_pi <- true_pi_fun(X)
+m <- sample(100, n, replace = TRUE)
+y <- rbinom(n, size = m, prob = true_pi)
 
+# Fit TwinBKP model
+model <- fit_TwinBKP(X, y, m, Xbounds=Xbounds)
+
+# Simulate 5 posterior draws of success probabilities
+simulate(model, Xnew = Xnew, nsim = 5)
+
+# Simulate binary classifications (threshold = 0.5)
+simulate(model, Xnew = Xnew, nsim = 5, threshold = 0.5)
+}
+
+# -------------------------- DKP and TwinDKP ---------------------------
 # Define true class probability function (3-class)
 true_pi_fun <- function(X) {
   p1 <- 1/(1+exp(-3*X))
@@ -146,41 +161,34 @@ model <- fit_DKP(X, Y, Xbounds = Xbounds)
 Xnew <- matrix(seq(-2, 2, length.out = 5), ncol = 1)
 simulate(model, Xnew = Xnew, nsim = 5)
 
-## -------------------- TwinBKP --------------------
-set.seed(123)
-
-# Define true success probability function
-true_pi_fun <- function(x) {
-  (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
-}
-
+\dontrun{
+# Larger TwinDKP example
 n <- 1000
-Xbounds <- matrix(c(-2,2), nrow=1)
 X <- tgp::lhs(n = n, rect = Xbounds)
 true_pi <- true_pi_fun(X)
-m <- sample(100, n, replace = TRUE)
-y <- rbinom(n, size = m, prob = true_pi)
+m <- sample(150, n, replace = TRUE)
 
-# Fit TwinBKP model
-model <- fit_TwinBKP(X, y, m, Xbounds=Xbounds)
+# Generate multinomial responses
+Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 
-# Simulate 5 posterior draws of success probabilities
-Xnew <- matrix(seq(-2, 2, length.out = 5), ncol = 1)
+# Fit TwinDKP model
+model <- fit_TwinDKP(X, Y, Xbounds = Xbounds)
+
+# Simulate 5 draws from posterior Dirichlet distributions at new point
 simulate(model, Xnew = Xnew, nsim = 5)
-
-# Simulate binary classifications (threshold = 0.5)
-simulate(model, Xnew = Xnew, nsim = 5, threshold = 0.5)
+}
 
 }
 \references{
 Zhao J, Qing K, Xu J (2025). \emph{BKP: An R Package for Beta
-Kernel Process Modeling}. arXiv. \doi{10.48550/arXiv.2508.10447}
+Kernel Process Modeling}. arXiv. \url{doi:10.48550/arXiv.2508.10447}.
 }
 \seealso{
-\code{\link{fit_BKP}}, \code{\link{fit_DKP}}, and
-\code{\link{fit_TwinBKP}} for model fitting; \code{\link{predict.BKP}},
-\code{\link{predict.DKP}}, and \code{\link{predict.TwinBKP}} for posterior
-prediction.
+\code{\link{fit_BKP}}, \code{\link{fit_DKP}},
+\code{\link{fit_TwinBKP}}, and \code{\link{fit_TwinDKP}} for model fitting;
+\code{\link{predict.BKP}}, \code{\link{predict.DKP}},
+\code{\link{predict.TwinBKP}}, and \code{\link{predict.TwinDKP}} for
+posterior prediction.
 }
 \keyword{BKP}
 \keyword{DKP}

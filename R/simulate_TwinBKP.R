@@ -1,38 +1,10 @@
 #' @rdname simulate
-#'
 #' @keywords BKP TwinBKP
-#'
-#' @examples
-#' ## -------------------- TwinBKP --------------------
-#' set.seed(123)
-#'
-#' # Define true success probability function
-#' true_pi_fun <- function(x) {
-#'   (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
-#' }
-#'
-#' n <- 1000
-#' Xbounds <- matrix(c(-2,2), nrow=1)
-#' X <- tgp::lhs(n = n, rect = Xbounds)
-#' true_pi <- true_pi_fun(X)
-#' m <- sample(100, n, replace = TRUE)
-#' y <- rbinom(n, size = m, prob = true_pi)
-#'
-#' # Fit TwinBKP model
-#' model <- fit_TwinBKP(X, y, m, Xbounds=Xbounds)
-#'
-#' # Simulate 5 posterior draws of success probabilities
-#' Xnew <- matrix(seq(-2, 2, length.out = 5), ncol = 1)
-#' simulate(model, Xnew = Xnew, nsim = 5)
-#'
-#' # Simulate binary classifications (threshold = 0.5)
-#' simulate(model, Xnew = Xnew, nsim = 5, threshold = 0.5)
-#'
 #' @export
 #' @method simulate TwinBKP
 simulate.TwinBKP <- function(object, nsim = 1, seed = NULL,
                              Xnew = NULL, threshold = NULL, ...) {
-  if (!is.numeric(nsim) || length(nsim) != 1 ||
+  if (!is.numeric(nsim) || length(nsim) != 1L ||
       is.na(nsim) || !is.finite(nsim) ||
       nsim <= 0 || nsim != as.integer(nsim)) {
     stop("`nsim` must be a positive integer.")
@@ -40,13 +12,14 @@ simulate.TwinBKP <- function(object, nsim = 1, seed = NULL,
   nsim <- as.integer(nsim)
 
   if (!is.null(seed) &&
-      (!is.numeric(seed) || length(seed) != 1 ||
+      (!is.numeric(seed) || length(seed) != 1L ||
        is.na(seed) || !is.finite(seed) ||
        seed != as.integer(seed))) {
     stop("`seed` must be a single integer or NULL.")
   }
 
   d <- ncol(object$X)
+
   if (!is.null(Xnew)) {
     if (is.null(dim(Xnew))) {
       if (d == 1L) {
@@ -57,11 +30,18 @@ simulate.TwinBKP <- function(object, nsim = 1, seed = NULL,
     } else {
       Xnew <- as.matrix(Xnew)
     }
+
     if (!is.numeric(Xnew)) {
       stop("'Xnew' must be numeric.")
     }
+    if (nrow(Xnew) < 1L || ncol(Xnew) < 1L) {
+      stop("'Xnew' must have at least one row and one column.")
+    }
     if (ncol(Xnew) != d) {
       stop("The number of columns in 'Xnew' must match the original input dimension.")
+    }
+    if (anyNA(Xnew) || any(!is.finite(Xnew))) {
+      stop("'Xnew' must contain only finite values with no NA, NaN, or Inf.")
     }
   }
 

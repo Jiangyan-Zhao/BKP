@@ -87,7 +87,7 @@ model <- fit_TwinBKP(X, y, m, Xbounds = Xbounds)
 parameter(model)
 }
 
-# -------------------------- DKP  and TwinDKP---------------------------
+# -------------------------- DKP and TwinDKP ---------------------------
 # Define true class probability function (3-class)
 true_pi_fun <- function(X) {
   p1 <- 1/(1+exp(-3*X))
