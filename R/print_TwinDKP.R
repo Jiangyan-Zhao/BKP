@@ -128,7 +128,7 @@ print.summary_TwinDKP <- function(x, ...) {
   cat("\n   Twin Dirichlet Kernel Process (TwinDKP) Model\n\n")
   cat(sprintf("Number of observations (n): %d\n", x$n_obs))
   cat(sprintf("Input dimension (d):        %d\n", x$input_dim))
-  cat(sprintf("Number of classes (q):      %d\n", x$n_classes))
+  cat(sprintf("Number of classes (q):      %d\n", x$n_class))
   cat(sprintf("Global kernel:              %s\n", x$global_kernel))
   cat(sprintf("Local kernel:               %s\n", x$local_kernel))
   cat(sprintf("Isotropic:                  %s\n", ifelse(x$isotropic, "TRUE", "FALSE")))
@@ -149,6 +149,20 @@ print.summary_TwinDKP <- function(x, ...) {
   cat(sprintf("Target global subset size:  %d\n", x$global_target))
   cat(sprintf("Local neighbours (l):       %d\n", x$local_size))
   cat(sprintf("Twinning runs:              %d\n", x$twins))
+
+  n_class <- min(3, x$n_class)
+
+  cat("\nPosterior predictive summary (training points):\n")
+
+  for (j in seq_len(n_class)) {
+    cat(sprintf("\nClass %d:\n", j))
+    print(posterior_summary(x$post_mean[, j], x$post_var[, j]))
+  }
+
+  if (x$n_class > 3) {
+    cat("\n ...\n")
+    cat("\nNote: Only the first 3 classes are displayed out of", x$n_class, "classes.\n")
+  }
 
   invisible(x)
 }

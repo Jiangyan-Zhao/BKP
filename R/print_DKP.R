@@ -100,7 +100,7 @@ print.summary_DKP <- function(x, ...) {
   n_class <- min(3, x$n_class)
   cat("\nPosterior predictive summary (training points):\n")
 
-  for (j in 1:x$n_class) {
+  for (j in seq_len(n_class)) {
     cat(sprintf("\nClass %d:\n", j))
     print(posterior_summary(x$post_mean[, j], x$post_var[, j]))
   }
