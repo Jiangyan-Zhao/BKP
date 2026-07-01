@@ -206,8 +206,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // twin_select_global_rcpp
-Rcpp::List twin_select_global_rcpp(Rcpp::NumericMatrix twin_data, Rcpp::NumericMatrix Xnorm, std::size_t r, std::size_t runs, Rcpp::IntegerVector u1, std::size_t leaf_size);
-RcppExport SEXP _BKP_twin_select_global_rcpp(SEXP twin_dataSEXP, SEXP XnormSEXP, SEXP rSEXP, SEXP runsSEXP, SEXP u1SEXP, SEXP leaf_sizeSEXP) {
+Rcpp::List twin_select_global_rcpp(Rcpp::NumericMatrix twin_data, Rcpp::NumericMatrix Xnorm, std::size_t r, std::size_t runs, Rcpp::IntegerVector u1, std::size_t leaf_size, std::size_t n_threads);
+RcppExport SEXP _BKP_twin_select_global_rcpp(SEXP twin_dataSEXP, SEXP XnormSEXP, SEXP rSEXP, SEXP runsSEXP, SEXP u1SEXP, SEXP leaf_sizeSEXP, SEXP n_threadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -217,7 +217,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< std::size_t >::type runs(runsSEXP);
     Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type u1(u1SEXP);
     Rcpp::traits::input_parameter< std::size_t >::type leaf_size(leaf_sizeSEXP);
-    rcpp_result_gen = Rcpp::wrap(twin_select_global_rcpp(twin_data, Xnorm, r, runs, u1, leaf_size));
+    Rcpp::traits::input_parameter< std::size_t >::type n_threads(n_threadsSEXP);
+    rcpp_result_gen = Rcpp::wrap(twin_select_global_rcpp(twin_data, Xnorm, r, runs, u1, leaf_size, n_threads));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -248,7 +249,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_BKP_shepard_m_loo_rcpp", (DL_FUNC) &_BKP_shepard_m_loo_rcpp, 3},
     {"_BKP_twin_bkp_posterior_rcpp", (DL_FUNC) &_BKP_twin_bkp_posterior_rcpp, 15},
     {"_BKP_twin_dkp_posterior_rcpp", (DL_FUNC) &_BKP_twin_dkp_posterior_rcpp, 14},
-    {"_BKP_twin_select_global_rcpp", (DL_FUNC) &_BKP_twin_select_global_rcpp, 6},
+    {"_BKP_twin_select_global_rcpp", (DL_FUNC) &_BKP_twin_select_global_rcpp, 7},
     {"_BKP_twin_local_indices_rcpp", (DL_FUNC) &_BKP_twin_local_indices_rcpp, 5},
     {NULL, NULL, 0}
 };

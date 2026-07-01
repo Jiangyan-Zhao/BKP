@@ -408,7 +408,8 @@ fit_TwinBKP <- function(
     r = r,
     runs = twins,
     u1 = u1,
-    leaf_size = leaf_size
+    leaf_size = leaf_size,
+    n_threads = n_threads
   )
 
   g_indices <- as.integer(twin_info$g_indices)

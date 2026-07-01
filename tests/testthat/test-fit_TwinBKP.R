@@ -495,3 +495,26 @@ test_that("fit_TwinBKP can optimize theta_g on a small global subset", {
   expect_true(all(model$theta_g > 0))
   expect_true(is.finite(model$loss_min))
 })
+
+test_that("fit_TwinBKP passes n_threads to twinning backend", {
+  set.seed(123)
+  X <- matrix(seq(0, 1, length.out = 30), ncol = 1)
+  m <- rep(10, 30)
+  y <- rbinom(30, size = m, prob = 0.4 + 0.2 * X[, 1])
+
+  fit <- fit_TwinBKP(
+    X, y, m,
+    theta_g = 0.3,
+    g = 8,
+    l = 3,
+    twins = 2,
+    n_threads = 1
+  )
+
+  expect_s3_class(fit, "TwinBKP")
+  expect_equal(fit$control$n_threads, 1L)
+
+  if (!is.null(fit$diagnostics$twin_info$n_threads)) {
+    expect_equal(as.integer(fit$diagnostics$twin_info$n_threads), 1L)
+  }
+})
