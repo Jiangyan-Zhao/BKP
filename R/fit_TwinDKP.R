@@ -409,7 +409,8 @@ fit_TwinDKP <- function(
     r = r,
     runs = twins,
     u1 = u1,
-    leaf_size = leaf_size
+    leaf_size = leaf_size,
+    n_threads = n_threads
   )
   g_indices <- as.integer(twin_info$g_indices)
   g_actual <- length(g_indices)

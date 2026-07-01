@@ -99,6 +99,7 @@ private:
   std::size_t runs_;
   std::vector<std::size_t> u1_;
   std::size_t leaf_size_;
+  std::size_t n_threads_;
 
   DF2 twin_data_;
   DF2 x_data_;
@@ -111,7 +112,8 @@ public:
     std::size_t r,
     std::size_t runs,
     std::vector<std::size_t>& u1,
-    std::size_t leaf_size)
+    std::size_t leaf_size,
+    std::size_t n_threads)
     :
     dim_twin_(twin_data.cols()),
     dim_x_(Xnorm.cols()),
@@ -119,7 +121,8 @@ public:
     r_(r),
     runs_(runs),
     u1_(u1),
-    leaf_size_(leaf_size)
+    leaf_size_(leaf_size),
+    n_threads_(std::max<std::size_t>(1, n_threads))
   {
     twin_data_.import_data(twin_data);
     x_data_.import_data(Xnorm);
@@ -133,7 +136,16 @@ public:
     all_indices.resize(runs_);
     min_dist.resize(runs_);
 
-#pragma omp parallel for
+    int n_threads_used = 1;
+#ifdef _OPENMP
+    n_threads_used = static_cast<int>(
+      std::max<std::size_t>(1, std::min<std::size_t>(n_threads_, runs_))
+    );
+#endif
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic) num_threads(n_threads_used)
+#endif
     for (std::size_t run = 0; run < runs_; run++)
     {
       kdTree tree(
@@ -200,6 +212,7 @@ public:
     returns_["theta_l"] = theta_l(g_indices0);
     returns_["min_dist"] = min_dist[max_index];
     returns_["best_run"] = max_index + 1;
+    returns_["n_threads"] = n_threads_used;
 
     return returns_;
   }
@@ -252,7 +265,16 @@ public:
     std::vector<double> distances;
     distances.resize(N_);
 
-#pragma omp parallel for
+    int n_threads_used = 1;
+#ifdef _OPENMP
+    n_threads_used = static_cast<int>(
+      std::max<std::size_t>(1, std::min<std::size_t>(n_threads_, N_))
+    );
+#endif
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static) num_threads(n_threads_used)
+#endif
     for (std::size_t i = 0; i < N_; i++)
     {
       nanoflann::KNNResultSet<double> resultSet(1);
@@ -280,7 +302,8 @@ Rcpp::List twin_select_global_rcpp(
     std::size_t r,
     std::size_t runs,
     Rcpp::IntegerVector u1,
-    std::size_t leaf_size = 8)
+    std::size_t leaf_size = 8,
+    std::size_t n_threads = 1)
 {
   std::vector<std::size_t> u1_cpp(runs);
 
@@ -294,7 +317,8 @@ Rcpp::List twin_select_global_rcpp(
       r,
       runs,
       u1_cpp,
-      leaf_size
+      leaf_size,
+      n_threads
   );
 
   return tree.twin();

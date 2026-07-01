@@ -41,8 +41,8 @@ twin_dkp_posterior_rcpp <- function(Xquery_norm, Xtrain_norm, Y, g_indices, loca
     .Call(`_BKP_twin_dkp_posterior_rcpp`, Xquery_norm, Xtrain_norm, Y, g_indices, local_indices, theta_g, theta_l, global_kernel, local_kernel, isotropic, prior, r0, p0, store_kernel)
 }
 
-twin_select_global_rcpp <- function(twin_data, Xnorm, r, runs, u1, leaf_size = 8L) {
-    .Call(`_BKP_twin_select_global_rcpp`, twin_data, Xnorm, r, runs, u1, leaf_size)
+twin_select_global_rcpp <- function(twin_data, Xnorm, r, runs, u1, leaf_size = 8, n_threads = 1) {
+    .Call(`_BKP_twin_select_global_rcpp`, twin_data, Xnorm, r, runs, u1, leaf_size, n_threads)
 }
 
 twin_local_indices_rcpp <- function(Xtrain_norm, Xquery_norm, g_indices, l, leaf_size = 8L) {

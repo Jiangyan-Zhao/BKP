@@ -119,3 +119,30 @@ test_that("fit_TwinDKP validates fixed p0 consistently", {
   expect_error(fit_TwinDKP(fx$X, fx$Y, prior = "fixed", p0 = c(.5, NaN, .5), theta_g = .4, theta_l = .3, g = 10, l = 5), "p0")
   expect_error(fit_TwinDKP(fx$X, fx$Y, prior = "fixed", p0 = c(.5, Inf, .5), theta_g = .4, theta_l = .3, g = 10, l = 5), "p0")
 })
+
+test_that("fit_TwinDKP passes n_threads to twinning backend", {
+  set.seed(123)
+  X <- matrix(seq(0, 1, length.out = 30), ncol = 1)
+  p1 <- 0.3 + 0.2 * X[, 1]
+  p2 <- 1 - p1
+
+  Y <- t(vapply(seq_len(30), function(i) {
+    as.vector(rmultinom(1, size = 10, prob = c(p1[i], p2[i])))
+  }, numeric(2)))
+
+  fit <- fit_TwinDKP(
+    X, Y,
+    theta_g = 0.3,
+    g = 8,
+    l = 3,
+    twins = 2,
+    n_threads = 1
+  )
+
+  expect_s3_class(fit, "TwinDKP")
+  expect_equal(fit$control$n_threads, 1L)
+
+  if (!is.null(fit$diagnostics$twin_info$n_threads)) {
+    expect_equal(as.integer(fit$diagnostics$twin_info$n_threads), 1L)
+  }
+})
