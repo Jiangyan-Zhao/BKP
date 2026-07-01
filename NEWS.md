@@ -1,4 +1,4 @@
-# BKP 0.3.0
+# BKP 0.3.0 (2026-07-01)
 
 - Added `fit_TwinDKP()` and associated S3 methods for scalable global-local Dirichlet Kernel Process modeling.
 - Added `fit_TwinBKP()` with full S3 support for scalable Twin Beta Kernel Process modeling.

@@ -35,13 +35,11 @@ File:
   src/twinning_bkp.cpp
 
 Original source:
-  The implementation is adapted from src/twinning.cpp in the twingp package
-  by Akhil Vakayil and V. Roshan Joseph.
+  The implementation is adapted from src/twinning.cpp in the twingp package,
+  developed by Akhil Vakayil and V. Roshan Joseph.
 
-Original copyright:
-  Copyright 2023 Akhil Vakayil
-
-Original license:
+Original copyright and license:
+  Copyright 2023 Akhil Vakayil, as stated in the original source file.
   Apache License, Version 2.0.
 
 Modifications in this package:

@@ -17,6 +17,7 @@ simulate.TwinDKP <- function(object, nsim = 1, seed = NULL,
        seed != as.integer(seed))) {
     stop("`seed` must be a single integer or NULL.")
   }
+  if (!is.null(seed)) set.seed(seed)
 
   if (!is.null(Xnew)) {
     prediction <- predict.TwinDKP(object, Xnew = Xnew, type = "probability", ...)

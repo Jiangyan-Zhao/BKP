@@ -19,7 +19,7 @@ bibentry(
               person(given = "Kunhai", family = "Qing"),
               person(given = "Jin", family = "Xu")),
   year    = "2026",
-  note    = "R package version 0.2.3",
+  note    = "R package version 0.3.0",
   url     = "https://cran.r-project.org/package=BKP",
   doi     = "10.32614/CRAN.package.BKP"
 )
