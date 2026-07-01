@@ -19,6 +19,7 @@ Description: Implements the Beta Kernel Process (BKP) for nonparametric modeling
  with hyperparameters selected by multi-start derivative-free optimization.
  For more details, see Zhao, Qing, and Xu (2025) <doi:10.48550/arXiv.2508.10447>.
 License: GPL (>= 3)
+Copyright: See inst/COPYRIGHTS
 URL: https://github.com/Jiangyan-Zhao/BKP
 BugReports: https://github.com/Jiangyan-Zhao/BKP/issues
 Encoding: UTF-8
