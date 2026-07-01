@@ -83,9 +83,9 @@ fit <- fit_BKP(X, y, m, Xbounds = Xbounds)
 summary(fit)
 plot(fit)
 
-Xnew <- matrix(seq(-2, 2, length.out = 100), ncol = 1)
+Xnew <- matrix(seq(-2, 2, length.out = 10), ncol = 1)
 pred <- predict(fit, Xnew = Xnew)
-head(pred$mean)
+pred
 ```
 
 For multinomial data, use `fit_DKP()`. For scalable global-local
