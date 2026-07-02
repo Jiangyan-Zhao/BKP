@@ -22,7 +22,7 @@ test_that("parameter returns correct parameters for DKP models", {
   # -------------------------------------------------------------------------
 
   # Fit the DKP model
-  model_noninformative <- fit_DKP(X, Y, prior = "noninformative")
+  model_noninformative <- fit_DKP(X, Y, theta = 0.3, prior = "noninformative")
 
   # Extract parameters using the S3 method
   params_noninformative <- parameter(model_noninformative)
@@ -39,7 +39,7 @@ test_that("parameter returns correct parameters for DKP models", {
   p0 <- c(0.25, 0.5, 0.25)
 
   # Fit the DKP model
-  model_fixed <- fit_DKP(X, Y, prior = "fixed", r0 = r0, p0 = p0)
+  model_fixed <- fit_DKP(X, Y, theta = 0.3, prior = "fixed", r0 = r0, p0 = p0)
 
   # Extract parameters using the S3 method
   params_fixed <- parameter(model_fixed)
@@ -55,7 +55,7 @@ test_that("parameter returns correct parameters for DKP models", {
   r0 <- 10
 
   # Fit the DKP model
-  model_adaptive <- fit_DKP(X, Y, prior = "adaptive", r0 = r0)
+  model_adaptive <- fit_DKP(X, Y, theta = 0.3, prior = "adaptive", r0 = r0)
 
   # Extract parameters using the S3 method
   params_adaptive <- parameter(model_adaptive)

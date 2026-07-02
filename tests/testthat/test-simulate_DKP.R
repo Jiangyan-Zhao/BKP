@@ -28,7 +28,7 @@ test_that("simulate.DKP returns correct posterior simulations and dimensions", {
   Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 
   # Fit DKP model (this will be the object to test)
-  model <- fit_DKP(X, Y, Xbounds = Xbounds)
+  model <- fit_DKP(X, Y, Xbounds = Xbounds, theta = 0.3)
 
   # -------------------------------------------------------------------------
   # Test Cases
@@ -70,7 +70,7 @@ test_that("simulate.DKP returns correct posterior simulations and dimensions", {
   # Case 4: Test MAP classification for single-label data
   m_single <- rep(1, n)
   Y_single <- t(sapply(1:n, function(i) rmultinom(1, size = m_single[i], prob = true_pi[i, ])))
-  model_single <- fit_DKP(X, Y_single, Xbounds = Xbounds)
+  model_single <- fit_DKP(X, Y_single, Xbounds = Xbounds, theta = 0.3)
 
   sim_class_result <- simulate(model_single, nsim = 20)
 
@@ -101,7 +101,7 @@ test_that("simulate.DKP handles input validation correctly", {
   true_pi <- true_pi_fun(X)
   m <- sample(150, n, replace = TRUE)
   Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
-  model <- fit_DKP(X, Y, Xbounds = Xbounds)
+  model <- fit_DKP(X, Y, Xbounds = Xbounds, theta = 0.3)
 
   # Case 5: Input validation tests
   # nsim must be a positive integer

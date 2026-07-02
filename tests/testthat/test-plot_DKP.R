@@ -29,7 +29,7 @@ test_that("plot.DKP generates plots without errors for 1D and 2D inputs", {
   Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 
   # Fit a 1D DKP model
-  model_1d <- fit_DKP(X, Y, Xbounds = Xbounds, prior = "noninformative")
+  model_1d <- fit_DKP(X, Y, Xbounds = Xbounds, theta = 0.3, prior = "noninformative")
 
   # Test that plot() runs without errors for a 1D model
   expect_no_error(plot(model_1d))
@@ -66,7 +66,7 @@ test_that("plot.DKP generates plots without errors for 1D and 2D inputs", {
   Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 
   # Fit a 2D DKP model
-  model_2d <- fit_DKP(X, Y, Xbounds = Xbounds, prior = "fixed", r0 = 10, p0 = c(1/3, 1/3, 1/3))
+  model_2d <- fit_DKP(X, Y, Xbounds = Xbounds, theta = 0.3, prior = "fixed", r0 = 10, p0 = c(1/3, 1/3, 1/3))
 
   # Test with default arguments
   expect_no_error(plot(model_2d, n_grid = 30))
@@ -87,7 +87,7 @@ test_that("plot.DKP generates plots without errors for 1D and 2D inputs", {
   X <- matrix(runif(n * d), n, d)
   Y <- t(rmultinom(n, size = 10, prob = c(1/3,1/3,1/3)))
   # Fit a 2D DKP model
-  model_2d <- fit_DKP(X, Y, prior = "fixed", r0 = 10, p0 = c(1/3, 1/3, 1/3))
+  model_2d <- fit_DKP(X, Y, theta = 0.3, prior = "fixed", r0 = 10, p0 = c(1/3, 1/3, 1/3))
 
   # Test with default arguments
   expect_no_error(plot(model_2d, dims=c(1,3), n_grid = 10))
@@ -103,7 +103,7 @@ test_that("plot.DKP validates input arguments and classification branches", {
   cl <- sample(1:3, nrow(X), replace = TRUE)
   Y <- matrix(0, nrow(X), 3)
   Y[cbind(seq_len(nrow(X)), cl)] <- 1
-  model <- fit_DKP(X, Y, prior = "noninformative", theta = 0.25)
+  model <- fit_DKP(X, Y, theta = 0.25, prior = "noninformative")
 
   expect_no_error(plot(model, dims = 1, n_grid = 8))
   expect_no_error(plot(model, dims = c(1, 2), n_grid = 8))
@@ -131,7 +131,7 @@ test_that("plot.DKP supports ggplot engine for 1D/2D and validates engine", {
   cl <- sample(1:3, nrow(X), replace = TRUE)
   Y <- matrix(0, nrow(X), 3)
   Y[cbind(seq_len(nrow(X)), cl)] <- 1
-  model <- fit_DKP(X, Y, prior = "noninformative", theta = 0.25)
+  model <- fit_DKP(X, Y, theta = 0.25, prior = "noninformative")
 
   expect_no_error(plot(model, n_grid = 8, engine = "ggplot"))
   expect_error(plot(model, engine = "bad_engine"),

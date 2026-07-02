@@ -24,7 +24,7 @@ test_that("summary.BKP returns a well-structured summary object with correct val
   y <- rbinom(n, size = m, prob = true_pi)
 
   # Fit BKP model (this will be the object to test)
-  model <- fit_BKP(X, y, m, Xbounds = Xbounds)
+  model <- fit_BKP(X, y, m, Xbounds = Xbounds, theta = 0.3)
 
   # -------------------------------------------------------------------------
   # Test Cases

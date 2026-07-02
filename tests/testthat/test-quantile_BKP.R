@@ -22,7 +22,7 @@ test_that("quantile.BKP returns correct posterior quantiles", {
   y <- rbinom(n, size = m, prob = true_pi)
 
   # Fit BKP model (this will be the object to test)
-  model <- fit_BKP(X, y, m, Xbounds = Xbounds)
+  model <- fit_BKP(X, y, m, Xbounds = Xbounds, theta = 0.3)
 
   # -------------------------------------------------------------------------
   # Test Cases: Verify quantile function

@@ -186,13 +186,16 @@ arma::mat kernel_matrix_arma(
   const double n_pairs = static_cast<double>(Xm.n_rows) *
     static_cast<double>(symmetric ? Xm.n_rows : Xpm.n_rows);
 
-  // GEMM is usually faster for moderate kernel matrices.  A 5000 x 5000
-  // double matrix is about 200 MB; even with several temporaries this is
-  // acceptable on ordinary machines.  For larger kernels, switch to the
-  // loop engine to cap peak memory.
-  const double loop_cutoff_pairs = 2.5e7;
+  // The serial loop engine is preferable for small matrices because it avoids
+  // BLAS/GEMM thread startup overhead and is more stable in CRAN checks.
+  // GEMM is usually faster for moderate kernel matrices. A dense matrix with
+  // 1e7 double entries is about 80 MB, but the GEMM path creates several such
+  // temporary matrices. For larger kernels, switch back to the loop engine
+  // to cap peak memory.
+  const double small_loop_cutoff_pairs = 2e6;
+  const double large_loop_cutoff_pairs = 1e7;
 
-  if (n_pairs > loop_cutoff_pairs) {
+  if (n_pairs < small_loop_cutoff_pairs || n_pairs > large_loop_cutoff_pairs) {
     return kernel_matrix_arma_loop(Xm, Xpm, theta, kernel, isotropic, symmetric);
   }
 

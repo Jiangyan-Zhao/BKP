@@ -29,7 +29,7 @@ test_that("summary.DKP returns a well-structured summary object with correct val
   Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 
   # Fit DKP model (this will be the object to test)
-  model <- fit_DKP(X, Y, Xbounds = Xbounds)
+  model <- fit_DKP(X, Y, Xbounds = Xbounds, theta = 0.3)
 
   # -------------------------------------------------------------------------
   # Test Cases

@@ -163,7 +163,7 @@
 #'   return(matrix(c(p1/2, p2/2, 1 - (p1+p2)/2), nrow = length(p1)))
 #' }
 #'
-#' n <- 1000
+#' n <- 200
 #' Xbounds <- matrix(c(-2, 2), nrow = 1)
 #' X <- tgp::lhs(n = n, rect = Xbounds)
 #' true_pi <- true_pi_fun(X)
@@ -173,7 +173,14 @@
 #' Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 #'
 #' # Fit TwinDKP model
-#' model1 <- fit_TwinDKP(X, Y, Xbounds = Xbounds)
+#' model1 <- fit_TwinDKP(
+#'      X, Y,
+#'      Xbounds = Xbounds,
+#'      theta_g = 0.3,
+#'      g = 20,
+#'      twins = 1,
+#'      n_threads = 1
+#'    )
 #' print(model1)
 #'
 #'
@@ -194,7 +201,7 @@
 #'   return(matrix(c(p1/2, p2/2, 1 - (p1+p2)/2), nrow = length(p1)))
 #' }
 #'
-#' n <- 1000
+#' n <- 200
 #' Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
 #' X <- tgp::lhs(n = n, rect = Xbounds)
 #' true_pi <- true_pi_fun(X)
@@ -204,7 +211,14 @@
 #' Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 #'
 #' # Fit TwinDKP model
-#' model2 <- fit_TwinDKP(X, Y, Xbounds = Xbounds)
+#' model2 <- fit_TwinDKP(
+#'      X, Y,
+#'      Xbounds = Xbounds,
+#'      theta_g = 0.3,
+#'      g = 20,
+#'      twins = 1,
+#'      n_threads = 1
+#'    )
 #' print(model2)
 #'
 #' @export

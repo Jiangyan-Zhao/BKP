@@ -18,7 +18,7 @@ test_that("parameter returns correct parameters for BKP models", {
   # -------------------------------------------------------------------------
 
   # Fit the BKP model
-  model_noninformative <- fit_BKP(X, y, m, prior = "noninformative")
+  model_noninformative <- fit_BKP(X, y, m, theta = 0.3, prior = "noninformative")
 
   # Extract parameters using the S3 method
   params_noninformative <- parameter(model_noninformative)
@@ -35,7 +35,7 @@ test_that("parameter returns correct parameters for BKP models", {
   p0 <- 0.6
 
   # Fit the BKP model
-  model_fixed <- fit_BKP(X, y, m, prior = "fixed", r0 = r0, p0 = p0)
+  model_fixed <- fit_BKP(X, y, m, theta = 0.3, prior = "fixed", r0 = r0, p0 = p0)
 
   # Extract parameters using the S3 method
   params_fixed <- parameter(model_fixed)
@@ -51,7 +51,7 @@ test_that("parameter returns correct parameters for BKP models", {
   r0 <- 10
 
   # Fit the BKP model
-  model_adaptive <- fit_BKP(X, y, m, prior = "adaptive", r0 = r0)
+  model_adaptive <- fit_BKP(X, y, m, theta = 0.3, prior = "adaptive", r0 = r0)
 
   # Extract parameters using the S3 method
   params_adaptive <- parameter(model_adaptive)

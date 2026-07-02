@@ -16,7 +16,7 @@ test_that("fit_BKP runs correctly with examples from the documentation", {
   m <- sample(100, n, replace = TRUE)
   y <- rbinom(n, size = m, prob = true_pi)
 
-  expect_no_error({model1 <- fit_BKP(X, y, m, Xbounds=Xbounds)})
+  expect_no_error({model1 <- fit_BKP(X, y, m, Xbounds=Xbounds, theta = 0.3)})
   expect_s3_class(model1, "BKP")
 
   # --- 2D Example ---
@@ -42,7 +42,7 @@ test_that("fit_BKP runs correctly with examples from the documentation", {
   m <- sample(100, n, replace = TRUE)
   y <- rbinom(n, size = m, prob = true_pi)
 
-  expect_no_error({model2 <- fit_BKP(X, y, m, Xbounds=Xbounds)})
+  expect_no_error({model2 <- fit_BKP(X, y, m, Xbounds=Xbounds, theta = 0.3)})
   expect_s3_class(model2, "BKP")
 })
 
@@ -89,7 +89,7 @@ test_that("fit_BKP returns a BKP object with correct structure and content", {
   y_test <- rbinom(n, size = 100, prob = 0.5)
   m_test <- rep(100, n)
 
-  model <- fit_BKP(X=X_test, y=y_test, m=m_test)
+  model <- fit_BKP(X=X_test, y=y_test, m=m_test, theta = 0.3)
 
   # Check class and structure
   expect_s3_class(model, "BKP")
@@ -145,7 +145,7 @@ test_that("fit_BKP validates extended argument branches", {
   m <- rep(5, nrow(X))
 
   expect_warning(
-    expect_s3_class(fit_BKP(X, y, m), "BKP"),
+    expect_s3_class(fit_BKP(X, y, m, theta = 0.3), "BKP"),
     "Input X does not appear to be normalized to \\[0,1\\]"
   )
 
@@ -158,7 +158,7 @@ test_that("fit_BKP validates extended argument branches", {
   y <- rbinom(nrow(X), size = 5, prob = 0.5)
   m <- rep(5, nrow(X))
   expect_error(fit_BKP(X, y, m, r0 = 0), "'r0' must be a positive scalar")
-  expect_error(fit_BKP(X, y, m, prior = "fixed", p0 = 1),
+  expect_error(fit_BKP(X, y, m, theta = 0.3, prior = "fixed", p0 = 1),
                "For fixed prior in BKP, 'p0' must be a scalar in \\(0, 1\\).")
   expect_error(fit_BKP(X, y, m, n_multi_start = 0), "'n_multi_start' must be a positive integer")
   expect_error(fit_BKP(X, y, m, theta = "bad"), "'theta' must be numeric")

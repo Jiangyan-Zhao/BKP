@@ -25,7 +25,7 @@ test_that("predict.BKP generates predictions without errors for various priors",
   y <- rbinom(n, size = m, prob = true_pi)
 
   # Fit BKP model with noninformative prior
-  model_noninformative <- fit_BKP(X, y, m, prior = "noninformative", Xbounds = Xbounds)
+  model_noninformative <- fit_BKP(X, y, m, theta = 0.3, prior = "noninformative", Xbounds = Xbounds)
 
   # Define new prediction locations
   Xnew <- matrix(seq(-2, 2, length.out = 100), ncol = 1)
@@ -48,7 +48,7 @@ test_that("predict.BKP generates predictions without errors for various priors",
   # Test Case 2: Fixed Prior
   # -------------------------------------------------------------------------
 
-  model_fixed <- fit_BKP(X, y, m, prior = "fixed", r0 = 10, p0 = 0.5, Xbounds = Xbounds)
+  model_fixed <- fit_BKP(X, y, m, theta = 0.3, prior = "fixed", r0 = 10, p0 = 0.5, Xbounds = Xbounds)
 
   pred_train_fixed <- predict(model_fixed)
   expect_no_error(predict(model_fixed))
@@ -63,7 +63,7 @@ test_that("predict.BKP generates predictions without errors for various priors",
   # Test Case 3: Adaptive Prior
   # -------------------------------------------------------------------------
 
-  model_adaptive <- fit_BKP(X, y, m, prior = "adaptive", Xbounds = Xbounds)
+  model_adaptive <- fit_BKP(X, y, m, theta = 0.3, prior = "adaptive", Xbounds = Xbounds)
 
   pred_train_adaptive <- predict(model_adaptive)
   expect_no_error(predict(model_adaptive))
@@ -80,7 +80,7 @@ test_that("test-predict_BKP validation and classification branches", {
   X <- matrix(runif(20), ncol = 2)
   y <- rbinom(nrow(X), 1, 0.5)
   m <- rep(1, nrow(X))
-  model <- fit_BKP(X, y, m, prior = "noninformative")
+  model <- fit_BKP(X, y, m, theta = 0.3, prior = "noninformative")
 
   pred_train <- predict(model)
   expect_true(!is.null(pred_train$class))
@@ -97,7 +97,7 @@ test_that("test-predict_BKP validation and classification branches", {
 
   m2 <- rep(2, nrow(X))
   y2 <- rbinom(nrow(X), m2, 0.5)
-  model_count <- fit_BKP(X, y2, m2, prior = "fixed", r0 = 4, p0 = 0.5)
+  model_count <- fit_BKP(X, y2, m2, theta = 0.3, prior = "fixed", r0 = 4, p0 = 0.5)
   pred_count <- predict(model_count)
   expect_true(is.null(pred_count$class))
 })
