@@ -10,9 +10,11 @@ Changes made:
 * Examples and tests were revised to avoid unnecessary hyperparameter
   optimization where fixed kernel lengthscales are sufficient to demonstrate
   the user interface.
-* Small kernel matrices are evaluated using the package's serial C++ loop
-  engine to avoid BLAS/GEMM thread startup overhead during CRAN
-  examples/tests.
+* Large kernel matrices are evaluated using the package's serial C++ loop
+  engine to limit peak memory, while moderate-size kernel matrices retain the
+  GEMM path for computational efficiency.
+* Tests involving kernel matrix construction were reduced in size to avoid
+  unnecessary CPU usage during CRAN checks.
 * Users can still choose the number of package-controlled OpenMP threads
   through the `n_threads` argument.
 * Added `inst/WORDLIST` for package-specific terms flagged by spell checking.
