@@ -161,13 +161,13 @@ y <- rbinom(n, size = m, prob = true_pi)
 
 # Fit TwinBKP model
 model1 <- fit_TwinBKP(
-  X, y, m,
-  Xbounds = Xbounds,
-  theta_g = 0.3,
-  g = 20,
-  twins = 1,
-  n_threads = 1
-)
+     X, y, m,
+     Xbounds = Xbounds,
+     theta_g = 0.3,
+     g = 20,
+     twins = 1,
+     n_threads = 1
+   )
 
 # Plot results
 plot(model1)
@@ -213,13 +213,13 @@ y <- rbinom(n, size = m, prob = true_pi)
 
 # Fit TwinBKP model
 model2 <- fit_TwinBKP(
-  X, y, m,
-  Xbounds = Xbounds,
-  theta_g = 0.3,
-  g = 20,
-  twins = 1,
-  n_threads = 1
-)
+     X, y, m,
+     Xbounds = Xbounds,
+     theta_g = 0.3,
+     g = 20,
+     twins = 1,
+     n_threads = 1
+   )
 
 # Plot results
 plot(model2)
@@ -261,13 +261,13 @@ Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 
 # Fit TwinDKP model
 model1 <- fit_TwinDKP(
-  X, Y,
-  Xbounds = Xbounds,
-  theta_g = 0.3,
-  g = 20,
-  twins = 1,
-  n_threads = 1
-)
+     X, Y,
+     Xbounds = Xbounds,
+     theta_g = 0.3,
+     g = 20,
+     twins = 1,
+     n_threads = 1
+   )
 
 # Plot results
 plot(model1)
@@ -317,13 +317,13 @@ Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 
 # Fit TwinDKP model
 model2 <- fit_TwinDKP(
-  X, Y,
-  Xbounds = Xbounds,
-  theta_g = 0.3,
-  g = 20,
-  twins = 1,
-  n_threads = 1
-)
+     X, Y,
+     Xbounds = Xbounds,
+     theta_g = 0.3,
+     g = 20,
+     twins = 1,
+     n_threads = 1
+   )
 
 # Plot results
 plot(model2)

@@ -20,7 +20,8 @@ make_dkp_model_1d <- function() {
   model <- fit_DKP(
     X, Y,
     Xbounds = Xbounds,
-    prior = "noninformative"
+    prior = "noninformative",
+    theta = 0.3
   )
 
   list(

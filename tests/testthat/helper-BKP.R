@@ -15,7 +15,8 @@ make_bkp_model_1d <- function() {
   model <- fit_BKP(
     X, y, m,
     Xbounds = Xbounds,
-    prior = "noninformative"
+    prior = "noninformative",
+    theta = 0.3
   )
 
   list(

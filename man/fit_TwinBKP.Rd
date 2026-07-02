@@ -217,13 +217,13 @@ y <- rbinom(n, size = m, prob = true_pi)
 
 # Fit TwinBKP model
 model1 <- fit_TwinBKP(
-  X, y, m,
-  Xbounds = Xbounds,
-  theta_g = 0.3,
-  g = 20,
-  twins = 1,
-  n_threads = 1
-)
+     X, y, m,
+     Xbounds = Xbounds,
+     theta_g = 0.3,
+     g = 20,
+     twins = 1,
+     n_threads = 1
+   )
 
 #-------------------------- 2D Example ---------------------------
 # Define 2D latent function and probability transformation
@@ -251,13 +251,13 @@ y <- rbinom(n, size = m, prob = true_pi)
 
 # Fit TwinBKP model
 model2 <- fit_TwinBKP(
-  X, y, m,
-  Xbounds = Xbounds,
-  theta_g = 0.3,
-  g = 20,
-  twins = 1,
-  n_threads = 1
-)
+     X, y, m,
+     Xbounds = Xbounds,
+     theta_g = 0.3,
+     g = 20,
+     twins = 1,
+     n_threads = 1
+   )
 
 }
 \references{
