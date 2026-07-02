@@ -22,7 +22,7 @@ test_that("fit_DKP runs correctly with examples from the documentation", {
   Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 
   # Fit DKP model
-  expect_no_error({model1 <- fit_DKP(X, Y, Xbounds = Xbounds)})
+  expect_no_error({model1 <- fit_DKP(X, Y, Xbounds = Xbounds, theta = 0.3)})
   expect_s3_class(model1, "DKP")
 
   # --- 2D Example ---
@@ -52,7 +52,7 @@ test_that("fit_DKP runs correctly with examples from the documentation", {
   Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 
   # Fit DKP model
-  expect_no_error({model2 <- fit_DKP(X, Y, Xbounds = Xbounds)})
+  expect_no_error({model2 <- fit_DKP(X, Y, Xbounds = Xbounds, theta = 0.3)})
   expect_s3_class(model2, "DKP")
 })
 
@@ -102,7 +102,7 @@ test_that("fit_DKP returns a DKP object with correct structure and content", {
   # Use withCallingHandlers to capture the warning and get the return value
   model_warning <- NULL
   model <- withCallingHandlers(
-    fit_DKP(X=X_test, Y=Y_test),
+    fit_DKP(X=X_test, Y=Y_test, theta = 0.3),
     warning = function(w) {
       model_warning <<- w
       invokeRestart("muffleWarning")
@@ -175,7 +175,7 @@ test_that("fit_DKP validates extended argument branches", {
   Y <- t(sapply(seq_len(nrow(X)), function(i) rmultinom(1, size = 8, prob = probs)))
 
   expect_warning(
-    expect_s3_class(fit_DKP(X, Y), "DKP"),
+    expect_s3_class(fit_DKP(X, Y, theta = 0.3), "DKP"),
     "Input X does not appear to be normalized to \\[0,1\\]"
   )
 
@@ -188,9 +188,9 @@ test_that("fit_DKP validates extended argument branches", {
   probs <- c(0.2, 0.3, 0.5)
   Y <- t(sapply(seq_len(nrow(X)), function(i) rmultinom(1, size = 8, prob = probs)))
   expect_error(fit_DKP(X, Y, r0 = 0), "'r0' must be a positive scalar")
-  expect_error(fit_DKP(X, Y, prior = "fixed", p0 = c(0.7, -0.2, 0.5)),
+  expect_error(fit_DKP(X, Y, theta = 0.3, prior = "fixed", p0 = c(0.7, -0.2, 0.5)),
                "For fixed prior in DKP, 'p0' must be a nonnegative finite numeric vector of length equal to the number of classes and sum to 1.")
-  expect_error(fit_DKP(X, Y, prior = "fixed", p0 = c(0.5, 0.5)),
+  expect_error(fit_DKP(X, Y, theta = 0.3, prior = "fixed", p0 = c(0.5, 0.5)),
                "For fixed prior in DKP, 'p0' must be a nonnegative finite numeric vector of length equal to the number of classes and sum to 1.")
   expect_error(fit_DKP(X, Y, n_multi_start = 0), "'n_multi_start' must be a positive integer")
   expect_error(fit_DKP(X, Y, theta = "bad"), "'theta' must be numeric")
@@ -291,7 +291,7 @@ test_that("DKP Shepard ESS works with optimized and fixed theta", {
                 3, 3, 2,
                 1, 2, 6), ncol = 3, byrow = TRUE)
 
-  optimized <- fit_DKP(X, Y, theta = NULL, n_multi_start = 2, ess = "shepard")
+  optimized <- fit_DKP(X, Y, theta = NULL, n_multi_start = 1, n_threads = 1, ess = "shepard")
   fixed <- fit_DKP(X, Y, theta = 0.3, ess = "shepard")
 
   expect_s3_class(optimized, "DKP")

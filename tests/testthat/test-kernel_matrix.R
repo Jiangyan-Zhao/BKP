@@ -65,7 +65,7 @@ test_that("anisotropic scaling is applied dimension-wise", {
   expect_equal(K[1, 2], exp(-((1 / 1)^2 + (2 / 2)^2)))
 })
 
-test_that("kernel_matrix low-memory engine matches direct Gaussian formula", {
+test_that("kernel_matrix serial loop engine matches direct Gaussian formula", {
   X <- matrix(seq(0, 1, length.out = 1001), ncol = 1)
   Xp <- matrix(seq(0.25, 0.75, length.out = 1000), ncol = 1)
   theta <- 0.3
@@ -107,7 +107,7 @@ test_that("kernel_matrix loop engine preserves kernel properties", {
   }
 })
 
-test_that("kernel_matrix low-memory engine supports all kernels and lengthscales", {
+test_that("kernel_matrix serial loop engine supports all kernels and lengthscales", {
   set.seed(2)
 
   X <- matrix(runif(1001 * 2), ncol = 2)

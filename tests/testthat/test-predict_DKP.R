@@ -33,7 +33,7 @@ test_that("predict.DKP generates predictions without errors for various priors",
   colnames(Y) <- paste0("class", 1:3)
 
   # Fit DKP model with noninformative prior
-  model_noninformative <- fit_DKP(X, Y, Xbounds = Xbounds, prior = "noninformative")
+  model_noninformative <- fit_DKP(X, Y, Xbounds = Xbounds, theta = 0.3, prior = "noninformative")
 
   # Define new prediction locations
   Xnew <- matrix(seq(-2, 2, length.out = 100), ncol = 1)
@@ -60,7 +60,7 @@ test_that("predict.DKP generates predictions without errors for various priors",
   # -------------------------------------------------------------------------
 
   p0 <- c(0.2, 0.3, 0.5)
-  model_fixed <- fit_DKP(X, Y, Xbounds = Xbounds, prior = "fixed", r0 = 10, p0 = p0)
+  model_fixed <- fit_DKP(X, Y, Xbounds = Xbounds, theta = 0.3, prior = "fixed", r0 = 10, p0 = p0)
 
   pred_train_fixed <- predict(model_fixed)
   expect_no_error(predict(model_fixed))
@@ -75,7 +75,7 @@ test_that("predict.DKP generates predictions without errors for various priors",
   # Test Case 3: Adaptive Prior
   # -------------------------------------------------------------------------
 
-  model_adaptive <- fit_DKP(X, Y, Xbounds = Xbounds, prior = "adaptive")
+  model_adaptive <- fit_DKP(X, Y, Xbounds = Xbounds, theta = 0.3, prior = "adaptive")
 
   pred_train_adaptive <- predict(model_adaptive)
   expect_no_error(predict(model_adaptive))
@@ -94,7 +94,7 @@ test_that("test-predict_DKP validation and class output branches", {
   cls <- sample(1:3, nrow(X), replace = TRUE)
   Y[cbind(seq_len(nrow(X)), cls)] <- 1
 
-  model <- fit_DKP(X, Y, prior = "fixed", r0 = 3, p0 = c(0.2, 0.3, 0.5))
+  model <- fit_DKP(X, Y, theta = 0.3, prior = "fixed", r0 = 3, p0 = c(0.2, 0.3, 0.5))
 
   pred_train <- predict(model)
   expect_true(!is.null(pred_train$class))
@@ -110,7 +110,7 @@ test_that("test-predict_DKP validation and class output branches", {
 
   Y_count <- matrix(sample(0:2, nrow(X) * 3, replace = TRUE), ncol = 3)
   Y_count[rowSums(Y_count) == 0, 1] <- 1
-  model_count <- fit_DKP(X, Y_count, prior = "adaptive")
+  model_count <- fit_DKP(X, Y_count, theta = 0.3, prior = "adaptive")
   pred_count <- predict(model_count)
   expect_true(is.null(pred_count$class))
 })

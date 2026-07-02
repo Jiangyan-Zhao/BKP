@@ -182,7 +182,7 @@ m <- sample(150, n, replace = TRUE)
 Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 
 # Fit DKP model
-model1 <- fit_DKP(X, Y, Xbounds = Xbounds)
+model1 <- fit_DKP(X, Y, Xbounds = Xbounds, theta = 0.3)
 print(model1)
 
 
@@ -213,7 +213,7 @@ m <- sample(150, n, replace = TRUE)
 Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 
 # Fit DKP model
-model2 <- fit_DKP(X, Y, Xbounds = Xbounds)
+model2 <- fit_DKP(X, Y, Xbounds = Xbounds, theta = 0.3)
 print(model2)
 
 }

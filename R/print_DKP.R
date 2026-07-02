@@ -21,7 +21,7 @@
 #' Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 #'
 #' # Fit DKP model
-#' model <- fit_DKP(X, Y, Xbounds = Xbounds)
+#' model <- fit_DKP(X, Y, Xbounds = Xbounds, theta = 0.3)
 #' print(model)                    # fitted object
 #' print(summary(model))           # summary
 #' print(predict(model))           # predictions
@@ -29,7 +29,7 @@
 #'
 #' \dontrun{
 #' # Larger TwinDKP example
-#' n <- 1000
+#' n <- 200
 #' X <- tgp::lhs(n = n, rect = Xbounds)
 #' true_pi <- true_pi_fun(X)
 #' m <- sample(150, n, replace = TRUE)
@@ -38,7 +38,14 @@
 #' Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 #'
 #' # Fit TwinDKP model
-#' model <- fit_TwinDKP(X, Y, Xbounds = Xbounds)
+#' model <- fit_TwinDKP(
+#'      X, Y,
+#'      Xbounds = Xbounds,
+#'      theta_g = 0.3,
+#'      g = 20,
+#'      twins = 1,
+#'      n_threads = 1
+#'    )
 #' print(model)                    # fitted object
 #' print(summary(model))           # summary
 #' print(predict(model))           # predictions

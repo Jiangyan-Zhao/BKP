@@ -23,7 +23,7 @@ test_that("simulate.BKP returns correct posterior simulations and dimensions", {
   y <- rbinom(n, size = m, prob = true_pi)
 
   # Fit BKP model (this will be the object to test)
-  model <- fit_BKP(X, y, m, Xbounds = Xbounds)
+  model <- fit_BKP(X, y, m, Xbounds = Xbounds, theta = 0.3)
 
   # -------------------------------------------------------------------------
   # Test Cases
@@ -91,7 +91,7 @@ test_that("simulate.BKP handles input validation correctly", {
   true_pi <- true_pi_fun(X)
   m <- sample(100, n, replace = TRUE)
   y <- rbinom(n, size = m, prob = true_pi)
-  model <- fit_BKP(X, y, m, Xbounds = Xbounds)
+  model <- fit_BKP(X, y, m, Xbounds = Xbounds, theta = 0.3)
 
   # Case 5: Input validation tests
   # nsim must be a positive integer

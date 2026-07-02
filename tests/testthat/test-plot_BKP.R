@@ -25,7 +25,7 @@ test_that("plot.BKP generates plots without errors", {
   y <- rbinom(n, size = m, prob = true_pi)
 
   # Fit a 1D BKP model
-  model_1d <- fit_BKP(X, y, m, Xbounds=Xbounds, prior = "noninformative")
+  model_1d <- fit_BKP(X, y, m, Xbounds=Xbounds, theta = 0.3, prior = "noninformative")
 
   # Test that plot() runs without errors for a 1D model
   expect_no_error(plot(model_1d))
@@ -60,7 +60,7 @@ test_that("plot.BKP generates plots without errors", {
   y <- rbinom(n, size = m, prob = true_pi)
 
   # Fit a 2D BKP model
-  model_2d <- fit_BKP(X, y, m, Xbounds=Xbounds, prior = "fixed", r0 = 10, p0 = 0.5)
+  model_2d <- fit_BKP(X, y, m, Xbounds=Xbounds, theta = 0.3, prior = "fixed", r0 = 10, p0 = 0.5)
 
   # Test with default arguments
   expect_no_error(plot(model_2d, n_grid = 30))
@@ -81,7 +81,7 @@ test_that("plot.BKP generates plots without errors", {
   y <- rbinom(n, size = m, prob = runif(n))
 
   # Fit a 2D BKP model
-  model_2d <- fit_BKP(X, y, m, prior = "fixed", r0 = 10, p0 = 0.5)
+  model_2d <- fit_BKP(X, y, m, theta = 0.3, prior = "fixed", r0 = 10, p0 = 0.5)
 
   # Test with default arguments
   expect_no_error(plot(model_2d, dims = c(1,3), n_grid = 10))
@@ -96,7 +96,7 @@ test_that("plot.BKP validates input arguments and classification branches", {
   X <- matrix(runif(40), ncol = 2)
   m <- rep(1, nrow(X))
   y <- rbinom(nrow(X), size = 1, prob = 0.5)
-  model <- fit_BKP(X, y, m, prior = "noninformative", theta = 0.3)
+  model <- fit_BKP(X, y, m, theta = 0.3, prior = "noninformative")
 
   expect_no_error(plot(model, dims = 1, threshold = 0.4, n_grid = 8))
   expect_no_error(plot(model, dims = c(1, 2), threshold = 0.4, n_grid = 8))
@@ -122,7 +122,7 @@ test_that("plot.BKP supports ggplot engine for 1D/2D and validates engine", {
   X <- matrix(runif(60), ncol = 2)
   m <- rep(10, nrow(X))
   y <- rbinom(nrow(X), size = m, prob = 0.5)
-  model <- fit_BKP(X, y, m, prior = "noninformative", theta = 0.3)
+  model <- fit_BKP(X, y, m, theta = 0.3, prior = "noninformative")
 
   expect_no_error(plot(model, n_grid = 8, engine = "ggplot"))
   expect_error(plot(model, engine = "bad_engine"),

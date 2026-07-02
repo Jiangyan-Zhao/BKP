@@ -208,7 +208,7 @@ true_pi_fun <- function(x) {
   (1 + exp(-x^2) * cos(10 * (1 - exp(-x)) / (1 + exp(-x)))) / 2
 }
 
-n <- 1000
+n <- 200
 Xbounds <- matrix(c(-2, 2), nrow = 1)
 X <- tgp::lhs(n = n, rect = Xbounds)
 true_pi <- true_pi_fun(X)
@@ -216,7 +216,14 @@ m <- sample(100, n, replace = TRUE)
 y <- rbinom(n, size = m, prob = true_pi)
 
 # Fit TwinBKP model
-model1 <- fit_TwinBKP(X, y, m, Xbounds = Xbounds)
+model1 <- fit_TwinBKP(
+  X, y, m,
+  Xbounds = Xbounds,
+  theta_g = 0.3,
+  g = 20,
+  twins = 1,
+  n_threads = 1
+)
 
 #-------------------------- 2D Example ---------------------------
 # Define 2D latent function and probability transformation
@@ -235,7 +242,7 @@ true_pi_fun <- function(X) {
   return(pnorm(f))  # Transform to probability
 }
 
-n <- 1000
+n <- 200
 Xbounds <- matrix(c(0, 0, 1, 1), nrow = 2)
 X <- tgp::lhs(n = n, rect = Xbounds)
 true_pi <- true_pi_fun(X)
@@ -243,7 +250,14 @@ m <- sample(100, n, replace = TRUE)
 y <- rbinom(n, size = m, prob = true_pi)
 
 # Fit TwinBKP model
-model2 <- fit_TwinBKP(X, y, m, Xbounds=Xbounds)
+model2 <- fit_TwinBKP(
+  X, y, m,
+  Xbounds = Xbounds,
+  theta_g = 0.3,
+  g = 20,
+  twins = 1,
+  n_threads = 1
+)
 
 }
 \references{

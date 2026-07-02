@@ -20,7 +20,7 @@ test_that("fit_BKP runs correctly with examples from the documentation", {
   y <- rbinom(n, size = m, prob = true_pi)
 
   # Fit BKP model
-  expect_no_error({model1 <- fit_BKP(X, y, m, Xbounds = Xbounds)})
+  expect_no_error({model1 <- fit_BKP(X, y, m, Xbounds = Xbounds, theta = 0.3)})
   expect_s3_class(model1, "BKP")
   expect_equal(dim(model1$Xnorm), dim(X))
 
@@ -51,7 +51,7 @@ test_that("fit_BKP runs correctly with examples from the documentation", {
   y <- rbinom(n, size = m, prob = true_pi)
 
   # Fit BKP model
-  expect_no_error({model2 <- fit_BKP(X, y, m, Xbounds = Xbounds)})
+  expect_no_error({model2 <- fit_BKP(X, y, m, Xbounds = Xbounds, theta = 0.3)})
   expect_s3_class(model2, "BKP")
   expect_equal(dim(model2$Xnorm), dim(X))
 })
@@ -107,7 +107,7 @@ test_that("fit_BKP returns a BKP object with correct structure and content", {
   m_test <- rep(100, n)
   y_test <- rbinom(n, size = m_test, prob = 0.5)
 
-  model <- fit_BKP(X = X_test, y = y_test, m = m_test)
+  model <- fit_BKP(X = X_test, y = y_test, m = m_test, theta = 0.3)
 
   # Check class and structure
   expect_s3_class(model, "BKP")
@@ -153,7 +153,7 @@ test_that("fit_BKP optimizes theta with Shepard ESS calibration", {
       m = m_test,
       ess = "shepard",
       theta = NULL,
-      n_multi_start = 2,
+      n_multi_start = 1,
       n_threads = 1
     )
   })

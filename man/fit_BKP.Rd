@@ -176,7 +176,7 @@ m <- sample(100, n, replace = TRUE)
 y <- rbinom(n, size = m, prob = true_pi)
 
 # Fit BKP model
-model1 <- fit_BKP(X, y, m, Xbounds = Xbounds)
+model1 <- fit_BKP(X, y, m, Xbounds = Xbounds, theta = 0.3)
 print(model1)
 
 
@@ -205,7 +205,7 @@ m <- sample(100, n, replace = TRUE)
 y <- rbinom(n, size = m, prob = true_pi)
 
 # Fit BKP model
-model2 <- fit_BKP(X, y, m, Xbounds = Xbounds)
+model2 <- fit_BKP(X, y, m, Xbounds = Xbounds, theta = 0.3)
 print(model2)
 
 }

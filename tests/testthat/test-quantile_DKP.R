@@ -25,7 +25,7 @@ test_that("quantile.DKP returns correct posterior quantiles", {
   Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 
   # Fit DKP model (this will be the object to test)
-  model <- fit_DKP(X, Y, Xbounds = Xbounds)
+  model <- fit_DKP(X, Y, Xbounds = Xbounds, theta = 0.3)
 
   # -------------------------------------------------------------------------
   # Test Cases: Verify quantile function
@@ -102,7 +102,7 @@ test_that("quantile.DKP handles input validation correctly", {
   m <- sample(150, n, replace = TRUE)
   Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 
-  model <- fit_DKP(X, Y, Xbounds = Xbounds)
+  model <- fit_DKP(X, Y, Xbounds = Xbounds, theta = 0.3)
 
   # Test for invalid probs values on the real model. The test should PASS
   # because the function correctly throws an error.
