@@ -20,14 +20,16 @@
 #' Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 #'
 #' # Fit DKP model
-#' model <- fit_DKP(X, Y, Xbounds = Xbounds, theta = 0.3)
+#' # A fixed theta is used here only to keep the example fast and reproducible.
+#' # In practice, omit theta to select it by leave-one-out cross-validation.
+#' model <- fit_DKP(X, Y, Xbounds = Xbounds, theta = 0.04)
 #'
 #' # Extract fitted values
 #' fitted(model)
 #'
 #' \dontrun{
 #' # Larger TwinDKP example
-#' n <- 200
+#' n <- 1000
 #' X <- tgp::lhs(n = n, rect = Xbounds)
 #' true_pi <- true_pi_fun(X)
 #' m <- sample(150, n, replace = TRUE)
@@ -35,14 +37,10 @@
 #' # Generate multinomial responses
 #' Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 #'
-#' # Fit TwinDKP model
+#' # Fit TwinDKP model using the default global lengthscale tuning
 #' model <- fit_TwinDKP(
 #'      X, Y,
-#'      Xbounds = Xbounds,
-#'      theta_g = 0.3,
-#'      g = 20,
-#'      twins = 1,
-#'      n_threads = 1
+#'      Xbounds = Xbounds
 #'    )
 #'
 #' # Extract fitted values

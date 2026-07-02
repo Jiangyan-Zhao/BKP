@@ -182,7 +182,9 @@ m <- sample(150, n, replace = TRUE)
 Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 
 # Fit DKP model
-model1 <- fit_DKP(X, Y, Xbounds = Xbounds, theta = 0.3)
+# A fixed theta is used here only to keep the example fast and reproducible.
+# In practice, omit theta to select it by leave-one-out cross-validation.
+model1 <- fit_DKP(X, Y, Xbounds = Xbounds, theta = 0.04)
 print(model1)
 
 
@@ -213,7 +215,9 @@ m <- sample(150, n, replace = TRUE)
 Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 
 # Fit DKP model
-model2 <- fit_DKP(X, Y, Xbounds = Xbounds, theta = 0.3)
+# A fixed theta is used here only to keep the example fast and reproducible.
+# In practice, omit theta to select it by leave-one-out cross-validation.
+model2 <- fit_DKP(X, Y, Xbounds = Xbounds, theta = 0.08)
 print(model2)
 
 }

@@ -39,7 +39,7 @@
 #' # Generate multinomial responses
 #' Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 #'
-#' # Fit TwinDKP model
+#' # Fit TwinDKP model using the default global lengthscale tuning
 #' model1 <- fit_TwinDKP(X, Y, Xbounds = Xbounds)
 #'
 #' # Plot results
@@ -90,7 +90,7 @@
 #' # Generate multinomial responses
 #' Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 #'
-#' # Fit TwinDKP model
+#' # Fit TwinDKP model using the default global lengthscale tuning
 #' model2 <- fit_TwinDKP(X, Y, Xbounds = Xbounds)
 #'
 #' # Plot results

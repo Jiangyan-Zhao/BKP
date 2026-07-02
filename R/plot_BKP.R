@@ -118,7 +118,7 @@
 #' m <- sample(100, n, replace = TRUE)
 #' y <- rbinom(n, size = m, prob = true_pi)
 #'
-#' # Fit TwinBKP model
+#' # Fit TwinBKP model using the default global lengthscale tuning
 #' model1 <- fit_TwinBKP(X, y, m, Xbounds = Xbounds)
 #'
 #' # Plot results
@@ -165,7 +165,7 @@
 #' m <- sample(100, n, replace = TRUE)
 #' y <- rbinom(n, size = m, prob = true_pi)
 #'
-#' # Fit TwinBKP model
+#' # Fit TwinBKP model using the default global lengthscale tuning
 #' model2 <- fit_TwinBKP(X, y, m, Xbounds = Xbounds)
 #'
 #' # Plot results

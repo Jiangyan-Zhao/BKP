@@ -172,10 +172,12 @@
 #' y <- rbinom(n, size = m, prob = true_pi)
 #'
 #' # Fit TwinBKP model
+#' # A fixed theta is used here only to keep the example fast and reproducible.
+#' # In practice, omit theta to select it by leave-one-out cross-validation.
 #' model1 <- fit_TwinBKP(
 #'      X, y, m,
 #'      Xbounds = Xbounds,
-#'      theta_g = 0.3,
+#'      theta_g = 0.04,
 #'      g = 20,
 #'      twins = 1,
 #'      n_threads = 1
@@ -206,10 +208,12 @@
 #' y <- rbinom(n, size = m, prob = true_pi)
 #'
 #' # Fit TwinBKP model
+#' # A fixed theta is used here only to keep the example fast and reproducible.
+#' # In practice, omit theta to select it by leave-one-out cross-validation.
 #' model2 <- fit_TwinBKP(
 #'      X, y, m,
 #'      Xbounds = Xbounds,
-#'      theta_g = 0.3,
+#'      theta_g = 0.08,
 #'      g = 20,
 #'      twins = 1,
 #'      n_threads = 1
