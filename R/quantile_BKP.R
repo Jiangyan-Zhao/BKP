@@ -62,27 +62,25 @@
 #' y <- rbinom(n, size = m, prob = true_pi)
 #'
 #' # Fit BKP model
-#' model <- fit_BKP(X, y, m, Xbounds = Xbounds, theta = 0.3)
+#' # A fixed theta is used here only to keep the example fast and reproducible.
+#' # In practice, omit theta to select it by leave-one-out cross-validation.
+#' model <- fit_BKP(X, y, m, Xbounds = Xbounds, theta = 0.04)
 #'
 #' # Extract posterior quantiles
 #' quantile(model)
 #'
 #' \dontrun{
 #' # Larger TwinBKP example
-#' n <- 200
+#' n <- 1000
 #' X <- tgp::lhs(n = n, rect = Xbounds)
 #' true_pi <- true_pi_fun(X)
 #' m <- sample(100, n, replace = TRUE)
 #' y <- rbinom(n, size = m, prob = true_pi)
 #'
-#' # Fit TwinBKP model
+#' # Fit TwinBKP model using the default global lengthscale tuning
 #' model <- fit_TwinBKP(
 #'      X, y, m,
-#'      Xbounds = Xbounds,
-#'      theta_g = 0.3,
-#'      g = 20,
-#'      twins = 1,
-#'      n_threads = 1
+#'      Xbounds = Xbounds
 #'    )
 #'
 #' # Extract posterior quantiles

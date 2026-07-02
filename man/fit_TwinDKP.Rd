@@ -218,10 +218,12 @@ m <- sample(150, n, replace = TRUE)
 Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 
 # Fit TwinDKP model
+# A fixed theta is used here only to keep the example fast and reproducible.
+# In practice, omit theta to select it by leave-one-out cross-validation.
 model1 <- fit_TwinDKP(
      X, Y,
      Xbounds = Xbounds,
-     theta_g = 0.3,
+     theta_g = 0.04,
      g = 20,
      twins = 1,
      n_threads = 1
@@ -256,10 +258,12 @@ m <- sample(150, n, replace = TRUE)
 Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 
 # Fit TwinDKP model
+# A fixed theta is used here only to keep the example fast and reproducible.
+# In practice, omit theta to select it by leave-one-out cross-validation.
 model2 <- fit_TwinDKP(
      X, Y,
      Xbounds = Xbounds,
-     theta_g = 0.3,
+     theta_g = 0.08,
      g = 20,
      twins = 1,
      n_threads = 1

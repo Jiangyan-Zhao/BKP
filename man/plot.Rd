@@ -146,27 +146,25 @@ m <- sample(100, n, replace = TRUE)
 y <- rbinom(n, size = m, prob = true_pi)
 
 # Fit BKP model
-model1 <- fit_BKP(X, y, m, Xbounds = Xbounds, theta = 0.3)
+# A fixed theta is used here only to keep the example fast and reproducible.
+# In practice, omit theta to select it by leave-one-out cross-validation.
+model1 <- fit_BKP(X, y, m, Xbounds = Xbounds, theta = 0.04)
 
 # Plot results
 plot(model1)
 
 \dontrun{
 # Larger TwinBKP example
-n <- 200
+n <- 1000
 X <- tgp::lhs(n = n, rect = Xbounds)
 true_pi <- true_pi_fun(X)
 m <- sample(100, n, replace = TRUE)
 y <- rbinom(n, size = m, prob = true_pi)
 
-# Fit TwinBKP model
+# Fit TwinBKP model using the default global lengthscale tuning
 model1 <- fit_TwinBKP(
      X, y, m,
-     Xbounds = Xbounds,
-     theta_g = 0.3,
-     g = 20,
-     twins = 1,
-     n_threads = 1
+     Xbounds = Xbounds
    )
 
 # Plot results
@@ -198,27 +196,25 @@ m <- sample(100, n, replace = TRUE)
 y <- rbinom(n, size = m, prob = true_pi)
 
 # Fit BKP model
-model2 <- fit_BKP(X, y, m, Xbounds = Xbounds, theta = 0.3)
+# A fixed theta is used here only to keep the example fast and reproducible.
+# In practice, omit theta to select it by leave-one-out cross-validation.
+model2 <- fit_BKP(X, y, m, Xbounds = Xbounds, theta = 0.08)
 
 # Plot results
 plot(model2)
 
 \dontrun{
 # Larger TwinBKP example
-n <- 200
+n <- 1000
 X <- tgp::lhs(n = n, rect = Xbounds)
 true_pi <- true_pi_fun(X)
 m <- sample(100, n, replace = TRUE)
 y <- rbinom(n, size = m, prob = true_pi)
 
-# Fit TwinBKP model
+# Fit TwinBKP model using the default global lengthscale tuning
 model2 <- fit_TwinBKP(
      X, y, m,
-     Xbounds = Xbounds,
-     theta_g = 0.3,
-     g = 20,
-     twins = 1,
-     n_threads = 1
+     Xbounds = Xbounds
    )
 
 # Plot results
@@ -244,14 +240,16 @@ m <- sample(150, n, replace = TRUE)
 Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 
 # Fit DKP model
-model1 <- fit_DKP(X, Y, Xbounds = Xbounds, theta = 0.3)
+# A fixed theta is used here only to keep the example fast and reproducible.
+# In practice, omit theta to select it by leave-one-out cross-validation.
+model1 <- fit_DKP(X, Y, Xbounds = Xbounds, theta = 0.04)
 
 # Plot results
 plot(model1)
 
 \dontrun{
 # Larger TwinDKP example
-n <- 200
+n <- 1000
 X <- tgp::lhs(n = n, rect = Xbounds)
 true_pi <- true_pi_fun(X)
 m <- sample(150, n, replace = TRUE)
@@ -259,14 +257,10 @@ m <- sample(150, n, replace = TRUE)
 # Generate multinomial responses
 Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 
-# Fit TwinDKP model
+# Fit TwinDKP model using the default global lengthscale tuning
 model1 <- fit_TwinDKP(
      X, Y,
-     Xbounds = Xbounds,
-     theta_g = 0.3,
-     g = 20,
-     twins = 1,
-     n_threads = 1
+     Xbounds = Xbounds
    )
 
 # Plot results
@@ -300,14 +294,16 @@ m <- sample(150, n, replace = TRUE)
 Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 
 # Fit DKP model
-model2 <- fit_DKP(X, Y, Xbounds = Xbounds, theta = 0.3)
+# A fixed theta is used here only to keep the example fast and reproducible.
+# In practice, omit theta to select it by leave-one-out cross-validation.
+model2 <- fit_DKP(X, Y, Xbounds = Xbounds, theta = 0.08)
 
 # Plot results
 plot(model2)
 
 \dontrun{
 # Larger TwinDKP example
-n <- 200
+n <- 1000
 X <- tgp::lhs(n = n, rect = Xbounds)
 true_pi <- true_pi_fun(X)
 m <- sample(150, n, replace = TRUE)
@@ -315,14 +311,10 @@ m <- sample(150, n, replace = TRUE)
 # Generate multinomial responses
 Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 
-# Fit TwinDKP model
+# Fit TwinDKP model using the default global lengthscale tuning
 model2 <- fit_TwinDKP(
      X, Y,
-     Xbounds = Xbounds,
-     theta_g = 0.3,
-     g = 20,
-     twins = 1,
-     n_threads = 1
+     Xbounds = Xbounds
    )
 
 # Plot results
