@@ -162,10 +162,7 @@ m <- sample(100, n, replace = TRUE)
 y <- rbinom(n, size = m, prob = true_pi)
 
 # Fit TwinBKP model using the default global lengthscale tuning
-model1 <- fit_TwinBKP(
-     X, y, m,
-     Xbounds = Xbounds
-   )
+model1 <- fit_TwinBKP(X, y, m, Xbounds = Xbounds)
 
 # Plot results
 plot(model1)
@@ -212,10 +209,7 @@ m <- sample(100, n, replace = TRUE)
 y <- rbinom(n, size = m, prob = true_pi)
 
 # Fit TwinBKP model using the default global lengthscale tuning
-model2 <- fit_TwinBKP(
-     X, y, m,
-     Xbounds = Xbounds
-   )
+model2 <- fit_TwinBKP(X, y, m, Xbounds = Xbounds)
 
 # Plot results
 plot(model2)
@@ -258,10 +252,7 @@ m <- sample(150, n, replace = TRUE)
 Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 
 # Fit TwinDKP model using the default global lengthscale tuning
-model1 <- fit_TwinDKP(
-     X, Y,
-     Xbounds = Xbounds
-   )
+model1 <- fit_TwinDKP(X, Y, Xbounds = Xbounds)
 
 # Plot results
 plot(model1)
@@ -312,10 +303,7 @@ m <- sample(150, n, replace = TRUE)
 Y <- t(sapply(1:n, function(i) rmultinom(1, size = m[i], prob = true_pi[i, ])))
 
 # Fit TwinDKP model using the default global lengthscale tuning
-model2 <- fit_TwinDKP(
-     X, Y,
-     Xbounds = Xbounds
-   )
+model2 <- fit_TwinDKP(X, Y, Xbounds = Xbounds)
 
 # Plot results
 plot(model2)
