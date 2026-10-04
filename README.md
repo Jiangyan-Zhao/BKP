@@ -32,8 +32,8 @@ location-specific nearest-neighbour updates.
 
 <a href="https://jiangyan-zhao.github.io/BKP-website/"><strong>Website</strong></a>
 ·
-<a href="https://github.com/Jiangyan-Zhao/BKP-paper/blob/master/paper/TR_BKP.pdf"><strong>Software
-paper</strong></a> ·
+<a href="https://github.com/Jiangyan-Zhao/BKP-paper/blob/master/paper/TR_BKP.pdf"><strong>Accepted
+JSS paper</strong></a> ·
 <a href="https://github.com/Jiangyan-Zhao/BKP-paper"><strong>Reproducibility
 materials</strong></a> ·
 <a href="https://cran.r-project.org/package=BKP"><strong>CRAN</strong></a>
@@ -260,8 +260,8 @@ points:
 - [**BKP website**](https://jiangyan-zhao.github.io/BKP-website/) —
   interactive overview, installation guide, methodology, examples, and
   project resources.
-- [**BKP software paper
-  (PDF)**](https://github.com/Jiangyan-Zhao/BKP-paper/blob/master/paper/TR_BKP.pdf)
+- [**BKP software paper (accepted in Journal of Statistical
+  Software)**](https://github.com/Jiangyan-Zhao/BKP-paper/blob/master/paper/TR_BKP.pdf)
   — statistical foundations, package design, and worked examples.
 - [**BKP-paper reproducibility
   repository**](https://github.com/Jiangyan-Zhao/BKP-paper) — manuscript
@@ -276,8 +276,9 @@ points:
 If you use **BKP** in your work, please cite both the software paper and
 the version of the R package used in your analysis.
 
-> Zhao, J., Qing, K., and Xu, J. (2025).  
-> *BKP: An R Package for Beta Kernel Process Modeling.*  
+> Zhao, J., Qing, K., and Xu, J. (2026+). *BKP: An R Package for Beta
+> Kernel Process Modeling.*\
+> Accepted for publication in *Journal of Statistical Software*.\
 > arXiv:2508.10447.
 
 For the version-specific package citation, run:
